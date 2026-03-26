@@ -1,0 +1,25 @@
+import PageHeader from "@/components/ui/custom/PageHeader";
+import PublicArticlesGrid from "@/components/public/articles/public-articles-grid";
+import { listPublicArticles } from "@/features/articles/public";
+
+export const dynamic = "force-dynamic";
+
+export default async function PublicArticlesPage() {
+  const articles = await listPublicArticles();
+
+  return (
+    <main className="min-h-screen bg-cobam-light-bg text-cobam-dark-blue">
+      <PageHeader
+        subtitle="Actualités"
+        title="Nos articles, conseils et nouveautés"
+        description="Retrouvez les dernières actualités COBAM GROUP, nos inspirations produits et nos conseils pour vos projets."
+      />
+
+      <section className="py-12 sm:py-16 lg:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <PublicArticlesGrid articles={articles} />
+        </div>
+      </section>
+    </main>
+  );
+}

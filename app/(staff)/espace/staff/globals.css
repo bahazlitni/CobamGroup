@@ -1,0 +1,283 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* -------------------------------------------------- */
+/* Shadcn + app theme variables                       */
+/* -------------------------------------------------- */
+
+:root {
+  --radius: 1rem;
+
+  /* shadcn semantic tokens */
+  --background: #f8f9fb;
+  --foreground: #14202e;
+
+  --card: #ffffff;
+  --card-foreground: #14202e;
+
+  --popover: #ffffff;
+  --popover-foreground: #14202e;
+
+  --primary: #14202e;
+  --primary-foreground: #ffffff;
+
+  --secondary: #eef3f7;
+  --secondary-foreground: #14202e;
+
+  --muted: #f3f6f9;
+  --muted-foreground: #6b7a8c;
+
+  --accent: #e9f6fb;
+  --accent-foreground: #14202e;
+
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  --border: #dbe3ea;
+  --input: #dbe3ea;
+  --ring: #0a8dc1;
+
+  /* optional chart tokens */
+  --chart-1: #0a8dc1;
+  --chart-2: #14202e;
+  --chart-3: #5e5e5e;
+  --chart-4: #7fc7df;
+  --chart-5: #d3d3d3;
+
+  /* optional sidebar tokens if you use shadcn sidebar */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #14202e;
+  --sidebar-primary: #14202e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eef3f7;
+  --sidebar-accent-foreground: #14202e;
+  --sidebar-border: #dbe3ea;
+  --sidebar-ring: #0a8dc1;
+}
+
+.dark {
+  /* You said your app is light-style here, but keeping dark valid avoids breakage */
+  --background: #0f1722;
+  --foreground: #f8fafc;
+
+  --card: #14202e;
+  --card-foreground: #f8fafc;
+
+  --popover: #14202e;
+  --popover-foreground: #f8fafc;
+
+  --primary: #f8fafc;
+  --primary-foreground: #14202e;
+
+  --secondary: #1b2b3b;
+  --secondary-foreground: #f8fafc;
+
+  --muted: #1a2734;
+  --muted-foreground: #b7c3cf;
+
+  --accent: #16384a;
+  --accent-foreground: #f8fafc;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --border: #243445;
+  --input: #243445;
+  --ring: #0a8dc1;
+
+  --chart-1: #38bdf8;
+  --chart-2: #e2e8f0;
+  --chart-3: #94a3b8;
+  --chart-4: #0ea5e9;
+  --chart-5: #475569;
+
+  --sidebar: #14202e;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #f8fafc;
+  --sidebar-primary-foreground: #14202e;
+  --sidebar-accent: #1b2b3b;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #243445;
+  --sidebar-ring: #0a8dc1;
+}
+
+@theme inline {
+  /* shadcn semantic mappings */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* your custom brand tokens */
+  --color-cobam-dark-blue: #14202e;
+  --color-cobam-water-blue: #0a8dc1;
+  --color-cobam-carbon-grey: #5e5e5e;
+  --color-cobam-quill-grey: #d3d3d3;
+  --color-cobam-light-bg: #f8f9fb;
+}
+
+/* -------------------------------------------------- */
+/* Base                                                */
+/* -------------------------------------------------- */
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    background-color: var(--background);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  button,
+  [role="button"],
+  a {
+    cursor: pointer;
+  }
+}
+
+/* -------------------------------------------------- */
+/* Utilities                                           */
+/* -------------------------------------------------- */
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* -------------------------------------------------- */
+/* Animations                                          */
+/* -------------------------------------------------- */
+
+@keyframes slideInFromRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes slideOutToRight {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}
+
+@keyframes slideInPanel {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOutPanel {
+  from { transform: translateX(0); opacity: 1; }
+  to   { transform: translateX(100%); opacity: 0; }
+}
+
+/* -------------------------------------------------- */
+/* Tiptap / editor                                     */
+/* -------------------------------------------------- */
+
+.tiptap p.is-editor-empty:first-child::before {
+  color: #94a3b8;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.ProseMirror {
+  outline: none;
+}
+
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4 {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.ProseMirror p {
+  color: #334155;
+  line-height: 1.8;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.25rem;
+}
+
+.ProseMirror ul {
+  list-style: disc;
+}
+
+.ProseMirror ol {
+  list-style: decimal;
+}
+
+.ProseMirror blockquote {
+  margin: 1rem 0;
+  border-left: 3px solid #cbd5e1;
+  padding-left: 1rem;
+  color: #475569;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 1rem;
+}

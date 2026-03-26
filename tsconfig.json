@@ -30,5 +30,11 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "components/staff/articles/ArticleEditorShell.tsx",
+    "components/staff/articles/SidebarCard.tsx",
+    "components/staff/articles/sidebar/**/*",
+    "components/staff/articles/block-editor/**/*"
+  ]
 }

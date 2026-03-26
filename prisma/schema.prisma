@@ -1,0 +1,659 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MediaKind {
+  IMAGE
+  VIDEO
+  DOCUMENT
+}
+
+enum MediaVisibility {
+  PRIVATE
+  PUBLIC
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum MediaLinkRole {
+  COVER
+  GALLERY
+  THUMBNAIL
+  BANNER
+  SEO_COVER
+  SWATCH
+  INLINE
+  TECHNICAL_SHEET_IMAGE
+  LIFESTYLE
+}
+
+enum Portal {
+  CUSTOMER
+  STAFF
+}
+
+enum PowerType {
+  ROOT
+  ADMIN
+  STAFF
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+  CLOSED
+}
+
+enum BrandShowcasePlacement {
+  NONE
+  REFERENCE
+  PARTNER
+}
+
+enum AuditActionType {
+  CREATE
+  UPDATE
+  DELETE
+  ATTACH
+  DETACH
+  PUBLISH
+  UNPUBLISH
+  RESTORE
+  ARCHIVE
+  ROLE_GRANT
+  ROLE_REVOKE
+  BAN
+  UNBAN
+  PASSWORD_CHANGE
+  LOGIN
+  LOGOUT
+}
+
+model User {
+  id                String     @id @default(cuid())
+  email             String     @unique
+  passwordHash      String     @map("password_hash")
+  portal            Portal     @default(STAFF)
+  powerType         PowerType  @default(STAFF) @map("power_type")
+  status            UserStatus @default(ACTIVE)
+  bannedAt          DateTime?  @map("banned_at")
+  bannedReason      String?    @map("banned_reason") @db.Text
+  closedAt          DateTime?  @map("closed_at")
+  lastLoginAt       DateTime?  @map("last_login_at")
+  passwordChangedAt DateTime?  @map("password_changed_at")
+  createdAt         DateTime   @default(now()) @map("created_at")
+  updatedAt         DateTime   @updatedAt @map("updated_at")
+
+  refreshTokens      RefreshToken[]
+  uploadedMedia      Media[]             @relation("MediaUploadedByUser")
+  articles           Article[]           @relation("ArticleAuthor")
+  articleAuthorLinks ArticleAuthorLink[]
+  createdArticleCategories ArticleCategory[] @relation("ArticleCategoryCreatedByUser")
+  updatedArticleCategories ArticleCategory[] @relation("ArticleCategoryUpdatedByUser")
+  auditLogs          AuditLog[]          @relation("AuditActor")
+  profile            StaffProfile?
+
+  receivedRoleAssignments UserRoleAssignment[] @relation("RoleAssignmentTarget")
+  grantedRoleAssignments  UserRoleAssignment[] @relation("RoleAssignmentGrantedBy")
+  revokedRoleAssignments  UserRoleAssignment[] @relation("RoleAssignmentRevokedBy")
+
+  @@index([powerType])
+  @@index([status])
+  @@map("users")
+}
+
+model StaffProfile {
+  id            BigInt    @id @default(autoincrement())
+  userId        String    @unique @map("user_id")
+  firstName     String?   @map("first_name") @db.VarChar(100)
+  lastName      String?   @map("last_name") @db.VarChar(100)
+  jobTitle      String?   @map("job_title") @db.VarChar(150)
+  phone         String?   @db.VarChar(50)
+  bio           String?
+  birthDate     DateTime? @map("birth_date")
+  avatarMediaId BigInt?   @map("avatar_media_id")
+
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatarMedia Media? @relation("StaffProfileAvatarMedia", fields: [avatarMediaId], references: [id], onDelete: SetNull)
+
+  @@index([avatarMediaId])
+  @@map("profiles")
+}
+
+model Permission {
+  id          BigInt   @id @default(autoincrement())
+  key         String   @unique @db.VarChar(150) // e.g. "products.update.own"
+  label       String   @db.VarChar(255)
+  resource    String   @db.VarChar(100) // e.g. "products"
+  action      String   @db.VarChar(100) // e.g. "update"
+  scope       String?  @db.VarChar(50) // e.g. "own", "any", "below_role"
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  roleLinks RolePermission[]
+
+  @@index([resource, action])
+  @@map("permissions")
+}
+
+model Role {
+  id            BigInt   @id @default(autoincrement())
+  key           String   @unique @db.VarChar(100)
+  name          String   @db.VarChar(150)
+  color         String   @db.VarChar(30)
+  priorityIndex Int      @default(100) @map("priority_index")
+  description   String?  @db.Text
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  permissionLinks RolePermission[]
+  userAssignments UserRoleAssignment[]
+
+  @@index([priorityIndex])
+  @@index([isActive])
+  @@map("roles")
+}
+
+model RolePermission {
+  roleId       BigInt  @map("role_id")
+  permissionId BigInt  @map("permission_id")
+  allowed      Boolean @default(true)
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+model UserRoleAssignment {
+  id              BigInt    @id @default(autoincrement())
+  userId          String    @map("user_id")
+  roleId          BigInt    @map("role_id")
+  grantedByUserId String?   @map("granted_by_user_id")
+  revokedByUserId String?   @map("revoked_by_user_id")
+  grantedAt       DateTime  @default(now()) @map("granted_at")
+  revokedAt       DateTime? @map("revoked_at")
+  reason          String?   @db.Text
+
+  user          User  @relation("RoleAssignmentTarget", fields: [userId], references: [id], onDelete: Cascade)
+  role          Role  @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  grantedByUser User? @relation("RoleAssignmentGrantedBy", fields: [grantedByUserId], references: [id], onDelete: SetNull)
+  revokedByUser User? @relation("RoleAssignmentRevokedBy", fields: [revokedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([userId, revokedAt])
+  @@index([roleId, revokedAt])
+  @@map("user_role_assignments")
+}
+
+model RefreshToken {
+  id                 String    @id @default(cuid())
+  tokenHash          String    @map("token_hash")
+  userId             String    @map("user_id")
+  expiresAt          DateTime  @map("expires_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  revokedAt          DateTime? @map("revoked_at")
+  lastUsedAt         DateTime? @map("last_used_at")
+  createdByIpAddress String?   @map("created_by_ip_address") @db.VarChar(100)
+  createdByUserAgent String?   @map("created_by_user_agent") @db.Text
+  replacedByTokenId  String?   @map("replaced_by_token_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model ProductBrand {
+  id                BigInt                 @id @default(autoincrement())
+  name              String                 @unique @db.VarChar(255)
+  slug              String                 @unique @db.VarChar(255)
+  description       String?                @db.Text
+  logoMediaId       BigInt?                @map("logo_media_id")
+  showcasePlacement BrandShowcasePlacement @default(NONE) @map("showcase_placement")
+  isProductBrand    Boolean                @default(true) @map("is_product_brand")
+  ownerUserId       String?                @map("owner_user_id")
+  createdByUserId   String?                @map("created_by_user_id")
+  updatedByUserId   String?                @map("updated_by_user_id")
+  deletedAt         DateTime?              @map("deleted_at")
+  deletedByUserId   String?                @map("deleted_by_user_id")
+  createdAt         DateTime               @default(now()) @map("created_at")
+  updatedAt         DateTime               @updatedAt @map("updated_at")
+
+  logoMedia     Media?         @relation("BrandLogoMedia", fields: [logoMediaId], references: [id], onDelete: SetNull)
+  productModels ProductModel[]
+
+  @@index([logoMediaId])
+  @@index([showcasePlacement])
+  @@index([isProductBrand])
+  @@index([ownerUserId])
+  @@map("product_brands")
+}
+
+model ProductCategory {
+  id             BigInt   @id @default(autoincrement())
+  parentId       BigInt?  @map("parent_id")
+  name           String   @db.VarChar(255)
+  subtitle       String?  @db.VarChar(255)
+  slug           String   @unique @db.VarChar(255)
+  description    String?  @db.Text
+  descriptionSeo String?  @map("description_seo") @db.Text
+  imageMediaId   BigInt?  @map("image_media_id")
+  sortOrder      Int      @default(0) @map("sort_order")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  parent     ProductCategory?  @relation("ProductTypeHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  imageMedia Media?            @relation("ProductCategoryImageMedia", fields: [imageMediaId], references: [id], onDelete: SetNull)
+  children   ProductCategory[] @relation("ProductTypeHierarchy")
+
+  productModels ProductModel[]
+
+  @@index([imageMediaId])
+  @@index([sortOrder])
+  @@index([isActive])
+  @@map("product_types")
+}
+
+model Tag {
+  id        BigInt   @id @default(autoincrement())
+  name      String   @unique @db.VarChar(255)
+  slug      String   @unique @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  productModelLinks ProductModelTagLink[]
+  articleLinks      ArticleTagLink[]
+
+  @@map("tags")
+}
+
+model Color {
+  id          BigInt   @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  displayName String   @map("display_name") @db.VarChar(255)
+  slug        String   @unique @db.VarChar(255)
+  hex         String?  @db.VarChar(32)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  products Product[]
+
+  @@map("colors")
+}
+
+model Material {
+  id          BigInt   @id @default(autoincrement())
+  fullname    String   @db.VarChar(255)
+  displayName String   @map("display_name") @db.VarChar(255)
+  description String?  @db.Text
+  color       String?  @db.VarChar(255)
+  type        String?  @db.VarChar(255)
+  slug        String   @unique @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  products Product[]
+
+  @@map("materials")
+}
+
+model Finish {
+  id        BigInt   @id @default(autoincrement())
+  name      String   @db.VarChar(255)
+  slug      String   @unique @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  products Product[]
+
+  @@map("finishes")
+}
+
+model Size {
+  id        BigInt   @id @default(autoincrement())
+  label     String   @unique @db.VarChar(255)
+  widthMm   Int?     @map("width_mm")
+  depthMm   Int?     @map("depth_mm")
+  heightMm  Int?     @map("height_mm")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  products Product[]
+
+  @@map("sizes")
+}
+
+model ProductModel {
+  id             BigInt   @id @default(autoincrement())
+  brandId        BigInt   @map("brand_id")
+  productTypeId  BigInt   @map("product_type_id")
+  baseName       String   @map("base_name") @db.VarChar(255)
+  baseSlug       String   @unique @map("base_slug") @db.VarChar(255)
+  description    String?  @db.Text
+  descriptionSeo String?  @map("description_seo") @db.Text
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  brand       ProductBrand    @relation(fields: [brandId], references: [id], onDelete: Restrict)
+  productType ProductCategory @relation(fields: [productTypeId], references: [id], onDelete: Restrict)
+
+  products   Product[]
+  tagLinks   ProductModelTagLink[]
+  mediaLinks ProductModelMediaLink[]
+
+  @@unique([productTypeId, brandId, baseName])
+  @@index([brandId])
+  @@index([productTypeId])
+  @@map("product_models")
+}
+
+model Product {
+  id                     BigInt   @id @default(autoincrement())
+  modelId                BigInt   @map("model_id")
+  code                   String   @unique @db.VarChar(255)
+  colorId                BigInt?  @map("color_id")
+  sizeId                 BigInt?  @map("size_id")
+  materialId             BigInt?  @map("material_id")
+  finishId               BigInt?  @map("finish_id")
+  widthMm                Int?     @map("width_mm")
+  depthMm                Int?     @map("depth_mm")
+  heightMm               Int?     @map("height_mm")
+  fullnameOverride       String?  @map("fullname_override") @db.VarChar(255)
+  displayNameOverride    String?  @map("display_name_override") @db.VarChar(255)
+  slugOverride           String?  @unique @map("slug_override") @db.VarChar(255)
+  descriptionOverride    String?  @map("description_override") @db.Text
+  descriptionSeoOverride String?  @map("description_seo_override") @db.Text
+  isActive               Boolean  @default(true) @map("is_active")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  model    ProductModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  color    Color?       @relation(fields: [colorId], references: [id], onDelete: SetNull)
+  size     Size?        @relation(fields: [sizeId], references: [id], onDelete: SetNull)
+  material Material?    @relation(fields: [materialId], references: [id], onDelete: SetNull)
+  finish   Finish?      @relation(fields: [finishId], references: [id], onDelete: SetNull)
+
+  mediaLinks ProductMediaLink[]
+
+  @@index([modelId])
+  @@index([colorId])
+  @@index([sizeId])
+  @@index([materialId])
+  @@index([finishId])
+  @@map("products")
+}
+
+model ProductModelTagLink {
+  modelId BigInt @map("model_id")
+  tagId   BigInt @map("tag_id")
+
+  model ProductModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  tag   Tag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([modelId, tagId])
+  @@index([tagId])
+  @@map("product_model_tag_links")
+}
+
+model ProductModelMediaLink {
+  modelId   BigInt        @map("model_id")
+  mediaId   BigInt        @map("media_id")
+  role      MediaLinkRole
+  sortOrder Int           @default(0) @map("sort_order")
+
+  model ProductModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  media Media        @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@id([modelId, mediaId])
+  @@index([mediaId])
+  @@map("product_model_media_links")
+}
+
+model ProductMediaLink {
+  productId BigInt        @map("product_id")
+  mediaId   BigInt        @map("media_id")
+  role      MediaLinkRole
+  sortOrder Int           @default(0) @map("sort_order")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  media   Media   @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@id([productId, mediaId])
+  @@index([mediaId])
+  @@map("product_media_links")
+}
+
+model ArticleCategory {
+  id              BigInt   @id @default(autoincrement())
+  parentId        BigInt?  @map("parent_id")
+  name            String   @db.VarChar(255)
+  slug            String   @unique @db.VarChar(255)
+  color           String   @default("#0a8dc1") @db.VarChar(30)
+  createdByUserId String?  @map("created_by_user_id")
+  updatedByUserId String?  @map("updated_by_user_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  parent        ArticleCategory?  @relation("ArticleCategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children      ArticleCategory[] @relation("ArticleCategoryHierarchy")
+  createdByUser User?             @relation("ArticleCategoryCreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  updatedByUser User?             @relation("ArticleCategoryUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: SetNull)
+  articleLinks  ArticleCategoryLink[]
+
+  @@index([createdByUserId])
+  @@index([updatedByUserId])
+
+  @@map("article_categories")
+}
+
+model Article {
+  id                BigInt    @id @default(autoincrement())
+  authorId          String    @map("author_id")
+  updatedByUserId   String?   @map("updated_by_user_id")
+  publishedByUserId String?   @map("published_by_user_id")
+  archivedByUserId  String?   @map("archived_by_user_id")
+  deletedByUserId   String?   @map("deleted_by_user_id")
+  deletedAt         DateTime? @map("deleted_at")
+
+  title          String        @db.VarChar(255)
+  displayTitle   String?       @map("display_title") @db.VarChar(255)
+  slug           String        @unique @db.VarChar(255)
+  excerpt        String?       @db.Text
+  content        String        @db.Text
+  descriptionSeo String?       @map("description_seo") @db.Text
+  status         ArticleStatus
+  publishedAt    DateTime?     @map("published_at")
+  coverMediaId   BigInt?       @map("cover_media_id")
+  ogTitle        String?       @map("og_title") @db.VarChar(255)
+  ogDescription  String?       @map("og_description") @db.Text
+  ogImageMediaId BigInt?       @map("og_image_media_id")
+  noIndex        Boolean       @default(false) @map("no_index")
+  noFollow       Boolean       @default(false) @map("no_follow")
+  schemaType     String?       @map("schema_type") @db.VarChar(100)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  author       User             @relation("ArticleAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  coverMedia   Media?           @relation("ArticleCoverMedia", fields: [coverMediaId], references: [id], onDelete: SetNull)
+  ogImageMedia Media?           @relation("ArticleOgImageMedia", fields: [ogImageMediaId], references: [id], onDelete: SetNull)
+
+  categoryLinks ArticleCategoryLink[]
+  authorLinks ArticleAuthorLink[]
+  tagLinks    ArticleTagLink[]
+  mediaLinks  ArticleMediaLink[]
+
+  @@index([authorId])
+  @@index([coverMediaId])
+  @@index([ogImageMediaId])
+  @@index([status])
+  @@map("articles")
+}
+
+model ArticleCategoryLink {
+  articleId   BigInt   @map("article_id")
+  categoryId  BigInt   @map("category_id")
+  score       Int
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  article  Article         @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  category ArticleCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@id([articleId, categoryId])
+  @@index([categoryId])
+  @@map("article_category_links")
+}
+
+model ArticleAuthorLink {
+  articleId BigInt   @map("article_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, userId])
+  @@index([userId])
+  @@map("article_author_links")
+}
+
+model ArticleTagLink {
+  articleId BigInt @map("article_id")
+  tagId     BigInt @map("tag_id")
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, tagId])
+  @@index([tagId])
+  @@map("article_tag_links")
+}
+
+model ArticleMediaLink {
+  articleId BigInt        @map("article_id")
+  mediaId   BigInt        @map("media_id")
+  role      MediaLinkRole
+  sortOrder Int           @default(0) @map("sort_order")
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  media   Media   @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, mediaId])
+  @@index([mediaId])
+  @@map("article_media_links")
+}
+
+model Media {
+  id               BigInt          @id @default(autoincrement())
+  kind             MediaKind
+  visibility       MediaVisibility @default(PRIVATE)
+  storagePath      String          @map("storage_path") @db.VarChar(500)
+  originalFilename String?         @map("original_filename") @db.VarChar(255)
+  mimeType         String?         @map("mime_type") @db.VarChar(255)
+  extension        String?         @db.VarChar(32)
+  altText          String?         @map("alt_text") @db.VarChar(500)
+  title            String?         @db.VarChar(255)
+  description      String?         @db.Text
+  widthPx          Int?            @map("width_px")
+  heightPx         Int?            @map("height_px")
+  durationSeconds  Decimal?        @map("duration_seconds") @db.Decimal(10, 2)
+  sizeBytes        BigInt?         @map("size_bytes")
+  sha256Hash       String?         @map("sha256_hash") @db.VarChar(128)
+  isActive         Boolean         @default(true) @map("is_active")
+  uploadedByUserId String?         @map("uploaded_by_user_id")
+  updatedByUserId  String?         @map("updated_by_user_id")
+  deletedAt        DateTime?       @map("deleted_at")
+  deletedByUserId  String?         @map("deleted_by_user_id")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  uploadedByUser User? @relation("MediaUploadedByUser", fields: [uploadedByUserId], references: [id], onDelete: SetNull)
+
+  productModelLinks       ProductModelMediaLink[]
+  productLinks            ProductMediaLink[]
+  brandLogoFor            ProductBrand[]          @relation("BrandLogoMedia")
+  productCategoryImageFor ProductCategory[]       @relation("ProductCategoryImageMedia")
+  staffProfileAvatarFor   StaffProfile[]          @relation("StaffProfileAvatarMedia")
+  articleCoverFor         Article[]               @relation("ArticleCoverMedia")
+  articleOgImageFor       Article[]               @relation("ArticleOgImageMedia")
+  articleMediaLinks       ArticleMediaLink[]
+
+  @@index([uploadedByUserId])
+  @@index([deletedAt])
+  @@map("media")
+}
+
+model AuditLog {
+  id                 BigInt          @id @default(autoincrement())
+  actorUserId        String?         @map("actor_user_id")
+  actionType         AuditActionType @map("action_type")
+  entityType         String          @map("entity_type") @db.VarChar(100)
+  entityId           String          @map("entity_id") @db.VarChar(100)
+  targetLabel        String?         @map("target_label") @db.VarChar(255)
+  summary            String?         @db.Text
+  reason             String?         @db.Text
+  requestId          String?         @map("request_id") @db.VarChar(255)
+  ipAddress          String?         @map("ip_address") @db.VarChar(100)
+  userAgent          String?         @map("user_agent") @db.Text
+  beforeSnapshotJson Json?           @map("before_snapshot_json")
+  afterSnapshotJson  Json?           @map("after_snapshot_json")
+  createdAt          DateTime        @default(now()) @map("created_at")
+
+  actorUser User? @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  fieldChanges    AuditLogFieldChange[]
+  relationChanges AuditLogRelationChange[]
+
+  @@index([actorUserId])
+  @@index([entityType, entityId])
+  @@index([actionType])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model AuditLogFieldChange {
+  id           BigInt  @id @default(autoincrement())
+  auditLogId   BigInt  @map("audit_log_id")
+  fieldName    String  @map("field_name") @db.VarChar(255)
+  oldValueText String? @map("old_value_text") @db.Text
+  newValueText String? @map("new_value_text") @db.Text
+
+  auditLog AuditLog @relation(fields: [auditLogId], references: [id], onDelete: Cascade)
+
+  @@index([auditLogId])
+  @@map("audit_log_field_changes")
+}
+
+model AuditLogRelationChange {
+  id              BigInt          @id @default(autoincrement())
+  auditLogId      BigInt          @map("audit_log_id")
+  relationName    String          @map("relation_name") @db.VarChar(255)
+  actionType      AuditActionType @map("action_type")
+  leftEntityType  String          @map("left_entity_type") @db.VarChar(100)
+  leftEntityId    String          @map("left_entity_id") @db.VarChar(100)
+  rightEntityType String          @map("right_entity_type") @db.VarChar(100)
+  rightEntityId   String          @map("right_entity_id") @db.VarChar(100)
+  detailsJson     Json?           @map("details_json")
+
+  auditLog AuditLog @relation(fields: [auditLogId], references: [id], onDelete: Cascade)
+
+  @@index([auditLogId])
+  @@index([leftEntityType, leftEntityId])
+  @@index([rightEntityType, rightEntityId])
+  @@map("audit_log_relation_changes")
+}
