@@ -1,5 +1,6 @@
 export { default as StaffField } from "./field";
 export { default as StaffBadge } from "./StaffBadge";
+export { default as StaffInput } from "./input";
 export {
   StaffEditorActionsPanel,
   StaffEditorInfoPanel,

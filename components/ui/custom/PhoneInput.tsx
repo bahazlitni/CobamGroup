@@ -42,7 +42,7 @@ export function PhoneInput({
       placeholder={placeholder ?? "+216 ..."}
       disabled={disabled}
       className={cn(
-        "h-12 rounded-md border-cobam-grey px-4 text-base border border-slate-300 bg-white",
+        "h-10 rounded-md border-cobam-grey px-4 text-base border border-slate-300 bg-white",
         fullWidth ? "w-full" : "w-auto"
       )}
     />

@@ -49,6 +49,8 @@ type MediaWithRelations = {
     productVariantLinks: number;
     brandLogoFor: number;
     productCategoryImageFor: number;
+    productFinishImageFor: number;
+    productSubcategoryImageFor: number;
     staffProfileAvatarFor: number;
     articleMediaLinks: number;
     articleCoverFor: number;
@@ -86,6 +88,8 @@ function buildUsage(media: MediaWithRelations): MediaUsageDto {
     media._count.productVariantLinks +
     media._count.brandLogoFor +
     media._count.productCategoryImageFor +
+    media._count.productFinishImageFor +
+    media._count.productSubcategoryImageFor +
     media._count.staffProfileAvatarFor +
     media._count.articleMediaLinks +
     media._count.articleCoverFor +
@@ -96,6 +100,8 @@ function buildUsage(media: MediaWithRelations): MediaUsageDto {
     productVariants: media._count.productVariantLinks,
     brandLogos: media._count.brandLogoFor,
     productCategoryImages: media._count.productCategoryImageFor,
+    productFinishImages: media._count.productFinishImageFor,
+    productSubcategoryImages: media._count.productSubcategoryImageFor,
     staffAvatars: media._count.staffProfileAvatarFor,
     articleAttachments: media._count.articleMediaLinks,
     articleCovers: media._count.articleCoverFor,

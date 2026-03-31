@@ -100,7 +100,7 @@ export default function NavBar({
               alt="COBAM GROUP"
               width={843}
               height={289}
-              className="hidden xl:block object-contain h-12 w-auto"
+              className="hidden xl:block object-contain h-10 w-auto"
               priority
             />
             <Image

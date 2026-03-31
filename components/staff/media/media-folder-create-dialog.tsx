@@ -56,7 +56,7 @@ export default function MediaFolderCreateDialog({
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder="Ex. Logos partenaires"
-            className="h-12 border-slate-300"
+            className="h-10 border-slate-300"
             autoFocus
           />
         </PanelField>

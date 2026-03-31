@@ -14,12 +14,12 @@ export default function Panel({
     pretitle: string;
     title: string;
     description?: string;
-    children: ReactNode[] | ReactNode;
+    children?: ReactNode;
     allowOverflow?: boolean;
 }) {
     return (
     <section className={cn(
-        "max-w-256 rounded-2xl border border-slate-200 bg-white shadow-sm",
+        "max-w-256 rounded-2xl border border-slate-300 bg-white shadow-sm",
         className
     )}>
         <PanelTitle pretitle={pretitle} title={title} description={description} />

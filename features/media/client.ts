@@ -52,6 +52,7 @@ function getErrorMessage(data: ApiFail | ApiOk<unknown> | null | undefined) {
 function buildListParams(params: {
   browseMode?: MediaBrowseMode;
   folderId?: number | null;
+  includeDescendantFolders?: boolean;
   page?: number;
   pageSize?: number;
   q?: string;
@@ -66,6 +67,9 @@ function buildListParams(params: {
   if (params.page != null) search.set("page", String(params.page));
   if (params.pageSize != null) search.set("pageSize", String(params.pageSize));
   if (params.folderId != null) search.set("folderId", String(params.folderId));
+  if (params.includeDescendantFolders) {
+    search.set("includeDescendantFolders", "true");
+  }
   if (params.q?.trim()) search.set("q", params.q.trim());
   if (params.kind && params.kind !== "ALL") search.set("kind", params.kind);
   if (params.status && params.status !== "all") search.set("status", params.status);
@@ -77,9 +81,22 @@ function buildListParams(params: {
   return search.toString();
 }
 
+const mediaFolderPathCache = new Map<string, number | null>();
+
+function normalizeMediaFolderPath(value: string) {
+  return value
+    .replace(/\\/g, "/")
+    .split("/")
+    .map((segment) => segment.trim())
+    .filter(Boolean)
+    .join("/")
+    .toLocaleLowerCase("fr");
+}
+
 export async function listMediaClient(params: {
   browseMode?: MediaBrowseMode;
   folderId?: number | null;
+  includeDescendantFolders?: boolean;
   page?: number;
   pageSize?: number;
   q?: string;
@@ -105,9 +122,33 @@ export async function listMediaClient(params: {
   return data;
 }
 
-export async function uploadMediaClient(
-  input: MediaUploadRequest,
-): Promise<MediaListItemDto> {
+export async function findMediaFolderIdByPathClient(path: string): Promise<number | null> {
+  const normalizedPath = normalizeMediaFolderPath(path);
+
+  if (!normalizedPath) {
+    return null;
+  }
+
+  if (mediaFolderPathCache.has(normalizedPath)) {
+    return mediaFolderPathCache.get(normalizedPath) ?? null;
+  }
+
+  const result = await listMediaClient({
+    browseMode: "library",
+    page: 1,
+    pageSize: 1,
+  });
+
+  const folderId =
+    result.folderOptions.find(
+      (option) => normalizeMediaFolderPath(option.pathLabel) === normalizedPath,
+    )?.id ?? null;
+
+  mediaFolderPathCache.set(normalizedPath, folderId);
+  return folderId;
+}
+
+export async function uploadMediaClient(input: MediaUploadRequest): Promise<MediaListItemDto> {
   const formData = new FormData();
   formData.set("file", input.file);
   if (input.title?.trim()) formData.set("title", input.title.trim());
@@ -261,8 +302,8 @@ export async function deleteMediaClient(
   const res = await staffApiFetch(
     `/api/staff/medias/${mediaId}${params.size > 0 ? `?${params.toString()}` : ""}`,
     {
-    method: "DELETE",
-    auth: true,
+      method: "DELETE",
+      auth: true,
     },
   );
   const data = await parseJsonSafe<MediaDeleteResponse>(res);
@@ -290,16 +331,13 @@ export async function fetchMediaBlobClient(
   const res = await staffApiFetch(
     `/api/staff/medias/${mediaId}/file${params.size > 0 ? `?${params.toString()}` : ""}`,
     {
-    method: "GET",
-    auth: true,
+      method: "GET",
+      auth: true,
     },
   );
 
   if (!res.ok) {
-    throw new MediaClientError(
-      "Impossible de charger le fichier média.",
-      res.status,
-    );
+    throw new MediaClientError("Impossible de charger le fichier média.", res.status);
   }
 
   return await res.blob();

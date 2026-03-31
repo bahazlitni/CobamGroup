@@ -38,7 +38,7 @@ export default function ImagePreview({
   if (effectiveSrc) {
     return (
       <div
-        className={cn("overflow-hidden border border-slate-200 bg-slate-50", className)}
+        className={cn("overflow-hidden border border-slate-300 bg-slate-50", className)}
         style={style}
       >
         <Image
@@ -57,7 +57,7 @@ export default function ImagePreview({
     return (
       <div
         className={cn(
-          "flex items-center justify-center overflow-hidden border border-slate-200 bg-slate-50 animate-pulse",
+          "flex items-center justify-center overflow-hidden border border-slate-300 bg-slate-50 animate-pulse",
           className,
         )}
         style={style}

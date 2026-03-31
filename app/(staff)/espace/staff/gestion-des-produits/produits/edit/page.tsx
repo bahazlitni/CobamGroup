@@ -24,7 +24,7 @@ import {
 } from "@/features/products/client";
 import {
   createEmptyProductAttributeEditorState,
-  createEmptyProductVariantEditorState,
+  createInheritedProductVariantEditorState,
   createEmptyProductEditorFormState,
   duplicateProductVariantEditorState,
   moveProductVariantEditorStates,
@@ -33,10 +33,7 @@ import {
   type ProductEditorFormState,
 } from "@/features/products/form";
 import { useProductDetail } from "@/features/products/hooks/use-product-detail";
-import {
-  EMPTY_PRODUCT_FORM_OPTIONS,
-  type ProductFormOptionsDto,
-} from "@/features/products/types";
+import { EMPTY_PRODUCT_FORM_OPTIONS, type ProductFormOptionsDto } from "@/features/products/types";
 
 type EditableField = keyof ProductEditorFormState;
 type EditableAttributeField = keyof ProductEditorFormState["attributes"][number];
@@ -75,13 +72,9 @@ function NewProductEditor() {
   const { user: authUser, isLoading: isAuthLoading } = useStaffSessionContext();
   const canCreateProduct = authUser ? canCreateProducts(authUser) : false;
 
-  const [initialForm] = useState<ProductEditorFormState>(() =>
-    createEmptyProductEditorFormState(),
-  );
+  const [initialForm] = useState<ProductEditorFormState>(() => createEmptyProductEditorFormState());
   const [form, setForm] = useState<ProductEditorFormState>(initialForm);
-  const [options, setOptions] = useState<ProductFormOptionsDto>(
-    EMPTY_PRODUCT_FORM_OPTIONS,
-  );
+  const [options, setOptions] = useState<ProductFormOptionsDto>(EMPTY_PRODUCT_FORM_OPTIONS);
   const [isLoadingOptions, setIsLoadingOptions] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const isDirty = useMemo(
@@ -128,10 +121,7 @@ function NewProductEditor() {
     };
   }, [canCreateProduct, isAuthLoading]);
 
-  const setField = (
-    field: EditableField,
-    value: ProductEditorFormState[EditableField],
-  ) => {
+  const setField = (field: EditableField, value: ProductEditorFormState[EditableField]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -140,13 +130,8 @@ function NewProductEditor() {
       ...prev,
       variants: [
         ...prev.variants,
-        createEmptyProductVariantEditorState({
-          lifecycleStatus: prev.lifecycleStatus,
-          visibility: prev.visibility,
-          attributeValues: syncVariantAttributeValueEditorStates(
-            prev.attributes,
-            [],
-          ),
+        createInheritedProductVariantEditorState({
+          attributes: prev.attributes,
         }),
       ],
     }));
@@ -177,9 +162,7 @@ function NewProductEditor() {
 
   const handleAttributeRemove = (formKey: string) => {
     setForm((prev) => {
-      const nextAttributes = prev.attributes.filter(
-        (attribute) => attribute.formKey !== formKey,
-      );
+      const nextAttributes = prev.attributes.filter((attribute) => attribute.formKey !== formKey);
 
       return {
         ...prev,
@@ -202,9 +185,7 @@ function NewProductEditor() {
   ) => {
     setForm((prev) => {
       const nextAttributes = prev.attributes.map((attribute) =>
-        attribute.formKey === formKey
-          ? { ...attribute, [field]: value }
-          : attribute,
+        attribute.formKey === formKey ? { ...attribute, [field]: value } : attribute,
       );
 
       return {
@@ -237,24 +218,25 @@ function NewProductEditor() {
   const handleVariantRemove = (formKey: string) => {
     setForm((prev) => ({
       ...prev,
-      variants: prev.variants.filter((variant) => variant.formKey !== formKey),
+      variants:
+        prev.variants[0]?.formKey === formKey
+          ? prev.variants
+          : prev.variants.filter((variant) => variant.formKey !== formKey),
     }));
   };
 
   const handleVariantDuplicate = (formKey: string) => {
     setForm((prev) => {
-      const sourceVariant = prev.variants.find(
-        (variant) => variant.formKey === formKey,
-      );
+      const sourceVariant = prev.variants.find((variant) => variant.formKey === formKey);
 
       if (!sourceVariant) {
         return prev;
       }
 
-      const insertIndex = prev.variants.findIndex(
-        (variant) => variant.formKey === formKey,
-      );
-      const duplicatedVariant = duplicateProductVariantEditorState(sourceVariant);
+      const insertIndex = prev.variants.findIndex((variant) => variant.formKey === formKey);
+      const duplicatedVariant = duplicateProductVariantEditorState(sourceVariant, {
+        isDefaultSource: insertIndex === 0,
+      });
       const nextVariants = [...prev.variants];
       nextVariants.splice(insertIndex + 1, 0, duplicatedVariant);
 
@@ -294,9 +276,7 @@ function NewProductEditor() {
     }));
   };
 
-  const handleVariantChange = <
-    Field extends keyof ProductEditorFormState["variants"][number],
-  >(
+  const handleVariantChange = <Field extends keyof ProductEditorFormState["variants"][number]>(
     formKey: string,
     field: Field,
     value: ProductEditorFormState["variants"][number][Field],
@@ -320,9 +300,7 @@ function NewProductEditor() {
     try {
       const product = await createProductClient(productEditorFormToPayload(form));
       toast.success("Famille produit créée.");
-      router.replace(
-        `/espace/staff/gestion-des-produits/produits/edit?id=${product.id}`,
-      );
+      router.replace(`/espace/staff/gestion-des-produits/produits/edit?id=${product.id}`);
       return true;
     } catch (err: unknown) {
       const message =
@@ -345,15 +323,13 @@ function NewProductEditor() {
   if (!canCreateProduct) {
     return (
       <div className="mx-auto max-w-md rounded-2xl border border-red-100 bg-white p-6 shadow-sm">
-        <h1 className="mb-2 text-lg font-semibold text-cobam-dark-blue">
-          Accès refusé
-        </h1>
+        <h1 className="text-cobam-dark-blue mb-2 text-lg font-semibold">Accès refusé</h1>
         <p className="mb-4 text-sm text-slate-600">
           Vous n&apos;avez pas l&apos;autorisation de créer une famille produit.
         </p>
         <Link
           href="/espace/staff/gestion-des-produits/produits"
-          className="inline-flex items-center gap-2 rounded-xl bg-cobam-dark-blue px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-cobam-water-blue"
+          className="bg-cobam-dark-blue hover:bg-cobam-water-blue inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-colors"
         >
           Retour
         </Link>
@@ -496,10 +472,7 @@ function ExistingProductEditor({ productId }: { productId: number }) {
         isSaving={isSaving}
         isDeleting={isDeleting}
         onFieldChange={
-          setField as (
-            field: EditableField,
-            value: ProductEditorFormState[EditableField],
-          ) => void
+          setField as (field: EditableField, value: ProductEditorFormState[EditableField]) => void
         }
         onAttributeAdd={addAttribute}
         onAttributeRemove={removeAttribute}
@@ -549,7 +522,7 @@ function ExistingProductEditor({ productId }: { productId: number }) {
 function ProductEditorLoading() {
   return (
     <div className="flex min-h-[40vh] items-center justify-center">
-      <div className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+      <div className="inline-flex items-center gap-3 rounded-2xl border border-slate-300 bg-white px-5 py-4 shadow-sm">
         <Loading />
       </div>
     </div>

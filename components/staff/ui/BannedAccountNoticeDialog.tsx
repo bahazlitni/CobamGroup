@@ -29,7 +29,7 @@ export default function BannedAccountNoticeDialog({
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/50 px-4">
       <div className="w-full max-w-xl rounded-[28px] border border-red-200 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.26)]">
         <div className="border-b border-red-100 px-6 py-5">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-600">
+          <div className="inline-flex h-10 w-12 items-center justify-center rounded-full bg-red-50 text-red-600">
             <ShieldAlert className="h-6 w-6" />
           </div>
           <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-red-500">
@@ -45,7 +45,7 @@ export default function BannedAccountNoticeDialog({
         </div>
 
         <div className="space-y-5 px-6 py-6">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+          <div className="rounded-2xl border border-slate-300 bg-slate-50/70 p-4">
             <p className="text-sm font-semibold text-cobam-dark-blue">
               Motifs communiques
             </p>
@@ -67,7 +67,7 @@ export default function BannedAccountNoticeDialog({
           </div>
 
           {banDetails?.description ? (
-            <div className="rounded-2xl border border-slate-200 p-4">
+            <div className="rounded-2xl border border-slate-300 p-4">
               <p className="text-sm font-semibold text-cobam-dark-blue">
                 Description complementaire
               </p>
@@ -77,7 +77,7 @@ export default function BannedAccountNoticeDialog({
             </div>
           ) : null}
 
-          <label className="flex items-start gap-3 rounded-2xl border border-slate-200 p-4 text-sm text-slate-600">
+          <label className="flex items-start gap-3 rounded-2xl border border-slate-300 p-4 text-sm text-slate-600">
             <input
               type="checkbox"
               checked={remember}

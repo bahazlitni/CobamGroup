@@ -62,7 +62,7 @@ export default function PanelSelect({
       <SelectTrigger
         id={id}
         className={cn(
-          "!h-12 rounded-md border border-slate-300 bg-white px-4",
+          "!h-10 rounded-md border border-slate-300 bg-white px-4",
           fullWidth ? "!w-full" : "!w-auto",
           triggerClassName,
         )}

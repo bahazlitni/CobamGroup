@@ -246,7 +246,7 @@ export default function MediaUploadDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[92vh] overflow-y-auto p-0 sm:max-w-5xl">
-        <DialogHeader className="border-b border-slate-200 px-6 py-6">
+        <DialogHeader className="border-b border-slate-300 px-6 py-6">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <UploadCloud className="h-5 w-5" />
             Importer plusieurs fichiers
@@ -341,8 +341,8 @@ export default function MediaUploadDialog({
           </div>
 
           <div className="space-y-4">
-            <Card className="rounded-[2rem] border border-slate-200 py-0 ring-0">
-              <CardHeader className="border-b border-slate-200 px-5 py-4">
+            <Card className="rounded-[2rem] border border-slate-300 py-0 ring-0">
+              <CardHeader className="border-b border-slate-300 px-5 py-4">
                 <CardTitle className="text-base text-cobam-dark-blue">
                   Résumé de l&apos;import
                 </CardTitle>
@@ -367,7 +367,7 @@ export default function MediaUploadDialog({
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3">
                     <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
                       En attente
                     </p>
@@ -375,7 +375,7 @@ export default function MediaUploadDialog({
                       {summary.pendingCount + summary.uploadingCount}
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3">
                     <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
                       Importes
                     </p>
@@ -383,7 +383,7 @@ export default function MediaUploadDialog({
                       {summary.successCount}
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3">
                     <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
                       En erreur
                     </p>
@@ -391,7 +391,7 @@ export default function MediaUploadDialog({
                       {summary.errorCount}
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3">
                     <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
                       Volume
                     </p>
@@ -404,8 +404,8 @@ export default function MediaUploadDialog({
             </Card>
 
             {hasSingleFile ? (
-              <Card className="rounded-[2rem] border border-slate-200 py-0 ring-0">
-                <CardHeader className="border-b border-slate-200 px-5 py-4">
+              <Card className="rounded-[2rem] border border-slate-300 py-0 ring-0">
+                <CardHeader className="border-b border-slate-300 px-5 py-4">
                   <CardTitle className="text-base text-cobam-dark-blue">
                     Metadonnees du fichier
                   </CardTitle>
@@ -460,7 +460,7 @@ export default function MediaUploadDialog({
                       value={title}
                       onChange={(event) => setTitle(event.target.value)}
                       placeholder="Nom d'affichage facultatif"
-                      className="h-12 rounded-2xl border-slate-200"
+                      className="h-10 rounded-2xl border-slate-300"
                     />
                   </div>
 
@@ -472,7 +472,7 @@ export default function MediaUploadDialog({
                       value={altText}
                       onChange={(event) => setAltText(event.target.value)}
                       placeholder="Utile surtout pour une image"
-                      className="h-12 rounded-2xl border-slate-200"
+                      className="h-10 rounded-2xl border-slate-300"
                     />
                   </div>
 
@@ -484,14 +484,14 @@ export default function MediaUploadDialog({
                       value={description}
                       onChange={(event) => setDescription(event.target.value)}
                       placeholder="Contexte, usage ou notes internes"
-                      className="min-h-28 rounded-2xl border-slate-200"
+                      className="min-h-28 rounded-2xl border-slate-300"
                     />
                   </div>
                 </CardContent>
               </Card>
             ) : (
-              <Card className="rounded-[2rem] border border-slate-200 py-0 ring-0">
-                <CardHeader className="border-b border-slate-200 px-5 py-4">
+              <Card className="rounded-[2rem] border border-slate-300 py-0 ring-0">
+                <CardHeader className="border-b border-slate-300 px-5 py-4">
                   <CardTitle className="flex items-center gap-2 text-base text-cobam-dark-blue">
                     <Info className="h-4 w-4" />
                     Import par lot
@@ -529,7 +529,7 @@ export default function MediaUploadDialog({
           </div>
         </div>
 
-        <DialogFooter className="border-t border-slate-200 px-6 py-4">
+        <DialogFooter className="border-t border-slate-300 px-6 py-4">
           <AnimatedUIButton
             type="button"
             variant="light"

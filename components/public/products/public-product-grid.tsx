@@ -14,7 +14,7 @@ type PublicProductGridProps = {
 
 function PublicProductCardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-[28px] border border-slate-300 bg-white shadow-sm">
       <div className="aspect-[4/3] animate-pulse bg-slate-200" />
       <div className="space-y-3 p-6">
         <div className="h-3 w-24 animate-pulse rounded-full bg-slate-200" />
@@ -168,7 +168,7 @@ export default function PublicProductGrid({
           : null}
       </div>
 
-      <div ref={sentinelRef} className="flex min-h-12 items-center justify-center">
+      <div ref={sentinelRef} className="flex min-h-10 items-center justify-center">
         {errorMessage ? (
           <div className="flex flex-col items-center gap-3 rounded-[24px] border border-rose-200 bg-rose-50 px-5 py-4 text-center text-sm text-rose-700">
             <span>{errorMessage}</span>
@@ -182,7 +182,7 @@ export default function PublicProductGrid({
             </Button>
           </div>
         ) : hasMore ? (
-          <div className="inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-500 shadow-sm">
+          <div className="inline-flex items-center gap-3 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-500 shadow-sm">
             <Loader2 className={`h-4 w-4 text-cobam-water-blue ${isLoading ? "animate-spin" : ""}`} />
             {isLoading ? "Chargement d'autres produits..." : "Chargement automatique..."}
           </div>

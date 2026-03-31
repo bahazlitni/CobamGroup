@@ -214,7 +214,7 @@ export default function UserDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-[40vh] flex items-center justify-center">
-        <div className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+        <div className="inline-flex items-center gap-3 rounded-2xl border border-slate-300 bg-white px-5 py-4 shadow-sm">
           <Loading />
         </div>
       </div>

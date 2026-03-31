@@ -13,7 +13,7 @@ export default function PublicArticleCard({
   return (
     <Link
       href={`/actualites/${article.slug}`}
-      className="group flex h-full flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+      className="group flex h-full flex-col overflow-hidden rounded-[28px] border border-slate-300 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
     >
       <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
         {article.coverImageThumbnailUrl ? (

@@ -43,7 +43,7 @@ function MediaGroupHeader({
         : "indeterminate";
 
   return (
-    <div className="col-span-full flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3">
+    <div className="col-span-full flex items-center justify-between gap-4 rounded-2xl border border-slate-300 bg-slate-50/80 px-4 py-3">
       <div className="flex items-center gap-3">
         <Checkbox
           checked={checked}
@@ -80,7 +80,7 @@ function MediaFolderSectionHeader({
         : "indeterminate";
 
   return (
-    <div className="col-span-full flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3">
+    <div className="col-span-full flex items-center justify-between gap-4 rounded-2xl border border-slate-300 bg-slate-50/80 px-4 py-3">
       <div className="flex items-center gap-3">
         <Checkbox
           checked={checked}

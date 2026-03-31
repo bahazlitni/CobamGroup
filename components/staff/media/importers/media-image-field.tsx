@@ -19,8 +19,9 @@ import {
 } from "./aspect-ratio";
 
 type MediaImageFieldProps = {
-  requireAspectRatio?: boolean
-  aspectRatio?: string
+  requireAspectRatio?: boolean;
+  aspectRatio?: string;
+  folderPath?: string;
   disabled?: boolean;
   label: string;
   description?: string;
@@ -32,12 +33,13 @@ type MediaImageFieldProps = {
   previewClassName?: string;
   previewImageClassName?: string;
   fallback?: ReactNode;
-  noImagePreview?: boolean
+  noImagePreview?: boolean;
 };
 
 export default function MediaImageField({
   requireAspectRatio = false,
   aspectRatio,
+  folderPath,
   disabled = false,
   label,
   description,
@@ -95,20 +97,12 @@ export default function MediaImageField({
     };
   }, [mediaId]);
 
-  const media =
-    mediaId != null && loadedState?.mediaId === mediaId
-      ? loadedState.media
-      : null;
-  const error =
-    mediaId != null && loadedState?.mediaId === mediaId
-      ? loadedState.error
-      : null;
+  const media = mediaId != null && loadedState?.mediaId === mediaId ? loadedState.media : null;
+  const error = mediaId != null && loadedState?.mediaId === mediaId ? loadedState.error : null;
   const isLoading = mediaId != null && loadedState?.mediaId !== mediaId;
   const requiredAspectRatio = parseAspectRatio(aspectRatio);
   const mediaAspectRatio = getAspectRatioValue(media);
-  const useWideLayout = isWideAspectRatio(
-    mediaAspectRatio ?? requiredAspectRatio?.value ?? null,
-  );
+  const useWideLayout = isWideAspectRatio(mediaAspectRatio ?? requiredAspectRatio?.value ?? null);
   const previewAspectRatio = getAspectRatioCssValue(requiredAspectRatio, media);
   const selectedImageAspectMismatch =
     Boolean(requireAspectRatio && requiredAspectRatio && media) &&
@@ -125,30 +119,31 @@ export default function MediaImageField({
                 : "grid gap-5 md:grid-cols-[auto_minmax(0,1fr)] md:items-start"
             }
           >
-            
-            {!noImagePreview && <ImagePreview
-              mediaId={mediaId}
-              alt={label}
-              className={
-                previewClassName ??
-                (useWideLayout ? "w-full rounded-3xl" : "h-32 w-32 rounded-3xl")
-              }
-              imageClassName={previewImageClassName}
-              fallback={fallback}
-              style={previewAspectRatio ? { aspectRatio: previewAspectRatio } : undefined}
-            />}
+            {!noImagePreview && (
+              <ImagePreview
+                mediaId={mediaId}
+                alt={label}
+                className={
+                  previewClassName ??
+                  (useWideLayout ? "w-full rounded-3xl" : "h-32 w-32 rounded-3xl")
+                }
+                imageClassName={previewImageClassName}
+                fallback={fallback}
+                style={previewAspectRatio ? { aspectRatio: previewAspectRatio } : undefined}
+              />
+            )}
 
             <div className="min-w-0 flex-1 space-y-2">
               <div className="space-y-1">
-                <p className="text-sm font-semibold text-cobam-dark-blue">{label}</p>
+                <p className="text-cobam-dark-blue text-sm font-semibold">{label}</p>
                 {description ? (
                   <p className="text-sm leading-6 text-slate-500">{description}</p>
                 ) : null}
               </div>
 
               {media ? (
-                <div className="space-y-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                  <p className="truncate text-sm font-medium text-cobam-dark-blue">
+                <div className="space-y-1 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3">
+                  <p className="text-cobam-dark-blue truncate text-sm font-medium">
                     {getMediaDisplayTitle(media)}
                   </p>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
@@ -165,12 +160,8 @@ export default function MediaImageField({
                   ) : null}
                 </div>
               ) : (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-                  {isLoading
-                    ? "Chargement de l'image..."
-                    : error
-                      ? error
-                      : emptyLabel}
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                  {isLoading ? "Chargement de l'image..." : error ? error : emptyLabel}
                 </div>
               )}
             </div>
@@ -193,7 +184,7 @@ export default function MediaImageField({
                 type="button"
                 onClick={() => onChange(null)}
                 variant="light"
-                className="border-slate-200"
+                className="border-slate-300"
                 disabled={disabled}
               >
                 <span className="inline-flex items-center gap-2">
@@ -224,10 +215,13 @@ export default function MediaImageField({
         open={open}
         onOpenChange={setOpen}
         title={dialogTitle ?? label}
-        description={dialogDescription ?? description ?? "Choisissez une image depuis la mediatheque."}
+        description={
+          dialogDescription ?? description ?? "Choisissez une image depuis la mediatheque."
+        }
         selectedMediaId={mediaId}
         aspectRatio={aspectRatio}
         requireAspectRatio={requireAspectRatio}
+        folderPath={folderPath}
         onSelect={(selectedMedia) => {
           setLoadedState({
             mediaId: selectedMedia.id,

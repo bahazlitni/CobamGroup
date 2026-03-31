@@ -3,6 +3,7 @@ import {
   PRODUCT_COMMERCIAL_MODE_OPTIONS,
   PRODUCT_LIFECYCLE_STATUS_OPTIONS,
   PRODUCT_PAGE_SIZE_OPTIONS,
+  PRODUCT_PRICE_UNIT_OPTIONS,
   PRODUCT_PRICE_VISIBILITY_OPTIONS,
   PRODUCT_VISIBILITY_OPTIONS,
   type ProductAttributeDataType,
@@ -12,6 +13,7 @@ import {
   type ProductLifecycleStatus,
   type ProductListQuery,
   type ProductPageSize,
+  type ProductPriceUnit,
   type ProductPriceVisibility,
   type ProductUpdateInput,
   type ProductVariantAttributeValueInput,
@@ -34,9 +36,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function parseRequiredString(value: unknown, fieldName: string): string {
   if (typeof value !== "string" || !value.trim()) {
-    throw new ProductValidationError(
-      `Missing or invalid field "${fieldName}"`,
-    );
+    throw new ProductValidationError(`Missing or invalid field "${fieldName}"`);
   }
 
   return value.trim();
@@ -70,25 +70,25 @@ function parseOptionalPriceString(value: unknown, fieldName: string) {
   return normalizedValue;
 }
 
-function assertPricePairConsistency(
-  basePriceAmount: string | null,
-  currentPriceAmount: string | null,
-  fieldPrefix: string,
-) {
-  if (currentPriceAmount != null && basePriceAmount == null) {
-    throw new ProductValidationError(
-      `Invalid ${fieldPrefix}: current price requires a base price`,
-    );
+function parseNonNegativeFloat(value: unknown, fieldName: string) {
+  if (value == null || value === "") {
+    return 19;
   }
+
+  const normalizedValue =
+    typeof value === "string" ? value.replace(",", ".").trim() : String(value);
+  const parsed = Number(normalizedValue);
+
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new ProductValidationError(`Invalid ${fieldName}`);
+  }
+
+  return parsed;
 }
 
 function parsePositiveInteger(value: unknown, fieldName: string): number {
   const parsed =
-    typeof value === "number"
-      ? value
-      : typeof value === "string"
-        ? Number(value)
-        : Number.NaN;
+    typeof value === "number" ? value : typeof value === "string" ? Number(value) : Number.NaN;
 
   if (!Number.isInteger(parsed) || parsed <= 0) {
     throw new ProductValidationError(`Invalid ${fieldName}`);
@@ -99,11 +99,7 @@ function parsePositiveInteger(value: unknown, fieldName: string): number {
 
 function parseNonNegativeInteger(value: unknown, fieldName: string): number {
   const parsed =
-    typeof value === "number"
-      ? value
-      : typeof value === "string"
-        ? Number(value)
-        : Number.NaN;
+    typeof value === "number" ? value : typeof value === "string" ? Number(value) : Number.NaN;
 
   if (!Number.isInteger(parsed) || parsed < 0) {
     throw new ProductValidationError(`Invalid ${fieldName}`);
@@ -112,20 +108,13 @@ function parseNonNegativeInteger(value: unknown, fieldName: string): number {
   return parsed;
 }
 
-function parsePositiveIntegerArray(
-  value: unknown,
-  fieldName: string,
-): number[] {
+function parsePositiveIntegerArray(value: unknown, fieldName: string): number[] {
   if (!Array.isArray(value)) {
     throw new ProductValidationError(`Invalid ${fieldName}`);
   }
 
   const parsed = Array.from(
-    new Set(
-      value.map((item, index) =>
-        parsePositiveInteger(item, `${fieldName}[${index}]`),
-      ),
-    ),
+    new Set(value.map((item, index) => parsePositiveInteger(item, `${fieldName}[${index}]`))),
   );
 
   if (parsed.length === 0) {
@@ -135,15 +124,24 @@ function parsePositiveIntegerArray(
   return parsed;
 }
 
-function parseOptionalPositiveIntegerArray(
+function parseOptionalPositiveIntegerCollection(
   value: unknown,
-  fieldName: string,
+  arrayFieldName: string,
+  singleFieldName = arrayFieldName,
 ): number[] {
-  if (value == null) {
+  if (value == null || value === "") {
     return [];
   }
 
-  return parsePositiveIntegerArray(value, fieldName);
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return [];
+    }
+
+    return parsePositiveIntegerArray(value, arrayFieldName);
+  }
+
+  return [parsePositiveInteger(value, singleFieldName)];
 }
 
 function parseEnumValue<T extends readonly string[]>(
@@ -156,6 +154,18 @@ function parseEnumValue<T extends readonly string[]>(
   }
 
   return value as T[number];
+}
+
+function parseOptionalEnumValue<T extends readonly string[]>(
+  value: unknown,
+  options: T,
+  fieldName: string,
+): T[number] | null {
+  if (value == null || value === "") {
+    return null;
+  }
+
+  return parseEnumValue(value, options, fieldName);
 }
 
 function parseStringArray(value: unknown, fieldName: string): string[] {
@@ -196,28 +206,24 @@ function parseOptionalId(value: unknown, fieldName: string) {
   return parsePositiveInteger(value, fieldName);
 }
 
-function parseProductAttributeInput(
-  raw: unknown,
-  index: number,
-): ProductAttributeInput {
+function parseProductAttributeInput(raw: unknown, index: number): ProductAttributeInput {
   if (!isRecord(raw)) {
     throw new ProductValidationError(`Invalid attributes[${index}]`);
   }
+
+  const dataType = parseEnumValue(
+    raw.dataType,
+    PRODUCT_ATTRIBUTE_DATA_TYPE_OPTIONS,
+    `attributes[${index}].dataType`,
+  ) as ProductAttributeDataType;
 
   return {
     tempKey: parseRequiredString(raw.tempKey, `attributes[${index}].tempKey`),
     id: parseOptionalId(raw.id, `attributes[${index}].id`),
     name: parseRequiredString(raw.name, `attributes[${index}].name`),
-    dataType: parseEnumValue(
-      raw.dataType,
-      PRODUCT_ATTRIBUTE_DATA_TYPE_OPTIONS,
-      `attributes[${index}].dataType`,
-    ) as ProductAttributeDataType,
-    unit: parseOptionalString(raw.unit),
-    sortOrder: parseNonNegativeInteger(
-      raw.sortOrder ?? index,
-      `attributes[${index}].sortOrder`,
-    ),
+    dataType,
+    unit: dataType === "NUMBER" ? parseOptionalString(raw.unit) : null,
+    sortOrder: parseNonNegativeInteger(raw.sortOrder ?? index, `attributes[${index}].sortOrder`),
   };
 }
 
@@ -273,9 +279,7 @@ function parseVariantAttributeValues(
   }
 
   if (!Array.isArray(value)) {
-    throw new ProductValidationError(
-      `Invalid variants[${variantIndex}].attributeValues`,
-    );
+    throw new ProductValidationError(`Invalid variants[${variantIndex}].attributeValues`);
   }
 
   return value.map((item, valueIndex) =>
@@ -283,10 +287,7 @@ function parseVariantAttributeValues(
   );
 }
 
-function parseProductVariantInput(
-  raw: unknown,
-  index: number,
-): ProductVariantInput {
+function parseProductVariantInput(raw: unknown, index: number): ProductVariantInput {
   if (!isRecord(raw)) {
     throw new ProductValidationError(`Invalid variants[${index}]`);
   }
@@ -294,46 +295,38 @@ function parseProductVariantInput(
   return {
     id: parseOptionalId(raw.id, `variants[${index}].id`),
     sku: parseRequiredString(raw.sku, `variants[${index}].sku`),
-    slug: parseRequiredString(raw.slug, `variants[${index}].slug`),
-    title: parseRequiredString(raw.title, `variants[${index}].title`),
-    subtitle: parseOptionalString(raw.subtitle),
-    description: parseOptionalString(raw.description),
-    lifecycleStatus: parseEnumValue(
+    name: parseRequiredString(raw.name, `variants[${index}].name`),
+    description: parseRequiredString(raw.description, `variants[${index}].description`),
+    descriptionSeo: parseRequiredString(raw.descriptionSeo, `variants[${index}].descriptionSeo`),
+    lifecycleStatus: parseOptionalEnumValue(
       raw.lifecycleStatus,
       PRODUCT_LIFECYCLE_STATUS_OPTIONS,
       `variants[${index}].lifecycleStatus`,
-    ) as ProductLifecycleStatus,
-    visibility: parseEnumValue(
+    ) as ProductLifecycleStatus | null,
+    visibility: parseOptionalEnumValue(
       raw.visibility,
       PRODUCT_VISIBILITY_OPTIONS,
       `variants[${index}].visibility`,
-    ) as ProductVisibility,
-    commercialMode: parseEnumValue(
+    ) as ProductVisibility | null,
+    commercialMode: parseOptionalEnumValue(
       raw.commercialMode,
       PRODUCT_COMMERCIAL_MODE_OPTIONS,
       `variants[${index}].commercialMode`,
-    ) as ProductCommercialMode,
-    priceVisibility: parseEnumValue(
+    ) as ProductCommercialMode | null,
+    priceVisibility: parseOptionalEnumValue(
       raw.priceVisibility,
       PRODUCT_PRICE_VISIBILITY_OPTIONS,
       `variants[${index}].priceVisibility`,
-    ) as ProductPriceVisibility,
-    isPromoted: Boolean(raw.isPromoted),
+    ) as ProductPriceVisibility | null,
     basePriceAmount: parseOptionalPriceString(
       raw.basePriceAmount,
       `variants[${index}].basePriceAmount`,
     ),
-    currentPriceAmount: parseOptionalPriceString(
-      raw.currentPriceAmount,
-      `variants[${index}].currentPriceAmount`,
-    ),
-    sortOrder: parseNonNegativeInteger(
-      raw.sortOrder ?? index,
-      `variants[${index}].sortOrder`,
-    ),
-    mediaIds: parseOptionalPositiveIntegerArray(
-      raw.mediaIds,
+    sortOrder: parseNonNegativeInteger(raw.sortOrder ?? index, `variants[${index}].sortOrder`),
+    mediaIds: parseOptionalPositiveIntegerCollection(
+      raw.mediaIds ?? raw.mediaId,
       `variants[${index}].mediaIds`,
+      `variants[${index}].mediaId`,
     ),
     attributeValues: parseVariantAttributeValues(raw.attributeValues, index),
   };
@@ -348,32 +341,20 @@ function parseVariants(value: unknown): ProductVariantInput[] {
     throw new ProductValidationError("Invalid variants");
   }
 
-  return value.map((item, index) => {
-    const variant = parseProductVariantInput(item, index);
-    assertPricePairConsistency(
-      variant.basePriceAmount,
-      variant.currentPriceAmount,
-      `variants[${index}]`,
-    );
-    return variant;
-  });
+  return value.map((item, index) => parseProductVariantInput(item, index));
 }
 
 export function parseProductIdParam(idParam: string): number {
   return parsePositiveInteger(idParam, "id");
 }
 
-export function parseProductListQuery(
-  searchParams: URLSearchParams,
-): ProductListQuery {
+export function parseProductListQuery(searchParams: URLSearchParams): ProductListQuery {
   const pageRaw = Number(searchParams.get("page") ?? "1");
   const page = Number.isInteger(pageRaw) && pageRaw > 0 ? pageRaw : 1;
 
   const pageSizeRaw = Number(searchParams.get("pageSize") ?? "20");
   const pageSize = (
-    PRODUCT_PAGE_SIZE_OPTIONS.includes(pageSizeRaw as ProductPageSize)
-      ? pageSizeRaw
-      : 20
+    PRODUCT_PAGE_SIZE_OPTIONS.includes(pageSizeRaw as ProductPageSize) ? pageSizeRaw : 20
   ) as ProductPageSize;
 
   const qRaw = searchParams.get("q");
@@ -404,22 +385,15 @@ function parseProductInputBase(raw: unknown): ProductCreateInput {
     ),
     mainImageMediaId: parseOptionalId(raw.mainImageMediaId, "mainImageMediaId"),
     name: parseRequiredString(raw.name, "name"),
-    slug: parseRequiredString(raw.slug, "slug"),
     subtitle: parseOptionalString(raw.subtitle),
-    excerpt: parseOptionalString(raw.excerpt),
     description: parseOptionalString(raw.description),
     descriptionSeo: parseOptionalString(raw.descriptionSeo),
-    lifecycleStatus: parseEnumValue(
-      raw.lifecycleStatus,
-      PRODUCT_LIFECYCLE_STATUS_OPTIONS,
-      "lifecycleStatus",
-    ) as ProductLifecycleStatus,
-    visibility: parseEnumValue(
-      raw.visibility,
-      PRODUCT_VISIBILITY_OPTIONS,
-      "visibility",
-    ) as ProductVisibility,
-    isPromoted: Boolean(raw.isPromoted),
+    priceUnit: parseEnumValue(
+      raw.priceUnit ?? "ITEM",
+      PRODUCT_PRICE_UNIT_OPTIONS,
+      "priceUnit",
+    ) as ProductPriceUnit,
+    vatRate: parseNonNegativeFloat(raw.vatRate ?? 19, "vatRate"),
     tagNames: parseStringArray(raw.tagNames, "tagNames"),
     attributes: parseAttributes(raw.attributes),
     variants: parseVariants(raw.variants),

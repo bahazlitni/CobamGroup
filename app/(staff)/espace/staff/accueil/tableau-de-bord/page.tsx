@@ -105,7 +105,7 @@ export default function EspaceStaffPage() {
       </section>
 
       <section className="grid items-start gap-6 lg:grid-cols-[2fr_1fr]">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+        <div className="rounded-2xl border border-slate-300 bg-white p-6 shadow-sm sm:p-7">
           <h3 className="mb-4 text-sm font-semibold text-cobam-dark-blue">
             Actions récentes
           </h3>
@@ -124,7 +124,7 @@ export default function EspaceStaffPage() {
           </ul>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+        <div className="rounded-2xl border border-slate-300 bg-white p-6 shadow-sm sm:p-7">
           <h3 className="mb-4 text-sm font-semibold text-cobam-dark-blue">
             Liens utiles
           </h3>

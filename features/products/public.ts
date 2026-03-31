@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { getArticleFirstParagraphText } from "@/features/articles/document";
 import { makeMediaPublicMany } from "@/features/media/repository";
 import { prisma } from "@/lib/server/db/prisma";
 
@@ -9,7 +10,7 @@ export type PublicProductSummary = {
   name: string;
   slug: string;
   subtitle: string;
-  excerpt: string;
+  description: string;
   brandName: string;
   price: string | null;
   imageUrl: string | null;
@@ -44,14 +45,15 @@ type PublicProductRecord = {
   name: string;
   slug: string;
   subtitle: string | null;
-  excerpt: string | null;
   description: string | null;
   brand: {
     name: string;
   } | null;
   variants: Array<{
+    lifecycleStatus: "DRAFT" | "ACTIVE" | "ARCHIVED" | null;
+    visibility: "HIDDEN" | "PUBLIC" | null;
+    priceVisibility: "HIDDEN" | "VISIBLE" | null;
     basePriceAmount: { toString(): string } | number | null;
-    currentPriceAmount: { toString(): string } | number | null;
   }>;
   mediaLinks: Array<{
     mediaId: bigint;
@@ -64,7 +66,6 @@ const publicProductSelect = {
   name: true,
   slug: true,
   subtitle: true,
-  excerpt: true,
   description: true,
   brand: {
     select: {
@@ -72,16 +73,12 @@ const publicProductSelect = {
     },
   },
   variants: {
-    where: {
-      lifecycleStatus: "ACTIVE",
-      visibility: "PUBLIC",
-      priceVisibility: "VISIBLE",
-    },
     orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
-    take: 1,
     select: {
+      lifecycleStatus: true,
+      visibility: true,
+      priceVisibility: true,
       basePriceAmount: true,
-      currentPriceAmount: true,
     },
   },
   mediaLinks: {
@@ -116,8 +113,12 @@ function buildPublicProductsWhere(
   input: Pick<PublicProductListQuery, "categorySlug" | "subcategorySlug">,
 ): Prisma.ProductFamilyWhereInput {
   return {
-    lifecycleStatus: "ACTIVE",
-    visibility: "PUBLIC",
+    variants: {
+      some: {
+        lifecycleStatus: "ACTIVE",
+        visibility: "PUBLIC",
+      },
+    },
     subcategories: {
       some: {
         isActive: true,
@@ -152,29 +153,29 @@ async function ensurePublicProductImages(records: PublicProductRecord[]) {
 
 function mapPublicProductSummary(product: PublicProductRecord): PublicProductSummary {
   const coverMedia = product.mediaLinks[0];
-  const visiblePriceVariant = product.variants[0] ?? null;
   const hasCover =
     coverMedia?.mediaId != null &&
     coverMedia.media != null &&
     coverMedia.media.isActive &&
     coverMedia.media.deletedAt == null;
+  const descriptionPreview = getArticleFirstParagraphText(product.description);
+  const visiblePriceVariant =
+    product.variants.find(
+      (variant) =>
+        variant.lifecycleStatus === "ACTIVE" &&
+        variant.visibility === "PUBLIC" &&
+        variant.priceVisibility === "VISIBLE" &&
+        variant.basePriceAmount != null,
+    ) ?? null;
 
   return {
     id: Number(product.id),
     name: product.name,
     slug: product.slug,
     subtitle: product.subtitle?.trim() ?? "",
-    excerpt:
-      product.excerpt?.trim() ??
-      product.description?.trim() ??
-      "Découvrez cette famille produit COBAM GROUP.",
+    description: descriptionPreview || "Découvrez cette famille produit COBAM GROUP.",
     brandName: product.brand?.name ?? "Sans marque",
-    price:
-      visiblePriceVariant?.currentPriceAmount != null
-        ? String(visiblePriceVariant.currentPriceAmount)
-        : visiblePriceVariant?.basePriceAmount != null
-          ? String(visiblePriceVariant.basePriceAmount)
-          : null,
+    price: visiblePriceVariant?.basePriceAmount != null ? String(visiblePriceVariant.basePriceAmount) : null,
     imageUrl:
       hasCover && coverMedia?.mediaId != null
         ? buildPublicMediaUrl(coverMedia.mediaId, "original")
@@ -183,10 +184,7 @@ function mapPublicProductSummary(product: PublicProductRecord): PublicProductSum
       hasCover && coverMedia?.mediaId != null
         ? buildPublicMediaUrl(coverMedia.mediaId, "thumbnail")
         : null,
-    imageAlt:
-      coverMedia?.media?.altText ??
-      coverMedia?.media?.title ??
-      product.name,
+    imageAlt: coverMedia?.media?.altText ?? coverMedia?.media?.title ?? product.name,
   };
 }
 

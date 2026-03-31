@@ -251,7 +251,7 @@ export default function HistoryTimeline() {
                 animate={{ opacity: 1 }}
                 className="absolute inset-0 flex flex-col items-center justify-center bg-cobam-dark-blue text-white"
               >
-                <RotateCcw className="w-12 h-12 text-cobam-water-blue mb-4 opacity-80" />
+                <RotateCcw className="w-12 h-10 text-cobam-water-blue mb-4 opacity-80" />
                 <button 
                   onClick={handleReplay}
                   className="px-6 py-3 bg-cobam-water-blue hover:bg-cobam-water-blue/80 text-white font-bold rounded-lg transition-colors tracking-wide uppercase text-sm"

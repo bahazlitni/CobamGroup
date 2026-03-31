@@ -75,7 +75,7 @@ function MediaInspectorPreview({
 
   if (!objectUrl) {
     return (
-      <div className="flex aspect-[16/10] items-center justify-center rounded-[2rem] border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-500">
+      <div className="flex aspect-[16/10] items-center justify-center rounded-[2rem] border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500">
         Aperçu indisponible.
       </div>
     );
@@ -103,14 +103,14 @@ function MediaInspectorPreview({
       <video
         src={objectUrl}
         controls
-        className="aspect-[16/10] w-full rounded-[2rem] border border-slate-200 bg-slate-950"
+        className="aspect-[16/10] w-full rounded-[2rem] border border-slate-300 bg-slate-950"
       />
     );
   }
 
   if (view === "audio") {
     return (
-      <div className="flex aspect-[16/10] flex-col items-center justify-center gap-5 rounded-[2rem] border border-slate-200 bg-slate-50 px-6">
+      <div className="flex aspect-[16/10] flex-col items-center justify-center gap-5 rounded-[2rem] border border-slate-300 bg-slate-50 px-6">
         <Headphones className="h-10 w-10 text-slate-400" />
         <audio src={objectUrl} controls className="w-full max-w-lg" />
       </div>
@@ -122,13 +122,13 @@ function MediaInspectorPreview({
       <iframe
         src={objectUrl}
         title={getMediaDisplayTitle(media)}
-        className="aspect-[16/10] w-full rounded-[2rem] border border-slate-200 bg-white"
+        className="aspect-[16/10] w-full rounded-[2rem] border border-slate-300 bg-white"
       />
     );
   }
 
   return (
-    <div className="flex aspect-[16/10] flex-col items-center justify-center gap-4 rounded-[2rem] border border-dashed border-slate-200 bg-slate-50 text-slate-500">
+    <div className="flex aspect-[16/10] flex-col items-center justify-center gap-4 rounded-[2rem] border border-dashed border-slate-300 bg-slate-50 text-slate-500">
       <File className="h-10 w-10 text-slate-300" />
       <p className="text-sm">Telechargez le fichier pour l&apos;ouvrir localement.</p>
     </div>
@@ -312,25 +312,25 @@ export default function MediaInspectorDialog({
                 ) : null}
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4">
+                  <div className="rounded-3xl border border-slate-300 bg-slate-50 px-4 py-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Taille</p>
                     <p className="mt-2 text-base font-semibold text-cobam-dark-blue">
                       {formatBytes(media.sizeBytes)}
                     </p>
                   </div>
-                  <div className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4">
+                  <div className="rounded-3xl border border-slate-300 bg-slate-50 px-4 py-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Type MIME</p>
                     <p className="mt-2 text-base font-semibold text-cobam-dark-blue">
                       {media.mimeType || "-"}
                     </p>
                   </div>
-                  <div className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4">
+                  <div className="rounded-3xl border border-slate-300 bg-slate-50 px-4 py-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Upload par</p>
                     <p className="mt-2 text-base font-semibold text-cobam-dark-blue">
                       {media.uploadedByLabel || "Inconnu"}
                     </p>
                   </div>
-                  <div className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4">
+                  <div className="rounded-3xl border border-slate-300 bg-slate-50 px-4 py-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Cree le</p>
                     <p className="mt-2 text-base font-semibold text-cobam-dark-blue">
                       {formatMediaDateTime(media.createdAt)}
@@ -340,7 +340,7 @@ export default function MediaInspectorDialog({
               </div>
 
               <div className="space-y-5">
-                <div className="rounded-[2rem] border border-slate-200 bg-white px-5 py-5">
+                <div className="rounded-[2rem] border border-slate-300 bg-white px-5 py-5">
                   <div className="flex flex-wrap items-center gap-2">
                     <MediaKindBadge kind={media.kind} />
                     <MediaVisibilityBadge visibility={media.visibility} />

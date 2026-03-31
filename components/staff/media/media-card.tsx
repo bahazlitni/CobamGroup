@@ -58,7 +58,7 @@ export default function MediaCard({
       className={
         isSelected
           ? "overflow-hidden rounded-3xl border border-cobam-water-blue/40 bg-cobam-water-blue/5 shadow-sm"
-          : "overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-cobam-water-blue/30 hover:shadow-md"
+          : "overflow-hidden rounded-3xl border border-slate-300 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-cobam-water-blue/30 hover:shadow-md"
       }
     >
       <CardContent className="space-y-4 px-4 py-4">

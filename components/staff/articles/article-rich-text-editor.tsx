@@ -75,7 +75,7 @@ export default function ArticleRichTextEditor({
   return (
     <div
       className={cn(
-        "border border-slate-200 bg-white shadow-sm",
+        "border border-slate-300 bg-white shadow-sm",
         !editable && "opacity-90",
         className,
       )}

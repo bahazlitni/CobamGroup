@@ -1,8 +1,5 @@
 import type { StaffSession } from "@/features/auth/types";
-import {
-  findActiveMediaByIds,
-  findImageMediaById,
-} from "@/features/media/repository";
+import { findActiveMediaByIds, findImageMediaById } from "@/features/media/repository";
 import { resolveOrCreateTagsByNames } from "@/features/tags/repository";
 import { parseRawProductAttributeValue } from "./attribute-values";
 import { canAccessProducts, canCreateProducts, canManageProducts } from "./access";
@@ -12,9 +9,9 @@ import {
   createProductAuditLog,
   deleteProduct,
   findBrandOptionById,
-  findProductBySlug,
   findProductById,
   findProductBySignature,
+  findProductBySlug,
   findProductSubcategoryOptionsByIds,
   findProductVariantsBySkus,
   findProductVariantsBySlugs,
@@ -30,12 +27,14 @@ import {
   mapProductToListItemDto,
   toProductAuditSnapshot,
 } from "./mappers";
+import { slugifyProductName, slugifyProductReference } from "./slug";
 import type {
   ProductCreateInput,
   ProductFormOptionsDto,
   ProductListQuery,
   ProductListResult,
   ProductUpdateInput,
+  ProductVariantInput,
 } from "./types";
 
 export class ProductServiceError extends Error {
@@ -47,7 +46,41 @@ export class ProductServiceError extends Error {
   }
 }
 
-function normalizeVariantIds(input: Pick<ProductCreateInput, "variants">) {
+async function writeProductAuditLogSafely(data: Parameters<typeof createProductAuditLog>[0]) {
+  try {
+    await createProductAuditLog(data);
+  } catch (error) {
+    console.error("PRODUCT_AUDIT_LOG_ERROR:", error);
+  }
+}
+
+function buildFamilySlug(name: string) {
+  const slug = slugifyProductName(name);
+
+  if (!slug) {
+    throw new ProductServiceError("Le nom de la famille ne permet pas de générer un slug.", 400);
+  }
+
+  return slug;
+}
+
+function buildVariantSlug(name: string) {
+  const slug = slugifyProductReference(name);
+
+  if (!slug) {
+    throw new ProductServiceError("Le nom d'une variante ne permet pas de générer un slug.", 400);
+  }
+
+  return slug;
+}
+
+function normalizeVariantIds<
+  T extends ProductVariantInput & {
+    slug?: string | null;
+  },
+>(input: {
+  variants: T[];
+}) {
   return input.variants.map((variant) => ({
     ...variant,
     id: variant.id ?? null,
@@ -67,6 +100,51 @@ function normalizeAttributeIds(input: Pick<ProductCreateInput, "attributes">) {
   }));
 }
 
+function assertProductHasAtLeastOneVariant(input: Pick<ProductCreateInput, "variants">) {
+  if (input.variants.length === 0) {
+    throw new ProductServiceError(
+      "Une famille produit doit contenir au moins une variante par défaut.",
+      400,
+    );
+  }
+}
+
+function materializeDefaultVariantFields(variant: ProductVariantInput): ProductVariantInput {
+  return {
+    ...variant,
+    lifecycleStatus: variant.lifecycleStatus ?? "DRAFT",
+    visibility: variant.visibility ?? "HIDDEN",
+    commercialMode: variant.commercialMode ?? "REFERENCE_ONLY",
+    priceVisibility: variant.priceVisibility ?? "HIDDEN",
+  };
+}
+
+function materializeVariantDefaults(input: Pick<ProductCreateInput, "variants">) {
+  assertProductHasAtLeastOneVariant(input);
+
+  const [defaultVariantRaw, ...remainingVariants] = input.variants;
+  const defaultVariant = materializeDefaultVariantFields(defaultVariantRaw);
+
+  return [
+    defaultVariant,
+    ...remainingVariants.map((variant) => ({
+      ...variant,
+      lifecycleStatus: variant.lifecycleStatus ?? defaultVariant.lifecycleStatus,
+      visibility: variant.visibility ?? defaultVariant.visibility,
+      commercialMode: variant.commercialMode ?? defaultVariant.commercialMode,
+      priceVisibility: variant.priceVisibility ?? defaultVariant.priceVisibility,
+      basePriceAmount: variant.basePriceAmount ?? defaultVariant.basePriceAmount,
+    })),
+  ];
+}
+
+function withComputedVariantSlugs(variants: ProductVariantInput[]) {
+  return variants.map((variant) => ({
+    ...variant,
+    slug: buildVariantSlug(variant.name),
+  }));
+}
+
 function assertValidProductAttributes(
   input: Pick<ProductCreateInput, "attributes" | "variants">,
   options?: { allowedAttributeIds?: readonly number[] },
@@ -75,30 +153,27 @@ function assertValidProductAttributes(
   const seenTempKeys = new Set<string>();
   const allowedAttributeIds = new Set(options?.allowedAttributeIds ?? []);
   const attributesById = new Map<number, ProductCreateInput["attributes"][number]>();
-  const attributesByTempKey = new Map<
-    string,
-    ProductCreateInput["attributes"][number]
-  >();
+  const attributesByTempKey = new Map<string, ProductCreateInput["attributes"][number]>();
 
   for (const attribute of input.attributes) {
     const normalizedName = attribute.name.trim().toLocaleLowerCase("fr");
     if (seenAttributeNames.has(normalizedName)) {
       throw new ProductServiceError(
-        "Deux attributs de famille ne peuvent pas partager le meme nom.",
+        "Deux attributs de famille ne peuvent pas partager le même nom.",
         400,
       );
     }
 
     if (seenTempKeys.has(attribute.tempKey)) {
       throw new ProductServiceError(
-        "Deux attributs de famille utilisent la meme cle temporaire.",
+        "Deux attributs de famille utilisent la même clé temporaire.",
         400,
       );
     }
 
     if (attribute.id != null && !allowedAttributeIds.has(attribute.id)) {
       throw new ProductServiceError(
-        "Un attribut transmis n'appartient pas a cette famille produit.",
+        "Un attribut transmis n'appartient pas à cette famille produit.",
         400,
       );
     }
@@ -126,19 +201,17 @@ function assertValidProductAttributes(
 
       if (!attribute) {
         throw new ProductServiceError(
-          "Une valeur de variante reference un attribut inexistant.",
+          "Une valeur de variante référence un attribut inexistant.",
           400,
         );
       }
 
       const attributeKey =
-        attribute.id != null
-          ? `id:${attribute.id}`
-          : `temp:${attribute.tempKey}`;
+        attribute.id != null ? `id:${attribute.id}` : `temp:${attribute.tempKey}`;
 
       if (seenVariantAttributes.has(attributeKey)) {
         throw new ProductServiceError(
-          "Une variante ne peut pas definir deux fois le meme attribut.",
+          "Une variante ne peut pas définir deux fois le même attribut.",
           400,
         );
       }
@@ -159,17 +232,24 @@ function assertValidProductAttributes(
   }
 }
 
-function assertValidVariantPrices(input: Pick<ProductCreateInput, "variants">) {
-  for (const variant of input.variants) {
-    if (
-      variant.currentPriceAmount != null &&
-      variant.basePriceAmount == null
-    ) {
-      throw new ProductServiceError(
-        "Le prix courant d'une variante nécessite un prix de base.",
-        400,
-      );
-    }
+function assertValidDefaultVariant(variant: ProductVariantInput | undefined) {
+  if (!variant) {
+    throw new ProductServiceError(
+      "Une famille produit doit contenir au moins une variante par défaut.",
+      400,
+    );
+  }
+
+  if (
+    variant.lifecycleStatus == null ||
+    variant.visibility == null ||
+    variant.commercialMode == null ||
+    variant.priceVisibility == null
+  ) {
+    throw new ProductServiceError(
+      "La variante par défaut doit définir le cycle de vie, la visibilité, le mode commercial et la visibilité du prix.",
+      400,
+    );
   }
 }
 
@@ -180,22 +260,28 @@ async function assertValidProductVariants(
   const seenSlugs = new Set<string>();
   const seenSkus = new Set<string>();
 
-  for (const variant of input.variants) {
-    if (seenSlugs.has(variant.slug)) {
+  for (const [index, variant] of input.variants.entries()) {
+    const variantSlug = buildVariantSlug(variant.name);
+
+    if (seenSlugs.has(variantSlug)) {
       throw new ProductServiceError(
-        "Deux variantes ne peuvent pas partager le meme slug.",
+        `Deux variantes génèrent le même slug (${variantSlug}).`,
         400,
       );
     }
 
     if (seenSkus.has(variant.sku)) {
+      throw new ProductServiceError("Deux variantes ne peuvent pas partager le même SKU.", 400);
+    }
+
+    if (!variant.name.trim() || !variant.description.trim() || !variant.descriptionSeo.trim()) {
       throw new ProductServiceError(
-        "Deux variantes ne peuvent pas partager le meme SKU.",
+        `La variante ${index + 1} doit définir un nom, une description et une description SEO.`,
         400,
       );
     }
 
-    seenSlugs.add(variant.slug);
+    seenSlugs.add(variantSlug);
     seenSkus.add(variant.sku);
   }
 
@@ -204,14 +290,14 @@ async function assertValidProductVariants(
   for (const variant of input.variants) {
     if (variant.id != null && !allowedIds.has(variant.id)) {
       throw new ProductServiceError(
-        "Une variante transmise n'appartient pas a cette famille produit.",
+        "Une variante transmise n'appartient pas à cette famille produit.",
         400,
       );
     }
   }
 
   const [existingBySlug, existingBySku] = await Promise.all([
-    findProductVariantsBySlugs(input.variants.map((variant) => variant.slug)),
+    findProductVariantsBySlugs(input.variants.map((variant) => buildVariantSlug(variant.name))),
     findProductVariantsBySkus(input.variants.map((variant) => variant.sku)),
   ]);
 
@@ -225,7 +311,7 @@ async function assertValidProductVariants(
   for (const existingVariant of existingBySlug) {
     if (!allowedBigIntIds.has(existingVariant.id)) {
       throw new ProductServiceError(
-        `Le slug de variante "${existingVariant.slug}" est deja utilise.`,
+        `Le slug de variante "${existingVariant.slug}" est déjà utilisé.`,
         400,
       );
     }
@@ -233,37 +319,29 @@ async function assertValidProductVariants(
 
   for (const existingVariant of existingBySku) {
     if (!allowedBigIntIds.has(existingVariant.id)) {
-      throw new ProductServiceError(
-        `Le SKU "${existingVariant.sku}" est deja utilise.`,
-        400,
-      );
+      throw new ProductServiceError(`Le SKU "${existingVariant.sku}" est déjà utilisé.`, 400);
     }
   }
 }
 
 async function assertUniqueProductInput(
-  input: Pick<ProductCreateInput, "slug" | "brandId" | "name">,
+  input: Pick<ProductCreateInput, "brandId" | "name">,
   options?: { excludeProductId?: number },
 ) {
+  const familySlug = buildFamilySlug(input.name);
   const [sameSlug, sameSignature] = await Promise.all([
-    findProductBySlug(input.slug),
+    findProductBySlug(familySlug),
     input.brandId != null
       ? findProductBySignature(input.brandId, input.name)
       : Promise.resolve(null),
   ]);
 
   if (sameSlug && Number(sameSlug.id) !== (options?.excludeProductId ?? -1)) {
-    throw new ProductServiceError("Un produit avec ce slug existe deja.", 400);
+    throw new ProductServiceError("Une famille produit avec ce slug existe déjà.", 400);
   }
 
-  if (
-    sameSignature &&
-    Number(sameSignature.id) !== (options?.excludeProductId ?? -1)
-  ) {
-    throw new ProductServiceError(
-      "Un produit avec cette marque et ce nom existe deja.",
-      400,
-    );
+  if (sameSignature && Number(sameSignature.id) !== (options?.excludeProductId ?? -1)) {
+    throw new ProductServiceError("Un produit avec cette marque et ce nom existe déjà.", 400);
   }
 }
 
@@ -272,9 +350,7 @@ async function assertValidProductRelations(
   options?: { currentBrandId?: number | null },
 ) {
   const [brand, productSubcategories] = await Promise.all([
-    input.brandId != null
-      ? findBrandOptionById(input.brandId)
-      : Promise.resolve(null),
+    input.brandId != null ? findBrandOptionById(input.brandId) : Promise.resolve(null),
     findProductSubcategoryOptionsByIds(input.productSubcategoryIds),
   ]);
 
@@ -288,21 +364,14 @@ async function assertValidProductRelations(
     !brand.isProductBrand &&
     input.brandId !== (options?.currentBrandId ?? -1)
   ) {
-    throw new ProductServiceError(
-      "Cette marque ne peut pas etre utilisee pour les produits.",
-      400,
-    );
+    throw new ProductServiceError("Cette marque ne peut pas être utilisée pour les produits.", 400);
   }
 
-  if (
-    productSubcategories.length !== new Set(input.productSubcategoryIds).size
-  ) {
-    throw new ProductServiceError(
-      "Au moins une sous-catégorie produit est introuvable.",
-      400,
-    );
+  if (productSubcategories.length !== new Set(input.productSubcategoryIds).size) {
+    throw new ProductServiceError("Au moins une sous-catégorie produit est introuvable.", 400);
   }
 }
+
 
 async function assertValidProductMedia(
   input: Pick<ProductCreateInput, "mainImageMediaId" | "variants">,
@@ -326,10 +395,7 @@ async function assertValidProductMedia(
   const media = await findActiveMediaByIds(variantMediaIds);
 
   if (media.length !== new Set(variantMediaIds).size) {
-    throw new ProductServiceError(
-      "Au moins un média de variante est introuvable ou inactif.",
-      400,
-    );
+    throw new ProductServiceError("Au moins un média de variante est introuvable ou inactif.", 400);
   }
 }
 
@@ -338,13 +404,10 @@ export async function listProductsService(
   query: ProductListQuery,
 ): Promise<ProductListResult> {
   if (!canAccessProducts(session)) {
-    throw new ProductServiceError("AccÃ¨s refusé.", 403);
+    throw new ProductServiceError("Accès refusé.", 403);
   }
 
-  const [items, total] = await Promise.all([
-    listProducts(query),
-    countProducts(query),
-  ]);
+  const [items, total] = await Promise.all([listProducts(query), countProducts(query)]);
 
   return {
     items: items.map(mapProductToListItemDto),
@@ -358,7 +421,7 @@ export async function getProductFormOptionsService(
   session: StaffSession,
 ): Promise<ProductFormOptionsDto> {
   if (!canAccessProducts(session)) {
-    throw new ProductServiceError("AccÃ¨s refusé.", 403);
+    throw new ProductServiceError("Accès refusé.", 403);
   }
 
   const [brands, productSubcategories] = await Promise.all([
@@ -368,18 +431,13 @@ export async function getProductFormOptionsService(
 
   return {
     brands: brands.map(mapProductBrandOptionDto),
-    productSubcategories: productSubcategories.map(
-      mapProductSubcategoryOptionDto,
-    ),
+    productSubcategories: productSubcategories.map(mapProductSubcategoryOptionDto),
   };
 }
 
-export async function getProductByIdService(
-  session: StaffSession,
-  productId: number,
-) {
+export async function getProductByIdService(session: StaffSession, productId: number) {
   if (!canAccessProducts(session)) {
-    throw new ProductServiceError("AccÃ¨s refusé.", 403);
+    throw new ProductServiceError("Accès refusé.", 403);
   }
 
   const product = await findProductById(productId);
@@ -390,32 +448,34 @@ export async function getProductByIdService(
   return mapProductToDetailDto(product);
 }
 
-export async function createProductService(
-  session: StaffSession,
-  input: ProductCreateInput,
-) {
+export async function createProductService(session: StaffSession, input: ProductCreateInput) {
   if (!canCreateProducts(session)) {
-    throw new ProductServiceError("AccÃ¨s refusé.", 403);
+    throw new ProductServiceError("Accès refusé.", 403);
   }
 
+  const materializedVariants = materializeVariantDefaults({ variants: input.variants });
+  assertValidDefaultVariant(materializedVariants[0]);
   await assertUniqueProductInput(input);
   await assertValidProductRelations(input);
-  await assertValidProductMedia(input);
-  assertValidProductAttributes(input);
-  assertValidVariantPrices(input);
-  await assertValidProductVariants(input);
+  await assertValidProductMedia({ ...input, variants: materializedVariants });
+  assertValidProductAttributes({ ...input, variants: materializedVariants });
+  await assertValidProductVariants({ variants: materializedVariants });
+
   const resolvedTags = await resolveOrCreateTagsByNames(input.tagNames);
   const attributes = normalizeAttributeIds(input);
-  const variants = normalizeVariantIds(input);
+  const variants = normalizeVariantIds({
+    variants: withComputedVariantSlugs(materializedVariants),
+  });
 
   const product = await createProduct({
     ...input,
+    slug: buildFamilySlug(input.name),
     tagIds: resolvedTags.map((tag) => Number(tag.id)),
     attributes,
     variants,
   });
 
-  await createProductAuditLog({
+  await writeProductAuditLogSafely({
     actorUserId: session.id,
     actionType: "CREATE",
     entityId: String(product.id),
@@ -433,7 +493,7 @@ export async function updateProductService(
   input: ProductUpdateInput,
 ) {
   if (!canManageProducts(session)) {
-    throw new ProductServiceError("AccÃ¨s refusé.", 403);
+    throw new ProductServiceError("Accès refusé.", 403);
   }
 
   const before = await findProductById(productId);
@@ -441,37 +501,48 @@ export async function updateProductService(
     throw new ProductServiceError("Produit introuvable.", 404);
   }
 
+  const materializedVariants = materializeVariantDefaults({ variants: input.variants });
+  assertValidDefaultVariant(materializedVariants[0]);
   await assertUniqueProductInput(input, { excludeProductId: productId });
   await assertValidProductRelations(input, {
     currentBrandId: before.brand != null ? Number(before.brand.id) : null,
   });
-  await assertValidProductMedia(input);
-  assertValidProductAttributes(input, {
-    allowedAttributeIds: before.attributeValues.map((attributeLink) =>
-      Number(attributeLink.attribute.id),
-    ),
-  });
-  assertValidVariantPrices(input);
-  await assertValidProductVariants(input, {
-    allowedVariantIds: before.variants.map((variant) => Number(variant.id)),
-  });
+  await assertValidProductMedia({ ...input, variants: materializedVariants });
+  assertValidProductAttributes(
+    { ...input, variants: materializedVariants },
+    {
+      allowedAttributeIds: before.attributeValues.map((attributeLink) =>
+        Number(attributeLink.attribute.id),
+      ),
+    },
+  );
+  await assertValidProductVariants(
+    { variants: materializedVariants },
+    {
+      allowedVariantIds: before.variants.map((variant) => Number(variant.id)),
+    },
+  );
+
   const resolvedTags = await resolveOrCreateTagsByNames(input.tagNames);
   const attributes = normalizeAttributeIds(input);
-  const variants = normalizeVariantIds(input);
+  const variants = normalizeVariantIds({
+    variants: withComputedVariantSlugs(materializedVariants),
+  });
 
   const product = await updateProduct(productId, {
     ...input,
+    slug: buildFamilySlug(input.name),
     tagIds: resolvedTags.map((tag) => Number(tag.id)),
     attributes,
     variants,
   });
 
-  await createProductAuditLog({
+  await writeProductAuditLogSafely({
     actorUserId: session.id,
     actionType: "UPDATE",
     entityId: String(product.id),
     targetLabel: product.name,
-    summary: "Mise Ã  jour d'une famille produit",
+    summary: "Mise à jour d'une famille produit",
     beforeSnapshotJson: toProductAuditSnapshot(before),
     afterSnapshotJson: toProductAuditSnapshot(product),
   });
@@ -479,12 +550,9 @@ export async function updateProductService(
   return mapProductToDetailDto(product);
 }
 
-export async function deleteProductService(
-  session: StaffSession,
-  productId: number,
-) {
+export async function deleteProductService(session: StaffSession, productId: number) {
   if (!canManageProducts(session)) {
-    throw new ProductServiceError("AccÃ¨s refusé.", 403);
+    throw new ProductServiceError("Accès refusé.", 403);
   }
 
   const before = await findProductById(productId);
@@ -494,7 +562,7 @@ export async function deleteProductService(
 
   const deleted = await deleteProduct(productId);
 
-  await createProductAuditLog({
+  await writeProductAuditLogSafely({
     actorUserId: session.id,
     actionType: "DELETE",
     entityId: String(deleted.id),

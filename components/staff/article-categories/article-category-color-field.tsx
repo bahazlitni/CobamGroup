@@ -31,12 +31,12 @@ export default function ArticleCategoryColorField({
           value={safeColor}
           disabled={disabled}
           onChange={(event) => onChange(event.target.value)}
-          className="h-12 w-16 cursor-pointer rounded-xl border border-slate-300 bg-white p-1 disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-10 w-16 cursor-pointer rounded-xl border border-slate-300 bg-white p-1 disabled:cursor-not-allowed disabled:opacity-60"
           aria-label="Choisir une couleur"
         />
         <div className="flex items-center gap-2 text-sm text-slate-500">
           <span
-            className="h-4 w-4 rounded-full border border-slate-200"
+            className="h-4 w-4 rounded-full border border-slate-300"
             style={{ backgroundColor: safeColor }}
             aria-hidden="true"
           />

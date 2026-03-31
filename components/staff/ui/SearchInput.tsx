@@ -11,7 +11,7 @@ interface Props {
 export default function SearchInput({
     value, onChange, placeholder="Rechercher...", fullWidth = false
 }: Props){
-    const baseCls = "relative h-12 w-full min-w-48 max-w-128"
+    const baseCls = "relative h-10 w-full min-w-48 max-w-128"
     const fullWidthCls = baseCls
     const nonFullWidth = baseCls + " max-w-128"
 

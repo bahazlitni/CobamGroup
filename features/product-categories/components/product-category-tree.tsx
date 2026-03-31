@@ -19,7 +19,7 @@ function ProductSubcategoryRow({
   const hasImage = subcategory.imageMediaId != null;
 
   return (
-    <li className="flex flex-wrap items-center justify-between gap-5 rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 w-fit">
+    <li className="flex flex-wrap items-center justify-between gap-5 rounded-2xl border border-slate-300 bg-white/80 px-4 py-3 w-fit">
           <div className="flex items-center gap-4">
             <ChevronRight className="h-4 w-4" />
             <p className="truncate font-medium text-cobam-dark-blue">
@@ -66,13 +66,13 @@ function ProductCategoryRow({
 
   return (
     <li className="space-y-3">
-      <div className="flex flex-wrap justify-between items-center rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+      <div className="flex flex-wrap justify-between items-center rounded-2xl border border-slate-300 bg-white px-5 py-4 shadow-sm">
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => onToggle(node.id)}
               disabled={!hasSubcategories}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-500 transition-colors hover:border-cobam-water-blue hover:text-cobam-water-blue disabled:cursor-default disabled:opacity-40"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-slate-50 text-slate-500 transition-colors hover:border-cobam-water-blue hover:text-cobam-water-blue disabled:cursor-default disabled:opacity-40"
               aria-label={
                 hasSubcategories
                   ? isExpanded

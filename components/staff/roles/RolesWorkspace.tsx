@@ -321,7 +321,7 @@ export default function RolesWorkspace() {
                   className={`flex w-full items-center justify-between gap-3 rounded-2xl border px-3 py-3 text-left transition ${
                     isSelected
                       ? "border-cobam-water-blue bg-cobam-light-bg/80"
-                      : "border-slate-200 bg-white hover:bg-slate-50"
+                      : "border-slate-300 bg-white hover:bg-slate-50"
                   } ${draggedRoleId === role.id ? "opacity-60" : ""}`}
                 >
                   <div className="flex min-w-0 items-center gap-3">
@@ -360,7 +360,7 @@ export default function RolesWorkspace() {
       </Panel>
 
       <div className="space-y-4">
-        <div className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-slate-300 bg-white p-5 shadow-sm">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               <StaffBadge size="sm" color="primary">
@@ -427,8 +427,8 @@ export default function RolesWorkspace() {
             hideSubmitButton
           />
         ) : (
-          <div className="flex min-h-[20rem] items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+          <div className="flex min-h-[20rem] items-center justify-center rounded-2xl border border-slate-300 bg-white shadow-sm">
+            <div className="inline-flex items-center gap-3 rounded-2xl border border-slate-300 bg-white px-5 py-4 shadow-sm">
               <Loading />
             </div>
           </div>

@@ -10,7 +10,7 @@ import {
 } from "../client";
 import {
   createEmptyProductAttributeEditorState,
-  createEmptyProductVariantEditorState,
+  createInheritedProductVariantEditorState,
   createEmptyProductEditorFormState,
   duplicateProductVariantEditorState,
   moveProductVariantEditorStates,
@@ -29,15 +29,11 @@ type EditableField = keyof ProductEditorFormState;
 
 export function useProductDetail(productId: number | null) {
   const [product, setProduct] = useState<ProductDetailDto | null>(null);
-  const [form, setForm] = useState<ProductEditorFormState>(
-    createEmptyProductEditorFormState(),
-  );
+  const [form, setForm] = useState<ProductEditorFormState>(createEmptyProductEditorFormState());
   const [savedForm, setSavedForm] = useState<ProductEditorFormState>(
     createEmptyProductEditorFormState(),
   );
-  const [options, setOptions] = useState<ProductFormOptionsDto>(
-    EMPTY_PRODUCT_FORM_OPTIONS,
-  );
+  const [options, setOptions] = useState<ProductFormOptionsDto>(EMPTY_PRODUCT_FORM_OPTIONS);
   const [isLoading, setIsLoading] = useState(Boolean(productId));
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -58,42 +54,34 @@ export function useProductDetail(productId: number | null) {
 
       const normalizedOptions =
         fetchedProduct.brand == null ||
-        fetchedOptions.brands.some(
-          (brand) => brand.id === fetchedProduct.brand?.id,
-        )
-        ? fetchedOptions
-        : {
-            ...fetchedOptions,
-            brands: [...fetchedOptions.brands, fetchedProduct.brand].sort(
-              (left, right) => left.name.localeCompare(right.name, "fr"),
-            ),
-          };
+        fetchedOptions.brands.some((brand) => brand.id === fetchedProduct.brand?.id)
+          ? fetchedOptions
+          : {
+              ...fetchedOptions,
+              brands: [...fetchedOptions.brands, fetchedProduct.brand].sort((left, right) =>
+                left.name.localeCompare(right.name, "fr"),
+              ),
+            };
 
       const missingProductSubcategories = fetchedProduct.productSubcategories.filter(
         (subcategory) =>
-          !normalizedOptions.productSubcategories.some(
-            (option) => option.id === subcategory.id,
-          ),
+          !normalizedOptions.productSubcategories.some((option) => option.id === subcategory.id),
       );
 
       const normalizedProductSubcategories =
         missingProductSubcategories.length === 0
           ? normalizedOptions.productSubcategories
-          : [
-              ...normalizedOptions.productSubcategories,
-              ...missingProductSubcategories,
-            ].sort((left, right) => {
-              const categoryDelta = left.categoryName.localeCompare(
-                right.categoryName,
-                "fr",
-              );
+          : [...normalizedOptions.productSubcategories, ...missingProductSubcategories].sort(
+              (left, right) => {
+                const categoryDelta = left.categoryName.localeCompare(right.categoryName, "fr");
 
-              if (categoryDelta !== 0) {
-                return categoryDelta;
-              }
+                if (categoryDelta !== 0) {
+                  return categoryDelta;
+                }
 
-              return left.name.localeCompare(right.name, "fr");
-            });
+                return left.name.localeCompare(right.name, "fr");
+              },
+            );
 
       const nextForm = productDetailToFormState(fetchedProduct);
       setProduct(fetchedProduct);
@@ -104,8 +92,7 @@ export function useProductDetail(productId: number | null) {
         productSubcategories: normalizedProductSubcategories,
       });
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Erreur lors du chargement du produit";
+      const message = err instanceof Error ? err.message : "Erreur lors du chargement du produit";
       setError(message);
     } finally {
       setIsLoading(false);
@@ -131,10 +118,7 @@ export function useProductDetail(productId: number | null) {
     setNotice(null);
 
     try {
-      const updated = await updateProductClient(
-        productId,
-        productEditorFormToPayload(form),
-      );
+      const updated = await updateProductClient(productId, productEditorFormToPayload(form));
       const nextForm = productDetailToFormState(updated);
       setProduct(updated);
       setForm(nextForm);
@@ -184,13 +168,8 @@ export function useProductDetail(productId: number | null) {
       ...prev,
       variants: [
         ...prev.variants,
-        createEmptyProductVariantEditorState({
-          lifecycleStatus: prev.lifecycleStatus,
-          visibility: prev.visibility,
-          attributeValues: syncVariantAttributeValueEditorStates(
-            prev.attributes,
-            [],
-          ),
+        createInheritedProductVariantEditorState({
+          attributes: prev.attributes,
         }),
       ],
     }));
@@ -221,9 +200,7 @@ export function useProductDetail(productId: number | null) {
 
   const removeAttribute = useCallback((formKey: string) => {
     setForm((prev) => {
-      const nextAttributes = prev.attributes.filter(
-        (attribute) => attribute.formKey !== formKey,
-      );
+      const nextAttributes = prev.attributes.filter((attribute) => attribute.formKey !== formKey);
 
       return {
         ...prev,
@@ -248,7 +225,11 @@ export function useProductDetail(productId: number | null) {
       setForm((prev) => {
         const nextAttributes = prev.attributes.map((attribute) =>
           attribute.formKey === formKey
-            ? { ...attribute, [field]: value }
+            ? {
+                ...attribute,
+                [field]: value,
+                ...(field === "dataType" && value !== "NUMBER" ? { unit: "" } : {}),
+              }
             : attribute,
         );
 
@@ -284,24 +265,25 @@ export function useProductDetail(productId: number | null) {
   const removeVariant = useCallback((formKey: string) => {
     setForm((prev) => ({
       ...prev,
-      variants: prev.variants.filter((variant) => variant.formKey !== formKey),
+      variants:
+        prev.variants[0]?.formKey === formKey
+          ? prev.variants
+          : prev.variants.filter((variant) => variant.formKey !== formKey),
     }));
   }, []);
 
   const duplicateVariant = useCallback((formKey: string) => {
     setForm((prev) => {
-      const sourceVariant = prev.variants.find(
-        (variant) => variant.formKey === formKey,
-      );
+      const sourceVariant = prev.variants.find((variant) => variant.formKey === formKey);
 
       if (!sourceVariant) {
         return prev;
       }
 
-      const insertIndex = prev.variants.findIndex(
-        (variant) => variant.formKey === formKey,
-      );
-      const duplicatedVariant = duplicateProductVariantEditorState(sourceVariant);
+      const insertIndex = prev.variants.findIndex((variant) => variant.formKey === formKey);
+      const duplicatedVariant = duplicateProductVariantEditorState(sourceVariant, {
+        isDefaultSource: insertIndex === 0,
+      });
       const nextVariants = [...prev.variants];
       nextVariants.splice(insertIndex + 1, 0, duplicatedVariant);
 

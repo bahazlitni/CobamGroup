@@ -2,6 +2,7 @@
 
 import type { FormEvent } from "react";
 import PanelTable from "@/components/staff/ui/PanelTable";
+import { getArticleFirstParagraphText } from "@/features/articles/document";
 import {
   StaffBadge,
   StaffFilterBar,
@@ -30,9 +31,15 @@ function getDescriptionPreview(description: string | null) {
     return "-";
   }
 
-  return description.length > 100
-    ? `${description.slice(0, 97)}...`
-    : description;
+  const textPreview = getArticleFirstParagraphText(description);
+
+  if (!textPreview) {
+    return "-";
+  }
+
+  return textPreview.length > 100
+    ? `${textPreview.slice(0, 97)}...`
+    : textPreview;
 }
 
 function getLifecycleBadge(status: "DRAFT" | "ACTIVE" | "ARCHIVED") {
@@ -188,7 +195,7 @@ export default function ProductsListPage() {
                   </div>
                 ) : null}
                 <div className="mt-1 text-xs text-slate-500">
-                  {getDescriptionPreview(product.excerpt ?? product.description)}
+                  {getDescriptionPreview(product.description)}
                 </div>
               </td>
 

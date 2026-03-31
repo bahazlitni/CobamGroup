@@ -317,6 +317,22 @@
   margin: 0.95rem 0;
 }
 
+.article-document a,
+.article-document .article-link {
+  color: var(--color-cobam-water-blue);
+  text-decoration-line: underline;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.18em;
+}
+
+.article-document a:hover,
+.article-document a:focus-visible,
+.article-document .article-link:hover,
+.article-document .article-link:focus-visible {
+  color: color-mix(in srgb, var(--color-cobam-water-blue) 82%, #14202e 18%);
+}
+
 .article-document ul,
 .article-document ol {
   padding-left: 1.35rem;

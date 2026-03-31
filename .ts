@@ -1,6 +1,6 @@
 // scripts/create-root-user.ts
 import { hash } from "bcryptjs";
-import { prisma } from "@/lib/server/db/prisma";
+import { prisma } from "C:/dev/cobam-group/lib/server/db/prisma";
 
 async function main() {
   const email = "root@cobam.com";

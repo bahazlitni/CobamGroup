@@ -1,12 +1,7 @@
 export const PRODUCT_PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
 export type ProductPageSize = (typeof PRODUCT_PAGE_SIZE_OPTIONS)[number];
-export const PRODUCT_LIFECYCLE_STATUS_OPTIONS = [
-  "DRAFT",
-  "ACTIVE",
-  "ARCHIVED",
-] as const;
-export type ProductLifecycleStatus =
-  (typeof PRODUCT_LIFECYCLE_STATUS_OPTIONS)[number];
+export const PRODUCT_LIFECYCLE_STATUS_OPTIONS = ["DRAFT", "ACTIVE", "ARCHIVED"] as const;
+export type ProductLifecycleStatus = (typeof PRODUCT_LIFECYCLE_STATUS_OPTIONS)[number];
 
 export const PRODUCT_VISIBILITY_OPTIONS = ["HIDDEN", "PUBLIC"] as const;
 export type ProductVisibility = (typeof PRODUCT_VISIBILITY_OPTIONS)[number];
@@ -15,22 +10,27 @@ export const PRODUCT_COMMERCIAL_MODE_OPTIONS = [
   "QUOTE_ONLY",
   "SELLABLE",
 ] as const;
-export type ProductCommercialMode =
-  (typeof PRODUCT_COMMERCIAL_MODE_OPTIONS)[number];
+export type ProductCommercialMode = (typeof PRODUCT_COMMERCIAL_MODE_OPTIONS)[number];
 
 export const PRODUCT_PRICE_VISIBILITY_OPTIONS = ["HIDDEN", "VISIBLE"] as const;
-export type ProductPriceVisibility =
-  (typeof PRODUCT_PRICE_VISIBILITY_OPTIONS)[number];
-export const PRODUCT_ATTRIBUTE_DATA_TYPE_OPTIONS = [
-  "TEXT",
-  "NUMBER",
-  "BOOLEAN",
-  "ENUM",
-  "COLOR",
-  "JSON",
+export type ProductPriceVisibility = (typeof PRODUCT_PRICE_VISIBILITY_OPTIONS)[number];
+export const PRODUCT_PRICE_UNIT_OPTIONS = [
+  "ITEM",
+  "MILLIGRAM",
+  "GRAM",
+  "KILOGRAM",
+  "MILLILITER",
+  "CENTILITER",
+  "LITER",
+  "CUBIC_METER",
+  "MILLIMETER",
+  "CENTIMETER",
+  "METER",
+  "SQUARE_METER",
 ] as const;
-export type ProductAttributeDataType =
-  (typeof PRODUCT_ATTRIBUTE_DATA_TYPE_OPTIONS)[number];
+export type ProductPriceUnit = (typeof PRODUCT_PRICE_UNIT_OPTIONS)[number];
+export const PRODUCT_ATTRIBUTE_DATA_TYPE_OPTIONS = ["TEXT", "NUMBER", "BOOLEAN"] as const;
+export type ProductAttributeDataType = (typeof PRODUCT_ATTRIBUTE_DATA_TYPE_OPTIONS)[number];
 
 export type ProductListQuery = {
   page: number;
@@ -45,14 +45,11 @@ export type ProductCreateInput = {
   productSubcategoryIds: number[];
   mainImageMediaId: number | null;
   name: string;
-  slug: string;
   subtitle: string | null;
-  excerpt: string | null;
   description: string | null;
   descriptionSeo: string | null;
-  lifecycleStatus: ProductLifecycleStatus;
-  visibility: ProductVisibility;
-  isPromoted: boolean;
+  priceUnit: ProductPriceUnit;
+  vatRate: number;
   tagNames: string[];
   attributes: ProductAttributeInput[];
   variants: ProductVariantInput[];
@@ -63,17 +60,14 @@ export type ProductUpdateInput = ProductCreateInput;
 export type ProductVariantInput = {
   id?: number | null;
   sku: string;
-  slug: string;
-  title: string;
-  subtitle: string | null;
-  description: string | null;
-  lifecycleStatus: ProductLifecycleStatus;
-  visibility: ProductVisibility;
-  commercialMode: ProductCommercialMode;
-  priceVisibility: ProductPriceVisibility;
-  isPromoted: boolean;
+  name: string;
+  description: string;
+  descriptionSeo: string;
+  lifecycleStatus: ProductLifecycleStatus | null;
+  visibility: ProductVisibility | null;
+  commercialMode: ProductCommercialMode | null;
+  priceVisibility: ProductPriceVisibility | null;
   basePriceAmount: string | null;
-  currentPriceAmount: string | null;
   sortOrder: number;
   mediaIds: number[];
   attributeValues: ProductVariantAttributeValueInput[];
@@ -143,11 +137,15 @@ export type ProductListItemDto = {
   name: string;
   slug: string;
   subtitle: string | null;
-  excerpt: string | null;
   description: string | null;
   lifecycleStatus: ProductLifecycleStatus;
   visibility: ProductVisibility;
-  isPromoted: boolean;
+  commercialMode: ProductCommercialMode;
+  priceVisibility: ProductPriceVisibility;
+  priceUnit: ProductPriceUnit;
+  vatRate: number;
+  basePriceAmount: string | null;
+  effectivePriceAmount: string | null;
   brand: ProductBrandOptionDto | null;
   productSubcategories: ProductSubcategoryOptionDto[];
   tagCount: number;
@@ -178,18 +176,20 @@ export type ProductAttributeDto = {
 export type ProductVariantDto = {
   id: number;
   sku: string;
-  slug: string;
-  title: string;
-  subtitle: string | null;
+  slug: string | null;
+  name: string | null;
   description: string | null;
-  lifecycleStatus: ProductLifecycleStatus;
-  visibility: ProductVisibility;
-  commercialMode: ProductCommercialMode;
-  priceVisibility: ProductPriceVisibility;
-  isPromoted: boolean;
-  currencyCode: string;
+  descriptionSeo: string | null;
+  lifecycleStatus: ProductLifecycleStatus | null;
+  visibility: ProductVisibility | null;
+  commercialMode: ProductCommercialMode | null;
+  priceVisibility: ProductPriceVisibility | null;
   basePriceAmount: string | null;
-  currentPriceAmount: string | null;
+  effectiveLifecycleStatus: ProductLifecycleStatus;
+  effectiveVisibility: ProductVisibility;
+  effectiveCommercialMode: ProductCommercialMode;
+  effectivePriceVisibility: ProductPriceVisibility;
+  effectiveBasePriceAmount: string | null;
   effectivePriceAmount: string | null;
   sortOrder: number;
   media: ProductMediaDto[];

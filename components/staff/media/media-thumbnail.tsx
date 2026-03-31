@@ -54,7 +54,7 @@ export default function MediaThumbnail({
   return (
     <div
       className={cn(
-        "flex items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50",
+        "flex items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50",
         className,
       )}
     >

@@ -1,11 +1,10 @@
 "use client";
 
-import { ChevronDown, ChevronUp, Copy, Link2, Unlink2 } from "lucide-react";
-import {
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import type { ReactNode } from "react";
+import { ChevronDown, ChevronUp, Copy } from "lucide-react";
+import ArticleRichTextEditor from "@/components/staff/articles/article-rich-text-editor";
+import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
 import {
   Dialog,
   DialogClose,
@@ -16,21 +15,31 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
 import { getProductAttributeDataTypeLabel } from "@/features/products/attribute-values";
-import type {
-  ProductAttributeEditorState,
-  ProductVariantEditorState,
+import {
+  getComputedVariantSlug,
+  getEffectiveVariantValues,
+  type ProductAttributeEditorState,
+  type ProductEditorFormState,
+  type ProductVariantEditorState,
 } from "@/features/products/form";
-import { slugifyProductReference } from "@/features/products/slug";
+import { getProductPriceUnitSymbol } from "@/features/products/price-units";
 import BooleanButton from "../ui/BooleanButton";
 import PanelField from "../ui/PanelField";
 import PanelInput from "../ui/PanelInput";
 import StaffBadge from "../ui/StaffBadge";
 import StaffSelect from "../ui/PanelSelect";
+import ProductAttributeValueInput from "./ProductAttributeValueInput";
 import ProductMediaGrid from "./ProductMediaGrid";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import ProductPriceField from "./ProductPriceField";
 
 type EditableVariantField = keyof ProductVariantEditorState;
 
@@ -40,19 +49,13 @@ function getAttributePlaceholder(attribute: ProductAttributeEditorState) {
       return attribute.unit ? `Valeur en ${attribute.unit}` : "Valeur numérique";
     case "BOOLEAN":
       return "Choisir Oui ou Non";
-    case "ENUM":
-      return "Ex. mat";
-    case "COLOR":
-      return "#0a8dc1";
-    case "JSON":
-      return '{"cle":"valeur"}';
     case "TEXT":
     default:
       return "Saisir une valeur";
   }
 }
 
-function getLifecycleBadge(status: ProductVariantEditorState["lifecycleStatus"]) {
+function getLifecycleBadge(status: "DRAFT" | "ACTIVE" | "ARCHIVED") {
   switch (status) {
     case "ACTIVE":
       return { label: "Active", color: "success" as const };
@@ -64,15 +67,13 @@ function getLifecycleBadge(status: ProductVariantEditorState["lifecycleStatus"])
   }
 }
 
-function getVisibilityBadge(visibility: ProductVariantEditorState["visibility"]) {
+function getVisibilityBadge(visibility: "HIDDEN" | "PUBLIC") {
   return visibility === "PUBLIC"
     ? { label: "Publique", color: "info" as const }
     : { label: "Masquée", color: "default" as const };
 }
 
-function getCommercialModeBadge(
-  commercialMode: ProductVariantEditorState["commercialMode"],
-) {
+function getCommercialModeBadge(commercialMode: "REFERENCE_ONLY" | "QUOTE_ONLY" | "SELLABLE") {
   switch (commercialMode) {
     case "SELLABLE":
       return { label: "Vendable", color: "success" as const };
@@ -84,9 +85,59 @@ function getCommercialModeBadge(
   }
 }
 
-function formatVariantPrice(variant: ProductVariantEditorState) {
-  const effective = variant.currentPriceAmount || variant.basePriceAmount;
-  return effective ? `${effective} TND` : "Sans prix";
+function formatVariantPrice(priceAmount: string | null, priceUnit: ProductEditorFormState["priceUnit"]) {
+  return priceAmount
+    ? `${priceAmount} TND / ${getProductPriceUnitSymbol(priceUnit)}`
+    : "Sans prix";
+}
+
+function getAddonCount(variant: ProductVariantEditorState, isDefault: boolean) {
+  if (isDefault) {
+    return 0;
+  }
+
+  return Object.values(variant.addons).filter(Boolean).length;
+}
+
+function AddonCard({
+  title,
+  active,
+  onAdd,
+  onRemove,
+  children,
+}: {
+  title: string;
+  active: boolean;
+  onAdd: () => void;
+  onRemove: () => void;
+  children: ReactNode;
+}) {
+  return active ? (
+    <div className="relative rounded-2xl border border-slate-300 bg-slate-50/70 p-4">
+      <AnimatedUIButton
+        type="button"
+        size="xs"
+        variant="light"
+        color="error"
+        icon="close"
+        iconPosition="left"
+        onClick={onRemove}
+        className="absolute top-3 right-3 z-20"
+      />
+      <div className="pr-12">{children}</div>
+    </div>
+  ) : (
+    <AnimatedUIButton
+      type="button"
+      size="sm"
+      variant="outline"
+      icon="plus"
+      iconPosition="left"
+      onClick={onAdd}
+    >
+      {title}
+    </AnimatedUIButton>
+  );
 }
 
 function VariantAttributeField({
@@ -114,30 +165,18 @@ function VariantAttributeField({
     );
   }
 
-  if (attribute.dataType === "JSON") {
-    return (
-      <PanelField id={id} label={attribute.name}>
-        <Textarea
-          id={id}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          placeholder={getAttributePlaceholder(attribute)}
-          className="min-h-24 rounded-md border-slate-300 px-4 py-3 text-base"
-        />
-      </PanelField>
-    );
-  }
-
   return (
     <div className="flex items-center gap-3">
-      <PanelInput
-        fullWidth
+      <ProductAttributeValueInput
         id={id}
-        type={attribute.dataType === "NUMBER" ? "number" : "text"}
-        inputMode={attribute.dataType === "NUMBER" ? "decimal" : undefined}
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={onChange}
+        attributeName={attribute.name}
+        dataType={attribute.dataType}
+        unit={attribute.unit || null}
         placeholder={getAttributePlaceholder(attribute)}
+        inputType={attribute.dataType === "NUMBER" ? "number" : "text"}
+        inputMode={attribute.dataType === "NUMBER" ? "decimal" : undefined}
       />
       {attribute.unit ? (
         <span className="text-sm font-medium text-slate-400">{attribute.unit}</span>
@@ -147,23 +186,27 @@ function VariantAttributeField({
 }
 
 export default function ProductVariantCard({
+  family,
   variant,
   index,
+  isOpen,
+  isDefault,
   isFirst,
   isLast,
   attributes,
-  isOpen,
   onVariantRemove,
   onVariantDuplicate,
   onVariantMove,
   onVariantChange,
   onVariantAttributeValueChange,
 }: {
+  family: ProductEditorFormState;
   variant: ProductVariantEditorState;
   index: number;
+  isOpen: boolean;
+  isDefault: boolean;
   isFirst: boolean;
   isLast: boolean;
-  isOpen: boolean;
   attributes: ProductAttributeEditorState[];
   onVariantRemove: (formKey: string) => void;
   onVariantDuplicate: (formKey: string) => void;
@@ -173,45 +216,74 @@ export default function ProductVariantCard({
     field: Field,
     value: ProductVariantEditorState[Field],
   ) => void;
-  onVariantAttributeValueChange: (
-    formKey: string,
-    attributeFormKey: string,
-    value: string,
-  ) => void;
+  onVariantAttributeValueChange: (formKey: string, attributeFormKey: string, value: string) => void;
 }) {
-  const lifecycleBadge = getLifecycleBadge(variant.lifecycleStatus);
-  const visibilityBadge = getVisibilityBadge(variant.visibility);
-  const commercialBadge = getCommercialModeBadge(variant.commercialMode);
+  const defaultVariant = family.variants[0] ?? null;
+  const effectiveValues = getEffectiveVariantValues(family, variant);
+  const lifecycleBadge = getLifecycleBadge(effectiveValues.effectiveLifecycleStatus);
+  const visibilityBadge = getVisibilityBadge(effectiveValues.effectiveVisibility);
+  const commercialBadge = getCommercialModeBadge(effectiveValues.effectiveCommercialMode);
   const filledAttributeCount = variant.attributeValues.filter((attributeValue) =>
     attributeValue.value.trim(),
   ).length;
+  const addonCount = getAddonCount(variant, isDefault);
+  const variantSlug = getComputedVariantSlug(variant.name) || "slug-variante";
+
+  const setAddonState = (
+    field:
+      | "lifecycleStatus"
+      | "visibility"
+      | "commercialMode"
+      | "priceVisibility"
+      | "basePriceAmount",
+    active: boolean,
+  ) => {
+    onVariantChange(variant.formKey, "addons", {
+      ...variant.addons,
+      [field]: active,
+    });
+  };
 
   return (
     <AccordionItem
       value={variant.formKey}
-      className="rounded-2xl border border-slate-200 bg-white px-4 shadow-sm sm:px-5"
+      className="rounded-3xl border border-slate-300 bg-white px-4 shadow-sm sm:px-5"
     >
-      <div className="flex justify-between items-start gap-3 py-4 sm:pt-5">
-          <div className="min-w-0 space-y-3">
-            <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+      <div className="flex items-start gap-3 py-4 sm:pt-5">
+        <div className="min-w-0 flex-1 space-y-3">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-xs font-semibold tracking-[0.16em] text-slate-400 uppercase">
                 Variante {index + 1}
               </p>
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="truncate text-base font-semibold text-cobam-dark-blue">
-                  {variant.title.trim() || "Variante sans titre"}
-                </h3>
-                {variant.sku.trim() ? (
-                  <StaffBadge size="sm" color="default">
-                    {variant.sku}
-                  </StaffBadge>
-                ) : null}
-              </div>
-              <p className="text-sm text-slate-500">
-                {variant.subtitle.trim() || formatVariantPrice(variant)}
-              </p>
+              {isDefault ? (
+                <StaffBadge size="sm" color="primary" icon="badge-check">
+                  Par défaut
+                </StaffBadge>
+              ) : null}
+              {!isDefault ? (
+                <StaffBadge size="sm" color={addonCount > 0 ? "info" : "default"}>
+                  {addonCount} addon{addonCount > 1 ? "s" : ""}
+                </StaffBadge>
+              ) : null}
             </div>
 
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-cobam-dark-blue truncate text-base font-semibold">
+                {variant.name.trim() || `Variante ${index + 1}`}
+              </h3>
+              {variant.sku.trim() ? (
+                <StaffBadge size="sm" color="default">
+                  {variant.sku}
+                </StaffBadge>
+              ) : null}
+            </div>
+
+            <p className="text-sm text-slate-500">{formatVariantPrice(effectiveValues.effectivePriceAmount, family.priceUnit)}</p>
+            <p className="text-xs text-slate-400">{variantSlug}</p>
+          </div>
+
+          {!isOpen ? (
             <div className="flex flex-wrap gap-2">
               <StaffBadge size="sm" color={lifecycleBadge.color}>
                 {lifecycleBadge.label}
@@ -229,38 +301,63 @@ export default function ProductVariantCard({
                 {filledAttributeCount}/{attributes.length} attribut
                 {attributes.length > 1 ? "s" : ""}
               </StaffBadge>
-              {variant.isPromoted ? (
-                <StaffBadge size="sm" color="warning">
-                  En promotion
-                </StaffBadge>
-              ) : null}
             </div>
-          </div>
-        <div className="inline-flex items-center gap-2">
+          ) : null}
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2 pt-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <AnimatedUIButton variant="outline" icon="ellipsis" />
+              <AnimatedUIButton
+                type="button"
+                variant="outline"
+                icon="ellipsis"
+                color="default"
+                aria-label="Options de la variante"
+                title="Options de la variante"
+                size="sm"
+              />
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuGroup>
-                <DropdownMenuItem className="inline-flex gap-2 w-full" onClick={() => onVariantDuplicate(variant.formKey)}>
-                  <Copy className="w-3 h-3" />Dupliquer
+                <DropdownMenuItem onSelect={() => onVariantDuplicate(variant.formKey)}>
+                  <Copy className="h-4 w-4" />
+                  Dupliquer
                 </DropdownMenuItem>
-                <DropdownMenuItem className="inline-flex gap-2 w-full" disabled={isFirst} onClick={() => onVariantMove(variant.formKey, "up")}><ChevronUp className="w-3 h-3" /> Monter</DropdownMenuItem>
-                <DropdownMenuItem className="inline-flex gap-2 w-full" disabled={isLast} onClick={() => onVariantMove(variant.formKey, "down")}><ChevronDown className="w-3 h-3" /> Descendre</DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={isFirst}
+                  onSelect={() => onVariantMove(variant.formKey, "up")}
+                >
+                  <ChevronUp className="h-4 w-4" />
+                  Monter
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={isLast}
+                  onSelect={() => onVariantMove(variant.formKey, "down")}
+                >
+                  <ChevronDown className="h-4 w-4" />
+                  Descendre
+                </DropdownMenuItem>
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
-          <AccordionTrigger hideChevron className="min-w-0 flex-1 py-0 hover:no-underline [something that removes the default chevron]">
-              <AnimatedUIButton icon={isOpen ? "chevron-up" : "chevron-down" }></AnimatedUIButton>
+
+          <AccordionTrigger hideChevron className="w-auto shrink-0 py-0 hover:no-underline">
+            <AnimatedUIButton
+              size="sm"
+              variant="outline"
+              icon={isOpen ? "chevron-up" : "chevron-down"}
+            />
           </AccordionTrigger>
+
+          {!isDefault ? (
             <Dialog>
               <DialogTrigger asChild>
                 <AnimatedUIButton
+                  size="sm"
                   type="button"
                   variant="outline"
                   icon="close"
-                  iconPosition="left"
                   color="error"
                   aria-label="Supprimer la variante"
                   title="Supprimer la variante"
@@ -270,9 +367,7 @@ export default function ProductVariantCard({
                 <DialogHeader>
                   <DialogTitle>Retirer cette variante ?</DialogTitle>
                   <DialogDescription>
-                    Cette action retirera définitivement{" "}
-                    {variant.title.trim() || `la variante ${index + 1}`} de la
-                    famille produit en cours d’édition.
+                    Cette action retirera définitivement {variant.name.trim() || `la variante ${index + 1}`} de la famille produit en cours d’édition.
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
@@ -294,309 +389,367 @@ export default function ProductVariantCard({
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-          </div>
+          ) : null}
+        </div>
       </div>
 
-      <AccordionContent className="pt-5 pb-5 overflow-y-auto">
-        <div className="grid gap-5">
-          <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)_minmax(0,1fr)]">
-            <PanelField
-              id={`variant-title-${variant.formKey}`}
-              label="Titre"
-              hint={`Slug : ${variant.slug || "à compléter"}`}
-            >
-              <PanelInput
-                id={`variant-title-${variant.formKey}`}
-                fullWidth
-                value={variant.title}
-                onChange={(event) => {
-                  const nextTitle = event.target.value;
-                  onVariantChange(variant.formKey, "title", nextTitle);
-                  if (
-                    variant.slug === "" ||
-                    variant.slug === slugifyProductReference(variant.title)
-                  ) {
-                    onVariantChange(
-                      variant.formKey,
-                      "slug",
-                      slugifyProductReference(nextTitle),
-                    );
-                  }
-                }}
-                placeholder="Ex. Mitigeur noir mat"
-              />
-            </PanelField>
+      <AccordionContent className="min-h-fit pt-5 pb-5">
+        <div className="space-y-5">
+          {!isDefault ? (
+            <div className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4 text-sm text-cyan-900">
+              Cette variante hérite des réglages de la variante par défaut tant qu’aucun addon n’est activé.
+            </div>
+          ) : null}
 
-            <PanelField id={`variant-sku-${variant.formKey}`} label="SKU">
+          <div className="grid gap-4 lg:grid-cols-2">
+            <PanelField
+              id={`variant-sku-${variant.formKey}`}
+              label="SKU"
+              hint="Toujours spécifique à la variante."
+            >
               <PanelInput
                 id={`variant-sku-${variant.formKey}`}
                 fullWidth
                 value={variant.sku}
-                onChange={(event) =>
-                  onVariantChange(variant.formKey, "sku", event.target.value)
-                }
-                placeholder="Ex. COB-MTG-001"
-              />
-            </PanelField>
-
-            <PanelField id={`variant-slug-${variant.formKey}`} label="Slug">
-              <PanelInput
-                id={`variant-slug-${variant.formKey}`}
-                fullWidth
-                value={variant.slug}
-                onChange={(event) =>
-                  onVariantChange(variant.formKey, "slug", event.target.value)
-                }
-                placeholder="slug-variante"
-              />
-            </PanelField>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)_minmax(0,0.7fr)]">
-            <PanelField id={`variant-subtitle-${variant.formKey}`} label="Sous-titre">
-              <PanelInput
-                id={`variant-subtitle-${variant.formKey}`}
-                fullWidth
-                value={variant.subtitle}
-                onChange={(event) =>
-                  onVariantChange(variant.formKey, "subtitle", event.target.value)
-                }
-                placeholder="Ex. Finition noire mate"
+                onChange={(event) => onVariantChange(variant.formKey, "sku", event.target.value)}
+                placeholder="Ex. ATL-001-BLK"
               />
             </PanelField>
 
             <PanelField
-              id={`variant-lifecycle-${variant.formKey}`}
-              label="Cycle de vie"
-            >
-              <StaffSelect
-                fullWidth
-                id={`variant-lifecycle-${variant.formKey}`}
-                value={variant.lifecycleStatus}
-                onValueChange={(value) =>
-                  onVariantChange(
-                    variant.formKey,
-                    "lifecycleStatus",
-                    value as ProductVariantEditorState["lifecycleStatus"],
-                  )
-                }
-                options={[
-                  { value: "DRAFT", label: "Brouillon" },
-                  { value: "ACTIVE", label: "Active" },
-                  { value: "ARCHIVED", label: "Archivée" },
-                ]}
-                triggerClassName="h-12 rounded-2xl border-slate-300 px-4 text-base"
-              />
-            </PanelField>
-
-            <PanelField id={`variant-visibility-${variant.formKey}`} label="Visibilité">
-              <StaffSelect
-                fullWidth
-                id={`variant-visibility-${variant.formKey}`}
-                value={variant.visibility}
-                onValueChange={(value) =>
-                  onVariantChange(
-                    variant.formKey,
-                    "visibility",
-                    value as ProductVariantEditorState["visibility"],
-                  )
-                }
-                options={[
-                  { value: "HIDDEN", label: "Masquée" },
-                  { value: "PUBLIC", label: "Publique" },
-                ]}
-                triggerClassName="h-12 rounded-2xl border-slate-300 px-4 text-base"
-              />
-            </PanelField>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
-            <PanelField
-              id={`variant-commercial-${variant.formKey}`}
-              label="Mode commercial"
-            >
-              <StaffSelect
-                fullWidth
-                id={`variant-commercial-${variant.formKey}`}
-                value={variant.commercialMode}
-                onValueChange={(value) =>
-                  onVariantChange(
-                    variant.formKey,
-                    "commercialMode",
-                    value as ProductVariantEditorState["commercialMode"],
-                  )
-                }
-                options={[
-                  { value: "REFERENCE_ONLY", label: "Référence" },
-                  { value: "QUOTE_ONLY", label: "Sur demande" },
-                  { value: "SELLABLE", label: "Vendable" },
-                ]}
-                triggerClassName="h-12 rounded-2xl border-slate-300 px-4 text-base"
-              />
-            </PanelField>
-
-            <PanelField
-              id={`variant-price-${variant.formKey}`}
-              label="Visibilité du prix"
-            >
-              <StaffSelect
-                fullWidth
-                id={`variant-price-${variant.formKey}`}
-                value={variant.priceVisibility}
-                onValueChange={(value) =>
-                  onVariantChange(
-                    variant.formKey,
-                    "priceVisibility",
-                    value as ProductVariantEditorState["priceVisibility"],
-                  )
-                }
-                options={[
-                  { value: "HIDDEN", label: "Masquée" },
-                  { value: "VISIBLE", label: "Visible" },
-                ]}
-                triggerClassName="h-12 rounded-2xl border-slate-300 px-4 text-base"
-              />
-            </PanelField>
-
-            <PanelField
-              id={`variant-promoted-${variant.formKey}`}
-              label="Promotion"
-              className="w-auto"
-            >
-              <BooleanButton
-                id={`variant-promoted-${variant.formKey}`}
-                checked={variant.isPromoted}
-                onClick={(checked: boolean) =>
-                  onVariantChange(variant.formKey, "isPromoted", checked)
-                }
-              />
-            </PanelField>
-          </div>
-
-          <div className="grid gap-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto] lg:items-end">
-            <PanelField
-              id={`variant-base-price-amount-${variant.formKey}`}
-              label="Prix de base"
+              id={`variant-name-${variant.formKey}`}
+              label="Nom"
             >
               <PanelInput
-                id={`variant-base-price-amount-${variant.formKey}`}
+                id={`variant-name-${variant.formKey}`}
                 fullWidth
-                type="number"
-                inputMode="decimal"
-                step="0.001"
-                min="0"
-                value={variant.basePriceAmount}
-                onChange={(event) => {
-                  const nextValue = event.target.value;
-                  onVariantChange(variant.formKey, "basePriceAmount", nextValue);
-                  if (variant.isPriceLinked) {
-                    onVariantChange(
-                      variant.formKey,
-                      "currentPriceAmount",
-                      nextValue,
-                    );
-                  }
-                }}
-                placeholder="Prix de base"
+                value={variant.name}
+                onChange={(event) => onVariantChange(variant.formKey, "name", event.target.value)}
+                placeholder="Nom de la variante"
               />
             </PanelField>
-
-            <button
-              type="button"
-              aria-pressed={variant.isPriceLinked}
-              title={
-                variant.isPriceLinked
-                  ? "Délier les deux prix"
-                  : "Lier les deux prix"
-              }
-              onClick={() => {
-                const nextLinked = !variant.isPriceLinked;
-                onVariantChange(variant.formKey, "isPriceLinked", nextLinked);
-                if (nextLinked) {
-                  onVariantChange(
-                    variant.formKey,
-                    "currentPriceAmount",
-                    variant.basePriceAmount,
-                  );
-                }
-              }}
-              className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border transition-colors ${
-                variant.isPriceLinked
-                  ? "border-cobam-water-blue/30 bg-cobam-water-blue/10 text-cobam-water-blue"
-                  : "border-slate-200 bg-white/70 text-slate-400 hover:border-slate-300 hover:text-slate-600"
-              }`}
-            >
-              {variant.isPriceLinked ? (
-                <Link2 className="h-4 w-4" />
-              ) : (
-                <Unlink2 className="h-4 w-4" />
-              )}
-            </button>
-
-            <PanelField
-              id={`variant-current-price-amount-${variant.formKey}`}
-              label="Prix courant"
-            >
-              <PanelInput
-                id={`variant-current-price-amount-${variant.formKey}`}
-                fullWidth
-                type="number"
-                inputMode="decimal"
-                step="0.001"
-                min="0"
-                value={variant.currentPriceAmount}
-                onChange={(event) => {
-                  onVariantChange(
-                    variant.formKey,
-                    "currentPriceAmount",
-                    event.target.value,
-                  );
-                  if (variant.isPriceLinked) {
-                    onVariantChange(variant.formKey, "isPriceLinked", false);
-                  }
-                }}
-                placeholder="Prix courant"
-              />
-            </PanelField>
-
-            <span className="flex h-12 items-center text-sm font-medium text-slate-500">
-              TND
-            </span>
           </div>
 
           <PanelField
             id={`variant-description-${variant.formKey}`}
             label="Description"
           >
-            <Textarea
-              id={`variant-description-${variant.formKey}`}
+            <ArticleRichTextEditor
+              editorId={`variant-description-${variant.formKey}`}
               value={variant.description}
-              onChange={(event) =>
-                onVariantChange(variant.formKey, "description", event.target.value)
-              }
-              placeholder="Description courte de cette référence précise..."
-              className="min-h-24 rounded-md border-slate-300 px-4 py-3 text-base"
+              onChange={(nextValue) => onVariantChange(variant.formKey, "description", nextValue)}
+              placeholder="Description de la variante..."
+              className="overflow-hidden rounded-[28px]"
             />
           </PanelField>
 
+          <PanelField
+            id={`variant-description-seo-${variant.formKey}`}
+            label="Description SEO"
+          >
+            <Textarea
+              id={`variant-description-seo-${variant.formKey}`}
+              value={variant.descriptionSeo}
+              onChange={(event) =>
+                onVariantChange(variant.formKey, "descriptionSeo", event.target.value)
+              }
+              placeholder="Résumé court optimisé pour les moteurs de recherche..."
+              className="min-h-28 rounded-md border-slate-300 px-4 py-3 text-base"
+            />
+          </PanelField>
+
+          {isDefault ? (
+            <div className="grid gap-4 lg:grid-cols-2">
+              <PanelField id={`variant-lifecycle-${variant.formKey}`} label="Cycle de vie">
+                <StaffSelect
+                  fullWidth
+                  id={`variant-lifecycle-${variant.formKey}`}
+                  value={variant.lifecycleStatus ?? "DRAFT"}
+                  onValueChange={(value) =>
+                    onVariantChange(
+                      variant.formKey,
+                      "lifecycleStatus",
+                      value as ProductVariantEditorState["lifecycleStatus"],
+                    )
+                  }
+                  options={[
+                    { value: "DRAFT", label: "Brouillon" },
+                    { value: "ACTIVE", label: "Active" },
+                    { value: "ARCHIVED", label: "Archivée" },
+                  ]}
+                  triggerClassName="h-10 rounded-2xl border-slate-300 px-4 text-base"
+                />
+              </PanelField>
+
+              <PanelField id={`variant-visibility-${variant.formKey}`} label="Visibilité">
+                <StaffSelect
+                  fullWidth
+                  id={`variant-visibility-${variant.formKey}`}
+                  value={variant.visibility ?? "HIDDEN"}
+                  onValueChange={(value) =>
+                    onVariantChange(
+                      variant.formKey,
+                      "visibility",
+                      value as ProductVariantEditorState["visibility"],
+                    )
+                  }
+                  options={[
+                    { value: "HIDDEN", label: "Masquée" },
+                    { value: "PUBLIC", label: "Publique" },
+                  ]}
+                  triggerClassName="h-10 rounded-2xl border-slate-300 px-4 text-base"
+                />
+              </PanelField>
+
+              <PanelField id={`variant-commercial-${variant.formKey}`} label="Mode commercial">
+                <StaffSelect
+                  fullWidth
+                  id={`variant-commercial-${variant.formKey}`}
+                  value={variant.commercialMode ?? "REFERENCE_ONLY"}
+                  onValueChange={(value) =>
+                    onVariantChange(
+                      variant.formKey,
+                      "commercialMode",
+                      value as ProductVariantEditorState["commercialMode"],
+                    )
+                  }
+                  options={[
+                    { value: "REFERENCE_ONLY", label: "Référence" },
+                    { value: "QUOTE_ONLY", label: "Sur demande" },
+                    { value: "SELLABLE", label: "Vendable" },
+                  ]}
+                  triggerClassName="h-10 rounded-2xl border-slate-300 px-4 text-base"
+                />
+              </PanelField>
+
+              <PanelField id={`variant-price-visibility-${variant.formKey}`} label="Visibilité du prix">
+                <StaffSelect
+                  fullWidth
+                  id={`variant-price-visibility-${variant.formKey}`}
+                  value={variant.priceVisibility ?? "HIDDEN"}
+                  onValueChange={(value) =>
+                    onVariantChange(
+                      variant.formKey,
+                      "priceVisibility",
+                      value as ProductVariantEditorState["priceVisibility"],
+                    )
+                  }
+                  options={[
+                    { value: "HIDDEN", label: "Masquée" },
+                    { value: "VISIBLE", label: "Visible" },
+                  ]}
+                  triggerClassName="h-10 rounded-2xl border-slate-300 px-4 text-base"
+                />
+              </PanelField>
+
+              <div className="lg:col-span-2">
+                <ProductPriceField
+                  id={`variant-base-price-${variant.formKey}`}
+                  value={variant.basePriceAmount ?? ""}
+                  priceUnitSymbol={getProductPriceUnitSymbol(family.priceUnit)}
+                  onChange={(nextValue) =>
+                    onVariantChange(variant.formKey, "basePriceAmount", nextValue)
+                  }
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid gap-4 lg:grid-cols-2">
+                <AddonCard
+                  title="Cycle de vie"
+                  active={variant.addons.lifecycleStatus}
+                  onAdd={() => {
+                    setAddonState("lifecycleStatus", true);
+                    onVariantChange(
+                      variant.formKey,
+                      "lifecycleStatus",
+                      defaultVariant?.lifecycleStatus ?? "DRAFT",
+                    );
+                  }}
+                  onRemove={() => {
+                    setAddonState("lifecycleStatus", false);
+                    onVariantChange(variant.formKey, "lifecycleStatus", null);
+                  }}
+                >
+                  <PanelField id={`variant-lifecycle-addon-${variant.formKey}`} label="Cycle de vie">
+                    <StaffSelect
+                      fullWidth
+                      id={`variant-lifecycle-addon-${variant.formKey}`}
+                      value={variant.lifecycleStatus ?? defaultVariant?.lifecycleStatus ?? "DRAFT"}
+                      onValueChange={(value) =>
+                        onVariantChange(
+                          variant.formKey,
+                          "lifecycleStatus",
+                          value as ProductVariantEditorState["lifecycleStatus"],
+                        )
+                      }
+                      options={[
+                        { value: "DRAFT", label: "Brouillon" },
+                        { value: "ACTIVE", label: "Active" },
+                        { value: "ARCHIVED", label: "Archivée" },
+                      ]}
+                      triggerClassName="h-10 rounded-2xl border-slate-300 px-4 text-base"
+                    />
+                  </PanelField>
+                </AddonCard>
+
+                <AddonCard
+                  title="Visibilité"
+                  active={variant.addons.visibility}
+                  onAdd={() => {
+                    setAddonState("visibility", true);
+                    onVariantChange(
+                      variant.formKey,
+                      "visibility",
+                      defaultVariant?.visibility ?? "HIDDEN",
+                    );
+                  }}
+                  onRemove={() => {
+                    setAddonState("visibility", false);
+                    onVariantChange(variant.formKey, "visibility", null);
+                  }}
+                >
+                  <PanelField id={`variant-visibility-addon-${variant.formKey}`} label="Visibilité">
+                    <StaffSelect
+                      fullWidth
+                      id={`variant-visibility-addon-${variant.formKey}`}
+                      value={variant.visibility ?? defaultVariant?.visibility ?? "HIDDEN"}
+                      onValueChange={(value) =>
+                        onVariantChange(
+                          variant.formKey,
+                          "visibility",
+                          value as ProductVariantEditorState["visibility"],
+                        )
+                      }
+                      options={[
+                        { value: "HIDDEN", label: "Masquée" },
+                        { value: "PUBLIC", label: "Publique" },
+                      ]}
+                      triggerClassName="h-10 rounded-2xl border-slate-300 px-4 text-base"
+                    />
+                  </PanelField>
+                </AddonCard>
+
+                <AddonCard
+                  title="Mode commercial"
+                  active={variant.addons.commercialMode}
+                  onAdd={() => {
+                    setAddonState("commercialMode", true);
+                    onVariantChange(
+                      variant.formKey,
+                      "commercialMode",
+                      defaultVariant?.commercialMode ?? "REFERENCE_ONLY",
+                    );
+                  }}
+                  onRemove={() => {
+                    setAddonState("commercialMode", false);
+                    onVariantChange(variant.formKey, "commercialMode", null);
+                  }}
+                >
+                  <PanelField id={`variant-commercial-addon-${variant.formKey}`} label="Mode commercial">
+                    <StaffSelect
+                      fullWidth
+                      id={`variant-commercial-addon-${variant.formKey}`}
+                      value={variant.commercialMode ?? defaultVariant?.commercialMode ?? "REFERENCE_ONLY"}
+                      onValueChange={(value) =>
+                        onVariantChange(
+                          variant.formKey,
+                          "commercialMode",
+                          value as ProductVariantEditorState["commercialMode"],
+                        )
+                      }
+                      options={[
+                        { value: "REFERENCE_ONLY", label: "Référence" },
+                        { value: "QUOTE_ONLY", label: "Sur demande" },
+                        { value: "SELLABLE", label: "Vendable" },
+                      ]}
+                      triggerClassName="h-10 rounded-2xl border-slate-300 px-4 text-base"
+                    />
+                  </PanelField>
+                </AddonCard>
+
+                <AddonCard
+                  title="Visibilité du prix"
+                  active={variant.addons.priceVisibility}
+                  onAdd={() => {
+                    setAddonState("priceVisibility", true);
+                    onVariantChange(
+                      variant.formKey,
+                      "priceVisibility",
+                      defaultVariant?.priceVisibility ?? "HIDDEN",
+                    );
+                  }}
+                  onRemove={() => {
+                    setAddonState("priceVisibility", false);
+                    onVariantChange(variant.formKey, "priceVisibility", null);
+                  }}
+                >
+                  <PanelField id={`variant-price-visibility-addon-${variant.formKey}`} label="Visibilité du prix">
+                    <StaffSelect
+                      fullWidth
+                      id={`variant-price-visibility-addon-${variant.formKey}`}
+                      value={variant.priceVisibility ?? defaultVariant?.priceVisibility ?? "HIDDEN"}
+                      onValueChange={(value) =>
+                        onVariantChange(
+                          variant.formKey,
+                          "priceVisibility",
+                          value as ProductVariantEditorState["priceVisibility"],
+                        )
+                      }
+                      options={[
+                        { value: "HIDDEN", label: "Masquée" },
+                        { value: "VISIBLE", label: "Visible" },
+                      ]}
+                      triggerClassName="h-10 rounded-2xl border-slate-300 px-4 text-base"
+                    />
+                  </PanelField>
+                </AddonCard>
+              </div>
+
+              <AddonCard
+                title="Prix"
+                active={variant.addons.basePriceAmount}
+                onAdd={() => {
+                  setAddonState("basePriceAmount", true);
+                  onVariantChange(
+                    variant.formKey,
+                    "basePriceAmount",
+                    defaultVariant?.basePriceAmount ?? "",
+                  );
+                }}
+                onRemove={() => {
+                  setAddonState("basePriceAmount", false);
+                  onVariantChange(variant.formKey, "basePriceAmount", null);
+                }}
+              >
+                <ProductPriceField
+                  id={`variant-price-addon-${variant.formKey}`}
+                  value={variant.basePriceAmount ?? defaultVariant?.basePriceAmount ?? ""}
+                  priceUnitSymbol={getProductPriceUnitSymbol(family.priceUnit)}
+                  onChange={(nextValue) =>
+                    onVariantChange(variant.formKey, "basePriceAmount", nextValue)
+                  }
+                />
+              </AddonCard>
+            </div>
+          )}
+
           <ProductMediaGrid
             items={variant.media}
-            onChange={(nextMedia) =>
-              onVariantChange(variant.formKey, "media", nextMedia)
-            }
+            onChange={(nextMedia) => onVariantChange(variant.formKey, "media", nextMedia)}
             title="Galerie de la variante"
             description="Optionnel : ajoutez plusieurs médias si besoin, puis glissez-les pour définir leur ordre d'affichage."
           />
 
-          <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-sm font-semibold text-cobam-dark-blue">
-                Valeurs d’attributs
-              </p>
+          <div className="rounded-2xl border border-slate-300 bg-slate-50/80 p-4">
+            <div className="mb-4 inline-flex items-center gap-2">
+              <p className="text-cobam-dark-blue text-sm font-semibold">Valeurs d’attributs</p>
               <StaffBadge size="sm" color="default">
                 {attributes.length}
               </StaffBadge>
             </div>
+
             {attributes.length === 0 ? (
               <p className="text-sm leading-6 text-slate-500">
                 Ajoutez d’abord des attributs sur la famille pour les renseigner ici.
@@ -606,10 +759,10 @@ export default function ProductVariantCard({
                 {attributes.map((attribute) => (
                   <div
                     key={`${variant.formKey}-${attribute.formKey}`}
-                    className="rounded-2xl border border-slate-200 bg-white p-4"
+                    className="rounded-2xl border border-slate-300 bg-white p-4"
                   >
                     <div className="mb-3 flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-semibold text-cobam-dark-blue">
+                      <p className="text-cobam-dark-blue text-sm font-semibold">
                         {attribute.name || "Attribut sans nom"}
                       </p>
                       <StaffBadge size="sm" color="secondary">
@@ -625,11 +778,7 @@ export default function ProductVariantCard({
                         )?.value ?? ""
                       }
                       onChange={(nextValue) =>
-                        onVariantAttributeValueChange(
-                          variant.formKey,
-                          attribute.formKey,
-                          nextValue,
-                        )
+                        onVariantAttributeValueChange(variant.formKey, attribute.formKey, nextValue)
                       }
                     />
                   </div>

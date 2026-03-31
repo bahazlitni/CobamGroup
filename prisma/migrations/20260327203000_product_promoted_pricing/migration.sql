@@ -38,7 +38,7 @@ ADD COLUMN "is_promoted" BOOLEAN NOT NULL DEFAULT false;
 -- AlterTable
 ALTER TABLE "product_variants"
 ADD COLUMN "base_price_amount" DECIMAL(12,2),
-ADD COLUMN "currency_code" CHAR(3) NOT NULL DEFAULT 'EUR',
+ADD COLUMN "currency_code" CHAR(3) NOT NULL DEFAULT 'TND',
 ADD COLUMN "current_price_amount" DECIMAL(12,2),
 ADD COLUMN "is_promoted" BOOLEAN NOT NULL DEFAULT false;
 

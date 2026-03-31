@@ -1,7 +1,8 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Sparkles, X } from "lucide-react";
+import { X } from "lucide-react";
+import ArticleRichTextEditor from "@/components/staff/articles/article-rich-text-editor";
 import { Accordion } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
 import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
@@ -17,20 +18,18 @@ import PanelInput from "@/components/staff/ui/PanelInput";
 import StaffSearchSelect from "@/components/staff/ui/search-select";
 import StaffSelect from "@/components/staff/ui/PanelSelect";
 import StaffTagInput from "@/components/staff/ui/tag-input";
-import BooleanButton from "../ui/BooleanButton";
+import ProductAttributeMetadataInput from "./ProductAttributeMetadataInput";
 import ProductMainImageField from "./ProductMainImageField";
 import ProductVariantCard from "./ProductVariantCard";
-import {
-  PRODUCT_ATTRIBUTE_DATA_TYPE_OPTIONS,
-  type ProductFormOptionsDto,
-} from "@/features/products/types";
+import { PRODUCT_PRICE_UNIT_SELECT_OPTIONS } from "@/features/products/price-units";
+import { type ProductFormOptionsDto } from "@/features/products/types";
 import type {
   ProductAttributeEditorState,
   ProductEditorFormState,
   ProductVariantEditorState,
 } from "@/features/products/form";
+import { getComputedFamilySlug } from "@/features/products/form";
 import { getProductAttributeDataTypeLabel } from "@/features/products/attribute-values";
-import { slugifyProductName } from "@/features/products/slug";
 
 type EditableField = keyof ProductEditorFormState;
 type EditableAttributeField = keyof ProductAttributeEditorState;
@@ -46,15 +45,35 @@ function RequirementRow({
   optional?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 px-3 py-2">
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-300 bg-slate-50/70 px-3 py-2">
       <span className="text-sm text-slate-600">{label}</span>
-      <StaffBadge
-        size="sm"
-        color={complete ? "success" : optional ? "default" : "warning"}
-      >
+      <StaffBadge size="sm" color={complete ? "success" : optional ? "default" : "warning"}>
         {complete ? "OK" : optional ? "Optionnel" : "À compléter"}
       </StaffBadge>
     </div>
+  );
+}
+
+function isVariantComplete(variant: ProductVariantEditorState) {
+  return (
+    variant.sku.trim().length > 0 &&
+    variant.name.trim().length > 0 &&
+    variant.description.trim().length > 0 &&
+    variant.descriptionSeo.trim().length > 0
+  );
+}
+
+function isDefaultVariantConfigured(variant: ProductVariantEditorState | undefined) {
+  if (!variant) {
+    return false;
+  }
+
+  return (
+    isVariantComplete(variant) &&
+    variant.lifecycleStatus != null &&
+    variant.visibility != null &&
+    variant.commercialMode != null &&
+    variant.priceVisibility != null
   );
 }
 
@@ -85,10 +104,7 @@ export default function ProductEditorPanels({
   options: ProductFormOptionsDto;
   isSaving: boolean;
   isDeleting?: boolean;
-  onFieldChange: (
-    field: EditableField,
-    value: ProductEditorFormState[EditableField],
-  ) => void;
+  onFieldChange: (field: EditableField, value: ProductEditorFormState[EditableField]) => void;
   onAttributeAdd: () => void;
   onAttributeRemove: (formKey: string) => void;
   onAttributeChange: <Field extends EditableAttributeField>(
@@ -105,11 +121,7 @@ export default function ProductEditorPanels({
     field: Field,
     value: ProductVariantEditorState[Field],
   ) => void;
-  onVariantAttributeValueChange: (
-    formKey: string,
-    attributeFormKey: string,
-    value: string,
-  ) => void;
+  onVariantAttributeValueChange: (formKey: string, attributeFormKey: string, value: string) => void;
   onSave: () => void;
   onDelete?: () => void;
   summary?: {
@@ -143,16 +155,11 @@ export default function ProductEditorPanels({
   );
 
   const selectedBrand = useMemo(
-    () =>
-      options.brands.find((brand) => String(brand.id) === form.brandId) ?? null,
+    () => options.brands.find((brand) => String(brand.id) === form.brandId) ?? null,
     [form.brandId, options.brands],
   );
 
-  const variantKeys = useMemo(
-    () => form.variants.map((variant) => variant.formKey),
-    [form.variants],
-  );
-
+  const variantKeys = useMemo(() => form.variants.map((variant) => variant.formKey), [form.variants]);
   const normalizedOpenVariantKeys = useMemo(
     () => openVariantKeys.filter((key) => variantKeys.includes(key)),
     [openVariantKeys, variantKeys],
@@ -166,14 +173,10 @@ export default function ProductEditorPanels({
     }
 
     const previousVariantKeys = previousVariantKeysRef.current;
-    const addedVariantKeys = variantKeys.filter(
-      (variantKey) => !previousVariantKeys.includes(variantKey),
-    );
+    const addedVariantKeys = variantKeys.filter((variantKey) => !previousVariantKeys.includes(variantKey));
 
     if (addedVariantKeys.length > 0) {
-      setOpenVariantKeys((currentKeys) =>
-        Array.from(new Set([...addedVariantKeys, ...currentKeys])),
-      );
+      setOpenVariantKeys((currentKeys) => Array.from(new Set([...addedVariantKeys, ...currentKeys])));
     }
 
     previousVariantKeysRef.current = variantKeys;
@@ -184,15 +187,13 @@ export default function ProductEditorPanels({
     missingDependencies.push("au moins une sous-catégorie produit");
   }
 
+  const defaultVariant = form.variants[0];
+  const hasCompleteDefaultVariant = isDefaultVariantConfigured(defaultVariant);
+  const areAllVariantsComplete = form.variants.every(isVariantComplete);
   const requiredItems = [
     { label: "Nom de la famille", complete: form.name.trim().length > 0 },
-    { label: "Slug", complete: form.slug.trim().length > 0 },
-    {
-      label: "Sous-catégorie liée",
-      complete: form.productSubcategoryIds.length > 0,
-    },
+    { label: "Sous-catégorie liée", complete: form.productSubcategoryIds.length > 0 },
   ];
-
   const optionalItems = [
     { label: "Marque", complete: Boolean(form.brandId) },
     { label: "Image principale", complete: form.mainImage != null },
@@ -201,7 +202,9 @@ export default function ProductEditorPanels({
   const canSave =
     !disableSave &&
     missingDependencies.length === 0 &&
-    requiredItems.every((item) => item.complete);
+    requiredItems.every((item) => item.complete) &&
+    hasCompleteDefaultVariant &&
+    areAllVariantsComplete;
 
   const summary = {
     variantCount: rawSummary.variantCount,
@@ -209,25 +212,12 @@ export default function ProductEditorPanels({
     updatedAt: rawSummary.updatedAt ?? "",
   };
   const hasSummary =
-    rawSummary.variantCount != null ||
-    rawSummary.createdAt != null ||
-    rawSummary.updatedAt != null;
+    rawSummary.variantCount != null || rawSummary.createdAt != null || rawSummary.updatedAt != null;
 
   return (
     <StaffEditorLayout
       sidebar={
         <>
-          <Panel
-            pretitle="Média"
-            title="Image principale"
-            description="Optionnelle : elle illustre toute la famille produit."
-          >
-            <ProductMainImageField
-              value={form.mainImage}
-              onChange={(media) => onFieldChange("mainImage", media)}
-            />
-          </Panel>
-
           <StaffEditorActionsPanel
             mode={mode}
             onSave={onSave}
@@ -235,7 +225,7 @@ export default function ProductEditorPanels({
             saveDisabled={!canSave}
             onDelete={onDelete}
             isDeleting={isDeleting}
-            description="Pour enregistrer, il suffit d’un nom, d’un slug et d’au moins une sous-catégorie. Le reste peut être complété plus tard."
+            description="Pour enregistrer, il faut un nom, au moins une sous-catégorie et une variante par défaut complète."
             topContent={
               <div className="space-y-4">
                 <div className="flex flex-wrap gap-2">
@@ -251,17 +241,21 @@ export default function ProductEditorPanels({
                     {form.attributes.length} attribut
                     {form.attributes.length > 1 ? "s" : ""}
                   </StaffBadge>
-                  {form.isPromoted ? (
-                    <StaffBadge size="sm" color="warning">En promotion</StaffBadge>
-                  ) : null}
                 </div>
 
                 <div className="space-y-2">
                   {requiredItems.map((item) => (
                     <RequirementRow key={item.label} label={item.label} complete={item.complete} />
                   ))}
+                  <RequirementRow label="Variante par défaut" complete={hasCompleteDefaultVariant} />
+                  <RequirementRow label="Toutes les variantes" complete={areAllVariantsComplete} />
                   {optionalItems.map((item) => (
-                    <RequirementRow key={item.label} label={item.label} complete={item.complete} optional />
+                    <RequirementRow
+                      key={item.label}
+                      label={item.label}
+                      complete={item.complete}
+                      optional
+                    />
                   ))}
                 </div>
               </div>
@@ -273,17 +267,21 @@ export default function ProductEditorPanels({
             description="Une vue compacte pour valider rapidement la structure de la famille."
           >
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Nom affiché</p>
-              <p className="mt-1 text-lg font-semibold text-cobam-dark-blue">{form.name.trim() || "Nom de la famille"}</p>
+              <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">Nom affiché</p>
+              <p className="text-cobam-dark-blue mt-1 text-lg font-semibold">
+                {form.name.trim() || "Nom de la famille"}
+              </p>
             </div>
 
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Slug</p>
-              <p className="mt-1 text-sm text-slate-600">{form.slug.trim() || "slug-famille"}</p>
+              <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">Slug</p>
+              <p className="mt-1 text-sm text-slate-600">
+                {getComputedFamilySlug(form.name) || "slug-famille"}
+              </p>
             </div>
 
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Marque</p>
+              <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">Marque</p>
               <p className="mt-1 text-sm text-slate-600">{selectedBrand?.name ?? "Aucune marque"}</p>
             </div>
 
@@ -298,16 +296,16 @@ export default function ProductEditorPanels({
                 <StaffBadge size="sm" color="default">Aucune sous-catégorie</StaffBadge>
               )}
             </div>
+
             <div className="flex flex-wrap gap-2">
               <StaffBadge size="sm" color="default">
                 {form.tagNames.length} tag{form.tagNames.length > 1 ? "s" : ""}
               </StaffBadge>
               <StaffBadge size="sm" color="secondary">
-                {form.attributes.length} attribut
-                {form.attributes.length > 1 ? "s" : ""}
+                {form.attributes.length} attribut{form.attributes.length > 1 ? "s" : ""}
               </StaffBadge>
-              <StaffBadge size="sm" color="info" icon="image">
-                {form.mainImage ? "Image ajoutée" : "Sans image"}
+              <StaffBadge size="sm" color="info">
+                TVA {form.vatRate || "19"}%
               </StaffBadge>
             </div>
 
@@ -335,222 +333,213 @@ export default function ProductEditorPanels({
         </>
       }
     >
-      <Panel
-        pretitle="Catalogue"
-        title="Essentiels"
-        description="Commencez par l’identité de la famille et son placement dans le catalogue."
-      >
-        <div className="space-y-6">
-          {missingDependencies.length > 0 ? (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Ajoutez d’abord {missingDependencies.join(" et ")} pour pouvoir enregistrer cette famille produit.
-            </div>
-          ) : null}
+      <Panel pretitle="Famille" title="Identité et référencement" allowOverflow>
+        <div className="grid gap-6 xl:grid-cols-2">
+          <PanelField id="name" label="Nom">
+            <PanelInput
+              id="name"
+              fullWidth
+              value={form.name}
+              onChange={(event) => onFieldChange("name", event.target.value)}
+              placeholder="Ex. Collection Atlas"
+            />
+          </PanelField>
 
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-            <div className="space-y-4">
-                <PanelField id="name" className="grid-cols" label="Nom" hint={`Slug : ${form.slug || "à générer"}`}>
-                  <PanelInput
-                    id="name"
-                    fullWidth
-                    value={form.name}
-                    onChange={(event) => {
-                      const nextName = event.target.value;
-                      onFieldChange("name", nextName);
-                      if (form.slug === "" || form.slug === slugifyProductName(form.name)) {
-                        onFieldChange("slug", slugifyProductName(nextName));
+          <PanelField id="subtitle" label="Sous-titre">
+            <PanelInput
+              id="subtitle"
+              fullWidth
+              value={form.subtitle}
+              onChange={(event) => onFieldChange("subtitle", event.target.value)}
+              placeholder="Ex. Robinetterie haut de gamme"
+            />
+          </PanelField>
+
+          <PanelField id="family-slug-preview" label="Slug">
+            <PanelInput
+              id="family-slug-preview"
+              fullWidth
+              value={getComputedFamilySlug(form.name)}
+              readOnly
+              placeholder="slug-famille"
+            />
+          </PanelField>
+
+          <PanelField id="brandId" label="Marque">
+            <StaffSearchSelect
+              id="brandId"
+              fullWidth
+              value={form.brandId}
+              onValueChange={(value) => onFieldChange("brandId", value)}
+              emptyLabel="Aucune marque"
+              placeholder="Sélectionner une marque"
+              searchPlaceholder="Rechercher une marque..."
+              noResultsLabel="Aucune marque trouvée"
+              options={options.brands.map((option) => ({
+                value: String(option.id),
+                label: option.name,
+              }))}
+              triggerClassName="h-10 rounded-2xl border-slate-300 px-4 text-base"
+            />
+          </PanelField>
+
+          <PanelField id="productSubcategoryIds" label="Sous-catégories" className="xl:col-span-2">
+            <div className="space-y-3">
+              <StaffSearchSelect
+                value=""
+                onValueChange={(value) => {
+                  if (!value) {
+                    return;
+                  }
+
+                  onFieldChange("productSubcategoryIds", [...form.productSubcategoryIds, value]);
+                }}
+                emptyLabel="Ajouter une sous-catégorie"
+                placeholder="Ajouter une sous-catégorie"
+                searchPlaceholder="Rechercher une sous-catégorie..."
+                noResultsLabel="Aucune autre sous-catégorie disponible"
+                options={remainingProductSubcategories.map((option) => ({
+                  value: String(option.id),
+                  label: `${option.categoryName} / ${option.name}`,
+                }))}
+                fullWidth
+                disabled={
+                  options.productSubcategories.length === 0 ||
+                  remainingProductSubcategories.length === 0
+                }
+                triggerClassName="h-10 rounded-2xl border-slate-300 px-4 text-base"
+              />
+
+              {selectedProductSubcategories.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {selectedProductSubcategories.map((subcategory) => (
+                    <button
+                      key={subcategory.id}
+                      type="button"
+                      onClick={() =>
+                        onFieldChange(
+                          "productSubcategoryIds",
+                          form.productSubcategoryIds.filter(
+                            (subcategoryId) => subcategoryId !== String(subcategory.id),
+                          ),
+                        )
                       }
-                    }}
-                    placeholder="Ex. Collection Atlas"
-                  />
-                </PanelField>
-
-              <div className="grid gap-4 lg:grid-cols-2">
-                <PanelField id="subtitle" label="Sous-titre">
-                  <PanelInput
-                    id="subtitle"
-                    fullWidth
-                    value={form.subtitle}
-                    onChange={(event) => onFieldChange("subtitle", event.target.value)}
-                    placeholder="Ex. Robinetterie haut de gamme"
-                  />
-                </PanelField>
-
-                <PanelField id="brandId" label="Marque">
-                  <StaffSearchSelect
-                    id="brandId"
-                    fullWidth
-                    value={form.brandId}
-                    onValueChange={(value) => onFieldChange("brandId", value)}
-                    emptyLabel="Aucune marque"
-                    placeholder="Sélectionner une marque"
-                    searchPlaceholder="Rechercher une marque..."
-                    noResultsLabel="Aucune marque trouvée"
-                    options={options.brands.map((option) => ({ value: String(option.id), label: option.name }))}
-                    triggerClassName="h-12 rounded-2xl border-slate-300 px-4 text-base"
-                  />
-                </PanelField>
-              </div>
-
-              <PanelField id="excerpt" label="Accroche" hint="Une courte synthèse utile pour les cartes et les listings.">
-                <Textarea
-                  id="excerpt"
-                  value={form.excerpt}
-                  onChange={(event) => onFieldChange("excerpt", event.target.value)}
-                  placeholder="Description de la famille produit..."
-                  className="min-h-24 rounded-md border-slate-300 px-4 py-3 text-base"
-                />
-              </PanelField>
-            </div>
-
-            <div className="rounded-[22px] border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
-              <div className="space-y-4">
-
-                <PanelField id="productSubcategoryIds" label="Sous-catégories" hint="Une famille peut appartenir à plusieurs sous-catégories.">
-                  <div className="space-y-3">
-                    <StaffSearchSelect
-                      value=""
-                      onValueChange={(value) => {
-                        if (!value) {
-                          return;
-                        }
-
-                        onFieldChange("productSubcategoryIds", [...form.productSubcategoryIds, value]);
-                      }}
-                      emptyLabel="Ajouter une sous-catégorie"
-                      placeholder="Ajouter une sous-catégorie"
-                      searchPlaceholder="Rechercher une sous-catégorie..."
-                      noResultsLabel="Aucune autre sous-catégorie disponible"
-                      options={remainingProductSubcategories.map((option) => ({ value: String(option.id), label: `${option.categoryName} / ${option.name}` }))}
-                      fullWidth
-                      disabled={options.productSubcategories.length === 0 || remainingProductSubcategories.length === 0}
-                      triggerClassName="h-12 rounded-2xl border-slate-300 px-4 text-base"
-                    />
-
-                    {selectedProductSubcategories.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {selectedProductSubcategories.map((subcategory) => (
-                          <button
-                            key={subcategory.id}
-                            type="button"
-                            onClick={() => onFieldChange("productSubcategoryIds", form.productSubcategoryIds.filter((subcategoryId) => subcategoryId !== String(subcategory.id)))}
-                            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-cobam-dark-blue transition-colors hover:border-slate-300 hover:bg-slate-100"
-                          >
-                            <span>{subcategory.categoryName} / {subcategory.name}</span>
-                            <X className="h-3.5 w-3.5 text-slate-400" />
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-3 text-sm text-slate-500">
-                        Sélectionnez au moins une sous-catégorie pour enregistrer cette famille.
-                      </div>
-                    )}
-                  </div>
-                </PanelField>
-
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <PanelField id="lifecycleStatus" label="Cycle de vie">
-                    <StaffSelect
-                      id="lifecycleStatus"
-                      fullWidth
-                      value={form.lifecycleStatus}
-                      onValueChange={(value) => onFieldChange("lifecycleStatus", value as ProductEditorFormState["lifecycleStatus"])}
-                      options={[{ value: "DRAFT", label: "Brouillon" }, { value: "ACTIVE", label: "Active" }, { value: "ARCHIVED", label: "Archivée" }]}
-                      triggerClassName="h-12 rounded-2xl border-slate-300 px-4 text-base"
-                    />
-                  </PanelField>
-
-                  <PanelField id="visibility" label="Visibilité">
-                    <StaffSelect
-                      id="visibility"
-                      fullWidth
-                      value={form.visibility}
-                      onValueChange={(value) => onFieldChange("visibility", value as ProductEditorFormState["visibility"])}
-                      options={[{ value: "HIDDEN", label: "Masquée" }, { value: "PUBLIC", label: "Publique" }]}
-                      triggerClassName="h-12 rounded-2xl border-slate-300 px-4 text-base"
-                    />
-                  </PanelField>
+                      className="text-cobam-dark-blue inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium transition-colors hover:border-slate-300 hover:bg-slate-100"
+                    >
+                      <span>
+                        {subcategory.categoryName} / {subcategory.name}
+                      </span>
+                      <X className="h-3.5 w-3.5 text-slate-400" />
+                    </button>
+                  ))}
                 </div>
-
-                <PanelField id="family-promoted" label="Promotion de la famille" hint="Activez cette option si la famille doit pouvoir apparaître dans la page Promotions.">
-                  <BooleanButton id="family-promoted" checked={form.isPromoted} onClick={(checked: boolean) => onFieldChange("isPromoted", checked)} />
-                </PanelField>
-              </div>
+              ) : null}
             </div>
+          </PanelField>
+
+          <PanelField id="description" label="Description" className="xl:col-span-2">
+            <ArticleRichTextEditor
+              editorId="product-family-description"
+              value={form.description}
+              onChange={(nextValue) => onFieldChange("description", nextValue)}
+              placeholder="Présentez la famille produit, ses usages et ses points forts."
+              className="overflow-hidden rounded-[28px]"
+            />
+          </PanelField>
+
+          <PanelField id="description-seo" label="Description SEO" className="xl:col-span-2">
+            <Textarea
+              id="description-seo"
+              value={form.descriptionSeo}
+              onChange={(event) => onFieldChange("descriptionSeo", event.target.value)}
+              placeholder="Résumé court optimisé pour les moteurs de recherche..."
+              className="min-h-32 rounded-md border-slate-300 px-4 py-3 text-base"
+            />
+          </PanelField>
+
+          <PanelField id="product-tags" label="Tags" className="xl:col-span-2">
+            <StaffTagInput
+              id="product-tags"
+              value={form.tagNames}
+              onChange={(nextTags) => onFieldChange("tagNames", nextTags)}
+              placeholder="Ex. douche, mitigeur, laiton brossé"
+            />
+          </PanelField>
+
+          <div className="xl:col-span-2">
+            <ProductMainImageField
+              value={form.mainImage}
+              onChange={(media) => onFieldChange("mainImage", media)}
+            />
           </div>
         </div>
       </Panel>
 
-      <Panel pretitle="Contenu" title="Descriptions et repères" description="Gardez sous la main tout ce qui sert à vendre, référencer et retrouver la famille plus tard.">
-        <div className="grid gap-6">
-          <div className="grid gap-4 xl:grid-cols-2">
-            <PanelField id="description" label="Description">
-              <Textarea
-                id="description"
-                value={form.description}
-                onChange={(event) => onFieldChange("description", event.target.value)}
-                placeholder="Description éditoriale, commerciale ou technique de la famille produit..."
-                className="min-h-36 rounded-md border-slate-300 px-4 py-3 text-base"
-              />
-            </PanelField>
+      <Panel pretitle="Tarification" title="Unité et TVA">
+        <div className="grid gap-6 xl:grid-cols-2">
+          <PanelField id="product-price-unit" label="Unité du prix">
+            <StaffSelect
+              id="product-price-unit"
+              fullWidth
+              value={form.priceUnit}
+              onValueChange={(value) =>
+                onFieldChange("priceUnit", value as ProductEditorFormState["priceUnit"])
+              }
+              options={PRODUCT_PRICE_UNIT_SELECT_OPTIONS}
+              triggerClassName="h-10 rounded-2xl border-slate-300 px-4 text-base"
+            />
+          </PanelField>
 
-            <PanelField id="description-seo" label="Description SEO" hint="Une formulation courte et claire pour les moteurs de recherche.">
-              <Textarea
-                id="description-seo"
-                value={form.descriptionSeo}
-                onChange={(event) => onFieldChange("descriptionSeo", event.target.value)}
-                placeholder="Résumé court optimisé pour les moteurs de recherche..."
-                className="min-h-36 rounded-md border-slate-300 px-4 py-3 text-base"
-              />
-            </PanelField>
-          </div>
-
-          <PanelField id="product-tags" label="Tags" hint="Les tags facilitent la recherche et la maintenance du catalogue.">
-            <StaffTagInput id="product-tags" value={form.tagNames} onChange={(nextTags) => onFieldChange("tagNames", nextTags)} placeholder="Ex. douche, mitigeur, laiton brossé" />
+          <PanelField id="family-vat-rate" label="TVA (%)">
+            <PanelInput
+              id="family-vat-rate"
+              fullWidth
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.01"
+              value={form.vatRate}
+              onChange={(event) => onFieldChange("vatRate", event.target.value)}
+              placeholder="19"
+            />
           </PanelField>
         </div>
       </Panel>
-      <Panel pretitle="Variantes" title="Attributs partagés" description="Définissez ici ce que chaque variante devra pouvoir renseigner.">
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <StaffBadge size="sm" color="secondary" icon="package">
-                {form.attributes.length} attribut
-                {form.attributes.length > 1 ? "s" : ""}
-              </StaffBadge>
-            </div>
-            <AnimatedUIButton type="button" variant="outline" icon="plus" iconPosition="left" onClick={onAttributeAdd}>
-              Attribut
-            </AnimatedUIButton>
-          </div>
 
-          {form.attributes.length === 0 ? (
-            <div className="rounded-[20px] border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500">
-              Aucun attribut pour le moment.
-            </div>
-          ) : (
+      <Panel pretitle="Variantes" title="Attributs partagés" description="Définissez les attributs que chaque variante pourra renseigner.">
+        <div className="space-y-4">
+          {form.attributes.length > 0 ? (
             <div className="grid gap-4 xl:grid-cols-2">
               {form.attributes.map((attribute, index) => (
-                <div key={attribute.formKey} className="rounded-[22px] border border-slate-200 bg-slate-50/70 p-4">
-                  <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-cobam-dark-blue">Attribut {index + 1}</p>
-                      <p className="text-sm text-slate-500">Visible sur toutes les variantes de la famille.</p>
-                    </div>
-                    <AnimatedUIButton type="button" variant="light" color="error" icon="delete" iconPosition="left" onClick={() => onAttributeRemove(attribute.formKey)}>
-                      Retirer
-                    </AnimatedUIButton>
+                <div
+                  key={attribute.formKey}
+                  className="rounded-2xl border border-slate-300 bg-slate-50/70 p-4"
+                >
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-cobam-dark-blue text-sm font-semibold">Attribut {index + 1}</p>
+                    <AnimatedUIButton
+                      size="sm"
+                      type="button"
+                      variant="light"
+                      color="error"
+                      icon="close"
+                      iconPosition="left"
+                      onClick={() => onAttributeRemove(attribute.formKey)}
+                    />
                   </div>
 
-                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)_minmax(0,0.8fr)]">
+                  <div className="grid gap-4">
                     <PanelField id={`attribute-name-${attribute.formKey}`} label="Nom">
-                      <PanelInput
-                        fullWidth
+                      <ProductAttributeMetadataInput
                         id={`attribute-name-${attribute.formKey}`}
                         value={attribute.name}
-                        onChange={(event) => onAttributeChange(attribute.formKey, "name", event.target.value)}
-                        placeholder="Ex. Finition"
+                        onValueChange={(nextValue) => onAttributeChange(attribute.formKey, "name", nextValue)}
+                        onMetadataSelect={(metadata) => {
+                          onAttributeChange(attribute.formKey, "name", metadata.name);
+                          onAttributeChange(attribute.formKey, "dataType", metadata.dataType);
+                          onAttributeChange(attribute.formKey, "unit", metadata.unit ?? "");
+                        }}
+                        placeholder="Nom de l'attribut"
                       />
                     </PanelField>
 
@@ -559,74 +548,92 @@ export default function ProductEditorPanels({
                         fullWidth
                         id={`attribute-type-${attribute.formKey}`}
                         value={attribute.dataType}
-                        onValueChange={(value) => onAttributeChange(attribute.formKey, "dataType", value as ProductAttributeEditorState["dataType"])}
-                        options={PRODUCT_ATTRIBUTE_DATA_TYPE_OPTIONS.map((option) => ({ value: option, label: getProductAttributeDataTypeLabel(option) }))}
+                        onValueChange={(value) =>
+                          onAttributeChange(
+                            attribute.formKey,
+                            "dataType",
+                            value as ProductAttributeEditorState["dataType"],
+                          )
+                        }
+                        options={[
+                          { value: "TEXT", label: getProductAttributeDataTypeLabel("TEXT") },
+                          { value: "NUMBER", label: getProductAttributeDataTypeLabel("NUMBER") },
+                          { value: "BOOLEAN", label: getProductAttributeDataTypeLabel("BOOLEAN") },
+                        ]}
+                        triggerClassName="h-10 rounded-2xl border-slate-300 px-4 text-base"
                       />
                     </PanelField>
 
-                    <PanelField id={`attribute-unit-${attribute.formKey}`} label="Unité" hint={attribute.dataType === "NUMBER" ? "Optionnelle" : "Utilisée surtout pour les valeurs numériques"}>
-                      <PanelInput
-                        fullWidth
-                        id={`attribute-unit-${attribute.formKey}`}
-                        value={attribute.unit}
-                        onChange={(event) => onAttributeChange(attribute.formKey, "unit", event.target.value)}
-                        placeholder="Ex. mm"
-                      />
-                    </PanelField>
+                    {attribute.dataType === "NUMBER" ? (
+                      <PanelField id={`attribute-unit-${attribute.formKey}`} label="Unité">
+                        <PanelInput
+                          id={`attribute-unit-${attribute.formKey}`}
+                          fullWidth
+                          value={attribute.unit}
+                          onChange={(event) => onAttributeChange(attribute.formKey, "unit", event.target.value)}
+                          placeholder="Ex. mm, kg, L"
+                        />
+                      </PanelField>
+                    ) : null}
                   </div>
                 </div>
               ))}
             </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-6 text-sm text-slate-500">
+              Aucun attribut partagé pour le moment.
+            </div>
           )}
+
+          <AnimatedUIButton
+            type="button"
+            variant="outline"
+            icon="plus"
+            iconPosition="left"
+            onClick={onAttributeAdd}
+          >
+            Ajouter un attribut
+          </AnimatedUIButton>
         </div>
       </Panel>
 
-      <Panel
-        pretitle="Variantes"
-        title="Références de la famille"
-        description="Travaillez vos variantes dans des cartes compactes, dupliquez-les vite et réorganisez-les directement dans la liste."
-        allowOverflow
-      >
+      <Panel pretitle="Variantes" title="Structure des variantes">
         <div className="space-y-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <StaffBadge size="sm" color="secondary" icon="package">
-                {form.variants.length} variante
-                {form.variants.length > 1 ? "s" : ""}
-              </StaffBadge>
-              <StaffBadge size="sm" color="default">Saisie compacte</StaffBadge>
-              <StaffBadge size="sm" color="info">Ordre éditable</StaffBadge>
-            </div>
+          <Accordion
+            type="multiple"
+            value={normalizedOpenVariantKeys}
+            onValueChange={(value) => setOpenVariantKeys(value)}
+            className="space-y-4"
+          >
+            {form.variants.map((variant, index) => (
+              <ProductVariantCard
+                key={variant.formKey}
+                family={form}
+                variant={variant}
+                index={index}
+                isOpen={normalizedOpenVariantKeys.includes(variant.formKey)}
+                isDefault={index === 0}
+                isFirst={index <= 1}
+                isLast={index === form.variants.length - 1}
+                attributes={form.attributes}
+                onVariantRemove={onVariantRemove}
+                onVariantDuplicate={onVariantDuplicate}
+                onVariantMove={onVariantMove}
+                onVariantChange={onVariantChange}
+                onVariantAttributeValueChange={onVariantAttributeValueChange}
+              />
+            ))}
+          </Accordion>
 
-            <AnimatedUIButton type="button" variant="outline" icon="plus" iconPosition="left" onClick={onVariantAdd}>
-              Variante
-            </AnimatedUIButton>
-          </div>
-
-          {form.variants.length === 0 ? (
-            <div className="rounded-[20px] border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500">
-              Aucune variante pour le moment. Ajoutez-en une première pour commencer à structurer la famille.
-            </div>
-          ) : (
-            <Accordion type="multiple" value={normalizedOpenVariantKeys} onValueChange={(value) => setOpenVariantKeys(value as string[])} className="gap-4">
-              {form.variants.map((variant, index) => (
-                <ProductVariantCard
-                  isOpen={openVariantKeys.includes(variant.formKey)}
-                  key={variant.formKey}
-                  variant={variant}
-                  index={index}
-                  isFirst={index === 0}
-                  isLast={index === form.variants.length - 1}
-                  attributes={form.attributes}
-                  onVariantRemove={onVariantRemove}
-                  onVariantDuplicate={onVariantDuplicate}
-                  onVariantMove={onVariantMove}
-                  onVariantChange={onVariantChange}
-                  onVariantAttributeValueChange={onVariantAttributeValueChange}
-                />
-              ))}
-            </Accordion>
-          )}
+          <AnimatedUIButton
+            type="button"
+            variant="outline"
+            icon="plus"
+            iconPosition="left"
+            onClick={onVariantAdd}
+          >
+            Ajouter une variante
+          </AnimatedUIButton>
         </div>
       </Panel>
     </StaffEditorLayout>

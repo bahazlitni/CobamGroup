@@ -515,7 +515,7 @@ function MediaLibraryPageContent() {
               Importer des fichiers
             </AnimatedUIButton>
           ) : (
-            <div className="flex h-12 items-center justify-center rounded-2xl border border-dashed border-slate-200 px-4 text-sm text-slate-400">
+            <div className="flex h-10 items-center justify-center rounded-2xl border border-dashed border-slate-300 px-4 text-sm text-slate-400">
               Import indisponible
             </div>
           )

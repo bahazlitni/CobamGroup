@@ -57,7 +57,7 @@ export default function MediaListRow({
       className={
         isSelected
           ? "grid grid-cols-[auto_minmax(0,1.6fr)_minmax(0,0.8fr)_auto_auto] items-center gap-4 rounded-2xl border border-cobam-water-blue/35 bg-cobam-water-blue/5 px-4 py-3"
-          : "grid grid-cols-[auto_minmax(0,1.6fr)_minmax(0,0.8fr)_auto_auto] items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 transition hover:border-cobam-water-blue/25 hover:bg-slate-50"
+          : "grid grid-cols-[auto_minmax(0,1.6fr)_minmax(0,0.8fr)_auto_auto] items-center gap-4 rounded-2xl border border-slate-300 bg-white px-4 py-3 transition hover:border-cobam-water-blue/25 hover:bg-slate-50"
       }
     >
       <div className="flex items-center gap-3">

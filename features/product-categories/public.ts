@@ -406,10 +406,14 @@ export async function listPublicProductSubcategoryCardsByCategorySlug(
           },
           productFamilies: {
             where: {
-              lifecycleStatus: "ACTIVE",
-              visibility: "PUBLIC",
               brand: {
                 deletedAt: null,
+              },
+              variants: {
+                some: {
+                  lifecycleStatus: "ACTIVE",
+                  visibility: "PUBLIC",
+                },
               },
             },
             select: {

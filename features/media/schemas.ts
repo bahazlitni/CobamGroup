@@ -33,9 +33,7 @@ function parseOptionalString(value: FormDataEntryValue | string | null): string 
   return trimmed ? trimmed : null;
 }
 
-function parseMediaVisibility(
-  value: string | null | undefined,
-): MediaVisibility | null {
+function parseMediaVisibility(value: string | null | undefined): MediaVisibility | null {
   if (value == null) {
     return null;
   }
@@ -69,6 +67,10 @@ function parseSortDirection(value: string | null): MediaSortDirection {
   return value === "asc" ? "asc" : "desc";
 }
 
+function parseIncludeDescendantFolders(value: string | null) {
+  return value === "true";
+}
+
 function parseBrowseMode(value: string | null): MediaBrowseMode {
   return value === "library" ? "library" : "folders";
 }
@@ -94,9 +96,7 @@ function parseOptionalMediaFolderId(
   return parsed;
 }
 
-export function parseMediaListQuery(
-  searchParams: URLSearchParams,
-): MediaListQuery {
+export function parseMediaListQuery(searchParams: URLSearchParams): MediaListQuery {
   const browseMode = parseBrowseMode(searchParams.get("browseMode"));
   const pageRaw = Number(searchParams.get("page") ?? "1");
   const page = Number.isInteger(pageRaw) && pageRaw > 0 ? pageRaw : 1;
@@ -120,19 +120,17 @@ export function parseMediaListQuery(
   const status: MediaFilterStatus =
     statusRaw === "active" || statusRaw === "inactive" ? statusRaw : "all";
 
-  const folderId =
-    browseMode === "folders"
-      ? (parseOptionalMediaFolderId(
-          searchParams.get("folderId"),
-          "folderId",
-        ) ?? null)
-      : undefined;
+  const parsedFolderId = parseOptionalMediaFolderId(searchParams.get("folderId"), "folderId");
+  const folderId = browseMode === "folders" ? (parsedFolderId ?? null) : parsedFolderId;
 
   return {
     browseMode,
     page,
     pageSize,
     folderId,
+    includeDescendantFolders: parseIncludeDescendantFolders(
+      searchParams.get("includeDescendantFolders"),
+    ),
     q,
     kind,
     status,
@@ -161,9 +159,7 @@ export function parseMediaUploadFormData(formData: FormData): MediaUploadInput {
       ) ?? MediaVisibility.PRIVATE,
     folderId:
       parseOptionalMediaFolderId(
-        typeof formData.get("folderId") === "string"
-          ? (formData.get("folderId") as string)
-          : null,
+        typeof formData.get("folderId") === "string" ? (formData.get("folderId") as string) : null,
         "folderId",
       ) ?? null,
   };
@@ -221,9 +217,7 @@ export function parseMediaFolderCreateInput(raw: unknown): MediaFolderCreateInpu
 
   const rawRecord = raw as Record<string, unknown>;
   const name =
-    "name" in rawRecord && typeof rawRecord.name === "string"
-      ? rawRecord.name.trim()
-      : "";
+    "name" in rawRecord && typeof rawRecord.name === "string" ? rawRecord.name.trim() : "";
 
   if (!name) {
     throw new MediaValidationError("Le nom du dossier est requis.");
@@ -235,15 +229,14 @@ export function parseMediaFolderCreateInput(raw: unknown): MediaFolderCreateInpu
 
   const parentId =
     "parentId" in rawRecord
-      ? parseOptionalMediaFolderId(
-          typeof rawRecord.parentId === "number" ||
-          typeof rawRecord.parentId === "string"
+      ? (parseOptionalMediaFolderId(
+          typeof rawRecord.parentId === "number" || typeof rawRecord.parentId === "string"
             ? rawRecord.parentId
             : rawRecord.parentId === null
               ? null
               : undefined,
           "parentId",
-        ) ?? null
+        ) ?? null)
       : null;
 
   return {
@@ -265,8 +258,7 @@ export function parseMediaFolderUpdateInput(raw: unknown): MediaFolderUpdateInpu
 
   const parentId =
     parseOptionalMediaFolderId(
-      typeof rawRecord.parentId === "number" ||
-      typeof rawRecord.parentId === "string"
+      typeof rawRecord.parentId === "number" || typeof rawRecord.parentId === "string"
         ? rawRecord.parentId
         : rawRecord.parentId === null
           ? null
@@ -279,10 +271,6 @@ export function parseMediaFolderUpdateInput(raw: unknown): MediaFolderUpdateInpu
   };
 }
 
-export function parseMediaFileVariant(
-  searchParams: URLSearchParams,
-): MediaFileVariant {
-  return searchParams.get("variant") === "thumbnail"
-    ? "thumbnail"
-    : "original";
+export function parseMediaFileVariant(searchParams: URLSearchParams): MediaFileVariant {
+  return searchParams.get("variant") === "thumbnail" ? "thumbnail" : "original";
 }

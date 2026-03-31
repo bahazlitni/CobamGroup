@@ -322,7 +322,7 @@ export default function ProductCategoryEditorPanels({
               {form.subcategories.map((subcategory, index) => (
                 <div
                   key={subcategory.formKey}
-                  className="rounded-[22px] border border-slate-200 bg-slate-50/60 p-4 shadow-sm"
+                  className="rounded-[22px] border border-slate-300 bg-slate-50/60 p-4 shadow-sm"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="space-y-1">

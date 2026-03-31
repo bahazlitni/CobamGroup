@@ -32,7 +32,7 @@ const statItems = [
 
 export default function MediaStats({ stats }: MediaStatsProps) {
   return (
-    <Card className="overflow-hidden rounded-[2rem] border border-slate-200">
+    <Card className="overflow-hidden rounded-[2rem] border border-slate-300">
       <CardContent className="grid gap-5 px-5 md:grid-cols-[minmax(0,1.35fr)_minmax(0,2fr)] md:px-6">
           <div className="flex flex-col justify-center ml-4">
             <p className="inline-flex text-sm font-medium text-slate-500 gap-2 items-center">
@@ -52,7 +52,7 @@ export default function MediaStats({ stats }: MediaStatsProps) {
             return (
               <div
                 key={item.key}
-                className="rounded-3xl border border-slate-200 bg-white px-4 py-4"
+                className="rounded-3xl border border-slate-300 bg-white px-4 py-4"
               >
                 <div className="flex items-center gap-2 text-sm text-slate-500">
                   <Icon className="h-4 w-4" />

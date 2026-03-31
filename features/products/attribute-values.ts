@@ -16,13 +16,7 @@ export function getProductAttributeDataTypeLabel(
     case "NUMBER":
       return "Nombre";
     case "BOOLEAN":
-      return "Booleen";
-    case "ENUM":
-      return "Liste";
-    case "COLOR":
-      return "Couleur";
-    case "JSON":
-      return "JSON";
+      return "Booléen";
     default:
       return dataType;
   }
@@ -48,7 +42,7 @@ export function parseRawProductAttributeValue(
     case "NUMBER": {
       const parsedNumber = Number(normalized.replace(",", "."));
       if (!Number.isFinite(parsedNumber)) {
-        throw new Error("La valeur numerique d'un attribut est invalide.");
+        throw new Error("La valeur numérique d'un attribut est invalide.");
       }
 
       return {
@@ -61,7 +55,7 @@ export function parseRawProductAttributeValue(
 
     case "BOOLEAN": {
       if (normalized !== "true" && normalized !== "false") {
-        throw new Error("La valeur booleenne d'un attribut est invalide.");
+        throw new Error("La valeur booléenne d'un attribut est invalide.");
       }
 
       return {
@@ -72,17 +66,7 @@ export function parseRawProductAttributeValue(
       };
     }
 
-    case "JSON":
-      return {
-        valueText: null,
-        valueNumber: null,
-        valueBoolean: null,
-        valueJson: JSON.parse(normalized),
-      };
-
     case "TEXT":
-    case "ENUM":
-    case "COLOR":
     default:
       return {
         valueText: normalized,
@@ -105,11 +89,7 @@ export function formatStoredProductAttributeValue(input: {
       return input.valueNumber != null ? String(input.valueNumber) : null;
     case "BOOLEAN":
       return input.valueBoolean == null ? null : String(input.valueBoolean);
-    case "JSON":
-      return input.valueJson == null ? null : JSON.stringify(input.valueJson);
     case "TEXT":
-    case "ENUM":
-    case "COLOR":
     default:
       return input.valueText;
   }

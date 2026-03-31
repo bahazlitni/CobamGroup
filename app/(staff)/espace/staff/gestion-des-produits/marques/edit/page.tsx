@@ -414,7 +414,7 @@ function BrandEditPageContent() {
               >
                 <label
                   htmlFor="brand-is-product-brand"
-                  className="flex min-h-12 cursor-pointer items-start gap-3 rounded-2xl border border-slate-300 bg-slate-50/60 px-4 py-3"
+                  className="flex min-h-10 cursor-pointer items-start gap-3 rounded-2xl border border-slate-300 bg-slate-50/60 px-4 py-3"
                 >
                   <Checkbox
                     id="brand-is-product-brand"
@@ -445,7 +445,7 @@ function BrandEditPageContent() {
 function BrandEditorLoading() {
   return (
     <div className="flex min-h-[40vh] items-center justify-center">
-      <div className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+      <div className="inline-flex items-center gap-3 rounded-2xl border border-slate-300 bg-white px-5 py-4 shadow-sm">
         <Loading />
       </div>
     </div>

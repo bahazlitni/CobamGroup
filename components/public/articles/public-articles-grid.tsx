@@ -69,9 +69,9 @@ export default function PublicArticlesGrid({
         ))}
       </div>
 
-      <div ref={sentinelRef} className="flex min-h-12 items-center justify-center">
+      <div ref={sentinelRef} className="flex min-h-10 items-center justify-center">
         {hasMore ? (
-          <div className="inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-500 shadow-sm">
+          <div className="inline-flex items-center gap-3 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-500 shadow-sm">
             <Loader2 className="h-4 w-4 animate-spin text-cobam-water-blue" />
             Chargement d&apos;autres articles...
           </div>

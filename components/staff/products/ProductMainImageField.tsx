@@ -38,6 +38,7 @@ export default function ProductMainImageField({
       }}
       aspectRatio="4:3"
       requireAspectRatio={false}
+      folderPath="/produits"
     />
   );
 }

@@ -11,28 +11,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
-import { listMediaClient, uploadMediaClient } from "@/features/media/client";
+import {
+  findMediaFolderIdByPathClient,
+  listMediaClient,
+  uploadMediaClient,
+} from "@/features/media/client";
 import type { MediaListItemDto } from "@/features/media/types";
 import { cn } from "@/lib/utils";
 import MediaThumbnail from "../media-thumbnail";
 import { formatBytes, getMediaDisplayTitle } from "../utils";
 import ImagePreview from "./ImagePreview";
 import SearchInput from "../../ui/SearchInput";
-import {
-  getAspectRatioCssValue,
-  matchesAspectRatio,
-  parseAspectRatio,
-} from "./aspect-ratio";
+import { getAspectRatioCssValue, matchesAspectRatio, parseAspectRatio } from "./aspect-ratio";
 
 type ImagePickerDialogProps = {
   open: boolean;
@@ -43,6 +37,7 @@ type ImagePickerDialogProps = {
   onSelect: (media: MediaListItemDto) => void;
   aspectRatio?: string;
   requireAspectRatio?: boolean;
+  folderPath?: string;
 };
 
 type PickerTab = "library" | "upload";
@@ -63,9 +58,7 @@ function PickerSection({
   return (
     <Card className={cn("overflow-hidden py-0 shadow-none ring-1 ring-slate-200", className)}>
       <CardHeader className="border-b border-slate-100 px-5 py-4">
-        <CardTitle className="text-sm font-semibold text-cobam-dark-blue">
-          {title}
-        </CardTitle>
+        <CardTitle className="text-cobam-dark-blue text-sm font-semibold">{title}</CardTitle>
         <CardDescription className="text-sm leading-6 text-slate-500">
           {description}
         </CardDescription>
@@ -87,15 +80,13 @@ function PickerEmptyState({
   return (
     <div
       className={cn(
-        "flex min-h-48 flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center",
+        "flex min-h-48 flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center",
         className,
       )}
     >
       <ImagePlus className="h-8 w-8 text-slate-300" />
-      <p className="mt-4 text-sm font-semibold text-cobam-dark-blue">{title}</p>
-      <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">
-        {description}
-      </p>
+      <p className="text-cobam-dark-blue mt-4 text-sm font-semibold">{title}</p>
+      <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">{description}</p>
     </div>
   );
 }
@@ -104,10 +95,7 @@ function PickerLoadingGrid() {
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: 6 }).map((_, index) => (
-        <div
-          key={index}
-          className="overflow-hidden rounded-3xl border border-slate-200 bg-white"
-        >
+        <div key={index} className="overflow-hidden rounded-3xl border border-slate-300 bg-white">
           <div className="aspect-square animate-pulse bg-slate-200/70" />
           <div className="space-y-2 p-4">
             <div className="h-4 w-2/3 animate-pulse rounded bg-slate-200/70" />
@@ -138,34 +126,29 @@ function LibraryImageCard({
       onClick={() => onSelect(item.id)}
       disabled={isBlocked}
       className={cn(
-        "flex flex-col group overflow-hidden rounded-3xl border bg-white text-left transition",
+        "group flex flex-col overflow-hidden rounded-3xl border bg-white text-left transition",
         isSelected
           ? "border-cobam-water-blue"
-          : "border-slate-200 hover:border-slate-300 hover:shadow-sm",
-        isBlocked && "cursor-not-allowed opacity-55 hover:border-slate-200 hover:shadow-none",
+          : "border-slate-300 hover:border-slate-300 hover:shadow-sm",
+        isBlocked && "cursor-not-allowed opacity-55 hover:border-slate-300 hover:shadow-none",
       )}
     >
       <div className="relative">
-        <MediaThumbnail
-          media={item}
-          className="aspect-square rounded-none"
-        />
+        <MediaThumbnail media={item} className="aspect-square rounded-none" />
         {isSelected ? (
-          <span className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-cobam-water-blue text-white shadow-sm">
+          <span className="bg-cobam-water-blue absolute top-3 right-3 inline-flex h-8 w-8 items-center justify-center rounded-full text-white shadow-sm">
             <Check className="h-4 w-4" />
           </span>
         ) : null}
       </div>
 
       <div className="space-y-1 p-4">
-        <p className="truncate text-sm font-semibold text-cobam-dark-blue">
+        <p className="text-cobam-dark-blue truncate text-sm font-semibold">
           {getMediaDisplayTitle(item)}
         </p>
         <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500">
           <span>{formatBytes(item.sizeBytes)}</span>
-          {item.originalFilename ? (
-            <span className="truncate">{item.originalFilename}</span>
-          ) : null}
+          {item.originalFilename ? <span className="truncate">{item.originalFilename}</span> : null}
         </div>
         {isBlocked && blockedReason ? (
           <p className="text-xs font-medium text-amber-700">{blockedReason}</p>
@@ -184,6 +167,7 @@ export default function ImagePickerDialog({
   onSelect,
   aspectRatio,
   requireAspectRatio = false,
+  folderPath,
 }: ImagePickerDialogProps) {
   const [activeTab, setActiveTab] = useState<PickerTab>("library");
   const [search, setSearch] = useState("");
@@ -206,6 +190,23 @@ export default function ImagePickerDialog({
   const aspectRatioMessage = requiredAspectRatio
     ? `Format requis: ${requiredAspectRatio.label}`
     : null;
+  const scopedLibraryDescription = folderPath
+    ? `Cette bibliotheque affiche uniquement les images du dossier ${folderPath} et de ses sous-dossiers.`
+    : "Cette bibliotheque affiche les images de tous les dossiers.";
+
+  const resolveScopedFolderId = useCallback(async () => {
+    if (!folderPath) {
+      return undefined;
+    }
+
+    const folderId = await findMediaFolderIdByPathClient(folderPath);
+
+    if (folderId == null) {
+      throw new Error(`Le dossier ${folderPath} est introuvable dans la mediatheque.`);
+    }
+
+    return folderId;
+  }, [folderPath]);
 
   useEffect(() => {
     if (!open) {
@@ -258,6 +259,7 @@ export default function ImagePickerDialog({
       }
 
       try {
+        const folderId = await resolveScopedFolderId();
         const result = await listMediaClient({
           browseMode: "library",
           page: nextPage,
@@ -266,17 +268,15 @@ export default function ImagePickerDialog({
           kind: "IMAGE",
           sortBy: "date",
           sortDirection: "desc",
+          folderId,
+          includeDescendantFolders: folderId != null,
         });
 
         setItems((current) => (reset ? result.items : [...current, ...result.items]));
         setPage(nextPage);
         setHasMore(nextPage * PAGE_SIZE < result.total);
       } catch (err: unknown) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Erreur lors du chargement des images.",
-        );
+        setError(err instanceof Error ? err.message : "Erreur lors du chargement des images.");
       } finally {
         if (reset) {
           setIsLoading(false);
@@ -285,7 +285,7 @@ export default function ImagePickerDialog({
         }
       }
     },
-    [deferredSearch, open],
+    [deferredSearch, open, resolveScopedFolderId],
   );
 
   useEffect(() => {
@@ -304,8 +304,7 @@ export default function ImagePickerDialog({
     Boolean(requireAspectRatio && requiredAspectRatio && selectedExistingMedia) &&
     !matchesAspectRatio(selectedExistingMedia, requiredAspectRatio);
   const uploadAspectPending =
-    Boolean(requireAspectRatio && requiredAspectRatio && uploadFile) &&
-    uploadDimensions == null;
+    Boolean(requireAspectRatio && requiredAspectRatio && uploadFile) && uploadDimensions == null;
   const uploadAspectMismatch =
     Boolean(requireAspectRatio && requiredAspectRatio && uploadFile && uploadDimensions) &&
     !matchesAspectRatio(uploadDimensions, requiredAspectRatio);
@@ -352,33 +351,31 @@ export default function ImagePickerDialog({
     setError(null);
 
     try {
+      const folderId = await resolveScopedFolderId();
       const media = await uploadMediaClient({
         file: uploadFile,
+        folderId,
       });
 
       onSelect(media);
       handleOpenChange(false);
     } catch (err: unknown) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Erreur lors de l'import de l'image.",
-      );
+      setError(err instanceof Error ? err.message : "Erreur lors de l'import de l'image.");
     } finally {
       setIsUploading(false);
     }
   };
 
-
-  const tabClsBase = "px-3 py-2 min-w-28"
-  const activeTabCls = tabClsBase + " text-cobam-dark-blue font-semibold shadow-sm border-slate-300"
-  const nonActiveTabCls = tabClsBase
+  const tabClsBase = "px-3 py-2 min-w-28";
+  const activeTabCls =
+    tabClsBase + " text-cobam-dark-blue font-semibold shadow-sm border-slate-300";
+  const nonActiveTabCls = tabClsBase;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="flex h-[80vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
-        <DialogHeader className="border-b border-slate-200 px-6 py-5">
-          <DialogTitle className="flex items-center gap-2 text-base font-semibold text-cobam-dark-blue">
+        <DialogHeader className="border-b border-slate-300 px-6 py-5">
+          <DialogTitle className="text-cobam-dark-blue flex items-center gap-2 text-base font-semibold">
             <ImagePlus className="h-5 w-5" />
             {title}
           </DialogTitle>
@@ -388,153 +385,148 @@ export default function ImagePickerDialog({
           </DialogDescription>
         </DialogHeader>
 
-          <Tabs
-            value={activeTab}
-            onValueChange={(value) => setActiveTab(value as PickerTab)}
-            className="flex flex-col gap-5 flex-1 overflow-y-auto px-6 py-6"
-          >
-            <TabsList variant="line" className="justify-start gap-2 rounded-none p-0">
-              <TabsTrigger value="library" className={activeTab === "library" ? activeTabCls : nonActiveTabCls}>
-                Bibliothèque
-              </TabsTrigger>
-              <TabsTrigger value="upload" className={activeTab === "upload" ? activeTabCls : nonActiveTabCls}>
-                Importer
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as PickerTab)}
+          className="flex flex-1 flex-col gap-5 overflow-y-auto px-6 py-6"
+        >
+          <TabsList variant="line" className="justify-start gap-2 rounded-none p-0">
+            <TabsTrigger
               value="library"
-              className="gap-5 space-y-5"
+              className={activeTab === "library" ? activeTabCls : nonActiveTabCls}
             >
-                  <SearchInput 
-                    value={search}
-                    onChange={(s: string) => setSearch(s)}
-                    fullWidth
-                  />
-
-                  {error ? (
-                    <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                      {error}
-                    </div>
-                  ) : null}
-
-                  {isLoading ? (
-                    <PickerLoadingGrid />
-                  ) : items.length === 0 ? (
-                    <PickerEmptyState
-                      title="Aucune image disponible"
-                      description="Essayez une autre recherche dans toute la mediatheque ou importez une nouvelle image depuis l'onglet Importer."
-                    />
-                  ) : (
-                    <div className="space-y-4">
-                      <p className="text-xs text-slate-500">
-                        Cette bibliotheque affiche les images de tous les dossiers.
-                      </p>
-                      <div className="max-h-[52vh] overflow-y-auto pr-1">
-                        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-                          {items.map((item) => (
-                            <LibraryImageCard
-                              key={item.id}
-                              item={item}
-                              isSelected={item.id === selectedExistingId}
-                              onSelect={setSelectedExistingId}
-                              isBlocked={
-                                Boolean(requireAspectRatio && requiredAspectRatio) &&
-                                !matchesAspectRatio(item, requiredAspectRatio)
-                              }
-                              blockedReason={
-                                requireAspectRatio && requiredAspectRatio
-                                  ? aspectRatioMessage ?? undefined
-                                  : undefined
-                              }
-                            />
-                          ))}
-                        </div>
-                      </div>
-
-                      {selectedExistingAspectMessage ? (
-                        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                          {selectedExistingAspectMessage}
-                        </div>
-                      ) : null}
-
-                      {hasMore ? (
-                        <div className="flex justify-center">
-                          <AnimatedUIButton
-                            type="button"
-                            variant="light"
-                            onClick={() => void loadImages(page + 1, false)}
-                            disabled={isLoadingMore}
-                            loading={isLoadingMore}
-                            loadingText="Chargement..."
-                          >
-                            Charger plus d&apos;images
-                          </AnimatedUIButton>
-                        </div>
-                      ) : null}
-                    </div>
-                  )}
-            </TabsContent>
-
-            <TabsContent
+              Bibliothèque
+            </TabsTrigger>
+            <TabsTrigger
               value="upload"
-              className="mt-0 grid gap-5 flex flex-col"
+              className={activeTab === "upload" ? activeTabCls : nonActiveTabCls}
             >
-                <div className="flex flex-col block rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5 gap-3">
-                    <span className="inline-flex items-center gap-2 font-semibold text-cobam-dark-blue">
-                      <Upload className="h-4 w-4" />
-                      Choisir un fichier
-                    </span>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={(event) =>
-                        setUploadFile(event.target.files?.[0] ?? null)
-                      }
-                    />
+              Importer
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="library" className="gap-5 space-y-5">
+            <SearchInput value={search} onChange={(s: string) => setSearch(s)} fullWidth />
+
+            {error ? (
+              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            ) : null}
+
+            {isLoading ? (
+              <PickerLoadingGrid />
+            ) : items.length === 0 ? (
+              <PickerEmptyState
+                title="Aucune image disponible"
+                description={
+                  folderPath
+                    ? `Aucune image n'est disponible dans ${folderPath} pour le moment.`
+                    : "Essayez une autre recherche dans toute la mediatheque ou importez une nouvelle image depuis l'onglet Importer."
+                }
+              />
+            ) : (
+              <div className="space-y-4">
+                <p className="text-xs text-slate-500">{scopedLibraryDescription}</p>
+                <div className="max-h-[52vh] overflow-y-auto pr-1">
+                  <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+                    {items.map((item) => (
+                      <LibraryImageCard
+                        key={item.id}
+                        item={item}
+                        isSelected={item.id === selectedExistingId}
+                        onSelect={setSelectedExistingId}
+                        isBlocked={
+                          Boolean(requireAspectRatio && requiredAspectRatio) &&
+                          !matchesAspectRatio(item, requiredAspectRatio)
+                        }
+                        blockedReason={
+                          requireAspectRatio && requiredAspectRatio
+                            ? (aspectRatioMessage ?? undefined)
+                            : undefined
+                        }
+                      />
+                    ))}
+                  </div>
                 </div>
 
-              <PickerSection
-                title="Aperçu"
-                description="Controlez rapidement le rendu avant l'import."
-              >
-                <div className="space-y-4">
-                  {error ? (
-                    <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                      {error}
-                    </div>
-                  ) : null}
+                {selectedExistingAspectMessage ? (
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                    {selectedExistingAspectMessage}
+                  </div>
+                ) : null}
 
-                  {uploadAspectError ? (
-                    <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                      {uploadAspectError}
-                    </div>
-                  ) : null}
+                {hasMore ? (
+                  <div className="flex justify-center">
+                    <AnimatedUIButton
+                      type="button"
+                      variant="light"
+                      onClick={() => void loadImages(page + 1, false)}
+                      disabled={isLoadingMore}
+                      loading={isLoadingMore}
+                      loadingText="Chargement..."
+                    >
+                      Charger plus d&apos;images
+                    </AnimatedUIButton>
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </TabsContent>
 
-                  {uploadPreviewUrl ? (
-                    <ImagePreview
-                      src={uploadPreviewUrl}
-                      alt="Aperçu de l'image"
-                      className="w-full rounded-3xl"
-                      style={{
-                        aspectRatio:
-                          getAspectRatioCssValue(requiredAspectRatio, uploadDimensions) ??
-                          "4 / 3",
-                      }}
-                    />
-                  ) : (
-                    <PickerEmptyState
-                      title="Aperçu indisponible"
-                      description="Choisissez un fichier image pour afficher son aperçu ici."
-                      className="min-h-[360px]"
-                    />
-                  )}
-                </div>
-              </PickerSection>
-            </TabsContent>
-          </Tabs>
+          <TabsContent value="upload" className="mt-0 flex grid flex-col gap-5">
+            <div className="block flex flex-col gap-3 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5">
+              <span className="text-cobam-dark-blue inline-flex items-center gap-2 font-semibold">
+                <Upload className="h-4 w-4" />
+                Choisir un fichier
+              </span>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(event) => setUploadFile(event.target.files?.[0] ?? null)}
+              />
+            </div>
 
-        <DialogFooter className="border-t border-slate-200 px-6 py-4">
+            <PickerSection
+              title="Aperçu"
+              description="Controlez rapidement le rendu avant l'import."
+            >
+              <div className="space-y-4">
+                {error ? (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {error}
+                  </div>
+                ) : null}
+
+                {uploadAspectError ? (
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                    {uploadAspectError}
+                  </div>
+                ) : null}
+
+                {uploadPreviewUrl ? (
+                  <ImagePreview
+                    src={uploadPreviewUrl}
+                    alt="Aperçu de l'image"
+                    className="w-full rounded-3xl"
+                    style={{
+                      aspectRatio:
+                        getAspectRatioCssValue(requiredAspectRatio, uploadDimensions) ?? "4 / 3",
+                    }}
+                  />
+                ) : (
+                  <PickerEmptyState
+                    title="Aperçu indisponible"
+                    description="Choisissez un fichier image pour afficher son aperçu ici."
+                    className="min-h-[360px]"
+                  />
+                )}
+              </div>
+            </PickerSection>
+          </TabsContent>
+        </Tabs>
+
+        <DialogFooter className="border-t border-slate-300 px-6 py-4">
           <AnimatedUIButton
             type="button"
             variant="light"

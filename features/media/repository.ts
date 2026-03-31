@@ -1,15 +1,11 @@
 import { MediaKind, MediaVisibility, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/server/db/prisma";
-import type {
-  MediaBrowseMode,
-  MediaFilterStatus,
-  MediaListQuery,
-  MediaUpdateInput,
-} from "./types";
+import type { MediaBrowseMode, MediaFilterStatus, MediaListQuery, MediaUpdateInput } from "./types";
 
 function buildMediaWhere(input: {
   query: MediaListQuery;
   ownerUserId: string | null;
+  folderIds?: readonly bigint[] | null;
 }): Prisma.MediaWhereInput {
   const where: Prisma.MediaWhereInput = {
     deletedAt: null,
@@ -40,9 +36,17 @@ function buildMediaWhere(input: {
     where.isActive = false;
   }
 
-  if (input.query.browseMode === "folders") {
+  if (input.folderIds && input.folderIds.length > 0) {
     where.folderId =
-      input.query.folderId != null ? BigInt(input.query.folderId) : null;
+      input.folderIds.length === 1
+        ? input.folderIds[0]
+        : {
+            in: [...input.folderIds],
+          };
+  } else if (input.query.browseMode === "folders") {
+    where.folderId = input.query.folderId != null ? BigInt(input.query.folderId) : null;
+  } else if (input.query.folderId != null) {
+    where.folderId = BigInt(input.query.folderId);
   }
 
   return where;
@@ -71,9 +75,7 @@ function buildMediaFolderWhere(input: {
   return where;
 }
 
-function buildMediaOrderBy(
-  query: MediaListQuery,
-): Prisma.MediaOrderByWithRelationInput[] {
+function buildMediaOrderBy(query: MediaListQuery): Prisma.MediaOrderByWithRelationInput[] {
   const direction = query.sortDirection ?? "desc";
 
   switch (query.sortBy) {
@@ -86,18 +88,11 @@ function buildMediaOrderBy(
       ];
 
     case "size":
-      return [
-        { sizeBytes: direction },
-        { createdAt: "desc" },
-        { id: "desc" },
-      ];
+      return [{ sizeBytes: direction }, { createdAt: "desc" }, { id: "desc" }];
 
     case "date":
     default:
-      return [
-        { createdAt: direction },
-        { id: direction },
-      ];
+      return [{ createdAt: direction }, { id: direction }];
   }
 }
 
@@ -150,6 +145,7 @@ type MediaUsageCounts = {
   productVariantLinks: number;
   brandLogoFor: number;
   productCategoryImageFor: number;
+  productFinishImageFor: number;
   productSubcategoryImageFor: number;
   staffProfileAvatarFor: number;
   articleMediaLinks: number;
@@ -162,6 +158,7 @@ export type DetachedMediaReferenceCounts = {
   productVariantLinks: number;
   brandLogos: number;
   productCategoryImages: number;
+  productFinishImages: number;
   productSubcategoryImages: number;
   staffAvatars: number;
   articleAttachments: number;
@@ -231,6 +228,7 @@ function createEmptyMediaUsageCounts(): MediaUsageCounts {
     productVariantLinks: 0,
     brandLogoFor: 0,
     productCategoryImageFor: 0,
+    productFinishImageFor: 0,
     productSubcategoryImageFor: 0,
     staffProfileAvatarFor: 0,
     articleMediaLinks: 0,
@@ -270,11 +268,12 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
     mediaIds.map((mediaId) => [mediaId.toString(), createEmptyMediaUsageCounts()]),
   );
 
-    const [
+  const [
     productFamilyLinks,
     productVariantLinks,
     brandLogos,
     productCategoryImages,
+    productFinishImages,
     productSubcategoryImages,
     staffAvatars,
     articleAttachments,
@@ -320,6 +319,16 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
       },
       select: {
         imageMediaId: true,
+      },
+    }),
+    prisma.productFinish.findMany({
+      where: {
+        mediaId: {
+          in: mediaIds,
+        },
+      },
+      select: {
+        mediaId: true,
       },
     }),
     prisma.productSubcategory.findMany({
@@ -392,19 +401,15 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
   }
 
   for (const category of productCategoryImages) {
-    incrementUsageCount(
-      countsByMediaId,
-      category.imageMediaId,
-      "productCategoryImageFor",
-    );
+    incrementUsageCount(countsByMediaId, category.imageMediaId, "productCategoryImageFor");
+  }
+
+  for (const finish of productFinishImages) {
+    incrementUsageCount(countsByMediaId, finish.mediaId, "productFinishImageFor");
   }
 
   for (const subcategory of productSubcategoryImages) {
-    incrementUsageCount(
-      countsByMediaId,
-      subcategory.imageMediaId,
-      "productSubcategoryImageFor",
-    );
+    incrementUsageCount(countsByMediaId, subcategory.imageMediaId, "productSubcategoryImageFor");
   }
 
   for (const profile of staffAvatars) {
@@ -432,6 +437,7 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
 export async function listMedia(input: {
   query: MediaListQuery;
   ownerUserId: string | null;
+  folderIds?: readonly bigint[] | null;
 }) {
   const records = await prisma.media.findMany({
     where: buildMediaWhere(input),
@@ -511,18 +517,10 @@ export async function listMediaFoldersAtLevel(input: {
 
   const recursiveMediaCountByFolderId = buildRecursiveMediaCountByFolderId(
     allFolders,
-    new Map(
-      mediaCounts.map((entry) => [
-        entry.folderId?.toString() ?? "",
-        entry._count._all,
-      ]),
-    ),
+    new Map(mediaCounts.map((entry) => [entry.folderId?.toString() ?? "", entry._count._all])),
   );
   const childFolderCountByFolderId = new Map(
-    childFolderCounts.map((entry) => [
-      entry.parentId?.toString() ?? "",
-      entry._count._all,
-    ]),
+    childFolderCounts.map((entry) => [entry.parentId?.toString() ?? "", entry._count._all]),
   );
 
   return folders.map((folder) => ({
@@ -544,10 +542,7 @@ export async function listAllMediaFolders(ownerUserId: string | null) {
   });
 }
 
-export async function findMediaFolderById(
-  folderId: number,
-  ownerUserId: string | null,
-) {
+export async function findMediaFolderById(folderId: number, ownerUserId: string | null) {
   return prisma.mediaFolder.findFirst({
     where: {
       id: BigInt(folderId),
@@ -564,6 +559,7 @@ export async function findMediaFolderById(
 export async function countMedia(input: {
   query: MediaListQuery;
   ownerUserId: string | null;
+  folderIds?: readonly bigint[] | null;
 }) {
   return prisma.media.count({
     where: buildMediaWhere(input),
@@ -573,9 +569,11 @@ export async function countMedia(input: {
 export async function aggregateMediaStats(input: {
   browseMode: MediaBrowseMode;
   folderId: number | null;
+  includeDescendantFolders?: boolean;
   q?: string;
   status?: MediaFilterStatus;
   ownerUserId: string | null;
+  folderIds?: readonly bigint[] | null;
 }) {
   const baseWhere = buildMediaWhere({
     query: {
@@ -583,11 +581,13 @@ export async function aggregateMediaStats(input: {
       page: 1,
       pageSize: 1,
       folderId: input.folderId,
+      includeDescendantFolders: input.includeDescendantFolders,
       q: input.q,
       kind: "ALL",
       status: input.status,
     },
     ownerUserId: input.ownerUserId,
+    folderIds: input.folderIds,
   });
 
   const [total, images, videos, documents, totalSize] = await Promise.all([
@@ -639,6 +639,8 @@ export async function findImageMediaById(mediaId: number) {
     },
     select: {
       id: true,
+      widthPx: true,
+      heightPx: true,
     },
   });
 }
@@ -783,10 +785,7 @@ export async function updateMediaFolderRecord(input: {
   });
 }
 
-export async function countMediaFolderContents(
-  folderId: number,
-  ownerUserId: string | null,
-) {
+export async function countMediaFolderContents(folderId: number, ownerUserId: string | null) {
   const folderIdValue = BigInt(folderId);
   const [mediaCount, childFolderCount] = await Promise.all([
     prisma.media.count({
@@ -833,8 +832,7 @@ export async function detachMediaFolderRelationsAndDeleteFolderRecord(input: {
   ownerUserId: string | null;
 }) {
   const folderIdValue = BigInt(input.folderId);
-  const parentIdValue =
-    input.parentId != null ? BigInt(input.parentId) : null;
+  const parentIdValue = input.parentId != null ? BigInt(input.parentId) : null;
 
   return prisma.$transaction(async (tx) => {
     const movedMedia = await tx.media.updateMany({
@@ -898,7 +896,9 @@ export async function makeMediaPublic(mediaId: number) {
 }
 
 export async function makeMediaPublicMany(mediaIds: readonly number[]) {
-  const normalizedIds = [...new Set(mediaIds.filter((mediaId) => Number.isInteger(mediaId) && mediaId > 0))];
+  const normalizedIds = [
+    ...new Set(mediaIds.filter((mediaId) => Number.isInteger(mediaId) && mediaId > 0)),
+  ];
 
   if (normalizedIds.length === 0) {
     return { count: 0 };
@@ -958,6 +958,14 @@ export async function detachMediaReferencesAndDeleteMediaRecord(mediaId: number)
         imageMediaId: null,
       },
     });
+    const productFinishImages = await tx.productFinish.updateMany({
+      where: {
+        mediaId: mediaIdValue,
+      },
+      data: {
+        mediaId: null,
+      },
+    });
     const productSubcategoryImages = await tx.productSubcategory.updateMany({
       where: {
         imageMediaId: mediaIdValue,
@@ -1005,6 +1013,7 @@ export async function detachMediaReferencesAndDeleteMediaRecord(mediaId: number)
       productVariantLinks: productVariantLinks.count,
       brandLogos: brandLogos.count,
       productCategoryImages: productCategoryImages.count,
+      productFinishImages: productFinishImages.count,
       productSubcategoryImages: productSubcategoryImages.count,
       staffAvatars: staffAvatars.count,
       articleAttachments: articleAttachments.count,
@@ -1015,6 +1024,7 @@ export async function detachMediaReferencesAndDeleteMediaRecord(mediaId: number)
         productVariantLinks.count +
         brandLogos.count +
         productCategoryImages.count +
+        productFinishImages.count +
         productSubcategoryImages.count +
         staffAvatars.count +
         articleAttachments.count +

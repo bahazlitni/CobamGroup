@@ -54,11 +54,11 @@ export default function MediaToolbar({
   onCreateFolder?: () => void;
 }) {
   return (
-    <Card className="overflow-hidden rounded-[2rem] border border-slate-200 shadow-sm">
+    <Card className="overflow-hidden rounded-[2rem] border border-slate-300 shadow-sm">
       <CardContent className="space-y-5 px-5 py-5 md:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 p-1">
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-50 p-1">
               <button
                 type="button"
                 onClick={() => onBrowseModeChange("folders")}
@@ -86,7 +86,7 @@ export default function MediaToolbar({
             </div>
 
             {browseMode === "folders" ? (
-              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 p-1">
+              <div className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-50 p-1">
                 <button
                   type="button"
                   onClick={() => onFolderLayoutChange("grid")}
@@ -134,7 +134,7 @@ export default function MediaToolbar({
               <TabsTrigger
                 key={option.value}
                 value={option.value}
-                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm data-[state=active]:border-cobam-dark-blue data-[state=active]:bg-cobam-dark-blue data-[state=active]:text-white data-[state=active]:after:hidden"
+                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm data-[state=active]:border-cobam-dark-blue data-[state=active]:bg-cobam-dark-blue data-[state=active]:text-white data-[state=active]:after:hidden"
               >
                 {option.label}
               </TabsTrigger>

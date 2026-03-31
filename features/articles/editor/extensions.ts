@@ -1,6 +1,7 @@
 import type { AnyExtension } from "@tiptap/core";
 import Color from "@tiptap/extension-color";
 import Image from "@tiptap/extension-image";
+import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Table } from "@tiptap/extension-table";
 import TableCell from "@tiptap/extension-table-cell";
@@ -52,6 +53,17 @@ export function createArticleEditorExtensions(
     }),
     Underline,
     TextStyle,
+    Link.configure({
+      openOnClick: false,
+      autolink: false,
+      linkOnPaste: true,
+      defaultProtocol: "https",
+      HTMLAttributes: {
+        class: "article-link",
+        target: "_blank",
+        rel: "noopener noreferrer",
+      },
+    }),
     Color.configure({
       types: ["textStyle"],
     }),

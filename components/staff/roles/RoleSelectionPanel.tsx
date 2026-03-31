@@ -70,7 +70,7 @@ export default function RoleSelectionPanel({
                 return (
                   <label
                     key={role.id}
-                    className="flex items-start gap-3 rounded-xl border border-slate-200 px-3 py-3 text-sm text-slate-700"
+                    className="flex items-start gap-3 rounded-xl border border-slate-300 px-3 py-3 text-sm text-slate-700"
                   >
                     <input
                       type="checkbox"

@@ -96,12 +96,8 @@ function getOwnerScope(session: StaffSession) {
   throw new MediaServiceError("Accès refusé.", 403);
 }
 
-function buildMediaFolderPathData(
-  folders: Awaited<ReturnType<typeof listAllMediaFolders>>,
-) {
-  const foldersById = new Map(
-    folders.map((folder) => [folder.id.toString(), folder]),
-  );
+function buildMediaFolderPathData(folders: Awaited<ReturnType<typeof listAllMediaFolders>>) {
+  const foldersById = new Map(folders.map((folder) => [folder.id.toString(), folder]));
 
   const buildBreadcrumbsForFolder = (folderId: bigint | null | undefined) => {
     const breadcrumbs: Array<{ id: bigint; name: string }> = [];
@@ -136,6 +132,61 @@ function buildMediaFolderPathData(
     buildBreadcrumbsForFolder,
     foldersById,
   };
+}
+
+function buildScopedFolderIds(options: {
+  allFolders: Awaited<ReturnType<typeof listAllMediaFolders>>;
+  folderId: number | null | undefined;
+  includeDescendantFolders?: boolean;
+}) {
+  if (options.folderId == null) {
+    return null;
+  }
+
+  const rootFolderId = BigInt(options.folderId);
+
+  if (!options.includeDescendantFolders) {
+    return [rootFolderId];
+  }
+
+  const childFolderIdsByParentId = new Map<string, bigint[]>();
+
+  for (const folder of options.allFolders) {
+    if (folder.parentId == null) {
+      continue;
+    }
+
+    const parentKey = folder.parentId.toString();
+    const currentChildren = childFolderIdsByParentId.get(parentKey) ?? [];
+    currentChildren.push(folder.id);
+    childFolderIdsByParentId.set(parentKey, currentChildren);
+  }
+
+  const scopedFolderIds = [rootFolderId];
+  const pendingFolderIds = [rootFolderId];
+  const seenFolderIds = new Set([rootFolderId.toString()]);
+
+  while (pendingFolderIds.length > 0) {
+    const currentFolderId = pendingFolderIds.pop();
+
+    if (!currentFolderId) {
+      continue;
+    }
+
+    for (const childFolderId of childFolderIdsByParentId.get(currentFolderId.toString()) ?? []) {
+      const childKey = childFolderId.toString();
+
+      if (seenFolderIds.has(childKey)) {
+        continue;
+      }
+
+      seenFolderIds.add(childKey);
+      scopedFolderIds.push(childFolderId);
+      pendingFolderIds.push(childFolderId);
+    }
+  }
+
+  return scopedFolderIds;
 }
 
 function sanitizeFilename(value: string) {
@@ -212,10 +263,7 @@ function buildMediaStorageKey(input: {
   return `media/${input.kind.toLowerCase()}/${year}/${month}/${randomUUID()}-${baseName || "file"}.${extension}`;
 }
 
-async function analyzeImageBuffer(
-  buffer: Buffer,
-  mimeType: string | null,
-) {
+async function analyzeImageBuffer(buffer: Buffer, mimeType: string | null) {
   try {
     const image = sharp(buffer, { failOn: "none" }).rotate();
     const metadata = await image.metadata();
@@ -231,10 +279,8 @@ async function analyzeImageBuffer(
       .toBuffer();
 
     return {
-      widthPx:
-        typeof metadata.width === "number" ? metadata.width : null,
-      heightPx:
-        typeof metadata.height === "number" ? metadata.height : null,
+      widthPx: typeof metadata.width === "number" ? metadata.width : null,
+      heightPx: typeof metadata.height === "number" ? metadata.height : null,
       thumbnailBuffer,
       thumbnailContentType: "image/webp" as const,
     };
@@ -257,6 +303,8 @@ function getMediaReferenceCount(media: Awaited<ReturnType<typeof findMediaById>>
     media._count.productVariantLinks +
     media._count.brandLogoFor +
     media._count.productCategoryImageFor +
+    media._count.productFinishImageFor +
+    media._count.productSubcategoryImageFor +
     media._count.staffProfileAvatarFor +
     media._count.articleMediaLinks +
     media._count.articleCoverFor +
@@ -295,6 +343,20 @@ function assertMediaCanBeDeletedWithoutForce(
     );
   }
 
+  if (media._count.productFinishImageFor > 0) {
+    throw new MediaServiceError(
+      "Impossible de supprimer un média encore utilisé par une finition.",
+      400,
+    );
+  }
+
+  if (media._count.productSubcategoryImageFor > 0) {
+    throw new MediaServiceError(
+      "Impossible de supprimer un média encore utilisé par une sous-catégorie de produit.",
+      400,
+    );
+  }
+
   if (media._count.staffProfileAvatarFor > 0) {
     throw new MediaServiceError(
       "Impossible de supprimer un média encore utilisé comme avatar.",
@@ -324,32 +386,36 @@ export async function listMediaService(
 
   const ownerUserId = getOwnerScope(session);
   const allFolders = await listAllMediaFolders(ownerUserId);
-  const { buildBreadcrumbsForFolder, foldersById } =
-    buildMediaFolderPathData(allFolders);
-  let currentFolder =
-    query.browseMode === "folders" && query.folderId != null
-      ? foldersById.get(String(query.folderId)) ?? null
-      : null;
+  const { buildBreadcrumbsForFolder, foldersById } = buildMediaFolderPathData(allFolders);
 
-  if (query.browseMode === "folders" && query.folderId != null && !currentFolder) {
-    const existingFolder = await findMediaFolderById(query.folderId, ownerUserId);
+  let requestedFolder =
+    query.folderId != null ? (foldersById.get(String(query.folderId)) ?? null) : null;
 
-    if (!existingFolder) {
+  if (query.folderId != null && !requestedFolder) {
+    requestedFolder = await findMediaFolderById(query.folderId, ownerUserId);
+
+    if (!requestedFolder) {
       throw new MediaServiceError("Dossier introuvable.", 404);
     }
-
-    currentFolder = existingFolder;
   }
+  const currentFolder = query.browseMode === "folders" ? requestedFolder : null;
+  const scopedFolderIds = buildScopedFolderIds({
+    allFolders,
+    folderId: query.folderId,
+    includeDescendantFolders: query.includeDescendantFolders,
+  });
 
   const [items, total, stats, folders] = await Promise.all([
-    listMedia({ query, ownerUserId }),
-    countMedia({ query, ownerUserId }),
+    listMedia({ query, ownerUserId, folderIds: scopedFolderIds }),
+    countMedia({ query, ownerUserId, folderIds: scopedFolderIds }),
     aggregateMediaStats({
       q: query.q,
       status: query.status,
       ownerUserId,
       browseMode: query.browseMode,
       folderId: query.folderId ?? null,
+      includeDescendantFolders: query.includeDescendantFolders,
+      folderIds: scopedFolderIds,
     }),
     query.browseMode === "folders"
       ? listMediaFoldersAtLevel({
@@ -384,10 +450,7 @@ export async function listMediaService(
   };
 }
 
-export async function uploadMediaService(
-  session: StaffSession,
-  input: MediaUploadInput,
-) {
+export async function uploadMediaService(session: StaffSession, input: MediaUploadInput) {
   if (!canUploadMedia(session)) {
     throw new MediaServiceError("Accès refusé.", 403);
   }
@@ -425,13 +488,9 @@ export async function uploadMediaService(
   const sha256Hash = createHash("sha256").update(buffer).digest("hex");
   const storage = getMediaStorageDriver();
   const imageArtifacts =
-    kind === MediaKind.IMAGE
-      ? await analyzeImageBuffer(buffer, input.file.type || null)
-      : null;
+    kind === MediaKind.IMAGE ? await analyzeImageBuffer(buffer, input.file.type || null) : null;
   const thumbnailStoragePath =
-    kind === MediaKind.IMAGE
-      ? getMediaVariantStoragePath(storagePath, "thumbnail")
-      : null;
+    kind === MediaKind.IMAGE ? getMediaVariantStoragePath(storagePath, "thumbnail") : null;
   let originalStored = false;
   let thumbnailStored = false;
 
@@ -503,10 +562,7 @@ export async function uploadMediaService(
   }
 }
 
-export async function getMediaByIdService(
-  session: StaffSession,
-  mediaId: number,
-) {
+export async function getMediaByIdService(session: StaffSession, mediaId: number) {
   if (!canAccessMediaLibrary(session)) {
     throw new MediaServiceError("Accès refusé.", 403);
   }
@@ -571,10 +627,7 @@ export async function updateMediaService(
     actorUserId: session.id,
     actionType: "UPDATE",
     entityId: String(updatedMedia.id),
-    targetLabel:
-      updatedMedia.originalFilename ??
-      updatedMedia.title ??
-      `Media ${updatedMedia.id}`,
+    targetLabel: updatedMedia.originalFilename ?? updatedMedia.title ?? `Media ${updatedMedia.id}`,
     summary: shouldChangeFolder
       ? "Déplacement d'un média"
       : input.visibility === MediaVisibility.PUBLIC
@@ -648,8 +701,7 @@ export async function deleteMediaFolderService(
   if (forceRemove) {
     await detachMediaFolderRelationsAndDeleteFolderRecord({
       folderId,
-      parentId:
-        existingFolder.parentId != null ? Number(existingFolder.parentId) : null,
+      parentId: existingFolder.parentId != null ? Number(existingFolder.parentId) : null,
       ownerUserId,
     });
     return;
@@ -678,15 +730,10 @@ export async function updateMediaFolderService(
   }
 
   if (input.parentId === folderId) {
-    throw new MediaServiceError(
-      "Impossible de déplacer un dossier dans lui-même.",
-      400,
-    );
+    throw new MediaServiceError("Impossible de déplacer un dossier dans lui-même.", 400);
   }
 
-  const foldersById = new Map(
-    allFolders.map((folder) => [Number(folder.id), folder]),
-  );
+  const foldersById = new Map(allFolders.map((folder) => [Number(folder.id), folder]));
 
   if (input.parentId != null) {
     const targetParent = foldersById.get(input.parentId);
@@ -695,8 +742,7 @@ export async function updateMediaFolderService(
       throw new MediaServiceError("Dossier parent introuvable.", 404);
     }
 
-    let currentParentId =
-      targetParent.parentId != null ? Number(targetParent.parentId) : null;
+    let currentParentId = targetParent.parentId != null ? Number(targetParent.parentId) : null;
 
     while (currentParentId != null) {
       if (currentParentId === folderId) {
@@ -713,8 +759,7 @@ export async function updateMediaFolderService(
     }
   }
 
-  const currentParentId =
-    existingFolder.parentId != null ? Number(existingFolder.parentId) : null;
+  const currentParentId = existingFolder.parentId != null ? Number(existingFolder.parentId) : null;
 
   if (currentParentId === input.parentId) {
     return mapMediaFolderSummaryDto(existingFolder);
@@ -770,10 +815,7 @@ export async function deleteMediaService(
     }
   } catch (error) {
     console.error("MEDIA_STORAGE_DELETE_ERROR:", error);
-    throw new MediaServiceError(
-      "Impossible de supprimer le fichier dans le stockage.",
-      500,
-    );
+    throw new MediaServiceError("Impossible de supprimer le fichier dans le stockage.", 500);
   }
 
   const deletionResult = forceRemove
@@ -783,7 +825,7 @@ export async function deleteMediaService(
         detachedReferences: null,
       };
   const referenceCount = forceRemove
-    ? deletionResult.detachedReferences?.total ?? getMediaReferenceCount(media)
+    ? (deletionResult.detachedReferences?.total ?? getMediaReferenceCount(media))
     : getMediaReferenceCount(media);
   const forceSummarySuffix =
     forceRemove && referenceCount > 0
@@ -808,10 +850,7 @@ async function readStoredMediaObject(
   variant: MediaFileVariant = "original",
 ) {
   const storage = getMediaStorageDriver();
-  const thumbnailStoragePath = getMediaVariantStoragePath(
-    media.storagePath,
-    "thumbnail",
-  );
+  const thumbnailStoragePath = getMediaVariantStoragePath(media.storagePath, "thumbnail");
 
   if (variant === "thumbnail" && media.kind === MediaKind.IMAGE) {
     const existingThumbnail = await storage.readObject(thumbnailStoragePath);
@@ -829,10 +868,7 @@ async function readStoredMediaObject(
     const originalObject = await storage.readObject(media.storagePath);
 
     if (!originalObject) {
-      throw new MediaServiceError(
-        "Fichier média introuvable dans le stockage.",
-        404,
-      );
+      throw new MediaServiceError("Fichier média introuvable dans le stockage.", 404);
     }
 
     try {
@@ -859,10 +895,7 @@ async function readStoredMediaObject(
 
       return {
         body: originalObject.body,
-        contentType:
-          media.mimeType ??
-          originalObject.contentType ??
-          "application/octet-stream",
+        contentType: media.mimeType ?? originalObject.contentType ?? "application/octet-stream",
         originalFilename:
           buildMediaVariantFilename(media.originalFilename, "original") ??
           `media-${media.id}${media.extension ? `.${media.extension}` : ""}`,

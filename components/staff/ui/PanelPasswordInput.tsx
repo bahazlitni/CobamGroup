@@ -19,7 +19,7 @@ export default function PanelPasswordInput(props: PanelInputProps) {
     return <div className="flex flex-row gap-5">
         <Input
             type={inputType}
-            className="h-12 rounded-md border-cobam-grey px-4 text-base"
+            className="h-10 rounded-md border-cobam-grey px-4 text-base"
             {...props}
         />
         <AnimatedUIButton onClick={handleToggle} size="lg" variant={variant}>

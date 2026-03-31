@@ -9,6 +9,11 @@ import {
   useState,
 } from "react";
 import { Loader2, X } from "lucide-react";
+import {
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+} from "@/components/ui/popover";
 import { listTagSuggestionsClient } from "@/features/tags/client";
 import type { TagSuggestionDto } from "@/features/tags/types";
 import { cn } from "@/lib/utils";
@@ -81,15 +86,15 @@ export default function StaffTagInput({
   disabled = false,
   maxSuggestions = 8,
   className,
-  id
+  id,
 }: {
   value: string[];
   onChange: (value: string[]) => void;
   placeholder?: string;
   disabled?: boolean;
   maxSuggestions?: number;
-  className?: string
-  id?: string
+  className?: string;
+  id?: string;
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const requestIdRef = useRef(0);
@@ -199,7 +204,8 @@ export default function StaffTagInput({
     const dedupedValues = dedupeTagNames(nextValues);
     const lastInsertedTag =
       normalizedTags[normalizedTags.length - 1].toLocaleLowerCase("fr-FR");
-    const nextInsertionIndex = findLastTagIndex(dedupedValues, lastInsertedTag) + 1;
+    const nextInsertionIndex =
+      findLastTagIndex(dedupedValues, lastInsertedTag) + 1;
 
     commitTags(dedupedValues);
     setInputValue("");
@@ -360,151 +366,169 @@ export default function StaffTagInput({
     isFocused && (isLoadingSuggestions || visibleSuggestions.length > 0);
 
   return (
-    <div id={id} className="relative">
-      <div
-        className={cn(
-          "flex min-h-12 flex-wrap items-center gap-2 rounded-2xl border border-slate-300 bg-white px-3 py-2 transition-colors",
-          disabled ? "cursor-not-allowed bg-slate-100/80 opacity-70" : "focus-within:border-cobam-water-blue",
-          className
-        )}
-        onClick={() => {
-          if (disabled) {
-            return;
-          }
+    <Popover open={showSuggestionMenu} modal={false}>
+      <PopoverAnchor asChild>
+        <div id={id} className="relative">
+          <div
+            className={cn(
+              "flex min-h-10 flex-wrap items-center gap-2 rounded-2xl border border-slate-300 bg-white px-3 py-2 transition-colors",
+              disabled
+                ? "cursor-not-allowed bg-slate-100/80 opacity-70"
+                : "focus-within:border-cobam-water-blue",
+              className,
+            )}
+            onClick={() => {
+              if (disabled) {
+                return;
+              }
 
-          setInsertionIndex(value.length);
-          inputRef.current?.focus();
-        }}
-      >
-        {value.slice(0, activeInsertionIndex).map((tagName, index) => (
-          <button
-            key={`${tagName}-${index}`}
-            type="button"
-            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-200"
-            onClick={(event) => {
-              event.stopPropagation();
-              setInsertionIndex(index + 1);
+              setInsertionIndex(value.length);
               inputRef.current?.focus();
             }}
           >
-            <span>{tagName}</span>
-            {!disabled ? (
-              <span
-                role="button"
-                tabIndex={-1}
+            {value.slice(0, activeInsertionIndex).map((tagName, index) => (
+              <button
+                key={`${tagName}-${index}`}
+                type="button"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-200"
                 onClick={(event) => {
                   event.stopPropagation();
-                  removeTagAt(index);
+                  setInsertionIndex(index + 1);
+                  inputRef.current?.focus();
                 }}
-                className="inline-flex h-4 w-4 items-center justify-center rounded-full text-slate-400 hover:bg-white hover:text-slate-700"
               >
-                <X className="h-3 w-3" />
-              </span>
-            ) : null}
-          </button>
-        ))}
+                <span>{tagName}</span>
+                {!disabled ? (
+                  <span
+                    role="button"
+                    tabIndex={-1}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      removeTagAt(index);
+                    }}
+                    className="inline-flex h-4 w-4 items-center justify-center rounded-full text-slate-400 hover:bg-white hover:text-slate-700"
+                  >
+                    <X className="h-3 w-3" />
+                  </span>
+                ) : null}
+              </button>
+            ))}
 
-        <div className="relative min-w-[10rem] flex-1">
-          <input
-            ref={inputRef}
-            value={inputValue}
-            onChange={(event) => handleInputChange(event.target.value)}
-            onPaste={handlePaste}
-            onKeyDown={handleKeyDown}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => {
-              setIsFocused(false);
-              if (normalizeTagName(inputValue)) {
-                insertTag(inputValue);
-              }
-            }}
-            placeholder={value.length === 0 ? placeholder : ""}
-            disabled={disabled}
-            className="h-8 w-full border-0 bg-transparent px-0 text-sm text-slate-700 outline-none placeholder:text-slate-400"
-          />
+            <div className="relative min-w-[10rem] flex-1">
+              <input
+                ref={inputRef}
+                value={inputValue}
+                onChange={(event) => handleInputChange(event.target.value)}
+                onPaste={handlePaste}
+                onKeyDown={handleKeyDown}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => {
+                  window.setTimeout(() => {
+                    setIsFocused(false);
+                    if (normalizeTagName(inputValue)) {
+                      insertTag(inputValue);
+                    }
+                  }, 100);
+                }}
+                placeholder={value.length === 0 ? placeholder : ""}
+                disabled={disabled}
+                className="h-8 w-full border-0 bg-transparent px-0 text-sm text-slate-700 outline-none placeholder:text-slate-400"
+              />
 
-          {ghostSuffix && inputValue ? (
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 flex h-8 items-center text-sm"
-            >
-              <span className="invisible whitespace-pre">{inputValue}</span>
-              <span className="whitespace-pre text-slate-300">{ghostSuffix}</span>
+              {ghostSuffix && inputValue ? (
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 flex h-8 items-center text-sm"
+                >
+                  <span className="invisible whitespace-pre">{inputValue}</span>
+                  <span className="whitespace-pre text-slate-300">
+                    {ghostSuffix}
+                  </span>
+                </div>
+              ) : null}
             </div>
-          ) : null}
-        </div>
 
-        {value.slice(activeInsertionIndex).map((tagName, index) => {
-          const actualIndex = activeInsertionIndex + index;
+            {value.slice(activeInsertionIndex).map((tagName, index) => {
+              const actualIndex = activeInsertionIndex + index;
 
-          return (
-            <button
-              key={`${tagName}-${actualIndex}`}
-              type="button"
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-200"
-              onClick={(event) => {
-                event.stopPropagation();
-                setInsertionIndex(actualIndex);
-                inputRef.current?.focus();
-              }}
-            >
-              <span>{tagName}</span>
-              {!disabled ? (
-                <span
-                  role="button"
-                  tabIndex={-1}
+              return (
+                <button
+                  key={`${tagName}-${actualIndex}`}
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-200"
                   onClick={(event) => {
                     event.stopPropagation();
-                    removeTagAt(actualIndex);
+                    setInsertionIndex(actualIndex);
+                    inputRef.current?.focus();
                   }}
-                  className="inline-flex h-4 w-4 items-center justify-center rounded-full text-slate-400 hover:bg-white hover:text-slate-700"
                 >
-                  <X className="h-3 w-3" />
-                </span>
-              ) : null}
-            </button>
-          );
-        })}
-      </div>
-
-      {showSuggestionMenu ? (
-        <div className="absolute top-[calc(100%+0.5rem)] left-0 z-20 w-full rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-200/70">
-          {isLoadingSuggestions ? (
-            <div className="flex items-center gap-2 px-3 py-2 text-sm text-slate-500">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Recherche de tags…</span>
-            </div>
-          ) : null}
-
-          {!isLoadingSuggestions && visibleSuggestions.length === 0 ? (
-            <div className="px-3 py-2 text-sm text-slate-500">
-              Aucun tag similaire pour le moment.
-            </div>
-          ) : null}
-
-          {!isLoadingSuggestions
-            ? visibleSuggestions.map((suggestion, index) => (
-                <button
-                  key={suggestion.id}
-                  type="button"
-                  className={cn(
-                    "flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition-colors",
-                    index === highlightedIndex
-                      ? "bg-slate-100 text-cobam-dark-blue"
-                      : "text-slate-600 hover:bg-slate-50",
-                  )}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                  }}
-                  onClick={() => insertTag(suggestion.name)}
-                >
-                  <span className="font-medium">{suggestion.name}</span>
-                  <span className="text-xs text-slate-400">{suggestion.slug}</span>
+                  <span>{tagName}</span>
+                  {!disabled ? (
+                    <span
+                      role="button"
+                      tabIndex={-1}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        removeTagAt(actualIndex);
+                      }}
+                      className="inline-flex h-4 w-4 items-center justify-center rounded-full text-slate-400 hover:bg-white hover:text-slate-700"
+                    >
+                      <X className="h-3 w-3" />
+                    </span>
+                  ) : null}
                 </button>
-              ))
-            : null}
+              );
+            })}
+          </div>
         </div>
-      ) : null}
-    </div>
+      </PopoverAnchor>
+
+      <PopoverContent
+        align="start"
+        side="bottom"
+        sideOffset={8}
+        onOpenAutoFocus={(event) => event.preventDefault()}
+        onCloseAutoFocus={(event) => event.preventDefault()}
+        className="z-[80] w-[var(--radix-popper-anchor-width)] min-w-[18rem] rounded-2xl border border-slate-300 bg-white p-2 shadow-xl shadow-slate-200/70"
+      >
+        {isLoadingSuggestions ? (
+          <div className="flex items-center gap-2 px-3 py-2 text-sm text-slate-500">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Recherche de tags…</span>
+          </div>
+        ) : null}
+
+        {!isLoadingSuggestions && visibleSuggestions.length === 0 ? (
+          <div className="px-3 py-2 text-sm text-slate-500">
+            Aucun tag similaire pour le moment.
+          </div>
+        ) : null}
+
+        {!isLoadingSuggestions
+          ? visibleSuggestions.map((suggestion, index) => (
+              <button
+                key={suggestion.id}
+                type="button"
+                className={cn(
+                  "flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition-colors",
+                  index === highlightedIndex
+                    ? "bg-slate-100 text-cobam-dark-blue"
+                    : "text-slate-600 hover:bg-slate-50",
+                )}
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                }}
+                onClick={() => {
+                  insertTag(suggestion.name);
+                  inputRef.current?.focus();
+                }}
+              >
+                <span className="font-medium">{suggestion.name}</span>
+                <span className="text-xs text-slate-400">{suggestion.slug}</span>
+              </button>
+            ))
+          : null}
+      </PopoverContent>
+    </Popover>
   );
 }

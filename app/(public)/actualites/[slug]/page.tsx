@@ -44,7 +44,7 @@ export default async function PublicArticleDetailPage({
 
   return (
     <main className="min-h-screen bg-white text-cobam-dark-blue">
-      <section className="border-b border-slate-200 bg-cobam-light-bg/80">
+      <section className="border-b border-slate-300 bg-cobam-light-bg/80">
         <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
 
           <div className="space-y-6">
@@ -81,7 +81,7 @@ export default async function PublicArticleDetailPage({
             />
 
             {article.coverImageUrl ? (
-              <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-sm">
+              <div className="overflow-hidden rounded-[32px] border border-slate-300 bg-white shadow-sm">
                 <div className="relative aspect-[16/9]">
                   <Image
                     src={article.coverImageUrl}
@@ -103,7 +103,7 @@ export default async function PublicArticleDetailPage({
         </div>
       </section>
 
-      <section className="border-t border-slate-200 bg-cobam-light-bg/60 py-14 sm:py-18">
+      <section className="border-t border-slate-300 bg-cobam-light-bg/60 py-14 sm:py-18">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <PublicArticleSuggestions articles={article.suggestions} />
         </div>

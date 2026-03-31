@@ -18,6 +18,7 @@ import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
 import MediaThumbnail from "@/components/staff/media/media-thumbnail";
 import { formatBytes, getMediaDisplayTitle } from "@/components/staff/media/utils";
 import {
+  findMediaFolderIdByPathClient,
   listMediaClient,
   uploadMediaClient,
 } from "@/features/media/client";
@@ -28,12 +29,9 @@ import { mapMediaListItemToProductMedia } from "./product-media-utils";
 
 type PickerTab = "library" | "upload";
 const PAGE_SIZE = 18;
+const PRODUCTS_MEDIA_FOLDER_PATH = "/produits";
 
-function MediaKindIcon({
-  kind,
-}: {
-  kind: ProductMediaDto["kind"] | MediaListItemDto["kind"];
-}) {
+function MediaKindIcon({ kind }: { kind: ProductMediaDto["kind"] | MediaListItemDto["kind"] }) {
   if (kind === "VIDEO") {
     return <Video className="h-8 w-8" />;
   }
@@ -45,13 +43,7 @@ function MediaKindIcon({
   return <File className="h-8 w-8" />;
 }
 
-function UploadPreview({
-  file,
-  previewUrl,
-}: {
-  file: File | null;
-  previewUrl: string | null;
-}) {
+function UploadPreview({ file, previewUrl }: { file: File | null; previewUrl: string | null }) {
   if (!file) {
     return (
       <div className="flex min-h-56 items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500">
@@ -62,26 +54,16 @@ function UploadPreview({
 
   if (file.type.startsWith("image/") && previewUrl) {
     return (
-      <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-slate-200 bg-slate-100">
-        <Image
-          src={previewUrl}
-          alt={file.name}
-          fill
-          className="object-cover"
-          unoptimized
-        />
+      <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-slate-300 bg-slate-100">
+        <Image src={previewUrl} alt={file.name} fill className="object-cover" unoptimized />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-56 flex-col items-center justify-center gap-3 rounded-3xl border border-slate-200 bg-slate-50 text-slate-500">
-      <MediaKindIcon
-        kind={file.type.startsWith("video/") ? "VIDEO" : "DOCUMENT"}
-      />
-      <p className="max-w-[18rem] truncate text-sm font-medium text-cobam-dark-blue">
-        {file.name}
-      </p>
+    <div className="flex min-h-56 flex-col items-center justify-center gap-3 rounded-3xl border border-slate-300 bg-slate-50 text-slate-500">
+      <MediaKindIcon kind={file.type.startsWith("video/") ? "VIDEO" : "DOCUMENT"} />
+      <p className="text-cobam-dark-blue max-w-[18rem] truncate text-sm font-medium">{file.name}</p>
       <p className="text-xs text-slate-500">{formatBytes(file.size)}</p>
     </div>
   );
@@ -107,18 +89,18 @@ function LibraryMediaCard({
         "flex flex-col overflow-hidden rounded-3xl border bg-white text-left transition",
         selected
           ? "border-cobam-water-blue shadow-sm"
-          : "border-slate-200 hover:border-slate-300 hover:shadow-sm",
-        blocked ? "cursor-not-allowed opacity-45 hover:border-slate-200 hover:shadow-none" : "",
+          : "border-slate-300 hover:border-slate-300 hover:shadow-sm",
+        blocked ? "cursor-not-allowed opacity-45 hover:border-slate-300 hover:shadow-none" : "",
       )}
     >
       <MediaThumbnail media={item} className="aspect-square rounded-none" />
       <div className="space-y-1 px-4 py-4">
         <div className="flex items-start justify-between gap-3">
-          <p className="truncate text-sm font-semibold text-cobam-dark-blue">
+          <p className="text-cobam-dark-blue truncate text-sm font-semibold">
             {getMediaDisplayTitle(item)}
           </p>
           {selected ? (
-            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cobam-water-blue text-white">
+            <span className="bg-cobam-water-blue inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white">
               <Check className="h-3.5 w-3.5" />
             </span>
           ) : null}
@@ -159,6 +141,19 @@ export default function ProductMediaPickerDialog({
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadPreviewUrl, setUploadPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const scopedLibraryDescription = `Cette bibliotheque affiche uniquement les medias du dossier ${PRODUCTS_MEDIA_FOLDER_PATH} et de ses sous-dossiers.`;
+
+  const resolveProductsFolderId = useCallback(async () => {
+    const folderId = await findMediaFolderIdByPathClient(PRODUCTS_MEDIA_FOLDER_PATH);
+
+    if (folderId == null) {
+      throw new Error(
+        `Le dossier ${PRODUCTS_MEDIA_FOLDER_PATH} est introuvable dans la mediatheque.`,
+      );
+    }
+
+    return folderId;
+  }, []);
 
   useEffect(() => {
     if (!uploadFile) {
@@ -193,23 +188,23 @@ export default function ProductMediaPickerDialog({
       }
 
       try {
+        const folderId = await resolveProductsFolderId();
         const result = await listMediaClient({
+          browseMode: "library",
           page: nextPage,
           pageSize: PAGE_SIZE,
           q: deferredSearch,
           sortBy: "date",
           sortDirection: "desc",
+          folderId,
+          includeDescendantFolders: true,
         });
 
         setItems((current) => (reset ? result.items : [...current, ...result.items]));
         setPage(nextPage);
         setHasMore(nextPage * PAGE_SIZE < result.total);
       } catch (err: unknown) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Erreur lors du chargement des medias.",
-        );
+        setError(err instanceof Error ? err.message : "Erreur lors du chargement des medias.");
       } finally {
         if (reset) {
           setIsLoading(false);
@@ -218,7 +213,7 @@ export default function ProductMediaPickerDialog({
         }
       }
     },
-    [deferredSearch, open],
+    [deferredSearch, open, resolveProductsFolderId],
   );
 
   useEffect(() => {
@@ -255,15 +250,16 @@ export default function ProductMediaPickerDialog({
     setError(null);
 
     try {
+      const folderId = await resolveProductsFolderId();
       const media = await uploadMediaClient({
         file: uploadFile,
+        folderId,
       });
 
       onSelect(mapMediaListItemToProductMedia(media));
       handleClose();
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Erreur lors de l'import du media.";
+      const message = err instanceof Error ? err.message : "Erreur lors de l'import du media.";
       setError(message);
     } finally {
       setIsUploading(false);
@@ -271,10 +267,13 @@ export default function ProductMediaPickerDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? onOpenChange(true) : handleClose())}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => (nextOpen ? onOpenChange(true) : handleClose())}
+    >
       <DialogContent className="flex h-[82vh] max-w-4xl flex-col gap-0 overflow-hidden p-0">
-        <DialogHeader className="border-b border-slate-200 px-6 py-5">
-          <DialogTitle className="text-base font-semibold text-cobam-dark-blue">
+        <DialogHeader className="border-b border-slate-300 px-6 py-5">
+          <DialogTitle className="text-cobam-dark-blue text-base font-semibold">
             {title}
           </DialogTitle>
           <DialogDescription className="pt-2 text-sm leading-6 text-slate-500">
@@ -293,7 +292,7 @@ export default function ProductMediaPickerDialog({
               className={cn(
                 "min-w-28 px-3 py-2",
                 activeTab === "library"
-                  ? "border-slate-300 font-semibold text-cobam-dark-blue shadow-sm"
+                  ? "text-cobam-dark-blue border-slate-300 font-semibold shadow-sm"
                   : "",
               )}
             >
@@ -304,7 +303,7 @@ export default function ProductMediaPickerDialog({
               className={cn(
                 "min-w-28 px-3 py-2",
                 activeTab === "upload"
-                  ? "border-slate-300 font-semibold text-cobam-dark-blue shadow-sm"
+                  ? "text-cobam-dark-blue border-slate-300 font-semibold shadow-sm"
                   : "",
               )}
             >
@@ -331,16 +330,17 @@ export default function ProductMediaPickerDialog({
                 {Array.from({ length: 6 }).map((_, index) => (
                   <div
                     key={index}
-                    className="aspect-square animate-pulse rounded-3xl border border-slate-200 bg-slate-100"
+                    className="aspect-square animate-pulse rounded-3xl border border-slate-300 bg-slate-100"
                   />
                 ))}
               </div>
             ) : items.length === 0 ? (
               <div className="flex min-h-56 items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500">
-                Aucun media disponible pour le moment.
+                Aucun media disponible dans {PRODUCTS_MEDIA_FOLDER_PATH} pour le moment.
               </div>
             ) : (
               <div className="space-y-4">
+                <p className="text-xs text-slate-500">{scopedLibraryDescription}</p>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {items.map((item) => (
                     <LibraryMediaCard
@@ -371,9 +371,12 @@ export default function ProductMediaPickerDialog({
             )}
           </TabsContent>
 
-          <TabsContent value="upload" className="mt-0 grid gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+          <TabsContent
+            value="upload"
+            className="mt-0 grid gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]"
+          >
             <div className="space-y-4 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5">
-              <div className="flex items-center gap-2 text-sm font-semibold text-cobam-dark-blue">
+              <div className="text-cobam-dark-blue flex items-center gap-2 text-sm font-semibold">
                 <Upload className="h-4 w-4" />
                 Ajouter un nouveau media
               </div>
@@ -398,7 +401,7 @@ export default function ProductMediaPickerDialog({
           </TabsContent>
         </Tabs>
 
-        <DialogFooter className="border-t border-slate-200 px-6 py-4">
+        <DialogFooter className="border-t border-slate-300 px-6 py-4">
           <AnimatedUIButton
             type="button"
             variant="light"

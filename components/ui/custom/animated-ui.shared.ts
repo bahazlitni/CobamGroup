@@ -252,7 +252,7 @@ export function getDefaultColors(color: StaffColorName): ColorsDataSet {
     case "default":
     default:
       return createColorSet(
-        "border-slate-200",
+        "border-slate-300",
         "bg-slate-50",
         "text-slate-700",
         "text-slate-600",
@@ -711,7 +711,7 @@ export function getAnimatedButtonSizeStyles(
         textSize: "text-lg",
         rounded: "rounded-2xl",
         gap: "gap-3",
-        minHeight: "min-h-12",
+        minHeight: "min-h-10",
       };
     case "2xl":
       return {

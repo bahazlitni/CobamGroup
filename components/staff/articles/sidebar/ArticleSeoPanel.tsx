@@ -118,7 +118,7 @@ export function ArticleSeoPanel({ state, onField }: ArticleSeoPanelProps) {
           </p>
         </div>
 
-        <div className="space-y-3 rounded-md border border-slate-200 p-3">
+        <div className="space-y-3 rounded-md border border-slate-300 p-3">
           <p className="text-xs font-semibold text-slate-600">Open Graph</p>
 
           <div>
@@ -156,7 +156,7 @@ export function ArticleSeoPanel({ state, onField }: ArticleSeoPanelProps) {
           </div>
         </div>
 
-        <div className="space-y-3 rounded-md border border-slate-200 p-3">
+        <div className="space-y-3 rounded-md border border-slate-300 p-3">
           <p className="text-xs font-semibold text-slate-600">Advanced</p>
 
           <div>

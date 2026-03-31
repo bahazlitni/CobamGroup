@@ -124,7 +124,7 @@ function MediaUploadQueueRow({
         "flex items-start gap-4 rounded-3xl border px-4 py-4 transition",
         item.status === "error"
           ? "border-rose-200 bg-rose-50/60"
-          : "border-slate-200 bg-white",
+          : "border-slate-300 bg-white",
       )}
     >
       <MediaUploadQueuePreview file={item.file} />
@@ -185,7 +185,7 @@ export default function MediaUploadQueue({
 
   if (items.length === 0) {
     return (
-      <div className="rounded-[1.75rem] border border-dashed border-slate-200 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500">
+      <div className="rounded-[1.75rem] border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500">
         Aucun fichier dans la file d&apos;import.
       </div>
     );
@@ -193,7 +193,7 @@ export default function MediaUploadQueue({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.75rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.75rem] border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600">
         <p className="font-medium text-cobam-dark-blue">
           {items.length} fichier(s) pret(s) a l&apos;import
         </p>

@@ -21,7 +21,10 @@ import {
   Logs,
   LucideProps,
   Package,
+  Paintbrush,
+  Palette,
   Shield,
+  Tags,
   User,
   Users,
 } from "lucide-react";
@@ -157,6 +160,21 @@ const STAFF_TABS: Record<string, StaffTabGroup> = {
         label: "Produits",
         icon: Package,
       },
+      "attributs-produits": {
+        key: "attributs-produits",
+        label: "Attributs produit",
+        icon: Tags,
+      },
+      finitions: {
+        key: "finitions",
+        label: "Finitions",
+        icon: Paintbrush,
+      },
+      couleurs: {
+        key: "couleurs",
+        label: "Couleurs",
+        icon: Palette,
+      },
       "categories-produits": {
           key: "categories-produits",
           label: "Catégories produits",
@@ -240,6 +258,9 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
       "gestion-des-produits": {
         marques: user ? canAccessBrands(user) : false,
         produits: user ? canAccessProducts(user) : false,
+        "attributs-produits": user ? canAccessProducts(user) : false,
+        finitions: user ? canAccessProducts(user) : false,
+        couleurs: user ? canAccessProducts(user) : false,
         "categories-produits": user
           ? canAccessProductCategories(user)
           : false,
@@ -381,8 +402,8 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
   return (
     <main className="flex min-h-screen bg-slate-50 text-slate-900">
       {/* Sidebar: narrow on mobile, normal on sm+ */}
-      <aside className="sticky left-0 top-0 max-h-screen flex w-14 flex-col border-r border-slate-200 bg-white md:w-64 scrollbar-left">        
-        <div className="border-b border-slate-200 px-2 py-3 text-[10px] text-slate-500 md:space-y-2 md:px-5 md:py-5">
+      <aside className="sticky left-0 top-0 max-h-screen flex w-14 flex-col border-r border-slate-300 bg-white md:w-64 scrollbar-left">        
+        <div className="border-b border-slate-300 px-2 py-3 text-[10px] text-slate-500 md:space-y-2 md:px-5 md:py-5">
           <p className="hidden md:block">
             Connecté en tant que : <strong>{displayEmail}</strong>
           </p>
@@ -437,7 +458,7 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
         </nav>
 
         {/* Footer: public site + logout */}
-        <div className="flex flex-col space-y-2 border-t border-slate-200 px-2 py-3 text-[10px] text-slate-500 md:px-5 md:py-5">
+        <div className="flex flex-col space-y-2 border-t border-slate-300 px-2 py-3 text-[10px] text-slate-500 md:px-5 md:py-5">
           {/* Public site link: icon-only on mobile, full on sm+ */}
                     <AnimatedUIButton
             icon="external-link"

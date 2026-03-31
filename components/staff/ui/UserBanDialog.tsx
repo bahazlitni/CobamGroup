@@ -87,7 +87,7 @@ export default function UserBanDialog({
         }
       }}
     >
-      <div className="w-full max-w-2xl rounded-[28px] border border-slate-200 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)]">
+      <div className="w-full max-w-2xl rounded-[28px] border border-slate-300 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)]">
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-500">
@@ -106,7 +106,7 @@ export default function UserBanDialog({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50 disabled:opacity-60"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 text-slate-500 transition hover:bg-slate-50 disabled:opacity-60"
           >
             <X className="h-4 w-4" />
           </button>
@@ -128,7 +128,7 @@ export default function UserBanDialog({
                     className={`flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3 transition ${
                       checked
                         ? "border-amber-300 bg-amber-50"
-                        : "border-slate-200 bg-white hover:border-slate-300"
+                        : "border-slate-300 bg-white hover:border-slate-300"
                     }`}
                   >
                     <input
@@ -146,7 +146,7 @@ export default function UserBanDialog({
             </div>
           </div>
 
-          <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+          <div className="space-y-3 rounded-2xl border border-slate-300 bg-slate-50/70 p-4">
             <label className="flex items-center gap-3 text-sm font-semibold text-cobam-dark-blue">
               <input
                 type="checkbox"

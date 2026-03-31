@@ -16,15 +16,15 @@ export default function PanelField({
   className?: string
 }) {
   return (
-    <div className={cn("space-y-2 w-full", className)}>
+    <div className={cn("space-y-1 w-full", className)}>
       <Label
         htmlFor={id}
-        className="text-[15px] overflow-visible font-semibold text-cobam-dark-blue block text-nowrap"
+        className="text-sm font-semibold text-cobam-dark-blue text-nowrap"
       >
         {label}
       </Label>
       {children}
-      {hint ? <p className="text-sm leading-6 text-slate-400">{hint}</p> : null}
+      {hint ? <p className="text-xs leading-4 text-slate-400">{hint}</p> : null}
     </div>
   );
 }

@@ -41,7 +41,7 @@ export function PanelBirthdayPicker({ id, value, onChange }: BirthdayPickerProps
           id={id}
           variant="outline"
           type="button"
-          className={"h-12 rounded-md border-cobam-grey px-4 text-base w-full justify-start"}
+          className={"h-10 rounded-md border-cobam-grey px-4 text-base w-full justify-start"}
         >
           <CalendarIcon className="mr-2 h-4 w-4 text-slate-400" />
           {date ? format(date, "dd MMMM yyyy") : "Sélectionner une date"}

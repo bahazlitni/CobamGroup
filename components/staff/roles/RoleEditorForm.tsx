@@ -374,7 +374,7 @@ export default function RoleEditorForm({
               value={state.description}
               onChange={(event) => onChange({ description: event.target.value })}
               rows={4}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cobam-water-blue/40"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cobam-water-blue/40"
             />
           </PanelField>
 
@@ -393,7 +393,7 @@ export default function RoleEditorForm({
           ) : null}
 
 
-        <div className="rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-sm text-slate-600">
+        <div className="rounded-xl border border-slate-300 bg-slate-50/70 px-4 py-3 text-sm text-slate-600">
           <span className="font-semibold text-slate-800">{selectedCount}</span>{" "}
           {selectedCountLabel}
         </div>
@@ -458,7 +458,7 @@ export default function RoleEditorForm({
                       className={`rounded-xl border px-4 py-4 transition-colors ${
                         isEnabled
                           ? "border-cobam-water-blue bg-cobam-light-bg/60"
-                          : "border-slate-200 bg-white"
+                          : "border-slate-300 bg-white"
                       }`}
                     >
                       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -524,7 +524,7 @@ export default function RoleEditorForm({
                                     permission.scope ??
                                     permission.label,
                                 }))}
-                                triggerClassName="h-10 min-w-44 rounded-lg border-slate-200 px-3 text-sm"
+                                triggerClassName="h-10 min-w-44 rounded-lg border-slate-300 px-3 text-sm"
                                 contentClassName="min-w-44"
                               />
                             </div>

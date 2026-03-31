@@ -141,7 +141,7 @@ export default function ArticleAuthorsPanel({
       </div>
 
       {originalAuthor ? (
-        <div className="rounded-2xl border border-slate-200 bg-white/80 p-4">
+        <div className="rounded-2xl border border-slate-300 bg-white/80 p-4">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <p className="text-sm font-semibold text-cobam-dark-blue">
               Auteur d&apos;origine
@@ -162,7 +162,7 @@ export default function ArticleAuthorsPanel({
         </div>
       ) : null}
 
-      <div className="rounded-2xl border border-slate-200 bg-white/80 p-4">
+      <div className="rounded-2xl border border-slate-300 bg-white/80 p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-cobam-dark-blue">
@@ -209,7 +209,7 @@ export default function ArticleAuthorsPanel({
   return (
     <>
       {mode === "compact" ? (
-        <div className="space-y-4 rounded-[24px] border border-slate-200 bg-slate-50/70 p-4">
+        <div className="space-y-4 rounded-[24px] border border-slate-300 bg-slate-50/70 p-4">
           {authorContent}
         </div>
       ) : (
@@ -224,7 +224,7 @@ export default function ArticleAuthorsPanel({
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[min(90vh,760px)] overflow-hidden p-0">
-          <DialogHeader className="border-b border-slate-200 px-6 pb-4 pt-6">
+          <DialogHeader className="border-b border-slate-300 px-6 pb-4 pt-6">
             <DialogTitle>Gerer les auteurs de l&apos;article</DialogTitle>
             <DialogDescription>
               Selectionnez les collaborateurs qui peuvent ecrire avec l&apos;auteur
@@ -233,7 +233,7 @@ export default function ArticleAuthorsPanel({
           </DialogHeader>
 
           <div className="flex flex-col gap-5 px-6 pb-6">
-            <label className="mt-1 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <label className="mt-1 flex items-center gap-3 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3">
               <Search className="h-4 w-4 text-slate-400" />
               <Input
                 value={search}
@@ -244,7 +244,7 @@ export default function ArticleAuthorsPanel({
             </label>
 
             {coAuthors.length > 0 ? (
-              <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+              <div className="space-y-3 rounded-2xl border border-slate-300 bg-slate-50/70 p-4">
                 <div className="flex items-center gap-2 text-sm font-semibold text-cobam-dark-blue">
                   <Users className="h-4 w-4 text-cobam-water-blue" />
                   Auteurs actuellement ajoutes
@@ -266,7 +266,7 @@ export default function ArticleAuthorsPanel({
               </div>
             ) : null}
 
-            <div className="min-h-[18rem] overflow-y-auto rounded-2xl border border-slate-200 bg-white">
+            <div className="min-h-[18rem] overflow-y-auto rounded-2xl border border-slate-300 bg-white">
               {isLoading ? (
                 <div className="space-y-3 p-4">
                   {Array.from({ length: 6 }).map((_, index) => (

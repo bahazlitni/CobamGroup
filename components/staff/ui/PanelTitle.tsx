@@ -2,7 +2,7 @@ export default function PanelTitle(
     {pretitle="", title, description=""}: {pretitle: string; title: string; description?:string;}
 ){
     return (title && 
-        <div className="border-b border-slate-200 px-5 py-4 sm:px-6">
+        <div className="border-b border-slate-300 px-5 py-4 sm:px-6">
             {pretitle && <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cobam-water-blue">
                 {pretitle}
             </p>}

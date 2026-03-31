@@ -7,7 +7,7 @@ type PublicProductCardProps = {
 
 export default function PublicProductCard({ product }: PublicProductCardProps) {
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+    <article className="flex h-full flex-col overflow-hidden rounded-[28px] border border-slate-300 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
       <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
         {product.imageThumbnailUrl ? (
           <Image
@@ -41,7 +41,7 @@ export default function PublicProductCard({ product }: PublicProductCardProps) {
           ) : null}
 
           <p className="line-clamp-4 text-sm leading-7 text-slate-600">
-            {product.excerpt}
+            {product.description}
           </p>
         </div>
       </div>

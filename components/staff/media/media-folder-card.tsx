@@ -78,7 +78,7 @@ export default function MediaFolderCard({
           ? "overflow-hidden rounded-3xl border border-cobam-water-blue bg-cobam-water-blue/5 shadow-md ring-2 ring-cobam-water-blue/20"
           : isSelected
             ? "overflow-hidden rounded-3xl border border-cobam-water-blue/40 bg-cobam-water-blue/5 shadow-sm"
-          : "overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-cobam-water-blue/30 hover:shadow-md"
+          : "overflow-hidden rounded-3xl border border-slate-300 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-cobam-water-blue/30 hover:shadow-md"
       }
     >
       <CardContent className="px-4 py-4">
@@ -111,7 +111,7 @@ export default function MediaFolderCard({
             className="flex w-full flex-col gap-4 text-left"
           >
             <div className="inline-flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cobam-water-blue/10 text-cobam-water-blue">
+            <div className="flex h-10 w-12 items-center justify-center rounded-2xl bg-cobam-water-blue/10 text-cobam-water-blue">
               <Folder className="h-6 w-6" />
             </div>
             <h2 className="line-clamp-2 text-base font-semibold text-cobam-dark-blue">

@@ -346,7 +346,7 @@ function ArticleEditPageContent() {
                       >
                         {selectedCategory ? (
                           <span
-                            className="h-4 w-4 rounded-full border border-slate-200"
+                            className="h-4 w-4 rounded-full border border-slate-300"
                             style={{ backgroundColor: selectedCategory.color }}
                             aria-hidden="true"
                           />
@@ -535,7 +535,7 @@ function ArticleEditPageContent() {
               />
             </PanelField>
 
-            <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 p-4">
+            <div className="rounded-[24px] border border-slate-300 bg-slate-50/70 p-4">
               <SeoChecks
                 title={editor.state.title}
                 slug={editor.state.slug}

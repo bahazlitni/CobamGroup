@@ -85,7 +85,7 @@ export default function StaffSearchSelect({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            "h-12 justify-between rounded-md border-slate-300 bg-white px-4 text-left font-normal text-slate-700 hover:bg-white",
+            "h-10 justify-between rounded-md border-slate-300 bg-white px-4 text-left font-normal text-slate-700 hover:bg-white",
             fullWidth ? "w-full" : "w-auto min-w-[16rem]",
             triggerClassName,
           )}
@@ -104,7 +104,7 @@ export default function StaffSearchSelect({
           contentClassName,
         )}
       >
-        <div className="border-b border-slate-200 p-2">
+        <div className="border-b border-slate-300 p-2">
           <div className="relative">
             <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input

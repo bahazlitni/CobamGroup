@@ -1,11 +1,9 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/server/db/prisma";
+import { ensureProductAttributeMetadataEntries } from "@/features/product-attribute-metadata/repository";
 import { parseRawProductAttributeValue } from "./attribute-values";
 import { slugifyProductName } from "./slug";
-import type {
-  ProductAttributeDataType,
-  ProductListQuery,
-} from "./types";
+import type { ProductAttributeDataType, ProductListQuery, ProductPriceUnit } from "./types";
 
 type ResolvedProductAttributeInput = {
   tempKey: string;
@@ -29,12 +27,10 @@ type ResolvedProductInput = {
   name: string;
   slug: string;
   subtitle: string | null;
-  excerpt: string | null;
   description: string | null;
   descriptionSeo: string | null;
-  lifecycleStatus: "DRAFT" | "ACTIVE" | "ARCHIVED";
-  visibility: "HIDDEN" | "PUBLIC";
-  isPromoted: boolean;
+  priceUnit: ProductPriceUnit;
+  vatRate: number;
   tagIds: number[];
   attributes: ResolvedProductAttributeInput[];
   variants: ResolvedProductVariantInput[];
@@ -43,17 +39,15 @@ type ResolvedProductInput = {
 type ResolvedProductVariantInput = {
   id: number | null;
   sku: string;
-  slug: string;
-  title: string;
-  subtitle: string | null;
-  description: string | null;
-  lifecycleStatus: "DRAFT" | "ACTIVE" | "ARCHIVED";
-  visibility: "HIDDEN" | "PUBLIC";
-  commercialMode: "REFERENCE_ONLY" | "QUOTE_ONLY" | "SELLABLE";
-  priceVisibility: "HIDDEN" | "VISIBLE";
-  isPromoted: boolean;
+  slug: string | null;
+  name: string;
+  description: string;
+  descriptionSeo: string;
+  lifecycleStatus: "DRAFT" | "ACTIVE" | "ARCHIVED" | null;
+  visibility: "HIDDEN" | "PUBLIC" | null;
+  commercialMode: "REFERENCE_ONLY" | "QUOTE_ONLY" | "SELLABLE" | null;
+  priceVisibility: "HIDDEN" | "VISIBLE" | null;
   basePriceAmount: string | null;
-  currentPriceAmount: string | null;
   sortOrder: number;
   mediaIds: number[];
   attributeValues: ResolvedProductVariantAttributeValueInput[];
@@ -73,7 +67,6 @@ function buildProductWhere(query: ProductListQuery): Prisma.ProductFamilyWhereIn
       { name: { contains: query.q, mode: "insensitive" } },
       { slug: { contains: query.q, mode: "insensitive" } },
       { subtitle: { contains: query.q, mode: "insensitive" } },
-      { excerpt: { contains: query.q, mode: "insensitive" } },
       { description: { contains: query.q, mode: "insensitive" } },
       { brand: { name: { contains: query.q, mode: "insensitive" } } },
       {
@@ -92,7 +85,7 @@ function buildProductWhere(query: ProductListQuery): Prisma.ProductFamilyWhereIn
           },
         },
       },
-      { variants: { some: { title: { contains: query.q, mode: "insensitive" } } } },
+      { variants: { some: { name: { contains: query.q, mode: "insensitive" } } } },
       { variants: { some: { sku: { contains: query.q, mode: "insensitive" } } } },
       { variants: { some: { slug: { contains: query.q, mode: "insensitive" } } } },
       {
@@ -127,13 +120,21 @@ const productFamilyListSelect = {
   name: true,
   slug: true,
   subtitle: true,
-  excerpt: true,
   description: true,
-  lifecycleStatus: true,
-  visibility: true,
-  isPromoted: true,
+  priceUnit: true,
+  vatRate: true,
   createdAt: true,
   updatedAt: true,
+  defaultVariant: {
+    select: {
+      id: true,
+      lifecycleStatus: true,
+      visibility: true,
+      commercialMode: true,
+      priceVisibility: true,
+      basePriceAmount: true,
+    },
+  },
   brand: {
     select: {
       id: true,
@@ -195,8 +196,15 @@ const productFamilyDetailSelect = {
     select: {
       id: true,
       sku: true,
-      title: true,
       slug: true,
+      name: true,
+      description: true,
+      descriptionSeo: true,
+      lifecycleStatus: true,
+      visibility: true,
+      commercialMode: true,
+      priceVisibility: true,
+      basePriceAmount: true,
     },
   },
   tagLinks: {
@@ -216,10 +224,7 @@ const productFamilyDetailSelect = {
     },
   },
   attributeValues: {
-    orderBy: [
-      { attribute: { sortOrder: "asc" } },
-      { attribute: { name: "asc" } },
-    ],
+    orderBy: [{ attribute: { sortOrder: "asc" } }, { attribute: { name: "asc" } }],
     select: {
       attribute: {
         select: {
@@ -240,17 +245,14 @@ const productFamilyDetailSelect = {
       id: true,
       sku: true,
       slug: true,
-      title: true,
-      subtitle: true,
+      name: true,
       description: true,
+      descriptionSeo: true,
       lifecycleStatus: true,
       visibility: true,
       commercialMode: true,
       priceVisibility: true,
-      isPromoted: true,
-      currencyCode: true,
       basePriceAmount: true,
-      currentPriceAmount: true,
       sortOrder: true,
       mediaLinks: {
         where: {
@@ -264,10 +266,7 @@ const productFamilyDetailSelect = {
         },
       },
       attributeValues: {
-        orderBy: [
-          { attribute: { sortOrder: "asc" } },
-          { attribute: { name: "asc" } },
-        ],
+        orderBy: [{ attribute: { sortOrder: "asc" } }, { attribute: { name: "asc" } }],
         select: {
           attributeId: true,
           valueText: true,
@@ -287,14 +286,9 @@ const productFamilyDetailSelect = {
   },
 } satisfies Prisma.ProductFamilySelect;
 
-function buildUniqueAttributeIdentifier(
-  name: string,
-  index: number,
-): string {
+function buildUniqueAttributeIdentifier(name: string, index: number): string {
   const baseSlug = slugifyProductName(name) || "attribute";
-  return `${baseSlug}-${Date.now()}-${index}-${Math.random()
-    .toString(36)
-    .slice(2, 7)}`;
+  return `${baseSlug}-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
 async function resolveProductAttributeDefinitions(
@@ -310,7 +304,7 @@ async function resolveProductAttributeDefinitions(
         data: {
           name: attribute.name,
           dataType: attribute.dataType,
-          unit: attribute.unit,
+          unit: attribute.dataType === "NUMBER" ? attribute.unit : null,
           scope: "VARIANT",
           sortOrder: attribute.sortOrder,
         },
@@ -336,7 +330,7 @@ async function resolveProductAttributeDefinitions(
         slug: uniqueIdentifier,
         scope: "VARIANT",
         dataType: attribute.dataType,
-        unit: attribute.unit,
+        unit: attribute.dataType === "NUMBER" ? attribute.unit : null,
         sortOrder: attribute.sortOrder,
       },
       select: {
@@ -592,6 +586,10 @@ async function syncProductVariants(
   variants: ResolvedProductVariantInput[],
   attributes: ResolvedAttributeDefinition[],
 ) {
+  if (variants.length === 0) {
+    throw new Error("A product family must keep at least one variant.");
+  }
+
   const keptVariantIds = variants
     .map((variant) => variant.id)
     .filter((variantId): variantId is number => variantId != null)
@@ -617,22 +615,16 @@ async function syncProductVariants(
       familyId,
       sku: variant.sku,
       slug: variant.slug,
-      title: variant.title,
-      subtitle: variant.subtitle,
+      name: variant.name,
       description: variant.description,
+      descriptionSeo: variant.descriptionSeo,
       lifecycleStatus: variant.lifecycleStatus,
       visibility: variant.visibility,
       commercialMode: variant.commercialMode,
       priceVisibility: variant.priceVisibility,
-      isPromoted: variant.isPromoted,
-      currencyCode: "EUR",
       basePriceAmount:
         variant.basePriceAmount != null
           ? new Prisma.Decimal(variant.basePriceAmount)
-          : null,
-      currentPriceAmount:
-        variant.currentPriceAmount != null
-          ? new Prisma.Decimal(variant.currentPriceAmount)
           : null,
       sortOrder: variant.sortOrder,
     };
@@ -646,12 +638,7 @@ async function syncProductVariants(
         },
       });
 
-      await syncProductVariantAttributeValues(
-        tx,
-        updated.id,
-        attributes,
-        variant.attributeValues,
-      );
+      await syncProductVariantAttributeValues(tx, updated.id, attributes, variant.attributeValues);
       await syncProductVariantMediaLinks(tx, updated.id, variant.mediaIds);
 
       savedVariantIds.push(updated.id);
@@ -665,12 +652,7 @@ async function syncProductVariants(
       },
     });
 
-    await syncProductVariantAttributeValues(
-      tx,
-      created.id,
-      attributes,
-      variant.attributeValues,
-    );
+    await syncProductVariantAttributeValues(tx, created.id, attributes, variant.attributeValues);
     await syncProductVariantMediaLinks(tx, created.id, variant.mediaIds);
 
     savedVariantIds.push(created.id);
@@ -716,10 +698,7 @@ export async function findProductBySlug(slug: string) {
   });
 }
 
-export async function findProductBySignature(
-  brandId: number | null,
-  name: string,
-) {
+export async function findProductBySignature(brandId: number | null, name: string) {
   if (brandId == null) {
     return null;
   }
@@ -748,9 +727,7 @@ export async function findBrandOptionById(brandId: number) {
   });
 }
 
-export async function findProductSubcategoryOptionsByIds(
-  productSubcategoryIds: readonly number[],
-) {
+export async function findProductSubcategoryOptionsByIds(productSubcategoryIds: readonly number[]) {
   if (productSubcategoryIds.length === 0) {
     return [];
   }
@@ -786,12 +763,10 @@ export async function createProduct(input: ResolvedProductInput) {
         name: input.name,
         slug: input.slug,
         subtitle: input.subtitle,
-        excerpt: input.excerpt,
         description: input.description,
         descriptionSeo: input.descriptionSeo,
-        lifecycleStatus: input.lifecycleStatus,
-        visibility: input.visibility,
-        isPromoted: input.isPromoted,
+        priceUnit: input.priceUnit,
+        vatRate: input.vatRate,
         subcategories: {
           connect: input.productSubcategoryIds.map((productSubcategoryId) => ({
             id: BigInt(productSubcategoryId),
@@ -813,14 +788,12 @@ export async function createProduct(input: ResolvedProductInput) {
       });
     }
 
-    const resolvedAttributes = await resolveProductAttributeDefinitions(
-      tx,
-      input.attributes,
-    );
+    const resolvedAttributes = await resolveProductAttributeDefinitions(tx, input.attributes);
 
     await syncProductFamilyCoverMedia(tx, created.id, input.mainImageMediaId);
     await syncProductFamilyAttributes(tx, created.id, resolvedAttributes);
     await syncProductVariants(tx, created.id, input.variants, resolvedAttributes);
+    await ensureProductAttributeMetadataEntries(tx, input.attributes);
 
     return tx.productFamily.findUniqueOrThrow({
       where: { id: created.id },
@@ -840,12 +813,10 @@ export async function updateProduct(productId: number, input: ResolvedProductInp
         name: input.name,
         slug: input.slug,
         subtitle: input.subtitle,
-        excerpt: input.excerpt,
         description: input.description,
         descriptionSeo: input.descriptionSeo,
-        lifecycleStatus: input.lifecycleStatus,
-        visibility: input.visibility,
-        isPromoted: input.isPromoted,
+        priceUnit: input.priceUnit,
+        vatRate: input.vatRate,
         subcategories: {
           set: input.productSubcategoryIds.map((productSubcategoryId) => ({
             id: BigInt(productSubcategoryId),
@@ -868,14 +839,12 @@ export async function updateProduct(productId: number, input: ResolvedProductInp
       });
     }
 
-    const resolvedAttributes = await resolveProductAttributeDefinitions(
-      tx,
-      input.attributes,
-    );
+    const resolvedAttributes = await resolveProductAttributeDefinitions(tx, input.attributes);
 
     await syncProductFamilyCoverMedia(tx, familyId, input.mainImageMediaId);
     await syncProductFamilyAttributes(tx, familyId, resolvedAttributes);
     await syncProductVariants(tx, familyId, input.variants, resolvedAttributes);
+    await ensureProductAttributeMetadataEntries(tx, input.attributes);
 
     return tx.productFamily.findUniqueOrThrow({
       where: { id: familyId },
@@ -971,6 +940,14 @@ export async function listProductSubcategoriesOptions() {
   });
 }
 
+function toAuditJson(
+  value: unknown,
+): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return Prisma.JsonNull;
+  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
+}
+
 export async function createProductAuditLog(data: {
   actorUserId: string;
   actionType: "CREATE" | "UPDATE" | "DELETE";
@@ -988,14 +965,8 @@ export async function createProductAuditLog(data: {
       entityId: data.entityId,
       targetLabel: data.targetLabel,
       summary: data.summary,
-      beforeSnapshotJson: data.beforeSnapshotJson as
-        | Prisma.InputJsonValue
-        | Prisma.NullableJsonNullValueInput
-        | undefined,
-      afterSnapshotJson: data.afterSnapshotJson as
-        | Prisma.InputJsonValue
-        | Prisma.NullableJsonNullValueInput
-        | undefined,
+      beforeSnapshotJson: toAuditJson(data.beforeSnapshotJson),
+      afterSnapshotJson: toAuditJson(data.afterSnapshotJson),
     },
   });
 }

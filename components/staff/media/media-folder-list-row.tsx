@@ -76,7 +76,7 @@ export default function MediaFolderListRow({
           ? "grid grid-cols-[minmax(0,1.8fr)_auto_auto] items-center gap-4 rounded-2xl border border-cobam-water-blue bg-cobam-water-blue/5 px-4 py-3 ring-2 ring-cobam-water-blue/20"
           : isSelected
             ? "grid grid-cols-[minmax(0,1.8fr)_auto_auto] items-center gap-4 rounded-2xl border border-cobam-water-blue/35 bg-cobam-water-blue/5 px-4 py-3"
-          : "grid grid-cols-[minmax(0,1.8fr)_auto_auto] items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 transition hover:border-cobam-water-blue/25 hover:bg-slate-50"
+          : "grid grid-cols-[minmax(0,1.8fr)_auto_auto] items-center gap-4 rounded-2xl border border-slate-300 bg-white px-4 py-3 transition hover:border-cobam-water-blue/25 hover:bg-slate-50"
       }
     >
       <div className="flex min-w-0 items-center gap-4">
@@ -99,7 +99,7 @@ export default function MediaFolderListRow({
           onClick={() => onOpen(folder.id)}
           className="flex min-w-0 items-center gap-4 text-left"
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cobam-water-blue/10 text-cobam-water-blue">
+          <div className="flex h-10 w-12 items-center justify-center rounded-2xl bg-cobam-water-blue/10 text-cobam-water-blue">
             <Folder className="h-6 w-6" />
           </div>
           <div className="min-w-0">

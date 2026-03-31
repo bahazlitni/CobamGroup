@@ -65,7 +65,7 @@ export default function ProductMediaTile({
       }}
       onDragEnd={onDragEnd}
       className={cn(
-        "group relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition",
+        "group relative overflow-hidden rounded-3xl border border-slate-300 bg-white shadow-sm transition",
         isDragOver ? "border-cobam-water-blue ring-2 ring-cobam-water-blue/20" : "",
         isDragging ? "scale-[0.98] opacity-70" : "hover:border-slate-300",
       )}

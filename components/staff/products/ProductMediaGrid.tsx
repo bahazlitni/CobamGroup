@@ -85,7 +85,7 @@ export default function ProductMediaGrid({
             items.length === 0 ? "min-h-52" : "",
           )}
         >
-          <span className="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-200 bg-white text-cobam-water-blue shadow-sm transition group-hover:border-cobam-water-blue/30">
+          <span className="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-300 bg-white text-cobam-water-blue shadow-sm transition group-hover:border-cobam-water-blue/30">
             <ImagePlus className="h-6 w-6" />
           </span>
           <p className="text-sm font-semibold text-cobam-dark-blue">

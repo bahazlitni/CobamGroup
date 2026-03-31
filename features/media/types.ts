@@ -21,6 +21,7 @@ export type MediaListQuery = {
   page: number;
   pageSize: number;
   folderId?: number | null;
+  includeDescendantFolders?: boolean;
   q?: string;
   kind?: MediaFilterKind;
   status?: MediaFilterStatus;
@@ -65,6 +66,8 @@ export type MediaUsageDto = {
   productVariants: number;
   brandLogos: number;
   productCategoryImages: number;
+  productFinishImages: number;
+  productSubcategoryImages: number;
   staffAvatars: number;
   articleAttachments: number;
   articleCovers: number;
@@ -149,10 +152,7 @@ export type MediaUploadBatchResult = {
 
 export type MediaUploadBatchCallbacks = {
   onItemStart?: (context: { index: number; input: MediaUploadRequest }) => void;
-  onItemComplete?: (context: {
-    index: number;
-    result: MediaUploadBatchItemResult;
-  }) => void;
+  onItemComplete?: (context: { index: number; result: MediaUploadBatchItemResult }) => void;
 };
 
 export type MediaStatsDto = {

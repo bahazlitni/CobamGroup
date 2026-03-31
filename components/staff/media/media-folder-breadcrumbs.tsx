@@ -57,7 +57,7 @@ export default function MediaFolderBreadcrumbs({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-[1.75rem] border border-slate-200 bg-white px-4 py-3 shadow-sm">
+    <div className="flex flex-wrap items-center gap-2 rounded-[1.75rem] border border-slate-300 bg-white px-4 py-3 shadow-sm">
       <button
         type="button"
         onClick={onOpenRoot}
