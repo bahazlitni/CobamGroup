@@ -1,3 +1,5 @@
+// @/features/media/types.ts
+
 import type { MediaKind, MediaVisibility } from "@prisma/client";
 import type { MediaStorageInfo } from "@/lib/server/storage/media/types";
 

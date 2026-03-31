@@ -1,3 +1,5 @@
+// @/features/media/mappers.ts
+
 import type { MediaKind, Prisma } from "@prisma/client";
 import type { MediaVisibility } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";

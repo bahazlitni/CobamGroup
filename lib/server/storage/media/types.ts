@@ -1,3 +1,5 @@
+// @/lib/server/storage/media/types.ts
+
 export type MediaStorageDriverKind = "local" | "s3";
 
 export type StoredMediaObject = {

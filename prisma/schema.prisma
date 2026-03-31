@@ -438,7 +438,7 @@ model ProductPackLine {
   sortOrder       Int    @default(0) @map("sort_order")
 
   pack           ProductPack    @relation(fields: [packId], references: [id], onDelete: Cascade)
-  productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Restrict)
+  //productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Restrict)
 
   @@id([packId, productVariantId])
   @@index([productVariantId])
@@ -452,7 +452,7 @@ model ProductPackMediaLink {
   sortOrder Int           @default(0) @map("sort_order")
 
   pack  ProductPack @relation(fields: [packId], references: [id], onDelete: Cascade)
-  media Media       @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  //media Media       @relation(fields: [mediaId], references: [id], onDelete: Cascade)
 
   @@id([packId, mediaId, role])
   @@index([mediaId])

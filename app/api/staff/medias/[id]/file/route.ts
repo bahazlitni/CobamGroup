@@ -1,3 +1,5 @@
+// @/app/api/staff/medias/[id]/file/route.ts
+
 import { AuthError, requireStaffSession } from "@/features/auth/server/session";
 import {
   parseMediaFileVariant,

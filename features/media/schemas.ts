@@ -1,3 +1,5 @@
+// @/features/media/schema.ts
+
 import { MediaKind, MediaVisibility } from "@prisma/client";
 import {
   DEFAULT_MEDIA_PAGE_SIZE,

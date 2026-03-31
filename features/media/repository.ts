@@ -1,3 +1,5 @@
+// @/features/media/repository.ts
+
 import { MediaKind, MediaVisibility, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/server/db/prisma";
 import type { MediaBrowseMode, MediaFilterStatus, MediaListQuery, MediaUpdateInput } from "./types";

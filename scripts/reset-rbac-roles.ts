@@ -1,3 +1,5 @@
+// @/scripts/reset-rbac-roles.ts
+
 import "dotenv/config";
 import { prisma } from "../lib/server/db/prisma";
 import {

@@ -1,3 +1,5 @@
+// @/features/media/hooks/use-media-library.ts
+
 "use client";
 
 import {

@@ -1,3 +1,5 @@
+// @/features/media/hooks/use-media-object-url.ts
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,16 +8,12 @@ import type { MediaFileVariant } from "@/features/media/types";
 
 const previewUrlCache = new Map<string, string>();
 
-function getCacheKey(mediaId: number, variant: MediaFileVariant) {
-  return `${mediaId}:${variant}`;
-}
-
 export function useMediaObjectUrl(
   mediaId: number | null,
   variant: MediaFileVariant = "thumbnail",
 ) {
   const cacheKey =
-    mediaId != null ? getCacheKey(mediaId, variant) : null;
+    mediaId != null ? `${mediaId}:${variant}` : null;
   const cachedObjectUrl =
     cacheKey != null ? previewUrlCache.get(cacheKey) ?? null : null;
   const [loadedPreview, setLoadedPreview] = useState<{

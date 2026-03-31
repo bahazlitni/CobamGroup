@@ -1,3 +1,5 @@
+// @/app/api/staff/medias/route.ts
+
 import { NextResponse } from "next/server";
 import { AuthError, requireStaffSession } from "@/features/auth/server/session";
 import {

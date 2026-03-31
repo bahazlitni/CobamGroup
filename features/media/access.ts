@@ -1,3 +1,5 @@
+// @/features/media/access.ts
+
 import type { StaffSession } from "@/features/auth/types";
 import { hasAnyPermission, hasPermission } from "@/features/rbac/access";
 import {

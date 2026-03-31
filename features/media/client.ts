@@ -1,3 +1,5 @@
+// @/features/media/client.ts
+
 "use client";
 
 import { staffApiFetch } from "@/lib/api/auth/staff/api-fetch";

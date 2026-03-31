@@ -1,3 +1,5 @@
+// @/features/media/file-variants.ts
+
 import path from "path";
 import type { MediaFileVariant } from "./types";
 

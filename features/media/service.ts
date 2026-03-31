@@ -1,3 +1,5 @@
+// @/features/media/service.ts
+
 import { createHash, randomUUID } from "crypto";
 import path from "path";
 import { MediaKind, MediaVisibility } from "@prisma/client";
