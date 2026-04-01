@@ -374,7 +374,6 @@ model ProductFamily {
   tagLinks              ProductFamilyTagLink[]
   mediaLinks            ProductFamilyMediaLink[]
   attributeValues       ProductFamilyAttributeValue[]
-  collectionLinks       ProductCollectionFamilyLink[]
 
   @@unique([brandId, name])
   @@index([brandId])
@@ -404,7 +403,6 @@ model ProductVariant {
   defaultForFamilies ProductFamily[]                @relation("ProductFamilyDefaultVariant")
   mediaLinks         ProductVariantMediaLink[]
   attributeValues    ProductVariantAttributeValue[]
-  collectionLinks    ProductCollectionVariantLink[]
 
   @@index([familyId])
   @@index([lifecycleStatus])
@@ -412,51 +410,6 @@ model ProductVariant {
   @@index([commercialMode])
   @@index([priceVisibility])
   @@map("product_variants")
-}
-
-model ProductPack {
-  id             BigInt    @id @default(autoincrement())
-  name           String    @db.VarChar(255)
-  slug           String    @unique @db.VarChar(255)
-  subtitle       String?   @db.VarChar(255)
-  description    String?   @db.Text
-  descriptionSeo String?   @map("description_seo") @db.Text
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
-
-  lines      ProductPackLine[]
-  mediaLinks ProductPackMediaLink[]
-
-  @@index([name])
-  @@map("product_packs")
-}
-
-model ProductPackLine {
-  packId          BigInt @map("pack_id")
-  productVariantId BigInt @map("product_variant_id")
-  quantity        Int    @default(1)
-  sortOrder       Int    @default(0) @map("sort_order")
-
-  pack           ProductPack    @relation(fields: [packId], references: [id], onDelete: Cascade)
-  //productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Restrict)
-
-  @@id([packId, productVariantId])
-  @@index([productVariantId])
-  @@map("product_pack_lines")
-}
-
-model ProductPackMediaLink {
-  packId    BigInt        @map("pack_id")
-  mediaId   BigInt        @map("media_id")
-  role      MediaLinkRole
-  sortOrder Int           @default(0) @map("sort_order")
-
-  pack  ProductPack @relation(fields: [packId], references: [id], onDelete: Cascade)
-  //media Media       @relation(fields: [mediaId], references: [id], onDelete: Cascade)
-
-  @@id([packId, mediaId, role])
-  @@index([mediaId])
-  @@map("product_pack_media_links")
 }
 
 model ProductFamilyTagLink {
@@ -497,50 +450,6 @@ model ProductVariantMediaLink {
   @@id([variantId, mediaId])
   @@index([mediaId])
   @@map("product_variant_media_links")
-}
-
-model ProductCollection {
-  id          BigInt   @id @default(autoincrement())
-  name        String   @db.VarChar(255)
-  slug        String   @unique @db.VarChar(255)
-  description String?  @db.Text
-  sortOrder   Int      @default(0) @map("sort_order")
-  isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  familyLinks  ProductCollectionFamilyLink[]
-  variantLinks ProductCollectionVariantLink[]
-
-  @@index([sortOrder])
-  @@index([isActive])
-  @@map("product_collections")
-}
-
-model ProductCollectionFamilyLink {
-  collectionId BigInt @map("collection_id")
-  familyId     BigInt @map("family_id")
-  sortOrder    Int    @default(0) @map("sort_order")
-
-  collection ProductCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  family     ProductFamily     @relation(fields: [familyId], references: [id], onDelete: Cascade)
-
-  @@id([collectionId, familyId])
-  @@index([familyId])
-  @@map("product_collection_family_links")
-}
-
-model ProductCollectionVariantLink {
-  collectionId BigInt @map("collection_id")
-  variantId    BigInt @map("variant_id")
-  sortOrder    Int    @default(0) @map("sort_order")
-
-  collection ProductCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  variant    ProductVariant    @relation(fields: [variantId], references: [id], onDelete: Cascade)
-
-  @@id([collectionId, variantId])
-  @@index([variantId])
-  @@map("product_collection_variant_links")
 }
 
 model ProductAttributeDefinition {
