@@ -37,6 +37,11 @@ function parsePositiveInteger(
   return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : fallback;
 }
 
+function parseOptionalSearchQuery(value: string | null) {
+  const normalizedValue = value?.trim();
+  return normalizedValue ? normalizedValue : null;
+}
+
 export async function GET(req: Request) {
   try {
     const searchParams = new URL(req.url).searchParams;
@@ -50,11 +55,13 @@ export async function GET(req: Request) {
       searchParams.get("pageSize"),
       PUBLIC_PRODUCTS_PAGE_SIZE,
     );
+    const q = parseOptionalSearchQuery(searchParams.get("q"));
     const result = await listPublicProductsBySubcategory({
       categorySlug,
       subcategorySlug,
       page,
       pageSize,
+      q,
     });
 
     return NextResponse.json(
