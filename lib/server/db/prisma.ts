@@ -10,15 +10,52 @@ const globalForPrisma = globalThis as unknown as {
   prismaPool?: Pool;
 };
 
+function parsePositiveInteger(value: string | null | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function resolvePoolMax() {
+  const explicitValue = parsePositiveInteger(process.env.DATABASE_POOL_MAX);
+
+  if (explicitValue != null) {
+    return explicitValue;
+  }
+
+  try {
+    const url = new URL(connectionString);
+    const connectionLimit = parsePositiveInteger(
+      url.searchParams.get("connection_limit"),
+    );
+
+    if (connectionLimit != null) {
+      return connectionLimit;
+    }
+  } catch {
+    // Ignore malformed URLs and fall back to a safe default below.
+  }
+
+  return process.env.NODE_ENV === "production" ? 1 : 10;
+}
+
 const pool =
   globalForPrisma.prismaPool ??
   new Pool({
     connectionString,
+    max: resolvePoolMax(),
+    idleTimeoutMillis:
+      parsePositiveInteger(process.env.DATABASE_POOL_IDLE_TIMEOUT_MS) ?? 10_000,
+    connectionTimeoutMillis:
+      parsePositiveInteger(process.env.DATABASE_POOL_CONNECTION_TIMEOUT_MS) ??
+      10_000,
+    keepAlive: true,
   });
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prismaPool = pool;
-}
+globalForPrisma.prismaPool = pool;
 
 const adapter = new PrismaPg(pool);
 
@@ -26,9 +63,10 @@ export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     adapter,
-    log: ["query", "error", "warn"],
+    log:
+      process.env.NODE_ENV === "production"
+        ? ["error", "warn"]
+        : ["query", "error", "warn"],
   });
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-}
+globalForPrisma.prisma = prisma;
