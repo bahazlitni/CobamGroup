@@ -1,8 +1,17 @@
 // @/features/media/repository.ts
 
-import { MediaKind, MediaVisibility, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/server/db/prisma";
-import type { MediaBrowseMode, MediaFilterStatus, MediaListQuery, MediaUpdateInput } from "./types";
+import {
+  MEDIA_KIND,
+  MEDIA_VISIBILITY,
+  type MediaBrowseMode,
+  type MediaFilterStatus,
+  type MediaKind,
+  type MediaListQuery,
+  type MediaUpdateInput,
+  type MediaVisibility,
+} from "./types";
 
 function buildMediaWhere(input: {
   query: MediaListQuery;
@@ -594,9 +603,9 @@ export async function aggregateMediaStats(input: {
 
   const [total, images, videos, documents, totalSize] = await Promise.all([
     prisma.media.count({ where: baseWhere }),
-    prisma.media.count({ where: { ...baseWhere, kind: MediaKind.IMAGE } }),
-    prisma.media.count({ where: { ...baseWhere, kind: MediaKind.VIDEO } }),
-    prisma.media.count({ where: { ...baseWhere, kind: MediaKind.DOCUMENT } }),
+    prisma.media.count({ where: { ...baseWhere, kind: MEDIA_KIND.IMAGE } }),
+    prisma.media.count({ where: { ...baseWhere, kind: MEDIA_KIND.VIDEO } }),
+    prisma.media.count({ where: { ...baseWhere, kind: MEDIA_KIND.DOCUMENT } }),
     prisma.media.aggregate({
       where: baseWhere,
       _sum: {
@@ -635,7 +644,7 @@ export async function findImageMediaById(mediaId: number) {
   return prisma.media.findFirst({
     where: {
       id: BigInt(mediaId),
-      kind: MediaKind.IMAGE,
+      kind: MEDIA_KIND.IMAGE,
       deletedAt: null,
       isActive: true,
     },
@@ -673,7 +682,7 @@ export async function findPublicMediaById(mediaId: number) {
       id: BigInt(mediaId),
       deletedAt: null,
       isActive: true,
-      visibility: MediaVisibility.PUBLIC,
+      visibility: MEDIA_VISIBILITY.PUBLIC,
     },
     select: {
       id: true,
@@ -892,7 +901,7 @@ export async function makeMediaPublic(mediaId: number) {
       isActive: true,
     },
     data: {
-      visibility: MediaVisibility.PUBLIC,
+      visibility: MEDIA_VISIBILITY.PUBLIC,
     },
   });
 }
@@ -915,7 +924,7 @@ export async function makeMediaPublicMany(mediaIds: readonly number[]) {
       isActive: true,
     },
     data: {
-      visibility: MediaVisibility.PUBLIC,
+      visibility: MEDIA_VISIBILITY.PUBLIC,
     },
   });
 }

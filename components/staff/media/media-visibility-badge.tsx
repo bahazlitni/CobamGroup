@@ -1,7 +1,7 @@
 "use client";
 
-import type { MediaVisibility } from "@prisma/client";
 import { StaffBadge } from "@/components/staff/ui";
+import type { MediaVisibility } from "@/features/media/types";
 
 export default function MediaVisibilityBadge({
   visibility,

@@ -1,10 +1,24 @@
 // @/features/media/types.ts
 
-import type { MediaKind, MediaVisibility } from "@prisma/client";
 import type { MediaStorageInfo } from "@/lib/server/storage/media/types";
 
 export const DEFAULT_MEDIA_PAGE_SIZE = 36;
 export const MAX_MEDIA_PAGE_SIZE = 96;
+export const MEDIA_KIND = {
+  IMAGE: "IMAGE",
+  VIDEO: "VIDEO",
+  DOCUMENT: "DOCUMENT",
+} as const;
+export const MEDIA_KIND_VALUES = Object.values(MEDIA_KIND);
+export type MediaKind = (typeof MEDIA_KIND)[keyof typeof MEDIA_KIND];
+
+export const MEDIA_VISIBILITY = {
+  PRIVATE: "PRIVATE",
+  PUBLIC: "PUBLIC",
+} as const;
+export const MEDIA_VISIBILITY_VALUES = Object.values(MEDIA_VISIBILITY);
+export type MediaVisibility =
+  (typeof MEDIA_VISIBILITY)[keyof typeof MEDIA_VISIBILITY];
 
 export type MediaFilterStatus = "all" | "active" | "inactive";
 export type MediaFilterKind = MediaKind | "ALL";

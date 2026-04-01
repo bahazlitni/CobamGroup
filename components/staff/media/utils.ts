@@ -1,5 +1,9 @@
-import type { MediaKind } from "@prisma/client";
-import type { MediaListItemDto, MediaSortBy, MediaView } from "@/features/media/types";
+import type {
+  MediaKind,
+  MediaListItemDto,
+  MediaSortBy,
+  MediaView,
+} from "@/features/media/types";
 
 export function formatBytes(value: number | null) {
   if (value == null || value <= 0) {

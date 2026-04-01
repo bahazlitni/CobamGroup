@@ -2,7 +2,6 @@
 
 import { createHash, randomUUID } from "crypto";
 import path from "path";
-import { MediaKind, MediaVisibility } from "@prisma/client";
 import sharp from "sharp";
 import type { StaffSession } from "@/features/auth/types";
 import {
@@ -56,11 +55,14 @@ import type {
   MediaFolderCreateInput,
   MediaFolderUpdateInput,
   MediaFileVariant,
+  MediaKind,
   MediaListQuery,
   MediaListResult,
   MediaUpdateInput,
   MediaUploadInput,
+  MediaVisibility,
 } from "./types";
+import { MEDIA_KIND, MEDIA_VISIBILITY } from "./types";
 import {
   getMediaMaxUploadBytes,
   getMediaStorageDriver,
@@ -225,11 +227,11 @@ function inferMediaKind(input: { mimeType: string | null; extension: string | nu
   const extension = input.extension?.toLowerCase() ?? null;
 
   if (mimeType?.startsWith("image/")) {
-    return MediaKind.IMAGE;
+    return MEDIA_KIND.IMAGE;
   }
 
   if (mimeType?.startsWith("video/")) {
-    return MediaKind.VIDEO;
+    return MEDIA_KIND.VIDEO;
   }
 
   if (
@@ -240,7 +242,7 @@ function inferMediaKind(input: { mimeType: string | null; extension: string | nu
     mimeType?.startsWith("application/") ||
     extension
   ) {
-    return MediaKind.DOCUMENT;
+    return MEDIA_KIND.DOCUMENT;
   }
 
   throw new MediaServiceError(
@@ -490,9 +492,13 @@ export async function uploadMediaService(session: StaffSession, input: MediaUplo
   const sha256Hash = createHash("sha256").update(buffer).digest("hex");
   const storage = getMediaStorageDriver();
   const imageArtifacts =
-    kind === MediaKind.IMAGE ? await analyzeImageBuffer(buffer, input.file.type || null) : null;
+    kind === MEDIA_KIND.IMAGE
+      ? await analyzeImageBuffer(buffer, input.file.type || null)
+      : null;
   const thumbnailStoragePath =
-    kind === MediaKind.IMAGE ? getMediaVariantStoragePath(storagePath, "thumbnail") : null;
+    kind === MEDIA_KIND.IMAGE
+      ? getMediaVariantStoragePath(storagePath, "thumbnail")
+      : null;
   let originalStored = false;
   let thumbnailStored = false;
 
@@ -632,7 +638,7 @@ export async function updateMediaService(
     targetLabel: updatedMedia.originalFilename ?? updatedMedia.title ?? `Media ${updatedMedia.id}`,
     summary: shouldChangeFolder
       ? "Déplacement d'un média"
-      : input.visibility === MediaVisibility.PUBLIC
+      : input.visibility === MEDIA_VISIBILITY.PUBLIC
         ? "Passage d'un média en public"
         : "Passage d'un média en privé",
     beforeSnapshotJson: toMediaAuditSnapshot(existingMedia),
@@ -812,7 +818,7 @@ export async function deleteMediaService(
   try {
     await storage.deleteObject(media.storagePath);
 
-    if (media.kind === MediaKind.IMAGE) {
+    if (media.kind === MEDIA_KIND.IMAGE) {
       await storage.deleteObject(getMediaVariantStoragePath(media.storagePath, "thumbnail"));
     }
   } catch (error) {
@@ -854,7 +860,7 @@ async function readStoredMediaObject(
   const storage = getMediaStorageDriver();
   const thumbnailStoragePath = getMediaVariantStoragePath(media.storagePath, "thumbnail");
 
-  if (variant === "thumbnail" && media.kind === MediaKind.IMAGE) {
+  if (variant === "thumbnail" && media.kind === MEDIA_KIND.IMAGE) {
     const existingThumbnail = await storage.readObject(thumbnailStoragePath);
 
     if (existingThumbnail) {

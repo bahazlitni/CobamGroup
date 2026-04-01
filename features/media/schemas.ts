@@ -1,20 +1,23 @@
 // @/features/media/schema.ts
 
-import { MediaKind, MediaVisibility } from "@prisma/client";
 import {
   DEFAULT_MEDIA_PAGE_SIZE,
   MAX_MEDIA_PAGE_SIZE,
+  MEDIA_KIND_VALUES,
+  MEDIA_VISIBILITY,
   type MediaBrowseMode,
   type MediaFileVariant,
   type MediaFilterKind,
   type MediaFilterStatus,
   type MediaFolderCreateInput,
   type MediaFolderUpdateInput,
+  type MediaKind,
   type MediaListQuery,
   type MediaSortBy,
   type MediaSortDirection,
   type MediaUpdateInput,
   type MediaUploadInput,
+  type MediaVisibility,
 } from "./types";
 
 export class MediaValidationError extends Error {
@@ -40,10 +43,10 @@ function parseMediaVisibility(value: string | null | undefined): MediaVisibility
     return null;
   }
 
-  return value === MediaVisibility.PUBLIC
-    ? MediaVisibility.PUBLIC
-    : value === MediaVisibility.PRIVATE
-      ? MediaVisibility.PRIVATE
+  return value === MEDIA_VISIBILITY.PUBLIC
+    ? MEDIA_VISIBILITY.PUBLIC
+    : value === MEDIA_VISIBILITY.PRIVATE
+      ? MEDIA_VISIBILITY.PRIVATE
       : null;
 }
 
@@ -114,7 +117,7 @@ export function parseMediaListQuery(searchParams: URLSearchParams): MediaListQue
 
   const kindRaw = searchParams.get("kind");
   const kind: MediaFilterKind =
-    kindRaw && Object.values(MediaKind).includes(kindRaw as MediaKind)
+    kindRaw && MEDIA_KIND_VALUES.includes(kindRaw as MediaKind)
       ? (kindRaw as MediaKind)
       : "ALL";
 
@@ -158,7 +161,7 @@ export function parseMediaUploadFormData(formData: FormData): MediaUploadInput {
         typeof formData.get("visibility") === "string"
           ? (formData.get("visibility") as string)
           : null,
-      ) ?? MediaVisibility.PRIVATE,
+      ) ?? MEDIA_VISIBILITY.PRIVATE,
     folderId:
       parseOptionalMediaFolderId(
         typeof formData.get("folderId") === "string" ? (formData.get("folderId") as string) : null,

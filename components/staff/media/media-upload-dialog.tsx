@@ -1,7 +1,6 @@
 "use client";
 
 import { type ChangeEvent, useMemo, useRef, useState } from "react";
-import type { MediaVisibility } from "@prisma/client";
 import { Info, UploadCloud } from "lucide-react";
 import {
   Dialog,
@@ -27,6 +26,7 @@ import type {
   MediaUploadBatchCallbacks,
   MediaUploadBatchResult,
   MediaUploadRequest,
+  MediaVisibility,
 } from "@/features/media/types";
 import MediaUploadQueue, {
   type MediaUploadQueueItem,

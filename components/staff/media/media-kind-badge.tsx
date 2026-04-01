@@ -1,5 +1,5 @@
-import type { MediaKind } from "@prisma/client";
 import { StaffBadge } from "@/components/staff/ui";
+import type { MediaKind } from "@/features/media/types";
 import { getMediaKindLabel } from "./utils";
 
 export default function MediaKindBadge({ kind }: { kind: MediaKind }) {
