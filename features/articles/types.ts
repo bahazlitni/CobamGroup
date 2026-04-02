@@ -47,7 +47,6 @@ export type ArticleCategoryAssignmentDto = {
 };
 
 export type ArticleTagDto = {
-  id: number;
   name: string;
   slug: string;
 };

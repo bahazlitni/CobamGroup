@@ -96,6 +96,16 @@ enum ProductPriceUnit {
   SQUARE_METER
 }
 
+enum ProductPackOverrideMode {
+  AUTO
+  MANUAL
+}
+
+enum AllProductSourceType {
+  VARIANT
+  PACK
+}
+
 enum ProductAttributeScope {
   FAMILY
   VARIANT
@@ -331,6 +341,7 @@ model ProductSubcategory {
   category        ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   imageMedia      Media?          @relation("ProductSubcategoryImageMedia", fields: [imageMediaId], references: [id], onDelete: SetNull)
   productFamilies ProductFamily[] @relation("ProductFamilySubcategories")
+  productPacks    ProductPack[]   @relation("ProductPackSubcategories")
 
   @@unique([categoryId, slug])
   @@index([categoryId])
@@ -347,9 +358,6 @@ model Tag {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  productFamilyLinks ProductFamilyTagLink[]
-  articleLinks       ArticleTagLink[]
-
   @@map("tags")
 }
 
@@ -362,18 +370,18 @@ model ProductFamily {
   subtitle         String?          @db.VarChar(255)
   description      String?          @db.Text
   descriptionSeo   String?          @map("description_seo") @db.Text
+  tags             String           @default("") @db.Text
   priceUnit        ProductPriceUnit @default(ITEM) @map("price_unit")
   vatRate          Float            @default(19) @map("vat_rate")
   createdAt        DateTime         @default(now()) @map("created_at")
   updatedAt        DateTime         @updatedAt @map("updated_at")
 
-  brand                 ProductBrand?                     @relation(fields: [brandId], references: [id], onDelete: Restrict)
-  subcategories         ProductSubcategory[]              @relation("ProductFamilySubcategories")
-  defaultVariant        ProductVariant?                   @relation("ProductFamilyDefaultVariant", fields: [defaultVariantId], references: [id], onDelete: SetNull)
-  variants              ProductVariant[]                  @relation("ProductFamilyVariants")
-  tagLinks              ProductFamilyTagLink[]
-  mediaLinks            ProductFamilyMediaLink[]
-  attributeValues       ProductFamilyAttributeValue[]
+  brand           ProductBrand?                 @relation(fields: [brandId], references: [id], onDelete: Restrict)
+  subcategories   ProductSubcategory[]          @relation("ProductFamilySubcategories")
+  defaultVariant  ProductVariant?               @relation("ProductFamilyDefaultVariant", fields: [defaultVariantId], references: [id], onDelete: SetNull)
+  variants        ProductVariant[]              @relation("ProductFamilyVariants")
+  mediaLinks      ProductFamilyMediaLink[]
+  attributeValues ProductFamilyAttributeValue[]
 
   @@unique([brandId, name])
   @@index([brandId])
@@ -401,6 +409,7 @@ model ProductVariant {
 
   family             ProductFamily                  @relation("ProductFamilyVariants", fields: [familyId], references: [id], onDelete: Cascade)
   defaultForFamilies ProductFamily[]                @relation("ProductFamilyDefaultVariant")
+  packLines          ProductPackLine[]
   mediaLinks         ProductVariantMediaLink[]
   attributeValues    ProductVariantAttributeValue[]
 
@@ -412,16 +421,98 @@ model ProductVariant {
   @@map("product_variants")
 }
 
-model ProductFamilyTagLink {
-  familyId BigInt @map("family_id")
-  tagId    BigInt @map("tag_id")
+model ProductPack {
+  id                    BigInt                  @id @default(autoincrement())
+  name                  String                  @db.VarChar(255)
+  slug                  String                  @unique @db.VarChar(255)
+  sku                   String                  @unique @db.VarChar(255)
+  description           String?                 @db.Text
+  descriptionSeo        String?                 @map("description_seo") @db.Text
+  commercialMode        ProductCommercialMode   @map("commercial_mode")
+  lifecycleStatusMode   ProductPackOverrideMode @default(AUTO) @map("lifecycle_status_mode")
+  manualLifecycleStatus ProductLifecycleStatus? @map("manual_lifecycle_status")
+  visibilityMode        ProductPackOverrideMode @default(AUTO) @map("visibility_mode")
+  manualVisibility      ProductVisibility?      @map("manual_visibility")
+  priceVisibilityMode   ProductPackOverrideMode @default(AUTO) @map("price_visibility_mode")
+  manualPriceVisibility ProductPriceVisibility? @map("manual_price_visibility")
+  createdAt             DateTime                @default(now()) @map("created_at")
+  updatedAt             DateTime                @updatedAt @map("updated_at")
 
-  family ProductFamily @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  tag    Tag           @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  lines         ProductPackLine[]
+  mediaLinks    ProductPackMediaLink[]
+  subcategories ProductSubcategory[]   @relation("ProductPackSubcategories")
 
-  @@id([familyId, tagId])
-  @@index([tagId])
-  @@map("product_family_tag_links")
+  @@index([commercialMode])
+  @@index([lifecycleStatusMode])
+  @@index([visibilityMode])
+  @@index([priceVisibilityMode])
+  @@map("product_packs")
+}
+
+model ProductPackLine {
+  packId    BigInt @map("pack_id")
+  variantId BigInt @map("variant_id")
+  quantity  Int    @default(1)
+  sortOrder Int    @default(0) @map("sort_order")
+
+  pack    ProductPack    @relation(fields: [packId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  @@id([packId, variantId])
+  @@index([variantId])
+  @@index([sortOrder])
+  @@map("product_pack_lines")
+}
+
+model ProductPackMediaLink {
+  packId    BigInt        @map("pack_id")
+  mediaId   BigInt        @map("media_id")
+  role      MediaLinkRole
+  sortOrder Int           @default(0) @map("sort_order")
+
+  pack  ProductPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+  media Media       @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@id([packId, mediaId])
+  @@index([mediaId])
+  @@map("product_pack_media_links")
+}
+
+model AllProduct {
+  id              BigInt                 @id @default(autoincrement())
+  sourceType      AllProductSourceType   @map("source_type")
+  sourceId        BigInt                 @map("source_id")
+  productFamilyId BigInt?                @map("product_family_id")
+  productPackId   BigInt?                @map("product_pack_id")
+  name            String                 @db.VarChar(255)
+  slug            String                 @db.VarChar(255)
+  sku             String                 @db.VarChar(255)
+  description     String?                @db.Text
+  descriptionSeo  String?                @map("description_seo") @db.Text
+  lifecycleStatus ProductLifecycleStatus @map("lifecycle_status")
+  visibility      ProductVisibility
+  commercialMode  ProductCommercialMode  @map("commercial_mode")
+  priceVisibility ProductPriceVisibility @map("price_visibility")
+  basePriceAmount Decimal?               @map("base_price_amount") @db.Decimal(12, 2)
+  priceUnit       ProductPriceUnit       @default(ITEM) @map("price_unit")
+  vatRate         Float                  @default(0) @map("vat_rate")
+  brandIds        BigInt[]               @default([]) @map("brand_ids")
+  tags            String                 @default("") @db.Text
+  subcategoryIds  BigInt[]               @default([]) @map("subcategory_ids")
+  coverMediaId    BigInt?                @map("cover_media_id")
+  createdAt       DateTime               @default(now()) @map("created_at")
+  updatedAt       DateTime               @updatedAt @map("updated_at")
+
+  @@unique([sourceType, sourceId])
+  @@unique([slug])
+  @@unique([sku])
+  @@index([productFamilyId])
+  @@index([productPackId])
+  @@index([lifecycleStatus])
+  @@index([visibility])
+  @@index([commercialMode])
+  @@index([priceVisibility])
+  @@map("all_products")
 }
 
 model ProductFamilyMediaLink {
@@ -626,6 +717,7 @@ model Article {
   excerpt        String?       @db.Text
   content        String        @db.Text
   descriptionSeo String?       @map("description_seo") @db.Text
+  tags           String        @default("") @db.Text
   status         ArticleStatus
   publishedAt    DateTime?     @map("published_at")
   coverMediaId   BigInt?       @map("cover_media_id")
@@ -644,7 +736,6 @@ model Article {
 
   categoryLinks ArticleCategoryLink[]
   authorLinks   ArticleAuthorLink[]
-  tagLinks      ArticleTagLink[]
   mediaLinks    ArticleMediaLink[]
 
   @@index([authorId])
@@ -679,18 +770,6 @@ model ArticleAuthorLink {
   @@id([articleId, userId])
   @@index([userId])
   @@map("article_author_links")
-}
-
-model ArticleTagLink {
-  articleId BigInt @map("article_id")
-  tagId     BigInt @map("tag_id")
-
-  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
-
-  @@id([articleId, tagId])
-  @@index([tagId])
-  @@map("article_tag_links")
 }
 
 model ArticleMediaLink {
@@ -753,6 +832,7 @@ model Media {
   uploadedByUser User?        @relation("MediaUploadedByUser", fields: [uploadedByUserId], references: [id], onDelete: SetNull)
 
   productFamilyLinks         ProductFamilyMediaLink[]
+  productPackLinks           ProductPackMediaLink[]
   productVariantLinks        ProductVariantMediaLink[]
   brandLogoFor               ProductBrand[]            @relation("BrandLogoMedia")
   productCategoryImageFor    ProductCategory[]         @relation("ProductCategoryImageMedia")

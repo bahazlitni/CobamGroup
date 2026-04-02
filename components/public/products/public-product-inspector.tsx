@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, CircleAlert } from "lucide-react";
+import { ChevronRight, CircleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { getArticlePlainText } from "@/features/articles/document";
 import PublicRichText from "@/components/public/articles/public-rich-text";

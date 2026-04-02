@@ -13,6 +13,11 @@ import { hasPermission } from "@/features/rbac/access";
 import { PERMISSIONS } from "@/features/rbac/permissions";
 import { canAffectTargetUser } from "@/features/rbac/roles";
 import { resolveAccessFromAssignments } from "@/features/rbac/user-access";
+import {
+  normalizeOwnedTagNames,
+  parseOwnedTagString,
+  serializeOwnedTagNames,
+} from "@/features/tags/owned";
 import { resolveOrCreateTagsByNames } from "@/features/tags/repository";
 import type {
   ArticleAuthorOptionsQuery,
@@ -191,8 +196,8 @@ function hasArticleContentChanges(article: ArticleRecord, input: ArticleUpdateIn
     score: assignment.score,
   }));
 
-  const currentTagNames = article.tagLinks.map((link) => link.tag.name);
-  const nextTagNames = [...input.tagNames];
+  const currentTagNames = parseOwnedTagString(article.tags);
+  const nextTagNames = normalizeOwnedTagNames(input.tagNames);
 
   return !(
     article.title === input.title &&
@@ -313,11 +318,6 @@ async function assertValidAuthorIds(authorIds: readonly string[]) {
   }
 }
 
-async function resolveArticleTagIds(tagNames: readonly string[]) {
-  const tags = await resolveOrCreateTagsByNames(tagNames);
-  return tags.map((tag) => Number(tag.id));
-}
-
 async function ensureArticleMediaIsPublic(input: {
   coverMediaId: number | null;
   ogImageMediaId: number | null;
@@ -414,8 +414,8 @@ export async function createArticleService(
     throw new ArticleServiceError("Forbidden", 403);
   }
 
-  const [resolvedTagIds] = await Promise.all([
-    resolveArticleTagIds(input.tagNames),
+  await Promise.all([
+    resolveOrCreateTagsByNames(input.tagNames),
     assertValidRelations({
       categoryAssignments: input.categoryAssignments,
       coverMediaId: input.coverMediaId,
@@ -426,7 +426,7 @@ export async function createArticleService(
 
   const article = await createArticle(session.id, {
     ...input,
-    tagIds: resolvedTagIds,
+    tags: serializeOwnedTagNames(input.tagNames),
   });
 
   await createArticleAuditLog({
@@ -470,8 +470,8 @@ export async function updateArticleService(
     throw new ArticleServiceError("Forbidden", 403);
   }
 
-  const [resolvedTagIds] = await Promise.all([
-    resolveArticleTagIds(input.tagNames),
+  await Promise.all([
+    resolveOrCreateTagsByNames(input.tagNames),
     assertValidRelations({
       categoryAssignments: input.categoryAssignments,
       coverMediaId: input.coverMediaId,
@@ -483,7 +483,7 @@ export async function updateArticleService(
   const article = await updateArticle(articleId, before.authorId, {
     ...input,
     authorIds: nextAuthorIds,
-    tagIds: resolvedTagIds,
+    tags: serializeOwnedTagNames(input.tagNames),
   });
 
   if (article.status === ArticleStatus.PUBLISHED) {

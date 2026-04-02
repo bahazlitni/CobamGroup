@@ -1,5 +1,7 @@
 import { formatStoredProductAttributeValue } from "./attribute-values";
 import { resolveVariantEffectiveValues } from "./overrides";
+import { countOwnedTags, parseOwnedTagString } from "@/features/tags/owned";
+import { slugifyTagName } from "@/features/tags/slug";
 import type {
   ProductAttributeDto,
   ProductBrandOptionDto,
@@ -32,6 +34,7 @@ type ProductFamilyListRecord = {
   slug: string;
   subtitle: string | null;
   description: string | null;
+  tags: string;
   priceUnit: ProductPriceUnit;
   vatRate: number;
   createdAt: Date;
@@ -54,7 +57,6 @@ type ProductFamilyListRecord = {
   }>;
   _count: {
     variants: number;
-    tagLinks: number;
   };
 };
 
@@ -122,13 +124,6 @@ type ProductFamilyDetailRecord = ProductFamilyListRecord & {
     description?: string | null;
     descriptionSeo?: string | null;
   }) | null;
-  tagLinks: Array<{
-    tag: {
-      id: bigint;
-      name: string;
-      slug: string;
-    };
-  }>;
   attributeValues: Array<{
     attribute: {
       id: bigint;
@@ -278,12 +273,10 @@ export function mapProductSubcategoryOptionDto(subcategory: {
 }
 
 export function mapProductTagOptionDto(tag: {
-  id: bigint;
   name: string;
   slug: string;
 }): ProductTagOptionDto {
   return {
-    id: Number(tag.id),
     name: tag.name,
     slug: tag.slug,
   };
@@ -308,7 +301,7 @@ export function mapProductToListItemDto(product: ProductFamilyListRecord): Produ
     effectivePriceAmount: basePriceAmount,
     brand: product.brand != null ? mapProductBrandOptionDto(product.brand) : null,
     productSubcategories: product.subcategories.map(mapProductSubcategoryOptionDto),
-    tagCount: product._count.tagLinks,
+    tagCount: countOwnedTags(product.tags),
     variantCount: product._count.variants,
     createdAt: product.createdAt.toISOString(),
     updatedAt: product.updatedAt.toISOString(),
@@ -326,7 +319,12 @@ export function mapProductToDetailDto(product: ProductFamilyDetailRecord): Produ
       product.mediaLinks[0] != null ? mapProductMediaToDto(product.mediaLinks[0].media) : null,
     attributes: product.attributeValues.map(mapProductAttributeToDto),
     defaultVariantId: defaultVariant != null ? Number(defaultVariant.id) : null,
-    tags: product.tagLinks.map((item) => mapProductTagOptionDto(item.tag)),
+    tags: parseOwnedTagString(product.tags).map((name) =>
+      mapProductTagOptionDto({
+        name,
+        slug: slugifyTagName(name),
+      }),
+    ),
     variants: product.variants.map((variant) => mapProductVariantToDto(defaultVariant, variant)),
   };
 }

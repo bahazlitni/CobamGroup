@@ -15,14 +15,6 @@ const CATEGORY_LINK_ORDER_BY = [
   { categoryId: "asc" },
 ] satisfies Prisma.ArticleCategoryLinkOrderByWithRelationInput[];
 
-const TAG_LINK_ORDER_BY = [
-  {
-    tag: {
-      name: "asc",
-    },
-  },
-] satisfies Prisma.ArticleTagLinkOrderByWithRelationInput[];
-
 type ResolvedArticleInput = {
   title: string;
   displayTitle: string | null;
@@ -30,11 +22,11 @@ type ResolvedArticleInput = {
   excerpt: string | null;
   content: string;
   descriptionSeo: string | null;
+  tags: string;
   categoryAssignments: Array<{
     categoryId: number;
     score: number;
   }>;
-  tagIds: number[];
   coverMediaId: number | null;
   ogTitle: string | null;
   ogDescription: string | null;
@@ -96,6 +88,7 @@ const ARTICLE_SELECT = Prisma.validator<Prisma.ArticleSelect>()({
   excerpt: true,
   content: true,
   descriptionSeo: true,
+  tags: true,
   status: true,
   publishedAt: true,
   coverMediaId: true,
@@ -134,19 +127,6 @@ const ARTICLE_SELECT = Prisma.validator<Prisma.ArticleSelect>()({
       },
     },
   },
-  tagLinks: {
-    orderBy: TAG_LINK_ORDER_BY,
-    select: {
-      tagId: true,
-      tag: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-        },
-      },
-    },
-  },
 });
 
 function buildArticleWhere(query: ArticleListQuery): Prisma.ArticleWhereInput {
@@ -162,6 +142,7 @@ function buildArticleWhere(query: ArticleListQuery): Prisma.ArticleWhereInput {
     where.OR = [
       { title: { contains: query.q, mode: "insensitive" } },
       { slug: { contains: query.q, mode: "insensitive" } },
+      { tags: { contains: query.q, mode: "insensitive" } },
     ];
   }
 
@@ -296,6 +277,7 @@ export async function createArticle(
       excerpt: input.excerpt,
       content: input.content,
       descriptionSeo: input.descriptionSeo,
+      tags: input.tags,
       status: ArticleStatus.DRAFT,
       coverMediaId:
         input.coverMediaId != null ? BigInt(input.coverMediaId) : null,
@@ -320,13 +302,6 @@ export async function createArticle(
             })),
           }
         : undefined,
-      tagLinks: input.tagIds.length
-        ? {
-            create: input.tagIds.map((tagId) => ({
-              tagId: BigInt(tagId),
-            })),
-          }
-        : undefined,
     },
     select: ARTICLE_SELECT,
   });
@@ -348,6 +323,7 @@ export async function updateArticle(
       excerpt: input.excerpt,
       content: input.content,
       descriptionSeo: input.descriptionSeo,
+      tags: input.tags,
       coverMediaId:
         input.coverMediaId != null ? BigInt(input.coverMediaId) : null,
       ogTitle: input.ogTitle,
@@ -372,16 +348,6 @@ export async function updateArticle(
               create: input.categoryAssignments.map((assignment) => ({
                 categoryId: BigInt(assignment.categoryId),
                 score: assignment.score,
-              })),
-            }
-          : {}),
-      },
-      tagLinks: {
-        deleteMany: {},
-        ...(input.tagIds.length
-          ? {
-              create: input.tagIds.map((tagId) => ({
-                tagId: BigInt(tagId),
               })),
             }
           : {}),

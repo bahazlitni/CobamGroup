@@ -184,31 +184,15 @@ export default function ProductsListPage() {
 
           return (
             <tr key={product.id} className="hover:bg-slate-50/60">
-              <td className="px-4 py-3 align-top">
-                <div className="font-semibold text-cobam-dark-blue">
-                  {product.name}
-                </div>
-                <div className="text-[11px] text-slate-400">{product.slug}</div>
-                {product.subtitle ? (
-                  <div className="mt-1 text-xs text-slate-500">
-                    {product.subtitle}
-                  </div>
-                ) : null}
-                <div className="mt-1 text-xs text-slate-500">
-                  {getDescriptionPreview(product.description)}
-                </div>
+              <td className="px-4 py-3 align-top font-semibold text-cobam-dark-blue">
+                {product.name}
               </td>
 
               <td className="px-4 py-3 align-top text-slate-600">
                 {product.brand ? (
-                  <>
-                    <div className="font-medium text-cobam-dark-blue">
-                      {product.brand.name}
-                    </div>
-                    <div className="text-[11px] text-slate-400">
-                      {product.brand.slug}
-                    </div>
-                  </>
+                  <div className="font-medium text-cobam-dark-blue">
+                    {product.brand.name}
+                  </div>
                 ) : (
                   <span className="text-sm text-slate-400">Aucune marque</span>
                 )}

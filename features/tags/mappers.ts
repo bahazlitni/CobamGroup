@@ -1,26 +1,21 @@
 import type { Tag } from "@prisma/client";
 import type { TagDetailDto, TagListItemDto } from "./types";
 
-type TagWithCounts = Tag & {
-  _count: {
-    articleLinks: number;
-    productFamilyLinks: number;
-  };
-};
+type TagRecord = Tag;
 
-export function mapTagToListItemDto(tag: TagWithCounts): TagListItemDto {
+export function mapTagToListItemDto(tag: TagRecord): TagListItemDto {
   return {
     id: Number(tag.id),
     name: tag.name,
     slug: tag.slug,
-    articleCount: tag._count.articleLinks,
-    productFamilyCount: tag._count.productFamilyLinks,
+    articleCount: 0,
+    productFamilyCount: 0,
     createdAt: tag.createdAt.toISOString(),
     updatedAt: tag.updatedAt.toISOString(),
   };
 }
 
-export function mapTagToDetailDto(tag: TagWithCounts): TagDetailDto {
+export function mapTagToDetailDto(tag: TagRecord): TagDetailDto {
   return mapTagToListItemDto(tag);
 }
 

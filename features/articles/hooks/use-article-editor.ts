@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { normalizeOwnedTagNames } from "@/features/tags/owned";
 import { normalizeArticleContent } from "../document";
 import {
   createArticleClient,
@@ -314,7 +315,7 @@ function mapEditorStateToPayload(state: ArticleEditorState) {
     title: state.title.trim(),
     displayTitle: state.displayTitle.trim() || null,
     slug: state.slug.trim(),
-    tagNames: state.tagNames.map((tagName) => tagName.trim()).filter(Boolean),
+    tagNames: normalizeOwnedTagNames(state.tagNames),
     authorIds: state.authorIds,
     excerpt: state.excerpt.trim() || null,
     content: normalizeArticleContent(state.content),

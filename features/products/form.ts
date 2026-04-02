@@ -9,6 +9,7 @@ import type {
   ProductVariantAttributeValueInput,
   ProductVisibility,
 } from "./types";
+import { normalizeOwnedTagNames } from "@/features/tags/owned";
 import { resolveVariantEffectiveValues } from "./overrides";
 import { slugifyProductName, slugifyProductReference } from "./slug";
 
@@ -485,7 +486,7 @@ export function productEditorFormToPayload(state: ProductEditorFormState): Produ
     descriptionSeo: state.descriptionSeo.trim() || null,
     priceUnit: state.priceUnit,
     vatRate: normalizeVatRate(state.vatRate),
-    tagNames: state.tagNames.map((tagName) => tagName.trim()).filter(Boolean),
+    tagNames: normalizeOwnedTagNames(state.tagNames),
     attributes: state.attributes.map((attribute, index) => ({
       tempKey: attribute.formKey,
       id: attribute.id,

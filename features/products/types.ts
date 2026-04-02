@@ -104,7 +104,6 @@ export type ProductSubcategoryOptionDto = {
 };
 
 export type ProductTagOptionDto = {
-  id: number;
   name: string;
   slug: string;
 };

@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/server/db/prisma";
+import { normalizeOwnedTagNames } from "./owned";
 import { slugifyTagName } from "./slug";
 import type {
   TagCreateInput,
@@ -27,12 +28,6 @@ const tagSelect = {
   slug: true,
   createdAt: true,
   updatedAt: true,
-  _count: {
-    select: {
-      articleLinks: true,
-      productFamilyLinks: true,
-    },
-  },
 } satisfies Prisma.TagSelect;
 
 export async function listTags(query: TagListQuery) {
@@ -123,28 +118,11 @@ export async function listTagSuggestions(query: TagSuggestionQuery) {
   });
 }
 
-function normalizeTagNames(tagNames: readonly string[]) {
-  const seenSlugs = new Set<string>();
-
-  return tagNames
-    .map((tagName) => tagName.replace(/\s+/g, " ").trim())
-    .filter(Boolean)
-    .map((name) => ({
-      name,
-      slug: slugifyTagName(name),
-    }))
-    .filter((entry) => {
-      if (!entry.slug || seenSlugs.has(entry.slug)) {
-        return false;
-      }
-
-      seenSlugs.add(entry.slug);
-      return true;
-    });
-}
-
 export async function resolveOrCreateTagsByNames(tagNames: readonly string[]) {
-  const normalizedEntries = normalizeTagNames(tagNames);
+  const normalizedEntries = normalizeOwnedTagNames(tagNames).map((name) => ({
+    name,
+    slug: slugifyTagName(name),
+  }));
 
   if (normalizedEntries.length === 0) {
     return [];

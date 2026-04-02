@@ -7,6 +7,8 @@ import {
 import { makeMediaPublicMany } from "@/features/media/repository";
 import { listProductColorCandidates } from "@/features/product-colors/repository";
 import { listProductFinishCandidates } from "@/features/product-finishes/repository";
+import { parseOwnedTagString } from "@/features/tags/owned";
+import { slugifyTagName } from "@/features/tags/slug";
 import { prisma } from "@/lib/server/db/prisma";
 import { formatStoredProductAttributeValue } from "./attribute-values";
 import { resolveVariantEffectiveValues } from "./overrides";
@@ -138,6 +140,7 @@ type PublicProductRecord = {
   subtitle: string | null;
   description: string | null;
   descriptionSeo: string | null;
+  tags: string;
   brand: {
     name: string;
   } | null;
@@ -151,12 +154,6 @@ type PublicProductRecord = {
     visibility: "HIDDEN" | "PUBLIC" | null;
     priceVisibility: "HIDDEN" | "VISIBLE" | null;
     basePriceAmount: { toString(): string } | number | null;
-  }>;
-  tagLinks: Array<{
-    tag: {
-      name: string;
-      slug: string;
-    };
   }>;
   mediaLinks: Array<{
     mediaId: bigint;
@@ -243,6 +240,7 @@ const publicProductSelect = {
   subtitle: true,
   description: true,
   descriptionSeo: true,
+  tags: true,
   brand: {
     select: {
       name: true,
@@ -264,16 +262,6 @@ const publicProductSelect = {
       visibility: true,
       priceVisibility: true,
       basePriceAmount: true,
-    },
-  },
-  tagLinks: {
-    select: {
-      tag: {
-        select: {
-          name: true,
-          slug: true,
-        },
-      },
     },
   },
   mediaLinks: {
@@ -597,11 +585,11 @@ function getPublicProductSearchScore(
     getIncludesScore(product.descriptionSeo, query, 42000),
   );
 
-  for (const tagLink of product.tagLinks) {
+  for (const tagName of parseOwnedTagString(product.tags)) {
     bestScore = Math.max(
       bestScore,
-      getIncludesScore(tagLink.tag.name, query, 60000),
-      getIncludesScore(tagLink.tag.slug, query, 60000),
+      getIncludesScore(tagName, query, 60000),
+      getIncludesScore(slugifyTagName(tagName), query, 60000),
     );
   }
 

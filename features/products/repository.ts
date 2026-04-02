@@ -1,4 +1,10 @@
 import { Prisma } from "@prisma/client";
+import {
+  deleteAllProductsForProductFamilyTx,
+  findDependentPackIdsByProductFamilyTx,
+  syncAllProductsForPackIdsTx,
+  syncAllProductsForProductFamilyTx,
+} from "@/features/all-products/repository";
 import { prisma } from "@/lib/server/db/prisma";
 import { ensureProductAttributeMetadataEntries } from "@/features/product-attribute-metadata/repository";
 import { parseRawProductAttributeValue } from "./attribute-values";
@@ -29,9 +35,9 @@ type ResolvedProductInput = {
   subtitle: string | null;
   description: string | null;
   descriptionSeo: string | null;
+  tags: string;
   priceUnit: ProductPriceUnit;
   vatRate: number;
-  tagIds: number[];
   attributes: ResolvedProductAttributeInput[];
   variants: ResolvedProductVariantInput[];
 };
@@ -68,6 +74,7 @@ function buildProductWhere(query: ProductListQuery): Prisma.ProductFamilyWhereIn
       { slug: { contains: query.q, mode: "insensitive" } },
       { subtitle: { contains: query.q, mode: "insensitive" } },
       { description: { contains: query.q, mode: "insensitive" } },
+      { tags: { contains: query.q, mode: "insensitive" } },
       { brand: { name: { contains: query.q, mode: "insensitive" } } },
       {
         subcategories: {
@@ -121,6 +128,7 @@ const productFamilyListSelect = {
   slug: true,
   subtitle: true,
   description: true,
+  tags: true,
   priceUnit: true,
   vatRate: true,
   createdAt: true,
@@ -160,7 +168,6 @@ const productFamilyListSelect = {
   _count: {
     select: {
       variants: true,
-      tagLinks: true,
     },
   },
 } satisfies Prisma.ProductFamilySelect;
@@ -205,22 +212,6 @@ const productFamilyDetailSelect = {
       commercialMode: true,
       priceVisibility: true,
       basePriceAmount: true,
-    },
-  },
-  tagLinks: {
-    orderBy: {
-      tag: {
-        name: "asc",
-      },
-    },
-    select: {
-      tag: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-        },
-      },
     },
   },
   attributeValues: {
@@ -765,6 +756,7 @@ export async function createProduct(input: ResolvedProductInput) {
         subtitle: input.subtitle,
         description: input.description,
         descriptionSeo: input.descriptionSeo,
+        tags: input.tags,
         priceUnit: input.priceUnit,
         vatRate: input.vatRate,
         subcategories: {
@@ -778,22 +770,13 @@ export async function createProduct(input: ResolvedProductInput) {
       },
     });
 
-    if (input.tagIds.length > 0) {
-      await tx.productFamilyTagLink.createMany({
-        data: input.tagIds.map((tagId) => ({
-          familyId: created.id,
-          tagId: BigInt(tagId),
-        })),
-        skipDuplicates: true,
-      });
-    }
-
     const resolvedAttributes = await resolveProductAttributeDefinitions(tx, input.attributes);
 
     await syncProductFamilyCoverMedia(tx, created.id, input.mainImageMediaId);
     await syncProductFamilyAttributes(tx, created.id, resolvedAttributes);
     await syncProductVariants(tx, created.id, input.variants, resolvedAttributes);
     await ensureProductAttributeMetadataEntries(tx, input.attributes);
+    await syncAllProductsForProductFamilyTx(tx, created.id);
 
     return tx.productFamily.findUniqueOrThrow({
       where: { id: created.id },
@@ -805,6 +788,10 @@ export async function createProduct(input: ResolvedProductInput) {
 export async function updateProduct(productId: number, input: ResolvedProductInput) {
   return prisma.$transaction(async (tx) => {
     const familyId = BigInt(productId);
+    const dependentPackIdsBeforeUpdate = await findDependentPackIdsByProductFamilyTx(
+      tx,
+      familyId,
+    );
 
     await tx.productFamily.update({
       where: { id: familyId },
@@ -815,6 +802,7 @@ export async function updateProduct(productId: number, input: ResolvedProductInp
         subtitle: input.subtitle,
         description: input.description,
         descriptionSeo: input.descriptionSeo,
+        tags: input.tags,
         priceUnit: input.priceUnit,
         vatRate: input.vatRate,
         subcategories: {
@@ -825,26 +813,14 @@ export async function updateProduct(productId: number, input: ResolvedProductInp
       },
     });
 
-    await tx.productFamilyTagLink.deleteMany({
-      where: { familyId },
-    });
-
-    if (input.tagIds.length > 0) {
-      await tx.productFamilyTagLink.createMany({
-        data: input.tagIds.map((tagId) => ({
-          familyId,
-          tagId: BigInt(tagId),
-        })),
-        skipDuplicates: true,
-      });
-    }
-
     const resolvedAttributes = await resolveProductAttributeDefinitions(tx, input.attributes);
 
     await syncProductFamilyCoverMedia(tx, familyId, input.mainImageMediaId);
     await syncProductFamilyAttributes(tx, familyId, resolvedAttributes);
     await syncProductVariants(tx, familyId, input.variants, resolvedAttributes);
     await ensureProductAttributeMetadataEntries(tx, input.attributes);
+    await syncAllProductsForProductFamilyTx(tx, familyId);
+    await syncAllProductsForPackIdsTx(tx, dependentPackIdsBeforeUpdate);
 
     return tx.productFamily.findUniqueOrThrow({
       where: { id: familyId },
@@ -854,12 +830,18 @@ export async function updateProduct(productId: number, input: ResolvedProductInp
 }
 
 export async function deleteProduct(productId: number) {
-  return prisma.productFamily.delete({
-    where: { id: BigInt(productId) },
-    select: {
-      id: true,
-      name: true,
-    },
+  return prisma.$transaction(async (tx) => {
+    const deleted = await tx.productFamily.delete({
+      where: { id: BigInt(productId) },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    await deleteAllProductsForProductFamilyTx(tx, deleted.id);
+
+    return deleted;
   });
 }
 
@@ -897,6 +879,27 @@ export async function findProductVariantsBySkus(skus: readonly string[]) {
       id: true,
       familyId: true,
       sku: true,
+    },
+  });
+}
+
+export async function findProductVariantsByIds(variantIds: readonly number[]) {
+  if (variantIds.length === 0) {
+    return [];
+  }
+
+  return prisma.productVariant.findMany({
+    where: {
+      id: {
+        in: [...new Set(variantIds)].map((variantId) => BigInt(variantId)),
+      },
+    },
+    select: {
+      id: true,
+      familyId: true,
+      sku: true,
+      slug: true,
+      name: true,
     },
   });
 }

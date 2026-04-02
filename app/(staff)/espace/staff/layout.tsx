@@ -13,6 +13,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BadgeCheck,
+  Boxes,
   ChevronDown,
   FileText,
   ImageIcon,
@@ -160,6 +161,11 @@ const STAFF_TABS: Record<string, StaffTabGroup> = {
         label: "Produits",
         icon: Package,
       },
+      packs: {
+        key: "packs",
+        label: "Packs",
+        icon: Boxes,
+      },
       "attributs-produits": {
         key: "attributs-produits",
         label: "Attributs produit",
@@ -258,6 +264,7 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
       "gestion-des-produits": {
         marques: user ? canAccessBrands(user) : false,
         produits: user ? canAccessProducts(user) : false,
+        packs: user ? canAccessProducts(user) : false,
         "attributs-produits": user ? canAccessProducts(user) : false,
         finitions: user ? canAccessProducts(user) : false,
         couleurs: user ? canAccessProducts(user) : false,

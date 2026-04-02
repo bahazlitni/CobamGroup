@@ -1,5 +1,7 @@
 import type { Article } from "@prisma/client";
 import { resolveAccessFromAssignments } from "@/features/rbac/user-access";
+import { parseOwnedTagString } from "@/features/tags/owned";
+import { slugifyTagName } from "@/features/tags/slug";
 import type {
   ArticleAbilitiesDto,
   ArticleCategoryAssignmentDto,
@@ -137,18 +139,11 @@ function mapArticleCategories(article: {
 }
 
 function mapArticleTags(article: {
-  tagLinks: Array<{
-    tag: {
-      id: bigint;
-      name: string;
-      slug: string;
-    };
-  }>;
+  tags: string;
 }): ArticleTagDto[] {
-  return article.tagLinks.map((link) => ({
-    id: Number(link.tag.id),
-    name: link.tag.name,
-    slug: link.tag.slug,
+  return parseOwnedTagString(article.tags).map((name) => ({
+    name,
+    slug: slugifyTagName(name),
   }));
 }
 
@@ -162,6 +157,7 @@ export function mapArticleToDetailDto(
     excerpt: string | null;
     content: string;
     descriptionSeo: string | null;
+    tags: string;
     status: Article["status"];
     publishedAt: Date | null;
     coverMediaId: bigint | null;
@@ -185,13 +181,6 @@ export function mapArticleToDetailDto(
         id: bigint;
         name: string;
         color: string;
-      };
-    }>;
-    tagLinks: Array<{
-      tag: {
-        id: bigint;
-        name: string;
-        slug: string;
       };
     }>;
   },
@@ -246,13 +235,7 @@ export function mapArticleToListItemDto(article: {
       color: string;
     };
   }>;
-  tagLinks: Array<{
-    tag: {
-      id: bigint;
-      name: string;
-      slug: string;
-    };
-  }>;
+  tags: string;
 }): ArticleListItemDto {
   const authors = mapArticleAuthors(article);
   const primaryAuthor = authors[0];

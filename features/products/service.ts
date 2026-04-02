@@ -1,5 +1,11 @@
+import { Prisma } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
 import { findActiveMediaByIds, findImageMediaById } from "@/features/media/repository";
+import {
+  findProductPacksBySkus,
+  findProductPacksBySlugs,
+} from "@/features/product-packs/repository";
+import { serializeOwnedTagNames } from "@/features/tags/owned";
 import { resolveOrCreateTagsByNames } from "@/features/tags/repository";
 import { parseRawProductAttributeValue } from "./attribute-values";
 import { canAccessProducts, canCreateProducts, canManageProducts } from "./access";
@@ -300,6 +306,10 @@ async function assertValidProductVariants(
     findProductVariantsBySlugs(input.variants.map((variant) => buildVariantSlug(variant.name))),
     findProductVariantsBySkus(input.variants.map((variant) => variant.sku)),
   ]);
+  const [existingPacksBySlug, existingPacksBySku] = await Promise.all([
+    findProductPacksBySlugs(input.variants.map((variant) => buildVariantSlug(variant.name))),
+    findProductPacksBySkus(input.variants.map((variant) => variant.sku)),
+  ]);
 
   const allowedBigIntIds = new Set(
     input.variants
@@ -322,6 +332,20 @@ async function assertValidProductVariants(
       throw new ProductServiceError(`Le SKU "${existingVariant.sku}" est déjà utilisé.`, 400);
     }
   }
+
+  for (const existingPack of existingPacksBySlug) {
+    throw new ProductServiceError(
+      `Le slug de variante "${existingPack.slug}" est déjà utilisé par un pack.`,
+      400,
+    );
+  }
+
+  for (const existingPack of existingPacksBySku) {
+    throw new ProductServiceError(
+      `Le SKU "${existingPack.sku}" est déjà utilisé par un pack.`,
+      400,
+    );
+  }
 }
 
 async function assertUniqueProductInput(
@@ -342,6 +366,12 @@ async function assertUniqueProductInput(
 
   if (sameSignature && Number(sameSignature.id) !== (options?.excludeProductId ?? -1)) {
     throw new ProductServiceError("Un produit avec cette marque et ce nom existe déjà.", 400);
+  }
+
+  const conflictingPackBySlug = await findProductPacksBySlugs([familySlug]);
+
+  if (conflictingPackBySlug.length > 0) {
+    throw new ProductServiceError("Une famille produit avec ce slug existe déjà sous forme de pack.", 400);
   }
 }
 
@@ -397,6 +427,20 @@ async function assertValidProductMedia(
   if (media.length !== new Set(variantMediaIds).size) {
     throw new ProductServiceError("Au moins un média de variante est introuvable ou inactif.", 400);
   }
+}
+
+function isGlobalProductProjectionConflict(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2002"
+  );
+}
+
+function isVariantReferencedByPack(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2003"
+  );
 }
 
 export async function listProductsService(
@@ -461,19 +505,32 @@ export async function createProductService(session: StaffSession, input: Product
   assertValidProductAttributes({ ...input, variants: materializedVariants });
   await assertValidProductVariants({ variants: materializedVariants });
 
-  const resolvedTags = await resolveOrCreateTagsByNames(input.tagNames);
+  await resolveOrCreateTagsByNames(input.tagNames);
   const attributes = normalizeAttributeIds(input);
   const variants = normalizeVariantIds({
     variants: withComputedVariantSlugs(materializedVariants),
   });
 
-  const product = await createProduct({
-    ...input,
-    slug: buildFamilySlug(input.name),
-    tagIds: resolvedTags.map((tag) => Number(tag.id)),
-    attributes,
-    variants,
-  });
+  let product;
+
+  try {
+    product = await createProduct({
+      ...input,
+      slug: buildFamilySlug(input.name),
+      tags: serializeOwnedTagNames(input.tagNames),
+      attributes,
+      variants,
+    });
+  } catch (error) {
+    if (isGlobalProductProjectionConflict(error)) {
+      throw new ProductServiceError(
+        "Le slug ou le SKU d'une variante entre en conflit avec un autre produit.",
+        400,
+      );
+    }
+
+    throw error;
+  }
 
   await writeProductAuditLogSafely({
     actorUserId: session.id,
@@ -523,19 +580,39 @@ export async function updateProductService(
     },
   );
 
-  const resolvedTags = await resolveOrCreateTagsByNames(input.tagNames);
+  await resolveOrCreateTagsByNames(input.tagNames);
   const attributes = normalizeAttributeIds(input);
   const variants = normalizeVariantIds({
     variants: withComputedVariantSlugs(materializedVariants),
   });
 
-  const product = await updateProduct(productId, {
-    ...input,
-    slug: buildFamilySlug(input.name),
-    tagIds: resolvedTags.map((tag) => Number(tag.id)),
-    attributes,
-    variants,
-  });
+  let product;
+
+  try {
+    product = await updateProduct(productId, {
+      ...input,
+      slug: buildFamilySlug(input.name),
+      tags: serializeOwnedTagNames(input.tagNames),
+      attributes,
+      variants,
+    });
+  } catch (error) {
+    if (isGlobalProductProjectionConflict(error)) {
+      throw new ProductServiceError(
+        "Le slug ou le SKU d'une variante entre en conflit avec un autre produit.",
+        400,
+      );
+    }
+
+    if (isVariantReferencedByPack(error)) {
+      throw new ProductServiceError(
+        "Impossible de modifier cette famille car une ou plusieurs variantes sont utilisees dans un pack.",
+        400,
+      );
+    }
+
+    throw error;
+  }
 
   await writeProductAuditLogSafely({
     actorUserId: session.id,
@@ -560,7 +637,20 @@ export async function deleteProductService(session: StaffSession, productId: num
     throw new ProductServiceError("Produit introuvable.", 404);
   }
 
-  const deleted = await deleteProduct(productId);
+  let deleted;
+
+  try {
+    deleted = await deleteProduct(productId);
+  } catch (error) {
+    if (isVariantReferencedByPack(error)) {
+      throw new ProductServiceError(
+        "Impossible de supprimer cette famille car une ou plusieurs variantes sont utilisees dans un pack.",
+        400,
+      );
+    }
+
+    throw error;
+  }
 
   await writeProductAuditLogSafely({
     actorUserId: session.id,
