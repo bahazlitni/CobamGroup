@@ -263,7 +263,7 @@ function ArticleCategoryEditPageContent() {
                   Slug
                 </p>
                 <p className="mt-1 text-sm text-slate-600">
-                  {previewSlug || "categorie-article"}
+                  {previewSlug || "catégorie-article"}
                 </p>
               </div>
 

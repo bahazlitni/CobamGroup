@@ -85,7 +85,7 @@ export function useArticleCategoryEditor(categoryId: number | null) {
       const message =
         err instanceof Error
           ? err.message
-          : "Erreur lors du chargement de la categorie d'articles";
+          : "Erreur lors du chargement de la catégorie d'articles";
       setError(message);
     } finally {
       setIsLoading(false);
@@ -161,7 +161,7 @@ export function useArticleCategoryEditor(categoryId: number | null) {
             ? err.message
             : err instanceof Error
               ? err.message
-              : "Erreur lors de la suppression de la categorie d'articles";
+              : "Erreur lors de la suppression de la catégorie d'articles";
         setError(message);
         return null;
       } finally {

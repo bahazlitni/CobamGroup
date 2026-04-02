@@ -242,7 +242,7 @@ export default function PublicProductGrid({
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="space-y-2">
             <p className="text-sm font-medium text-slate-500">
-              0 famille dans cette sous-categorie
+              0 famille dans cette sous-catégorie
             </p>
           </div>
 
@@ -270,8 +270,8 @@ export default function PublicProductGrid({
 
         <div className="rounded-[28px] border border-dashed border-slate-300 bg-white/80 px-6 py-14 text-center text-slate-500">
           {activeSearchQuery
-            ? "Aucune famille ne correspond a cette recherche dans cette sous-categorie."
-            : "Aucune famille publique n'est disponible pour le moment dans cette sous-categorie."}
+            ? "Aucune famille ne correspond a cette recherche dans cette sous-catégorie."
+            : "Aucune famille publique n'est disponible pour le moment dans cette sous-catégorie."}
         </div>
       </div>
     );
@@ -286,7 +286,7 @@ export default function PublicProductGrid({
               ? "Recherche des familles en cours..."
               : activeSearchQuery
                 ? `${total} famille${total > 1 ? "s" : ""} trouvee${total > 1 ? "s" : ""}`
-                : `${total} famille${total > 1 ? "s" : ""} dans cette sous-categorie`}
+                : `${total} famille${total > 1 ? "s" : ""} dans cette sous-catégorie`}
           </p>
         </div>
 
@@ -377,7 +377,7 @@ export default function PublicProductGrid({
           </div>
         ) : !isRefreshing && items.length > 0 ? (
           <p className="text-sm font-medium text-slate-400">
-            Toutes les familles visibles de cette sous-categorie sont affichees.
+            Toutes les familles visibles de cette sous-catégorie sont affichees.
           </p>
         ) : null}
       </div>

@@ -1,5 +1,9 @@
 import { Prisma } from "@prisma/client";
-import { getArticleFirstParagraphText } from "@/features/articles/document";
+import {
+  extractArticleMediaIds,
+  getArticleFirstParagraphText,
+  replaceArticleImageSources,
+} from "@/features/articles/document";
 import { makeMediaPublicMany } from "@/features/media/repository";
 import { listProductColorCandidates } from "@/features/product-colors/repository";
 import { listProductFinishCandidates } from "@/features/product-finishes/repository";
@@ -22,7 +26,7 @@ export type PublicProductSummary = {
   slug: string;
   subtitle: string;
   description: string;
-  brandName: string;
+  brandName: string | null;
   price: string | null;
   imageUrl: string | null;
   imageThumbnailUrl: string | null;
@@ -105,6 +109,11 @@ export type PublicProductInspector = {
   description: string;
   descriptionSeo: string;
   brandName: string | null;
+  subcategories: Array<{
+    name: string;
+    slug: string;
+    categorySlug: string;
+  }>;
   priceUnit: ProductPriceUnit;
   vatRate: number;
   defaultVariantId: number | null;
@@ -181,6 +190,13 @@ type PublicProductDetailRecord = {
   brand: {
     name: string;
   } | null;
+  subcategories: Array<{
+    name: string;
+    slug: string;
+    category: {
+      slug: string;
+    };
+  }>;
   mediaLinks: Array<{
     mediaId: bigint;
     media: PublicInspectorMediaRecord;
@@ -306,6 +322,21 @@ const publicProductDetailSelect = {
   brand: {
     select: {
       name: true,
+    },
+  },
+  subcategories: {
+    where: {
+      isActive: true,
+    },
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: {
+      name: true,
+      slug: true,
+      category: {
+        select: {
+          slug: true,
+        },
+      },
     },
   },
   mediaLinks: {
@@ -616,6 +647,13 @@ function mapPublicInspectorMedia(
   };
 }
 
+function normalizePublicRichTextContent(value: string | null | undefined) {
+  return replaceArticleImageSources(
+    value,
+    (mediaId) => buildPublicMediaUrl(mediaId, "original"),
+  );
+}
+
 function buildPublicDefaultVariantFallback(
   product: Pick<PublicProductDetailRecord, "defaultVariantId" | "variants">,
 ) {
@@ -655,7 +693,12 @@ function mapPublicInspectorVariant(
     sku: variant.sku,
     slug: variant.slug,
     name: variant.name?.trim() || product.name,
-    description: variant.description?.trim() || product.description?.trim() || "",
+    description:
+      variant.description?.trim() || product.description?.trim()
+        ? normalizePublicRichTextContent(
+            variant.description?.trim() || product.description?.trim() || "",
+          )
+        : "",
     descriptionSeo:
       variant.descriptionSeo?.trim() || product.descriptionSeo?.trim() || "",
     lifecycleStatus: effectiveValues.effectiveLifecycleStatus,
@@ -788,6 +831,8 @@ async function ensurePublicProductDetailMedia(record: PublicProductDetailRecord)
     ...record.variants.flatMap((variant) =>
       variant.mediaLinks.map((link) => Number(link.mediaId)),
     ),
+    ...extractArticleMediaIds(record.description),
+    ...record.variants.flatMap((variant) => extractArticleMediaIds(variant.description)),
   ];
 
   await makeMediaPublicMany(mediaIds);
@@ -835,7 +880,7 @@ function mapPublicProductSummary(product: PublicProductRecord): PublicProductSum
     slug: product.slug,
     subtitle: product.subtitle?.trim() ?? "",
     description: descriptionPreview || "Découvrez cette famille produit COBAM GROUP.",
-    brandName: product.brand?.name ?? "Sans marque",
+    brandName: product.brand?.name ?? null,
     price: visiblePriceVariant?.basePriceAmount != null ? String(visiblePriceVariant.basePriceAmount) : null,
     imageUrl:
       hasCover && coverMedia?.mediaId != null
@@ -907,9 +952,14 @@ export async function findPublicProductBySlugs(input: {
     name: product.name,
     slug: product.slug,
     subtitle: product.subtitle?.trim() ?? "",
-    description: product.description?.trim() ?? "",
+    description: normalizePublicRichTextContent(product.description?.trim() ?? ""),
     descriptionSeo: product.descriptionSeo?.trim() ?? product.description?.trim() ?? "",
     brandName: product.brand?.name ?? null,
+    subcategories: product.subcategories.map((subcategory) => ({
+      name: subcategory.name,
+      slug: subcategory.slug,
+      categorySlug: subcategory.category.slug,
+    })),
     priceUnit: product.priceUnit,
     vatRate: product.vatRate,
     defaultVariantId: resolvedDefaultVariantId,

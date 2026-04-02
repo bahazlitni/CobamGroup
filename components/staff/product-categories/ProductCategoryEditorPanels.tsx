@@ -109,7 +109,7 @@ export default function ProductCategoryEditorPanels({
                 Slug
               </p>
               <p className="mt-1 text-sm text-slate-600">
-                {form.slug.trim() || "slug-categorie"}
+                {form.slug.trim() || "slug-catégorie"}
               </p>
             </div>
 

@@ -103,7 +103,7 @@ export async function getArticleCategoryByIdClient(
   if (!res.ok || !data?.ok || !data.category) {
     throw new ArticleCategoriesClientError(
       getErrorMessage(data) ||
-        "Erreur lors du chargement de la categorie d'articles",
+        "Erreur lors du chargement de la catégorie d'articles",
       res.status,
     );
   }
@@ -181,7 +181,7 @@ export async function deleteArticleCategoryClient(
   if (!res.ok || !data?.ok) {
     throw new ArticleCategoriesClientError(
       getErrorMessage(data) ||
-        "Erreur lors de la suppression de la categorie d'articles",
+        "Erreur lors de la suppression de la catégorie d'articles",
       res.status,
     );
   }
