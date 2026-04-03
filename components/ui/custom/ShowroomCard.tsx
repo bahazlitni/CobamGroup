@@ -1,5 +1,7 @@
-import { MapPin, Phone, Clock, ExternalLink } from "lucide-react";
+// @/components/ui/custom/ShowroomCard.tsx
+"use client";
 
+import { MapPin, Phone, Clock, Navigation } from "lucide-react";
 
 const SHOWROOMS: Record<
   string,
@@ -47,14 +49,12 @@ interface ShowroomCardProps {
 
 export default function ShowroomCard({ location }: ShowroomCardProps) {
   const { name, address, phone, hours, mapQuery } = SHOWROOMS[location];
-
   const embedUrl = `https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
 
   return (
-    <div className="group bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
-      {/* Embedded Map */}
-      <div className="relative h-48 w-full overflow-hidden bg-cobam-light-bg">
+    <div className="group relative overflow-hidden rounded-2xl bg-white/60 backdrop-blur-sm shadow-sm transition-all duration-500 hover:shadow-xl hover:scale-[1.02] border border-slate-200/50">
+      <div className="relative h-40 w-full overflow-hidden">
         <iframe
           src={embedUrl}
           width="100%"
@@ -62,48 +62,36 @@ export default function ShowroomCard({ location }: ShowroomCardProps) {
           style={{ border: 0 }}
           allowFullScreen={false}
           loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
           title={`Carte - ${name}`}
-          className="absolute inset-0 w-full h-full"
+          className="absolute inset-0 w-full h-full transition-transform duration-700 group-hover:scale-105"
         />
       </div>
-
-      {/* Info */}
-      <div className="p-5 flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="text-cobam-dark-blue font-bold text-base leading-tight group-hover:text-cobam-water-blue transition-colors">
-            {name}
-          </h3>
-          <div className="bg-cobam-water-blue/10 text-cobam-water-blue rounded-lg p-1.5 flex-shrink-0">
-            <MapPin size={14} />
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2 text-sm text-cobam-carbon-grey">
+      <div className="p-5">
+        <h3 className="text-lg font-bold text-cobam-dark-blue group-hover:text-cobam-water-blue transition-colors">
+          {name}
+        </h3>
+        <div className="mt-3 space-y-2 text-sm text-cobam-carbon-grey">
           <div className="flex items-start gap-2">
-            <MapPin size={13} className="mt-0.5 flex-shrink-0 text-cobam-quill-grey" />
+            <MapPin size={14} className="mt-0.5 flex-shrink-0 text-cobam-water-blue" />
             <span>{address}</span>
           </div>
-          <a
-            href={`tel:${phone}`}
-            className="flex items-center gap-2 hover:text-cobam-water-blue transition-colors"
-          >
-            <Phone size={13} className="flex-shrink-0 text-cobam-quill-grey" />
+          <a href={`tel:${phone}`} className="flex items-center gap-2 hover:text-cobam-water-blue transition">
+            <Phone size={14} className="text-cobam-water-blue" />
             <span>{phone}</span>
           </a>
           <div className="flex items-center gap-2">
-            <Clock size={13} className="flex-shrink-0 text-cobam-quill-grey" />
+            <Clock size={14} className="text-cobam-water-blue" />
             <span>{hours}</span>
           </div>
         </div>
-
         <a
           href={mapsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-1 w-full text-center text-xs font-bold text-cobam-water-blue border border-cobam-water-blue/30 hover:bg-cobam-water-blue hover:text-white rounded-lg py-2 transition-all"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-cobam-water-blue/30 bg-white/50 py-2 text-xs font-bold text-cobam-water-blue transition-all hover:bg-cobam-water-blue hover:text-white"
         >
-          Obtenir l'itinéraire →
+          <Navigation size={14} />
+          Itinéraire
         </a>
       </div>
     </div>

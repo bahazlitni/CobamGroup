@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import type { PublicBrand } from "@/features/brands/public";
+import type { PublicBrand } from "@/features/brands/types";
 import { scrollToIdCenter } from "@/lib/utils";
 
 export default function GridView({ brands }: { brands: PublicBrand[] }) {

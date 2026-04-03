@@ -1,6 +1,7 @@
 "use client";
 
-import { Home, MapPin, UserCircle, ShoppingCart, FileText, Phone } from "lucide-react";
+import { MapPin, UserCircle, ShoppingCart, FileText, Phone } from "lucide-react";
+import { COBAM_CONTACT_DETAILS, getPhoneHref } from "@/data/contact-details";
 
 export default function TopBar() {
   return (
@@ -10,8 +11,11 @@ export default function TopBar() {
         <div className="flex items-center gap-2 text-cobam-quill-grey">
           <Phone size={12} />
           <span>Service Client :</span>
-          <a href="tel:+21626833101" className="text-cobam-water-blue hover:underline font-semibold">
-            +216 26 833 101
+          <a
+            href={getPhoneHref(COBAM_CONTACT_DETAILS.phoneMobile)}
+            className="text-cobam-water-blue hover:underline font-semibold"
+          >
+            {COBAM_CONTACT_DETAILS.phoneMobile}
           </a>
         </div>
 

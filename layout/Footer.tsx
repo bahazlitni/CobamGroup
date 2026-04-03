@@ -6,6 +6,11 @@ import FooterColumn from "@/components/ui/custom/FooterColumn";
 import { FaFacebook, FaInstagram, FaLinkedin } from "react-icons/fa";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import {
+  COBAM_CONTACT_DETAILS,
+  COBAM_SOCIAL_LINKS,
+  getPhoneHref,
+} from "@/data/contact-details";
 
 const footerInfo = [
   { label: "Mentions Légales", href: "#" },
@@ -20,6 +25,8 @@ const footerUseful = [
 ];
 
 const slogans = ["Depuis 1994", "Maisons de rêve"];
+
+
 
 export default function Footer() {
   const [index, setIndex] = useState(0);
@@ -68,21 +75,17 @@ export default function Footer() {
               </p>
             </div>
 
-            <div className="flex gap-4 mt-2">
-              {[
-                { icon: FaFacebook, href: "https://facebook.com/cobamgrp", label: "Facebook" },
-                { icon: FaInstagram, href: "https://instagram.com/cobamgroup/", label: "Instagram" },
-                { icon: FaLinkedin, href: "https://linkedin.com/company/cobam-group/", label: "LinkedIn" },
-              ].map(({ icon: Icon, href, label }) => (
+            <div className="flex gap-4 mt-2 justify-center">
+              {COBAM_SOCIAL_LINKS.map((social) => (
                 <a
-                  key={label}
-                  href={href}
+                  key={social.label}
+                  href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={label}
+                  aria-label={social.label}
                   className="text-gray-400 hover:text-cobam-water-blue transition-colors"
                 >
-                  <Icon size={18} />
+                  <social.Icon size={18} />
                 </a>
               ))}
             </div>
@@ -106,20 +109,29 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="tel:+21626833101"
+                  href={getPhoneHref(COBAM_CONTACT_DETAILS.phoneFixed)}
                   className="flex items-center gap-2 hover:text-cobam-water-blue transition-colors"
                 >
                   <Phone size={14} className="text-cobam-water-blue flex-shrink-0" />
-                  +216 26 833 101
+                  {COBAM_CONTACT_DETAILS.phoneFixed}
                 </a>
               </li>
               <li>
                 <a
-                  href="mailto:contact@cobamgroup.com"
+                  href={getPhoneHref(COBAM_CONTACT_DETAILS.phoneMobile)}
+                  className="flex items-center gap-2 hover:text-cobam-water-blue transition-colors"
+                >
+                  <Phone size={14} className="text-cobam-water-blue flex-shrink-0" />
+                  {COBAM_CONTACT_DETAILS.phoneMobile}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={`mailto:${COBAM_CONTACT_DETAILS.email}`}
                   className="flex items-center gap-2 hover:text-cobam-water-blue transition-colors"
                 >
                   <Mail size={14} className="text-cobam-water-blue flex-shrink-0" />
-                  contact@cobamgroup.com
+                  {COBAM_CONTACT_DETAILS.email}
                 </a>
               </li>
             </ul>
@@ -128,8 +140,8 @@ export default function Footer() {
 
         <Separator className="bg-white/10 mb-6" />
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
-          <p>© {new Date().getFullYear()} COBAM GROUP. Tous droits réservés.</p>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-xs text-gray-500">
+          <p>© {new Date().getFullYear()} Cobam Group. Tous droits réservés.</p>
         </div>
       </div>
     </footer>

@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TimelineView from "./TimelineView";
 import GridView from "./GridView";
 import { LayoutGrid, GitCommit } from "lucide-react";
-import type { PublicBrand } from "@/features/brands/public";
+import type { PublicBrand } from "@/features/brands/types";
 
 export default function BrandsViews({ brands }: { brands: PublicBrand[] }) {
   const [view, setView] = useState("timeline");

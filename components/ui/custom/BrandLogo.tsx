@@ -11,7 +11,7 @@ export default function BrandLogo({ name, imageUrl }: BrandLogoProps) {
         src={imageUrl}
         alt={name}
         width={480}
-        height={240}
+        height={270}
         className="object-contain h-32"
       />
     </div>

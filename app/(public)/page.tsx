@@ -6,12 +6,11 @@ import TestimonialCard from "@/components/ui/custom/TestimonialCard";
 import ShowroomCard from "@/components/ui/custom/ShowroomCard";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
-import { categoriesData, productCategoryLinks, productsData } from "@/data/categories";
 import BrandSlider from "@/components/ui/custom/BrandSlider";
-import ContactSection from "@/components/ui/custom/ContactForm";
-import ProductExplorer from "@/components/ui/custom/ProductExplorer";
 import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
 import { listPublicBrandShowcaseData } from "@/features/brands/public";
+import SuivezNousSection from "@/layout/SuivezNousSection";
+import { PatternLosangeOnWhiteVerticalBottomless } from "@/components/ui/custom/PatternLosange";
 
 const newProducts = [
   { name: "AMB ARENISCA PERLA", category: "Sol Intérieur", imageUrl: "/images/collections/amb-arenisca-perla-353x353.jpg", href: "#" },
@@ -27,8 +26,8 @@ const newProducts = [
 const stats = [
   { value: "+30", label: "Ans d'expérience" },
   { value: "+5K", label: "Références produits" },
-  { value: "+8", label: "Showrooms en Tunisie" },
-  { value: "+50K", label: "Clients satisfaits" },
+  { value: "4", label: "Showrooms à Djerba" },
+  { value: "+1K", label: "Clients satisfaits" },
 ];
 
 const testimonials = [
@@ -77,21 +76,11 @@ export default async function Home() {
       </section>
 
 
-      {/* Product Explorer */}
-      <section className="py-20">
-          <SectionHeader preTitle="Nos Produits" title="Explorez la Richesse" description="Parcourez nos différentes catégories pour trouver les produits qui correspondent à vos besoins spécifiques. Chaque catégorie est soigneusement organisée pour faciliter votre recherche et vous offrir une expérience d'achat agréable." centered titleTextColor="text-cobam-dark-blue" descriptionTextColor="text-gray-700" />
-          <ProductExplorer   
-              categories = {categoriesData}
-              products = {productsData}
-              links = {productCategoryLinks}
-              hasTopBar={true}
-              hasResizeButton={false}
-              hasCloseButton={false}
-          />
-      </section>
 
       {/* New Collection */}
-      <section className="py-24 bg-white">
+      <section className="relative py-24 bg-white">
+          <PatternLosangeOnWhiteVerticalBottomless />
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-12 flex-wrap gap-4">
             <SectionHeader
@@ -244,7 +233,8 @@ export default async function Home() {
         </div>
       </section>
 
-      <ContactSection />
+      <SuivezNousSection />
+
     </main>
   );
 }

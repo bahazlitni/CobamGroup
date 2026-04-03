@@ -1,14 +1,6 @@
 import { BrandShowcasePlacement, MediaVisibility } from "@prisma/client";
 import { prisma } from "@/lib/server/db/prisma";
-
-export type PublicBrand = {
-  id: number;
-  name: string;
-  slug: string;
-  description: string;
-  logoMediaId: number | null;
-  imageUrl: string | null;
-};
+import type { PublicBrand } from "./types";
 
 function buildPublicMediaThumbnailUrl(mediaId: bigint | number) {
   return `/api/media/${mediaId.toString()}/file?variant=thumbnail`;

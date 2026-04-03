@@ -76,3 +76,12 @@ export type BrandListResult = {
   page: number;
   pageSize: number;
 };
+
+export type PublicBrand = {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  logoMediaId: number | null;
+  imageUrl: string | null;
+};

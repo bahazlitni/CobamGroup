@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { PublicProductSummary } from "@/features/products/public";
+import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
 
 type PublicProductCardProps = {
   product: PublicProductSummary;
@@ -100,17 +101,13 @@ export default function ProductCard({
               Voir le produit
             </span>
 
-            <span
-              className="
-                inline-flex h-10 w-10 items-center justify-center rounded-full border border-border
-                bg-background text-cobam-dark-blue transition-all duration-300
-                group-hover:border-cobam-water-blue group-hover:bg-cobam-water-blue
-                group-hover:text-white
-              "
+            <AnimatedUIButton
+              variant="secondary"
+              size="sm"
+              className="rounded-full"
+              icon="chevron-right"
               aria-hidden="true"
-            >
-              →
-            </span>
+            />
           </div>
         </div>
       </article>

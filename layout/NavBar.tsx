@@ -44,7 +44,7 @@ const mainLinks = [
     hasMega: false,
     children: undefined,
   },
-  { label: "CONTACT", href: "#contact", hasMega: false, children: undefined },
+  { label: "CONTACT", href: "/contact", hasMega: false, children: undefined },
 ];
 
 export default function NavBar({
@@ -360,7 +360,7 @@ export default function NavBar({
                         className="w-full border-cobam-dark-blue/20 text-cobam-dark-blue hover:bg-cobam-dark-blue hover:text-white font-semibold py-5"
                         asChild
                       >
-                        <a href="#contact" onClick={closeSheet}>
+                        <a href="/contact" onClick={closeSheet}>
                           Nous contacter
                         </a>
                       </Button>

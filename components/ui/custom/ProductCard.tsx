@@ -1,63 +1,43 @@
+// @/components/ui/custom/ProductCard.tsx
+"use client";
+
 import Image from "next/image";
-import { StaffBadge } from "@/components/staff/ui";
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 
 interface ProductCardProps {
   name: string;
   category: string;
-  href: string;
-  isNew?: boolean;
-  isPromo?: boolean;
   imageUrl: string;
+  href: string;
 }
 
-export default function ProductCard({
-  name,
-  category,
-  href,
-  isNew,
-  isPromo,
-  imageUrl,
-}: ProductCardProps) {
+export default function ProductCard({ name, category, imageUrl, href }: ProductCardProps) {
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-      <div className="absolute top-3 left-3 z-10 flex gap-2">
-        {isNew ? (
-          <StaffBadge size="md" color="secondary" icon="star">
-            Nouveau
-          </StaffBadge>
-        ) : null}
-        {isPromo ? (
-          <StaffBadge size="md" color="red" icon="warning">
-            Promo
-          </StaffBadge>
-        ) : null}
-      </div>
-
-      <div className="relative h-56 overflow-hidden bg-cobam-light-bg">
+    <Link
+      href={href}
+      className="group relative block overflow-hidden rounded-2xl bg-white/60 backdrop-blur-sm transition-all duration-500 hover:scale-[1.02] hover:shadow-xl hover:shadow-cobam-water-blue/10 border border-slate-200/50"
+    >
+      <div className="aspect-square overflow-hidden bg-cobam-light-bg">
         <Image
           src={imageUrl}
           alt={name}
-          fill
-          className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+          width={400}
+          height={400}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
-        <div className="absolute inset-0 flex items-center justify-center bg-cobam-dark-blue/60 opacity-0 transition-opacity group-hover:opacity-100">
-          <Button
-            size="sm"
-            className="bg-cobam-water-blue font-bold text-white hover:bg-white hover:text-cobam-water-blue"
-            asChild
-          >
-            <a href={href}>Demande de devis</a>
-          </Button>
-        </div>
       </div>
-
       <div className="p-4">
-        <p className="mb-1 text-xs font-semibold tracking-wider text-cobam-water-blue uppercase">
+        <p className="text-xs font-medium uppercase tracking-wider text-cobam-water-blue">
           {category}
         </p>
-        <h3 className="text-sm font-bold text-cobam-dark-blue">{name}</h3>
+        <h3 className="mt-1 text-base font-semibold text-cobam-dark-blue group-hover:text-cobam-water-blue transition-colors">
+          {name}
+        </h3>
       </div>
-    </div>
+      <div className="absolute bottom-4 right-4 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 translate-x-2">
+        <ArrowUpRight className="h-5 w-5 text-cobam-water-blue" />
+      </div>
+    </Link>
   );
 }

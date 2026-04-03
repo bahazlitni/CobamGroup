@@ -85,15 +85,11 @@ export default function HeroSlider() {
       </div>
 
 
-      {/* Decorative geometric shapes */}
-      <div className="absolute opacity-50 left-0 top-1/2 -translate-y-1/2 w-3/5 h-112 bg-cobam-dark-blue rounded-r-full" />
-      <div className="absolute opacity-50 translate-x-1/2 right-1/12 bottom-0 w-32 h-40 rounded-t-full bg-cobam-water-blue" />
-
       {/* Content */}
       <div className="relative z-10 h-full flex items-center">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="rounded-4xl absolute backdrop-blur-md left-1/2 -translate-x-1/2 bg-cobam-dark-blue/50 p-12">
           <div
-            className={`max-w-2xl transition-all duration-500 ${
+            className={`text-center flex flex-col items-center justify-center max-w-2xl transition-all duration-500 ${
               animating
                 ? "opacity-0 translate-y-4"
                 : "opacity-100 translate-y-0"
@@ -108,10 +104,10 @@ export default function HeroSlider() {
             >
               {slide.title}
             </h1>
-            <p className="text-gray-300 text-lg leading-relaxed mb-8 max-w-xl">
+            <p className="text-cobam-quill-grey text-lg leading-relaxed mb-8 max-w-xl">
               {slide.subtitle}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 w-fit">
               <AnimatedUIButton
                 size="lg"
                 variant="primary"
@@ -123,7 +119,8 @@ export default function HeroSlider() {
               <AnimatedUIButton
                 size="lg"
                 variant="secondary"
-                href="#contact"
+                href="/contact"
+
               >
                 Nous Contacter
               </AnimatedUIButton>

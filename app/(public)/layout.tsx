@@ -1,3 +1,5 @@
+// @/app/(public)/layout.tsx
+
 import { ReactNode } from "react";
 import Footer from "@/layout/Footer";
 import NavBar from "@/layout/NavBar";
