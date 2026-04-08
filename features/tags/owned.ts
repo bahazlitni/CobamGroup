@@ -1,4 +1,4 @@
-import { slugifyTagName } from "./slug";
+import { slugify } from "@/lib/slugify";
 
 function splitOwnedTagCandidate(value: string | null | undefined) {
   return (value ?? "")
@@ -15,7 +15,7 @@ export function normalizeOwnedTagNames(tagNames: readonly string[]) {
   return tagNames
     .flatMap((tagName) => splitOwnedTagCandidate(tagName))
     .filter((name) => {
-      const slug = slugifyTagName(name);
+      const slug = slugify(name);
 
       if (!slug || seenSlugs.has(slug)) {
         return false;

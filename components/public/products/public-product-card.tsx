@@ -3,10 +3,12 @@ import Image from "next/image";
 import Link from "next/link";
 import type { PublicProductSummary } from "@/features/products/public";
 import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { normalizeThemeColor, withThemeAlpha } from "@/lib/theme-color";
 
 type PublicProductCardProps = {
   product: PublicProductSummary;
   href: string;
+  themeColor?: string | null;
 };
 
 function formatPrice(price: string | null) {
@@ -17,9 +19,11 @@ function formatPrice(price: string | null) {
 export default function ProductCard({
   product,
   href = `/produits/${product.slug}`,
+  themeColor,
 }: PublicProductCardProps) {
   const imageSrc = product.imageThumbnailUrl || product.imageUrl || null;
   const price = formatPrice(product.price);
+  const resolvedThemeColor = normalizeThemeColor(themeColor);
 
   return (
     <Link
@@ -34,8 +38,23 @@ export default function ProductCard({
           transition-all duration-300
           group-hover:-translate-y-1 group-hover:shadow-[0_10px_20px_rgba(20,32,46,0.12)]
         "
+        style={{
+          borderColor: withThemeAlpha(resolvedThemeColor, 0.18),
+          background: `linear-gradient(180deg, rgba(255,255,255,1), ${withThemeAlpha(
+            resolvedThemeColor,
+            0.06,
+          )})`,
+        }}
       >
-        <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+        <div
+          className="relative aspect-[4/3] w-full overflow-hidden bg-muted"
+          style={{
+            background: `linear-gradient(135deg, ${withThemeAlpha(
+              resolvedThemeColor,
+              0.12,
+            )}, rgba(255,255,255,0.98))`,
+          }}
+        >
           {imageSrc ? (
             <Image
               src={imageSrc}
@@ -57,10 +76,14 @@ export default function ProductCard({
             {product.brandName && (
               <span
                 className="
-                  inline-flex max-w-fit items-center rounded-full border border-cyan-100
-                  bg-accent px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]
-                  text-cobam-water-blue
+                  inline-flex max-w-fit items-center rounded-full border px-3 py-1 text-[11px]
+                  font-semibold uppercase tracking-[0.16em]
                 "
+                style={{
+                  borderColor: withThemeAlpha(resolvedThemeColor, 0.18),
+                  backgroundColor: withThemeAlpha(resolvedThemeColor, 0.1),
+                  color: resolvedThemeColor,
+                }}
               >
                 {product.brandName}
               </span>
@@ -74,7 +97,10 @@ export default function ProductCard({
             </h3>
 
             {product.subtitle && (
-              <p className="line-clamp-2 text-sm font-medium text-cobam-water-blue">
+              <p
+                className="line-clamp-2 text-sm font-medium"
+                style={{ color: resolvedThemeColor }}
+              >
                 {product.subtitle}
               </p>
             )}
@@ -97,7 +123,10 @@ export default function ProductCard({
 
           {/* CTA */}
           <div className="mt-auto flex items-center justify-between pt-2">
-            <span className="text-sm font-medium text-foreground transition-colors group-hover:text-cobam-water-blue">
+            <span
+              className="text-sm font-medium text-foreground transition-colors"
+              style={{ color: resolvedThemeColor }}
+            >
               Voir le produit
             </span>
 

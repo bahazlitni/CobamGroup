@@ -1,117 +1,175 @@
 "use client";
 
-import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import {
+  ProductCommercialMode,
+  ProductLifecycle,
+  ProductStockUnit,
+} from "@prisma/client";
 import { Package } from "lucide-react";
 import { toast } from "sonner";
-import ProductEditorPanels from "@/components/staff/products/ProductEditorPanels";
 import Loading from "@/components/staff/Loading";
+import ArticleRichTextEditor from "@/components/staff/articles/article-rich-text-editor";
+import ProductMediaGrid from "@/components/staff/products/ProductMediaGrid";
+import ProductSubcategoriesField from "@/components/staff/products/ProductSubcategoriesField";
 import Panel from "@/components/staff/ui/Panel";
+import PanelField from "@/components/staff/ui/PanelField";
+import PanelInput from "@/components/staff/ui/PanelInput";
 import {
-  StaffNotice,
+  PanelAutoCompleteInput,
   StaffPageHeader,
+  StaffSelect,
   StaffStateCard,
+  StaffTagInput,
   UnsavedChangesGuard,
 } from "@/components/staff/ui";
+import { Textarea } from "@/components/ui/textarea";
 import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
 import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
 import { canCreateProducts, canManageProducts } from "@/features/products/access";
 import {
-  createProductClient,
-  getProductFormOptionsClient,
-  ProductsClientError,
-} from "@/features/products/client";
-import {
-  createEmptyProductAttributeEditorState,
-  createInheritedProductVariantEditorState,
-  createEmptyProductEditorFormState,
-  duplicateProductVariantEditorState,
-  moveProductVariantEditorStates,
-  productEditorFormToPayload,
-  syncVariantAttributeValueEditorStates,
-  type ProductEditorFormState,
-} from "@/features/products/form";
-import { useProductDetail } from "@/features/products/hooks/use-product-detail";
-import { EMPTY_PRODUCT_FORM_OPTIONS, type ProductFormOptionsDto } from "@/features/products/types";
+  createSingleProductClient,
+  deleteSingleProductClient,
+  getSingleProductClient,
+  getSingleProductFormOptionsClient,
+  SingleProductsClientError,
+  updateSingleProductClient,
+} from "@/features/single-products/client";
+import type {
+  SingleProductDetailDto,
+  SingleProductFormOptionsDto,
+  SingleProductUpsertInput,
+} from "@/features/single-products/types";
+import { slugify } from "@/lib/slugify";
+import { ProductAttributeInputDto } from "@/features/products/types";
+import PanelAttributesInput from "@/components/staff/ui/PanelAttributesInput";
+import { getProductBrandSuggestions } from "@/lib/static_tables/brands";
 
-type EditableField = keyof ProductEditorFormState;
-type EditableAttributeField = keyof ProductEditorFormState["attributes"][number];
+function createEmptyFormState(): SingleProductUpsertInput {
+  return {
+    sku: "",
+    slug: "",
+    name: "",
+    description: null,
+    descriptionSeo: null,
+    brandCode: null,
+    basePriceAmount: null,
+    vatRate: 19,
+    stock: null,
+    stockUnit: "ITEM",
+    visibility: true,
+    priceVisibility: true,
+    stockVisibility: true,
+    lifecycle: "DRAFT",
+    commercialMode: "ON_REQUEST_ONLY",
+    tags: "",
+    subcategoryIds: [],
+    datasheet: null,
+    media: [],
+    attributes: [],
+  };
+}
 
-export default function ProductEditPage() {
+function mapProductToForm(product: SingleProductDetailDto): SingleProductUpsertInput {
+  return {
+    sku: product.sku,
+    slug: product.slug,
+    name: product.name,
+    description: product.description,
+    descriptionSeo: product.descriptionSeo,
+    brandCode: product.brandCode,
+    basePriceAmount: product.basePriceAmount,
+    vatRate: product.vatRate,
+    stock: product.stock,
+    stockUnit: product.stockUnit,
+    visibility: product.visibility,
+    priceVisibility: product.priceVisibility,
+    stockVisibility: product.stockVisibility,
+    lifecycle: product.lifecycle,
+    commercialMode: product.commercialMode,
+    tags: product.tags,
+    subcategoryIds: product.subcategoryIds,
+    datasheet: product.datasheet,
+    media: product.media,
+    attributes: product.attributes,
+  };
+}
+
+function formatEnumLabel(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+export default function SingleProductEditPage() {
   return (
-    <Suspense fallback={<ProductEditorLoading />}>
-      <ProductEditPageContent />
+    <Suspense fallback={<EditorLoading />}>
+      <SingleProductEditPageContent />
     </Suspense>
   );
 }
 
-function ProductEditPageContent() {
+
+function SingleProductEditPageContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useStaffSessionContext();
+  const productId = Number(searchParams.get("id") ?? "");
+  const isEdit = Number.isInteger(productId) && productId > 0;
+  const canCreate = user ? canCreateProducts(user) : false;
+  const canManage = user ? canManageProducts(user) : false;
+  const [form, setForm] = useState<SingleProductUpsertInput>(createEmptyFormState);
+  const [initialSnapshot, setInitialSnapshot] = useState("");
+  const [options, setOptions] = useState<SingleProductFormOptionsDto>({
+    productSubcategories: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const productId = useMemo(() => {
-    const raw = searchParams.get("id");
-
-    if (!raw) {
-      return null;
-    }
-
-    const parsed = Number(raw);
-    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-  }, [searchParams]);
-
-  if (productId) {
-    return <ExistingProductEditor productId={productId} />;
+  const onAttributesChange = (attributes: ProductAttributeInputDto[]) => {
+    setForm((current) => ({...current, attributes }))
   }
 
-  return <NewProductEditor />;
-}
-
-function NewProductEditor() {
-  const router = useRouter();
-  const { user: authUser, isLoading: isAuthLoading } = useStaffSessionContext();
-  const canCreateProduct = authUser ? canCreateProducts(authUser) : false;
-
-  const [initialForm] = useState<ProductEditorFormState>(() => createEmptyProductEditorFormState());
-  const [form, setForm] = useState<ProductEditorFormState>(initialForm);
-  const [options, setOptions] = useState<ProductFormOptionsDto>(EMPTY_PRODUCT_FORM_OPTIONS);
-  const [isLoadingOptions, setIsLoadingOptions] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const isDirty = useMemo(
-    () => JSON.stringify(form) !== JSON.stringify(initialForm),
-    [form, initialForm],
-  );
-
   useEffect(() => {
-    if (isAuthLoading || !canCreateProduct) {
-      if (!isAuthLoading) {
-        setIsLoadingOptions(false);
-      }
-      return;
-    }
-
     let cancelled = false;
-    setIsLoadingOptions(true);
+    setIsLoading(true);
 
     void (async () => {
       try {
-        const nextOptions = await getProductFormOptionsClient();
-        if (!cancelled) {
-          setOptions(nextOptions);
+        const [formOptions, product] = await Promise.all([
+          getSingleProductFormOptionsClient(),
+          isEdit ? getSingleProductClient(productId) : Promise.resolve(null),
+        ]);
+
+        if (cancelled) {
+          return;
+        }
+
+        setOptions(formOptions);
+
+        if (product) {
+          const nextForm = mapProductToForm(product);
+          setForm(nextForm);
+          setInitialSnapshot(JSON.stringify(nextForm));
+        } else {
+          const nextForm = createEmptyFormState();
+          setForm(nextForm);
+          setInitialSnapshot(JSON.stringify(nextForm));
         }
       } catch (err: unknown) {
-        const message =
-          err instanceof ProductsClientError
+        toast.error(
+          err instanceof SingleProductsClientError
             ? err.message
             : err instanceof Error
               ? err.message
-              : "Erreur lors du chargement des options produit";
-        if (!cancelled) {
-          toast.error(message);
-        }
+              : "Impossible de charger l'éditeur du produit simple.",
+        );
       } finally {
         if (!cancelled) {
-          setIsLoadingOptions(false);
+          setIsLoading(false);
         }
       }
     })();
@@ -119,407 +177,394 @@ function NewProductEditor() {
     return () => {
       cancelled = true;
     };
-  }, [canCreateProduct, isAuthLoading]);
+  }, [isEdit, productId]);
 
-  const setField = (field: EditableField, value: ProductEditorFormState[EditableField]) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
+  const isDirty = useMemo(
+    () => JSON.stringify(form) !== initialSnapshot,
+    [form, initialSnapshot],
+  );
 
-  const handleVariantAdd = () => {
-    setForm((prev) => ({
-      ...prev,
-      variants: [
-        ...prev.variants,
-        createInheritedProductVariantEditorState({
-          attributes: prev.attributes,
-        }),
-      ],
-    }));
-  };
-
-  const handleAttributeAdd = () => {
-    setForm((prev) => {
-      const nextAttributes = [
-        ...prev.attributes,
-        createEmptyProductAttributeEditorState({
-          sortOrder: String(prev.attributes.length),
-        }),
-      ];
-
-      return {
-        ...prev,
-        attributes: nextAttributes,
-        variants: prev.variants.map((variant) => ({
-          ...variant,
-          attributeValues: syncVariantAttributeValueEditorStates(
-            nextAttributes,
-            variant.attributeValues,
-          ),
-        })),
-      };
-    });
-  };
-
-  const handleAttributeRemove = (formKey: string) => {
-    setForm((prev) => {
-      const nextAttributes = prev.attributes.filter((attribute) => attribute.formKey !== formKey);
-
-      return {
-        ...prev,
-        attributes: nextAttributes,
-        variants: prev.variants.map((variant) => ({
-          ...variant,
-          attributeValues: syncVariantAttributeValueEditorStates(
-            nextAttributes,
-            variant.attributeValues,
-          ),
-        })),
-      };
-    });
-  };
-
-  const handleAttributeChange = <Field extends EditableAttributeField>(
-    formKey: string,
-    field: Field,
-    value: ProductEditorFormState["attributes"][number][Field],
-  ) => {
-    setForm((prev) => {
-      const nextAttributes = prev.attributes.map((attribute) =>
-        attribute.formKey === formKey ? { ...attribute, [field]: value } : attribute,
-      );
-
-      return {
-        ...prev,
-        attributes: nextAttributes,
-        variants:
-          field === "dataType"
-            ? prev.variants.map((variant) => ({
-                ...variant,
-                attributeValues: syncVariantAttributeValueEditorStates(
-                  nextAttributes,
-                  variant.attributeValues.map((attributeValue) =>
-                    attributeValue.attributeFormKey === formKey
-                      ? { ...attributeValue, value: "" }
-                      : attributeValue,
-                  ),
-                ),
-              }))
-            : prev.variants.map((variant) => ({
-                ...variant,
-                attributeValues: syncVariantAttributeValueEditorStates(
-                  nextAttributes,
-                  variant.attributeValues,
-                ),
-              })),
-      };
-    });
-  };
-
-  const handleVariantRemove = (formKey: string) => {
-    setForm((prev) => ({
-      ...prev,
-      variants:
-        prev.variants[0]?.formKey === formKey
-          ? prev.variants
-          : prev.variants.filter((variant) => variant.formKey !== formKey),
-    }));
-  };
-
-  const handleVariantDuplicate = (formKey: string) => {
-    setForm((prev) => {
-      const sourceVariant = prev.variants.find((variant) => variant.formKey === formKey);
-
-      if (!sourceVariant) {
-        return prev;
-      }
-
-      const insertIndex = prev.variants.findIndex((variant) => variant.formKey === formKey);
-      const duplicatedVariant = duplicateProductVariantEditorState(sourceVariant, {
-        isDefaultSource: insertIndex === 0,
-      });
-      const nextVariants = [...prev.variants];
-      nextVariants.splice(insertIndex + 1, 0, duplicatedVariant);
-
-      return {
-        ...prev,
-        variants: nextVariants,
-      };
-    });
-  };
-
-  const handleVariantMove = (formKey: string, direction: "up" | "down") => {
-    setForm((prev) => ({
-      ...prev,
-      variants: moveProductVariantEditorStates(prev.variants, formKey, direction),
-    }));
-  };
-
-  const handleVariantAttributeValueChange = (
-    formKey: string,
-    attributeFormKey: string,
-    value: string,
-  ) => {
-    setForm((prev) => ({
-      ...prev,
-      variants: prev.variants.map((variant) =>
-        variant.formKey === formKey
-          ? {
-              ...variant,
-              attributeValues: variant.attributeValues.map((attributeValue) =>
-                attributeValue.attributeFormKey === attributeFormKey
-                  ? { ...attributeValue, value }
-                  : attributeValue,
-              ),
-            }
-          : variant,
-      ),
-    }));
-  };
-
-  const handleVariantChange = <Field extends keyof ProductEditorFormState["variants"][number]>(
-    formKey: string,
-    field: Field,
-    value: ProductEditorFormState["variants"][number][Field],
-  ) => {
-    setForm((prev) => ({
-      ...prev,
-      variants: prev.variants.map((variant) =>
-        variant.formKey === formKey ? { ...variant, [field]: value } : variant,
-      ),
-    }));
-  };
+  const canSave = isEdit ? canManage : canCreate;
 
   const handleSave = async () => {
-    if (!canCreateProduct) {
-      toast.error("Accès refusé");
+    if (!canSave) {
+      toast.error("Accès refusé.");
       return false;
     }
 
     setIsSaving(true);
-
     try {
-      const product = await createProductClient(productEditorFormToPayload(form));
-      toast.success("Famille produit créée.");
-      router.replace(`/espace/staff/gestion-des-produits/produits/edit?id=${product.id}`);
+      const result = isEdit
+        ? await updateSingleProductClient(productId, form)
+        : await createSingleProductClient(form);
+      const nextForm = mapProductToForm(result);
+      setForm(nextForm);
+      setInitialSnapshot(JSON.stringify(nextForm));
+      toast.success(isEdit ? "Produit simple mis à jour." : "Produit simple créé.");
+      if (!isEdit) {
+        router.replace(`/espace/staff/gestion-des-produits/produits/edit?id=${result.id}`);
+      }
       return true;
     } catch (err: unknown) {
-      const message =
-        err instanceof ProductsClientError
+      toast.error(
+        err instanceof SingleProductsClientError
           ? err.message
           : err instanceof Error
             ? err.message
-            : "Erreur lors de la création de la famille produit";
-      toast.error(message);
+            : "Impossible d'enregistrer le produit simple.",
+      );
       return false;
     } finally {
       setIsSaving(false);
     }
   };
 
-  if (isAuthLoading || isLoadingOptions) {
-    return <ProductEditorLoading />;
+  const handleDelete = async () => {
+    if (!isEdit || !canManage) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Supprimer le produit "${form.name}" ?`);
+    if (!confirmed) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deleteSingleProductClient(productId);
+      toast.success("Produit simple supprimé.");
+      router.replace("/espace/staff/gestion-des-produits/produits");
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof SingleProductsClientError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Impossible de supprimer le produit simple.",
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  if (isLoading) {
+    return <EditorLoading />;
   }
 
-  if (!canCreateProduct) {
+  if (!canCreate && !isEdit) {
     return (
-      <div className="mx-auto max-w-md rounded-2xl border border-red-100 bg-white p-6 shadow-sm">
-        <h1 className="text-cobam-dark-blue mb-2 text-lg font-semibold">Accès refusé</h1>
-        <p className="mb-4 text-sm text-slate-600">
-          Vous n&apos;avez pas l&apos;autorisation de créer une famille produit.
-        </p>
-        <Link
-          href="/espace/staff/gestion-des-produits/produits"
-          className="bg-cobam-dark-blue hover:bg-cobam-water-blue inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-colors"
-        >
-          Retour
-        </Link>
-      </div>
+      <StaffStateCard
+        title="Accès refusé"
+        description="Vous ne pouvez pas créer de produit simple."
+      />
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-full">
       <UnsavedChangesGuard isDirty={isDirty} onSaveAndContinue={handleSave} />
 
       <StaffPageHeader
         backHref="/espace/staff/gestion-des-produits/produits"
         eyebrow="Produits"
-        title="Création d'une famille produit"
+        title={isEdit ? form.name || "Produit simple" : "Nouveau produit simple"}
         icon={Package}
       />
 
-      <ProductEditorPanels
-        mode="create"
-        form={form}
-        options={options}
-        isSaving={isSaving}
-        onFieldChange={setField}
-        onAttributeAdd={handleAttributeAdd}
-        onAttributeRemove={handleAttributeRemove}
-        onAttributeChange={handleAttributeChange}
-        onVariantAdd={handleVariantAdd}
-        onVariantRemove={handleVariantRemove}
-        onVariantDuplicate={handleVariantDuplicate}
-        onVariantMove={handleVariantMove}
-        onVariantChange={handleVariantChange}
-        onVariantAttributeValueChange={handleVariantAttributeValueChange}
-        onSave={() => void handleSave()}
-        disableSave={isLoadingOptions}
-      />
+      <Panel pretitle="Produit" title="Informations principales">
+        <div className="grid gap-6 md:grid-cols-4">
+          <PanelField id={`product-sku`} label="SKU">
+            <PanelInput
+              id={`product-sku`}
+              fullWidth
+              value={form.sku}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  sku: event.target.value,
+                }))
+              }
+            />
+          </PanelField>
+
+          <PanelField className="col-span-2" id={`product-name`} label="Nom">
+            <PanelInput
+              id={`product-name`}
+              fullWidth
+              value={form.name}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  slug: slugify(event.target.value),
+                  name: event.target.value,
+                }))
+              }
+            />
+          </PanelField>
+
+          <PanelField id="product-brand" label="Marque">
+            <PanelAutoCompleteInput
+              id="product-brand"
+              fullWidth
+              value={form.brandCode ?? ""}
+              suggestions={getProductBrandSuggestions(form.brandCode ?? "")}
+              onValueChange={(value) =>
+                setForm((current) => ({
+                  ...current,
+                  brandCode: value ?? null,
+                }))
+              }
+            />
+          </PanelField>
+          <PanelField id="product-price" label="Prix de base">
+            <PanelInput
+            fullWidth
+              id="product-price"
+              value={form.basePriceAmount ?? ""}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  basePriceAmount: event.target.value || null,
+                }))
+              }
+            />
+          </PanelField>
+          <PanelField id="product-vat" label="TVA">
+            <PanelInput
+            fullWidth
+              id="product-vat"
+              value={form.vatRate == null ? "" : String(form.vatRate)}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  vatRate: event.target.value ? Number(event.target.value) : null,
+                }))
+              }
+            />
+          </PanelField>
+
+          <PanelField id="product-stock" label="Stock">
+            <PanelInput
+            fullWidth
+              id="product-stock"
+              value={form.stock ?? ""}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  stock: event.target.value || null,
+                }))
+              }
+            />
+          </PanelField>
+          <PanelField id="product-stock-unit" label="Unité de stock">
+            <StaffSelect
+              id="product-stock-unit"
+              fullWidth
+              value={form.stockUnit ?? ""}
+              onValueChange={(value) =>
+                setForm((current) => ({
+                  ...current,
+                  stockUnit: value ? (value as ProductStockUnit) : null,
+                }))
+              }
+              options={Object.values(ProductStockUnit).map((value) => ({
+                value,
+                label: formatEnumLabel(value),
+              }))}
+            />
+          </PanelField>
+          <PanelField id="product-lifecycle" label="Cycle de vie">
+            <StaffSelect
+              id="product-lifecycle"
+              fullWidth
+              value={form.lifecycle}
+              onValueChange={(value) =>
+                setForm((current) => ({
+                  ...current,
+                  lifecycle: value as ProductLifecycle,
+                }))
+              }
+              options={Object.values(ProductLifecycle).map((value) => ({
+                value,
+                label: formatEnumLabel(value),
+              }))}
+            />
+          </PanelField>
+
+          <PanelField id="product-commercial" label="Mode commercial">
+            <StaffSelect
+              id="product-commercial"
+              fullWidth
+              value={form.commercialMode}
+              onValueChange={(value) =>
+                setForm((current) => ({
+                  ...current,
+                  commercialMode: value as ProductCommercialMode,
+                }))
+              }
+              options={Object.values(ProductCommercialMode).map((value) => ({
+                value,
+                label: formatEnumLabel(value),
+              }))}
+            />
+          </PanelField>
+          <PanelField id="product-visibility" label="Visible">
+            <StaffSelect
+              id="product-visibility"
+              fullWidth
+              value={String(form.visibility)}
+              onValueChange={(value) =>
+                setForm((current) => ({
+                  ...current,
+                  visibility: value === "true",
+                }))
+              }
+              options={[
+                { value: "true", label: "Oui" },
+                { value: "false", label: "Non" },
+              ]}
+            />
+          </PanelField>
+          <PanelField id="product-price-visibility" label="Prix visible">
+            <StaffSelect
+              id="product-price-visibility"
+              fullWidth
+              value={String(form.priceVisibility)}
+              onValueChange={(value) =>
+                setForm((current) => ({
+                  ...current,
+                  priceVisibility: value === "true",
+                }))
+              }
+              options={[
+                { value: "true", label: "Oui" },
+                { value: "false", label: "Non" },
+              ]}
+            />
+          </PanelField>
+        </div>
+
+        <ProductSubcategoriesField
+          value={form.subcategoryIds.map(String)}
+          options={options.productSubcategories}
+          onChange={(nextValue) =>
+            setForm((current) => ({
+              ...current,
+              subcategoryIds: nextValue.map(Number),
+            }))
+          }
+        />
+
+        <PanelField id="product-tags" label="Tags">
+          <StaffTagInput
+            id="product-tags"
+            
+            value={form.tags.split(" ").filter((tag) => tag.trim() !== "")}
+            onChange={(strings) =>
+              setForm((current) => ({
+                ...current,
+                tags: strings.join(" "),
+              }))
+            }
+          />
+        </PanelField>
+
+        <PanelField id="product-description" label="Description">
+          <ArticleRichTextEditor
+            editorId="product-description"
+            value={form.description ?? ""}
+            onChange={(value) =>
+              setForm((current) => ({
+                ...current,
+                description: value,
+              }))
+            }
+            placeholder="Description du produit..."
+          />
+        </PanelField>
+
+        <PanelField id="product-description-seo" label="Description SEO">
+          <Textarea
+            id="product-description-seo"
+            value={form.descriptionSeo ?? ""}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                descriptionSeo: event.target.value || null,
+              }))
+            }
+          />
+        </PanelField>
+      </Panel>
+
+      <Panel pretitle="Galerie" title="Médias du produit">
+        <ProductMediaGrid
+          items={form.media}
+          onChange={(media) =>
+            setForm((current) => ({
+              ...current,
+              media,
+            }))
+          }
+          title="Galerie"
+          description="Le premier média devient la couverture du produit."
+        />
+      </Panel>
+
+      <Panel pretitle="Documentation" title="Fiche technique">
+        <ProductMediaGrid
+          items={form.datasheet ? [form.datasheet] : []}
+          onChange={(items) =>
+            setForm((current) => ({
+              ...current,
+              datasheet: items[0] ?? null,
+            }))
+          }
+          title="Document technique"
+          description="Optionnel : associez une fiche technique a ce produit simple."
+          pickerTitle="Ajouter une fiche technique"
+          pickerDescription="Choisissez un document existant ou importez-en un nouveau pour ce produit."
+          addButtonLabel={form.datasheet ? "Remplacer la fiche technique" : "Ajouter une fiche technique"}
+          addButtonHint="Optionnel : document PDF ou bureautique"
+          mediaKind="DOCUMENT"
+          maxItems={1}
+        />
+      </Panel>
+
+      <Panel allowOverflow pretitle="Attributs" title="Valeurs du produit">
+          <PanelAttributesInput 
+            attributes={form.attributes}
+            onAttributesChange={onAttributesChange}
+          />
+      </Panel>
+
+      <div className="flex flex-wrap gap-3">
+        <AnimatedUIButton
+          type="button"
+          variant="primary"
+          onClick={() => void handleSave()}
+          loading={isSaving}
+          loadingText="Enregistrement..."
+        >
+          Enregistrer
+        </AnimatedUIButton>
+        {isEdit ? (
+          <AnimatedUIButton
+            type="button"
+            variant="light"
+            onClick={() => void handleDelete()}
+            loading={isDeleting}
+            loadingText="Suppression..."
+          >
+            Supprimer
+          </AnimatedUIButton>
+        ) : null}
+      </div>
     </div>
   );
 }
 
-function ExistingProductEditor({ productId }: { productId: number }) {
-  const router = useRouter();
-  const { user: authUser } = useStaffSessionContext();
-  const canDelete = !!authUser && canManageProducts(authUser);
-
-  const {
-    product,
-    form,
-    isDirty,
-    options,
-    isLoading,
-    isSaving,
-    isDeleting,
-    error,
-    notice,
-    setField,
-    addAttribute,
-    removeAttribute,
-    setAttributeField,
-    addVariant,
-    removeVariant,
-    duplicateVariant,
-    moveVariant,
-    setVariantField,
-    setVariantAttributeValue,
-    save,
-    remove,
-  } = useProductDetail(productId);
-
-  useEffect(() => {
-    if (notice) {
-      toast.success(notice);
-    }
-  }, [notice]);
-
-  useEffect(() => {
-    if (error && product) {
-      toast.error(error);
-    }
-  }, [error, product]);
-
-  const handleDelete = async () => {
-    if (!product) return;
-
-    const confirmed = window.confirm(
-      `Supprimer la famille produit ${product.name} ? Toutes ses variantes seront supprimées en même temps.`,
-    );
-    if (!confirmed) return;
-
-    const deleted = await remove();
-    if (deleted) {
-      toast.success("Famille produit supprimée.");
-      router.replace("/espace/staff/gestion-des-produits/produits");
-    }
-  };
-
-  if (isLoading) {
-    return <ProductEditorLoading />;
-  }
-
-  if (error && !product) {
-    return (
-      <StaffStateCard
-        title="Erreur"
-        description={error}
-        actionHref="/espace/staff/gestion-des-produits/produits"
-        actionLabel="Retour aux produits"
-      />
-    );
-  }
-
-  if (!product) {
-    return null;
-  }
-
-  return (
-    <div className="space-y-6">
-      <UnsavedChangesGuard
-        isDirty={isDirty}
-        onSaveAndContinue={async () => Boolean(await save())}
-      />
-
-      <StaffPageHeader
-        backHref="/espace/staff/gestion-des-produits/produits"
-        eyebrow="Produits"
-        title={product.name}
-        icon={Package}
-      />
-
-      {error ? (
-        <StaffNotice variant="error" title="Modification impossible">
-          {error}
-        </StaffNotice>
-      ) : null}
-
-      <ProductEditorPanels
-        mode="edit"
-        form={form}
-        options={options}
-        isSaving={isSaving}
-        isDeleting={isDeleting}
-        onFieldChange={
-          setField as (field: EditableField, value: ProductEditorFormState[EditableField]) => void
-        }
-        onAttributeAdd={addAttribute}
-        onAttributeRemove={removeAttribute}
-        onAttributeChange={setAttributeField}
-        onVariantAdd={addVariant}
-        onVariantRemove={removeVariant}
-        onVariantDuplicate={duplicateVariant}
-        onVariantMove={moveVariant}
-        onVariantChange={setVariantField}
-        onVariantAttributeValueChange={setVariantAttributeValue}
-        onSave={() => void save()}
-        onDelete={canDelete ? () => void handleDelete() : undefined}
-        summary={{
-          variantCount: form.variants.length,
-          createdAt: product.createdAt,
-          updatedAt: product.updatedAt,
-        }}
-        sidebarFooter={
-          canDelete ? (
-            <Panel
-              pretitle="Danger"
-              title="Suppression"
-              description="Supprimer la famille retire aussi toutes les variantes qui lui sont rattachées."
-            >
-              <AnimatedUIButton
-                type="button"
-                onClick={() => void handleDelete()}
-                loading={isDeleting}
-                loadingText="Suppression..."
-                variant="light"
-                icon="delete"
-                iconPosition="left"
-                className="w-full border-red-200 bg-red-50 hover:border-red-300 hover:bg-red-100"
-                textClassName="text-red-700"
-                iconClassName="text-red-700"
-              >
-                Supprimer
-              </AnimatedUIButton>
-            </Panel>
-          ) : null
-        }
-      />
-    </div>
-  );
-}
-
-function ProductEditorLoading() {
+function EditorLoading() {
   return (
     <div className="flex min-h-[40vh] items-center justify-center">
       <div className="inline-flex items-center gap-3 rounded-2xl border border-slate-300 bg-white px-5 py-4 shadow-sm">

@@ -8,6 +8,7 @@ export type PublicMegaMenuProductCategory = {
   imageUrlHD: string;
   slug: string;
   parent: string | null;
+  themeColor: string | null;
 };
 
 export type PublicProductCategoryPageData = {
@@ -15,6 +16,7 @@ export type PublicProductCategoryPageData = {
   name: string;
   subtitle: string;
   slug: string;
+  themeColor: string | null;
   description: string;
   descriptionSEO: string;
   href: string;

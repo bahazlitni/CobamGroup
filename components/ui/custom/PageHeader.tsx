@@ -1,27 +1,60 @@
-export default function PageHeader({ className, subtitle, title, description }: { className?: string; subtitle: string; title: string; description: string }) {
-    return (
-    <section className={`flex items-center bg-cobam-dark-blue text-white relative overflow-hidden ${className || ''}`}>
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-            <div className="w-72 h-72 rounded-full bg-cobam-water-blue/80 absolute -top-16 -left-10" />
-            <div className="w-64 h-64 rounded-full bg-white absolute bottom-0 right-10" />
-        </div>
+import { normalizeThemeColor, withThemeAlpha } from "@/lib/theme-color";
 
-        <div className="max-w-5xl relative z-10 mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24">
-            <p className="text-cobam-water-blue text-xs font-bold tracking-[0.35em] uppercase mb-4">
-            {subtitle}
-            </p>
+export default function PageHeader({
+  className,
+  subtitle,
+  title,
+  description,
+  themeColor,
+}: {
+  className?: string;
+  subtitle: string;
+  title: string;
+  description: string;
+  themeColor?: string | null;
+}) {
+  const resolvedThemeColor = normalizeThemeColor(themeColor);
 
-            <h1
-            className="max-w-2xl text-3xl sm:text-4xl lg:text-5xl font-bold mb-6"
-            style={{ fontFamily: "var(--font-playfair), serif" }}
-            >
-            {title}
-            </h1>
+  return (
+    <section
+      className={`relative flex items-center overflow-hidden bg-cobam-dark-blue text-white ${className || ""}`}
+      style={{
+        backgroundImage: `linear-gradient(135deg, ${withThemeAlpha(
+          resolvedThemeColor,
+          0.18,
+        )}, rgba(11, 37, 69, 0.96) 50%)`,
+      }}
+    >
+      <div className="pointer-events-none absolute inset-0 opacity-100">
+        <div
+          className="absolute -left-10 -top-16 h-72 w-72 rounded-full"
+          style={{ backgroundColor: withThemeAlpha(resolvedThemeColor, 0.42) }}
+        />
+        <div
+          className="absolute bottom-0 right-10 h-64 w-64 rounded-full"
+          style={{ backgroundColor: withThemeAlpha(resolvedThemeColor, 0.16) }}
+        />
+      </div>
 
-            <p className="text-white/80 text-base sm:text-lg max-w-2xl">
-            {description}
-            </p>
-        </div>
+      <div className="relative z-10 mx-auto max-w-5xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
+        <p
+          className="mb-4 text-xs font-bold uppercase tracking-[0.35em]"
+          style={{ color: resolvedThemeColor }}
+        >
+          {subtitle}
+        </p>
+
+        <h1
+          className="mb-6 max-w-2xl text-3xl font-bold sm:text-4xl lg:text-5xl"
+          style={{ fontFamily: "var(--font-playfair), serif" }}
+        >
+          {title}
+        </h1>
+
+        <p className="max-w-2xl text-base text-white/80 sm:text-lg">
+          {description}
+        </p>
+      </div>
     </section>
-    );
+  );
 }

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
-import type { PublicBrand } from "@/features/brands/types";
+import type { Brand as PublicBrand } from "@/lib/static_tables/brands";
 import { scrollToIdCenter } from "@/lib/utils";
 
 export default function TimelineView({ brands }: { brands: PublicBrand[] }) {

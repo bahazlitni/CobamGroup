@@ -2,18 +2,14 @@
 
 import { staffApiFetch } from "@/lib/api/auth/staff/api-fetch";
 import type {
-  ProductPackCreateInput,
   ProductPackDetailDto,
+  ProductPackFormOptionsDto,
   ProductPackListResult,
-  ProductPackUpdateInput,
+  ProductPackUpsertInput,
 } from "./types";
 
 type ApiOk<T> = { ok: true } & T;
 type ApiFail = { ok: false; message?: string };
-
-type ProductPackListResponse = ApiOk<ProductPackListResult> | ApiFail;
-type ProductPackDetailResponse = ApiOk<{ pack: ProductPackDetailDto }> | ApiFail;
-type ProductPackDeleteResponse = ApiOk<Record<string, never>> | ApiFail;
 
 export class ProductPacksClientError extends Error {
   status: number;
@@ -32,133 +28,111 @@ async function parseJsonSafe<T>(res: Response): Promise<T | null> {
   }
 }
 
-function getApiErrorMessage(data: unknown): string | undefined {
-  if (
-    data &&
-    typeof data === "object" &&
-    "message" in data &&
-    typeof data.message === "string"
-  ) {
-    return data.message;
-  }
+async function unwrapResponse<T>(res: Response, fallbackMessage: string): Promise<T> {
+  const payload = await parseJsonSafe<ApiOk<T> | ApiFail>(res);
 
-  return undefined;
-}
-
-function buildListParams(params: {
-  page?: number;
-  pageSize?: number;
-  q?: string;
-}) {
-  const search = new URLSearchParams();
-
-  if (params.page != null) search.set("page", String(params.page));
-  if (params.pageSize != null) search.set("pageSize", String(params.pageSize));
-  if (params.q?.trim()) search.set("q", params.q.trim());
-
-  return search.toString();
-}
-
-export async function listProductPacksClient(params: {
-  page?: number;
-  pageSize?: number;
-  q?: string;
-}): Promise<ProductPackListResult> {
-  const query = buildListParams(params);
-  const res = await staffApiFetch(
-    `/api/staff/product-packs${query ? `?${query}` : ""}`,
-    { method: "GET", auth: true },
-  );
-  const data = await parseJsonSafe<ProductPackListResponse>(res);
-
-  if (!res.ok || !data?.ok) {
+  if (!res.ok || !payload || !("ok" in payload) || !payload.ok) {
     throw new ProductPacksClientError(
-      getApiErrorMessage(data) || "Erreur lors du chargement des packs produit.",
+      payload && "message" in payload && payload.message ? payload.message : fallbackMessage,
       res.status,
     );
   }
 
-  return {
-    items: data.items,
-    total: data.total,
-    page: data.page,
-    pageSize: data.pageSize,
-  };
+  return payload;
 }
 
-export async function getProductPackByIdClient(
-  packId: number,
-): Promise<ProductPackDetailDto> {
-  const res = await staffApiFetch(`/api/staff/product-packs/${packId}`, {
+export async function getProductPackFormOptionsClient(): Promise<ProductPackFormOptionsDto> {
+  const res = await staffApiFetch("/api/staff/product-packs/options", {
     method: "GET",
     auth: true,
   });
-  const data = await parseJsonSafe<ProductPackDetailResponse>(res);
+  const payload = await unwrapResponse<{ options: ProductPackFormOptionsDto }>(
+    res,
+    "Impossible de charger les options du pack.",
+  );
 
-  if (!res.ok || !data?.ok || !data.pack) {
-    throw new ProductPacksClientError(
-      getApiErrorMessage(data) || "Erreur lors du chargement du pack produit.",
-      res.status,
-    );
+  return payload.options;
+}
+
+export async function listProductPacksClient(input: {
+  page: number;
+  pageSize: number;
+  q?: string;
+}): Promise<ProductPackListResult> {
+  const search = new URLSearchParams({
+    page: String(input.page),
+    pageSize: String(input.pageSize),
+  });
+
+  if (input.q?.trim()) {
+    search.set("q", input.q.trim());
   }
 
-  return data.pack;
+  const res = await staffApiFetch(`/api/staff/product-packs?${search.toString()}`, {
+    method: "GET",
+    auth: true,
+  });
+
+  return unwrapResponse<ProductPackListResult>(res, "Impossible de charger les packs.");
+}
+
+export async function getProductPackClient(id: number): Promise<ProductPackDetailDto> {
+  const res = await staffApiFetch(`/api/staff/product-packs/${id}`, {
+    method: "GET",
+    auth: true,
+  });
+  const payload = await unwrapResponse<{ pack: ProductPackDetailDto }>(
+    res,
+    "Impossible de charger le pack.",
+  );
+
+  return payload.pack;
 }
 
 export async function createProductPackClient(
-  input: ProductPackCreateInput,
+  input: ProductPackUpsertInput,
 ): Promise<ProductPackDetailDto> {
   const res = await staffApiFetch("/api/staff/product-packs", {
     method: "POST",
     auth: true,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(input),
   });
-  const data = await parseJsonSafe<ProductPackDetailResponse>(res);
+  const payload = await unwrapResponse<{ pack: ProductPackDetailDto }>(
+    res,
+    "Impossible de creer le pack.",
+  );
 
-  if (!res.ok || !data?.ok || !data.pack) {
-    throw new ProductPacksClientError(
-      getApiErrorMessage(data) || "Erreur lors de la creation du pack produit.",
-      res.status,
-    );
-  }
-
-  return data.pack;
+  return payload.pack;
 }
 
 export async function updateProductPackClient(
-  packId: number,
-  input: ProductPackUpdateInput,
+  id: number,
+  input: ProductPackUpsertInput,
 ): Promise<ProductPackDetailDto> {
-  const res = await staffApiFetch(`/api/staff/product-packs/${packId}`, {
+  const res = await staffApiFetch(`/api/staff/product-packs/${id}`, {
     method: "PUT",
     auth: true,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(input),
   });
-  const data = await parseJsonSafe<ProductPackDetailResponse>(res);
+  const payload = await unwrapResponse<{ pack: ProductPackDetailDto }>(
+    res,
+    "Impossible de mettre a jour le pack.",
+  );
 
-  if (!res.ok || !data?.ok || !data.pack) {
-    throw new ProductPacksClientError(
-      getApiErrorMessage(data) || "Erreur lors de la mise a jour du pack produit.",
-      res.status,
-    );
-  }
-
-  return data.pack;
+  return payload.pack;
 }
 
-export async function deleteProductPackClient(packId: number): Promise<void> {
-  const res = await staffApiFetch(`/api/staff/product-packs/${packId}`, {
+export async function deleteProductPackClient(id: number) {
+  const res = await staffApiFetch(`/api/staff/product-packs/${id}`, {
     method: "DELETE",
     auth: true,
   });
-  const data = await parseJsonSafe<ProductPackDeleteResponse>(res);
 
-  if (!res.ok || !data?.ok) {
-    throw new ProductPacksClientError(
-      getApiErrorMessage(data) || "Erreur lors de la suppression du pack produit.",
-      res.status,
-    );
-  }
+  await unwrapResponse<Record<string, never>>(res, "Impossible de supprimer le pack.");
 }

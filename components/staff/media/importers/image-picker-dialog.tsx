@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { Check, ImagePlus, Upload } from "lucide-react";
 import {
   Dialog,
@@ -186,6 +186,8 @@ export default function ImagePickerDialog({
     widthPx: number;
     heightPx: number;
   } | null>(null);
+  const loadRequestIdRef = useRef(0);
+  const isClosingRef = useRef(false);
   const requiredAspectRatio = useMemo(() => parseAspectRatio(aspectRatio), [aspectRatio]);
   const aspectRatioMessage = requiredAspectRatio
     ? `Format requis: ${requiredAspectRatio.label}`
@@ -246,9 +248,11 @@ export default function ImagePickerDialog({
 
   const loadImages = useCallback(
     async (nextPage: number, reset: boolean) => {
-      if (!open) {
+      if (!open || isClosingRef.current) {
         return;
       }
+
+      const requestId = ++loadRequestIdRef.current;
 
       setError(null);
 
@@ -272,12 +276,24 @@ export default function ImagePickerDialog({
           includeDescendantFolders: folderId != null,
         });
 
+        if (requestId !== loadRequestIdRef.current || isClosingRef.current) {
+          return;
+        }
+
         setItems((current) => (reset ? result.items : [...current, ...result.items]));
         setPage(nextPage);
         setHasMore(nextPage * PAGE_SIZE < result.total);
       } catch (err: unknown) {
+        if (requestId !== loadRequestIdRef.current || isClosingRef.current) {
+          return;
+        }
+
         setError(err instanceof Error ? err.message : "Erreur lors du chargement des images.");
       } finally {
+        if (requestId !== loadRequestIdRef.current) {
+          return;
+        }
+
         if (reset) {
           setIsLoading(false);
         } else {
@@ -290,9 +306,23 @@ export default function ImagePickerDialog({
 
   useEffect(() => {
     if (!open) {
+      loadRequestIdRef.current += 1;
+      isClosingRef.current = false;
+      setActiveTab("library");
+      setSearch("");
+      setItems([]);
+      setPage(1);
+      setHasMore(true);
+      setIsLoading(false);
+      setIsLoadingMore(false);
+      setError(null);
+      setSelectedExistingId(null);
+      setUploadFile(null);
+      setUploadDimensions(null);
       return;
     }
 
+    isClosingRef.current = false;
     void loadImages(1, true);
   }, [loadImages, open]);
 
@@ -323,11 +353,10 @@ export default function ImagePickerDialog({
     }
 
     if (!nextOpen) {
-      setActiveTab("library");
-      setSearch("");
-      setUploadFile(null);
-      setUploadDimensions(null);
-      setError(null);
+      isClosingRef.current = true;
+      loadRequestIdRef.current += 1;
+      setIsLoading(false);
+      setIsLoadingMore(false);
     }
 
     onOpenChange(nextOpen);
@@ -414,7 +443,7 @@ export default function ImagePickerDialog({
               </div>
             ) : null}
 
-            {isLoading ? (
+            {isLoading && items.length === 0 ? (
               <PickerLoadingGrid />
             ) : items.length === 0 ? (
               <PickerEmptyState

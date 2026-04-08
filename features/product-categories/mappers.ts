@@ -18,7 +18,7 @@ type ProductSubcategoryWithCounts = {
   createdAt: Date;
   updatedAt: Date;
   _count: {
-    productFamilies: number;
+    productLinks: number;
   };
 };
 
@@ -27,6 +27,7 @@ type ProductCategoryWithRelations = {
   name: string;
   subtitle: string | null;
   slug: string;
+  themeColor: string | null;
   description: string | null;
   descriptionSeo: string | null;
   imageMediaId: bigint | null;
@@ -61,7 +62,7 @@ function mapProductSubcategoryToListItemDto(
     imageMediaId: toNumber(subcategory.imageMediaId),
     sortOrder: subcategory.sortOrder,
     isActive: subcategory.isActive,
-    productFamilyCount: subcategory._count.productFamilies,
+    productFamilyCount: subcategory._count.productLinks,
     createdAt: subcategory.createdAt.toISOString(),
     updatedAt: subcategory.updatedAt.toISOString(),
   };
@@ -79,6 +80,7 @@ export function mapProductCategoryToListItemDto(
     name: category.name,
     subtitle: category.subtitle,
     slug: category.slug,
+    themeColor: category.themeColor,
     description: category.description,
     descriptionSeo: category.descriptionSeo,
     imageMediaId: toNumber(category.imageMediaId),

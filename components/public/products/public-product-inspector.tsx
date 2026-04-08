@@ -21,18 +21,12 @@ import {
   type PublicProductInspectorMedia,
   type PublicProductInspectorVariant,
 } from "@/features/products/public";
-import { getProductPriceUnitSymbol } from "@/features/products/price-units";
-import { normalizeProductAttributeMetadataName } from "@/features/product-attribute-metadata/normalize";
+import type { PublicProductBreadcrumb } from "@/features/products/public-breadcrumb";
 import { cn } from "@/lib/utils";
 
 type PublicProductInspectorViewProps = {
   product: PublicProductInspector;
-  breadcrumb: {
-    categoryName: string;
-    categorySlug: string;
-    subcategoryName: string;
-    subcategorySlug: string;
-  };
+  breadcrumb?: PublicProductBreadcrumb | null;
 };
 
 type SpecialAttributeKind = "COLOR" | "FINISH";
@@ -60,7 +54,7 @@ type NormalAttributeOption = {
 };
 
 type NormalAttributeGroup = {
-  attributeId: number;
+  attributeId: string;
   name: string;
   unit: string | null;
   options: NormalAttributeOption[];
@@ -91,7 +85,7 @@ type RailScrollState = {
 };
 
 function normalizeComparableValue(value: string | null | undefined) {
-  return normalizeProductAttributeMetadataName(value ?? "");
+  return value ?? "";
 }
 
 function resolveInitialVariantId(product: PublicProductInspector) {
@@ -120,7 +114,7 @@ function getVariantSpecialValue(
 
 function getVariantAttributeValue(
   variant: PublicProductInspectorVariant,
-  attributeId: number,
+  attributeId: string,
 ) {
   return variant.attributes.find(
     (attribute) => attribute.attributeId === attributeId && attribute.specialType == null,
@@ -194,7 +188,7 @@ function buildFinishOptions(product: PublicProductInspector) {
 }
 
 function buildNormalAttributeGroups(product: PublicProductInspector) {
-  const groups = new Map<number, NormalAttributeGroup>();
+  const groups = new Map<string, NormalAttributeGroup>();
 
   for (const variant of product.variants) {
     for (const attribute of variant.attributes) {
@@ -262,7 +256,7 @@ function findVariantBySpecialValues(
 
 function findVariantByNormalAttribute(
   variants: PublicProductInspectorVariant[],
-  attributeId: number,
+  attributeId: string,
   valueKey: string,
 ) {
   return (
@@ -516,7 +510,7 @@ function ColorBlob({
               hasFailure
                 ? undefined
                 : {
-                    backgroundColor: option.reference?.hexValue,
+                    backgroundColor: option.reference?.hexValue ?? undefined,
                   }
             }
           />
@@ -644,7 +638,7 @@ function CommercialModeAction({
 }: {
   commercialMode: PublicProductInspectorVariant["commercialMode"];
 }) {
-  if (commercialMode === "SELLABLE") {
+  if (commercialMode === "ONLINE_ONLY") {
     return (
       <AnimatedUIButton size="md" variant="secondary" onClick={() => undefined}>
         Acheter
@@ -652,10 +646,18 @@ function CommercialModeAction({
     );
   }
 
-  if (commercialMode === "QUOTE_ONLY") {
+  if (commercialMode === "ON_REQUEST_OR_ONLINE") {
+    return (
+      <AnimatedUIButton size="md" variant="secondary" onClick={() => undefined}>
+        Acheter
+      </AnimatedUIButton>
+    );
+  }
+
+  if (commercialMode === "ON_REQUEST_ONLY") {
     return (
       <AnimatedUIButton size="md" variant="outline" onClick={() => undefined}>
-        Demander un devis
+        Demander
       </AnimatedUIButton>
     );
   }
@@ -671,7 +673,6 @@ export default function PublicProductInspectorView({
   product,
   breadcrumb,
 }: PublicProductInspectorViewProps) {
-  const unitSymbol = getProductPriceUnitSymbol(product.priceUnit);
   const variantRailRef = useRef<HTMLDivElement | null>(null);
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
@@ -695,7 +696,7 @@ export default function PublicProductInspectorView({
   const selectedColor = getVariantSpecialValue(selectedVariant, "COLOR");
   const selectedFinish = getVariantSpecialValue(selectedVariant, "FINISH");
   const selectedPrice =
-    selectedVariant?.priceVisibility === "VISIBLE"
+    selectedVariant?.priceVisibility
       ? formatPriceParts(selectedVariant.basePriceAmount)
       : null;
   const descriptionPlainText = getArticlePlainText(selectedVariant?.description ?? null);
@@ -814,7 +815,7 @@ export default function PublicProductInspectorView({
     }
   };
 
-  const handleNormalAttributeSelect = (attributeId: number, valueKey: string) => {
+  const handleNormalAttributeSelect = (attributeId: string, valueKey: string) => {
     const targetVariant = findVariantByNormalAttribute(product.variants, attributeId, valueKey);
 
     if (targetVariant) {
@@ -825,9 +826,9 @@ export default function PublicProductInspectorView({
   const copySku = async () => {
     try {
       await copyText(selectedVariant.sku);
-      toast.success("Code copié.");
+      toast.success("SKU copié.");
     } catch {
-      toast.error("Impossible de copier le code produit.");
+      toast.error("Impossible de copier le SKU produit.");
     }
   };
 
@@ -870,25 +871,27 @@ export default function PublicProductInspectorView({
           <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 sm:p-8">
             <div className="space-y-6">
               <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-1.5 text-sm text-slate-500">
-                  <Link href="/produits" className="transition hover:text-cobam-water-blue">
-                    Produits
-                  </Link>
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
-                  <Link
-                    href={`/produits/${breadcrumb.categorySlug}`}
-                    className="transition hover:text-cobam-water-blue"
-                  >
-                    {breadcrumb.categoryName}
-                  </Link>
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
-                  <Link
-                    href={`/produits/${breadcrumb.categorySlug}/${breadcrumb.subcategorySlug}`}
-                    className="transition hover:text-cobam-water-blue"
-                  >
-                    {breadcrumb.subcategoryName}
-                  </Link>
-                </div>
+                {breadcrumb ? (
+                  <div className="flex flex-wrap items-center gap-1.5 text-sm text-slate-500">
+                    <Link href="/produits" className="transition hover:text-cobam-water-blue">
+                      Produits
+                    </Link>
+                    <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+                    <Link
+                      href={`/produits/${breadcrumb.categorySlug}`}
+                      className="transition hover:text-cobam-water-blue"
+                    >
+                      {breadcrumb.categoryName}
+                    </Link>
+                    <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+                    <Link
+                      href={`/produits/${breadcrumb.categorySlug}/${breadcrumb.subcategorySlug}`}
+                      className="transition hover:text-cobam-water-blue"
+                    >
+                      {breadcrumb.subcategoryName}
+                    </Link>
+                  </div>
+                ) : null}
 
                 <div className="space-y-2">
                   <h1 className="w-fit flex flex-wrap items-center gap-3 text-3xl font-semibold tracking-[-0.04em] text-cobam-dark-blue sm:text-4xl">
@@ -903,7 +906,7 @@ export default function PublicProductInspectorView({
 
                   <div className="w-fit flex flex-wrap items-center gap-3">
                     <span className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-                      Code
+                      SKU
                     </span>
                     <span className="text-sm font-semibold text-cobam-dark-blue">{selectedVariant.sku}</span>
                     <AnimatedUIButton
@@ -983,9 +986,6 @@ export default function PublicProductInspectorView({
                       ) : null}
                       <span className="pt-2 text-sm font-medium text-slate-500">TND</span>
                     </div>
-                    {unitSymbol !== "item" ? (
-                      <p className="text-sm text-slate-500">Par {unitSymbol}</p>
-                    ) : null}
                   </div>
 
                   <CommercialModeAction commercialMode={selectedVariant.commercialMode} />

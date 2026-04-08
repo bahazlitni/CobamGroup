@@ -1,19 +1,24 @@
 import type { ReactNode } from "react";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 export default function StaffField({
   id,
   label,
   hint,
   children,
+  fullWidth = false,
+  className = "",
 }: {
   id?: string;
   label: string;
   hint?: string;
   children: ReactNode;
+  fullWidth?: boolean
+  className?: string
 }) {
   return (
-    <div className="space-y-2">
+    <div className={cn("space-y-2", className, fullWidth ? "w-full" : "")}>
       <Label
         htmlFor={id}
         className="text-[15px] font-semibold text-cobam-dark-blue"

@@ -4,6 +4,7 @@ import { Trash2 } from "lucide-react";
 import MediaImageField from "@/components/staff/media/importers/media-image-field";
 import ImagePreview from "@/components/staff/media/importers/ImagePreview";
 import Panel from "@/components/staff/ui/Panel";
+import { PanelAutoCompleteInput } from "@/components/staff/ui";
 import PanelField from "@/components/staff/ui/PanelField";
 import PanelInput from "@/components/staff/ui/PanelInput";
 import {
@@ -19,6 +20,7 @@ import type {
   ProductCategoryEditorFormState,
   ProductSubcategoryEditorState,
 } from "@/features/product-categories/form";
+import { getColorNameSuggestions, resolveColorHex } from "@/lib/static_tables/colors";
 
 type EditableField = keyof ProductCategoryEditorFormState;
 type EditableSubcategoryField = keyof ProductSubcategoryEditorState;
@@ -79,6 +81,7 @@ export default function ProductCategoryEditorPanels({
   const previewDescription =
     buildExcerpt(form.description) ?? buildExcerpt(form.descriptionSeo);
   const hasImage = form.imageMediaId != null;
+  const resolvedThemeColor = resolveColorHex(form.themeColor);
 
   return (
     <StaffEditorLayout
@@ -116,6 +119,16 @@ export default function ProductCategoryEditorPanels({
             <div className="flex flex-wrap gap-2">
               <StaffBadge size="sm" color={form.isActive ? "green" : "default"}>
                 {form.isActive ? "Active" : "Inactive"}
+              </StaffBadge>
+
+              <StaffBadge size="sm" color="secondary">
+                <span className="inline-flex items-center gap-2">
+                  <span
+                    className="h-2.5 w-2.5 rounded-full border border-slate-300"
+                    style={{ backgroundColor: resolvedThemeColor ?? "#9CA3AF" }}
+                  />
+                  Couleur thème
+                </span>
               </StaffBadge>
 
               <StaffBadge size="sm" color="secondary" icon="folder">
@@ -213,7 +226,7 @@ export default function ProductCategoryEditorPanels({
             </PanelField>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-4">
             <PanelField id="category-slug" label="Slug">
               <PanelInput
                 id="category-slug"
@@ -246,6 +259,27 @@ export default function ProductCategoryEditorPanels({
                   { value: "false", label: "Inactive" },
                 ]}
               />
+            </PanelField>
+
+            <PanelField id="category-theme-color" label="Couleur thème">
+              <div className="space-y-3">
+                <PanelAutoCompleteInput
+                  id="category-theme-color"
+                  fullWidth
+                  value={form.themeColor}
+                  suggestions={getColorNameSuggestions(form.themeColor)}
+                  onValueChange={(value) => onFieldChange("themeColor", value ?? "")}
+                  placeholder="Ex. Bleu canard ou #048B9A"
+                />
+
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <span
+                    className="h-3.5 w-3.5 rounded-full border border-slate-300"
+                    style={{ backgroundColor: resolvedThemeColor ?? "#9CA3AF" }}
+                  />
+                  {resolvedThemeColor ?? "Gris par défaut"}
+                </div>
+              </div>
             </PanelField>
           </div>
 

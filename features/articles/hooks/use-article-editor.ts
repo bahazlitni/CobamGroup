@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { normalizeOwnedTagNames } from "@/features/tags/owned";
+import { slugify } from "@/lib/slugify";
 import { normalizeArticleContent } from "../document";
 import {
   createArticleClient,
@@ -43,17 +44,6 @@ export type ArticleEditorState = {
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
-}
-
-function slugify(input: string) {
-  return input
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
 }
 
 function deriveFocusKeyword(title: string) {

@@ -1,6 +1,7 @@
 import type { StaffSession } from "@/features/auth/types";
 import { hasAnyPermission, hasPermission } from "@/features/rbac/access";
 import { PERMISSIONS } from "@/features/rbac/permissions";
+import type { ProductLifecycle } from "@prisma/client";
 
 export function canAccessProducts(session: StaffSession): boolean {
   return hasAnyPermission(session, [
@@ -41,4 +42,29 @@ export function canManageProducts(session: StaffSession): boolean {
     PERMISSIONS.PRODUCTS_DELETE_BELOW_ROLE,
     PERMISSIONS.PRODUCTS_DELETE_OWN,
   ]);
+}
+
+export function canPublishProducts(session: StaffSession): boolean {
+  return hasAnyPermission(session, [
+    PERMISSIONS.PRODUCTS_PUBLISH_ALL,
+    PERMISSIONS.PRODUCTS_PUBLISH_BELOW_ROLE,
+    PERMISSIONS.PRODUCTS_PUBLISH_OWN,
+  ]);
+}
+
+export function canUnpublishProducts(session: StaffSession): boolean {
+  return hasAnyPermission(session, [
+    PERMISSIONS.PRODUCTS_UNPUBLISH_ALL,
+    PERMISSIONS.PRODUCTS_UNPUBLISH_BELOW_ROLE,
+    PERMISSIONS.PRODUCTS_UNPUBLISH_OWN,
+  ]);
+}
+
+export function canToggleProductLifecycle(
+  session: StaffSession,
+  nextLifecycle: ProductLifecycle,
+): boolean {
+  return nextLifecycle === "ACTIVE"
+    ? canPublishProducts(session)
+    : canUnpublishProducts(session);
 }

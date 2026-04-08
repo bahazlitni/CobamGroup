@@ -8,7 +8,7 @@ import {
   getArticleCategoryByIdClient,
   updateArticleCategoryClient,
 } from "../client";
-import { slugifyArticleCategoryName } from "../slug";
+import { slugify } from "@/lib/slugify";
 import type {
   ArticleCategoryDeleteResult,
   ArticleCategoryDetailDto,
@@ -44,7 +44,7 @@ function toFormState(
 function toPayload(state: ArticleCategoryFormState): ArticleCategoryMutationInput {
   return {
     name: state.name.trim(),
-    slug: state.slug.trim() || slugifyArticleCategoryName(state.name),
+    slug: state.slug.trim() || slugify(state.name),
     color: normalizeColor(state.color),
   };
 }

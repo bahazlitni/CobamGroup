@@ -12,7 +12,6 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  BadgeCheck,
   Boxes,
   ChevronDown,
   FileText,
@@ -22,10 +21,7 @@ import {
   Logs,
   LucideProps,
   Package,
-  Paintbrush,
-  Palette,
   Shield,
-  Tags,
   User,
   Users,
 } from "lucide-react";
@@ -40,7 +36,6 @@ import { cn } from "@/lib/utils";
 import { canAccessPersonalDetails, canAccessSecuritySettings } from "@/features/account/access";
 import { canAccessArticleCategories } from "@/features/article-categories/access";
 import { canAccessArticles } from "@/features/articles/access";
-import { canAccessBrands } from "@/features/brands/access";
 import { canAccessMediaLibrary } from "@/features/media/access";
 import { canAccessProductCategories } from "@/features/product-categories/access";
 import { canAccessProducts } from "@/features/products/access";
@@ -153,12 +148,17 @@ const STAFF_TABS: Record<string, StaffTabGroup> = {
     }
   },
   "gestion-des-produits": {
-    key: "gestions-des-produits",
+    key: "gestion-des-produits",
     label: "Gestion des produits",
     tabs: {
       produits: {
         key: "produits",
-        label: "Produits",
+        label: "Tous les produits",
+        icon: Package,
+      },
+      familles: {
+        key: "familles",
+        label: "Familles",
         icon: Package,
       },
       packs: {
@@ -166,31 +166,11 @@ const STAFF_TABS: Record<string, StaffTabGroup> = {
         label: "Packs",
         icon: Boxes,
       },
-      "attributs-produits": {
-        key: "attributs-produits",
-        label: "Attributs produit",
-        icon: Tags,
-      },
-      finitions: {
-        key: "finitions",
-        label: "Finitions",
-        icon: Paintbrush,
-      },
-      couleurs: {
-        key: "couleurs",
-        label: "Couleurs",
-        icon: Palette,
-      },
       "categories-produits": {
           key: "categories-produits",
           label: "Catégories produits",
           icon: ListTree,
         },
-      marques: {
-        key: "marques",
-        label: "Marques",
-        icon: BadgeCheck,
-      },
     }
   },
   autres: {
@@ -262,12 +242,9 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
         "categories-articles": user ? canAccessArticleCategories(user) : false,
       },
       "gestion-des-produits": {
-        marques: user ? canAccessBrands(user) : false,
         produits: user ? canAccessProducts(user) : false,
+        familles: user ? canAccessProducts(user) : false,
         packs: user ? canAccessProducts(user) : false,
-        "attributs-produits": user ? canAccessProducts(user) : false,
-        finitions: user ? canAccessProducts(user) : false,
-        couleurs: user ? canAccessProducts(user) : false,
         "categories-produits": user
           ? canAccessProductCategories(user)
           : false,

@@ -1,7 +1,7 @@
 import type { Article } from "@prisma/client";
 import { resolveAccessFromAssignments } from "@/features/rbac/user-access";
 import { parseOwnedTagString } from "@/features/tags/owned";
-import { slugifyTagName } from "@/features/tags/slug";
+import { slugify } from "@/lib/slugify";
 import type {
   ArticleAbilitiesDto,
   ArticleCategoryAssignmentDto,
@@ -143,7 +143,7 @@ function mapArticleTags(article: {
 }): ArticleTagDto[] {
   return parseOwnedTagString(article.tags).map((name) => ({
     name,
-    slug: slugifyTagName(name),
+    slug: slugify(name),
   }));
 }
 

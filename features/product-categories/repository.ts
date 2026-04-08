@@ -50,7 +50,7 @@ const productSubcategorySelect = {
   updatedAt: true,
   _count: {
     select: {
-      productFamilies: true,
+      productLinks: true,
     },
   },
 } satisfies Prisma.ProductSubcategorySelect;
@@ -60,6 +60,7 @@ const productCategorySelect = {
   name: true,
   subtitle: true,
   slug: true,
+  themeColor: true,
   description: true,
   descriptionSeo: true,
   imageMediaId: true,
@@ -219,7 +220,7 @@ export async function findProductSubcategoriesByCategoryAndSlugs(input: {
       name: true,
       _count: {
         select: {
-          productFamilies: true,
+          productLinks: true,
         },
       },
     },
@@ -235,6 +236,7 @@ export async function createProductCategory(
         name: input.name,
         subtitle: input.subtitle,
         slug: input.slug,
+        themeColor: input.themeColor,
         description: input.description,
         descriptionSeo: input.descriptionSeo,
         imageMediaId:
@@ -269,6 +271,7 @@ export async function updateProductCategory(
         name: input.name,
         subtitle: input.subtitle,
         slug: input.slug,
+        themeColor: input.themeColor,
         description: input.description,
         descriptionSeo: input.descriptionSeo,
         imageMediaId:
@@ -294,11 +297,13 @@ export async function deleteProductCategory(categoryId: number) {
 }
 
 export async function countProductFamiliesForCategory(categoryId: number) {
-  return prisma.productFamily.count({
+  return prisma.product.count({
     where: {
-      subcategories: {
+      subcategoryLinks: {
         some: {
-          categoryId: BigInt(categoryId),
+          subcategory: {
+            categoryId: BigInt(categoryId),
+          },
         },
       },
     },
@@ -325,7 +330,7 @@ export async function countProductFamiliesForSubcategories(
       name: true,
       _count: {
         select: {
-          productFamilies: true,
+          productLinks: true,
         },
       },
     },

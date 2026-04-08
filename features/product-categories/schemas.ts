@@ -176,6 +176,7 @@ function parseProductCategoryInputBase(
     name: parseRequiredString(raw.name, "name"),
     subtitle: parseOptionalString(raw.subtitle),
     slug: parseRequiredString(raw.slug, "slug"),
+    themeColor: parseOptionalString(raw.themeColor),
     description: parseOptionalString(raw.description),
     descriptionSeo: parseOptionalString(raw.descriptionSeo),
     imageMediaId: parseOptionalPositiveInteger(raw.imageMediaId, "imageMediaId"),

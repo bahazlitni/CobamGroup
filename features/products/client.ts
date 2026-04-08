@@ -2,22 +2,14 @@
 
 import { staffApiFetch } from "@/lib/api/auth/staff/api-fetch";
 import type {
-  ProductCreateInput,
-  ProductDetailDto,
+  ProductFamilyDetailDto,
+  ProductFamilyListResult,
+  ProductFamilyUpsertInput,
   ProductFormOptionsDto,
-  ProductListResult,
-  ProductUpdateInput,
 } from "./types";
 
 type ApiOk<T> = { ok: true } & T;
 type ApiFail = { ok: false; message?: string };
-
-type ProductListResponse = ApiOk<ProductListResult> | ApiFail;
-type ProductDetailResponse = ApiOk<{ product: ProductDetailDto }> | ApiFail;
-type ProductOptionsResponse =
-  | ApiOk<{ options: ProductFormOptionsDto }>
-  | ApiFail;
-type ProductDeleteResponse = ApiOk<Record<string, never>> | ApiFail;
 
 export class ProductsClientError extends Error {
   status: number;
@@ -36,68 +28,22 @@ async function parseJsonSafe<T>(res: Response): Promise<T | null> {
   }
 }
 
-function getApiErrorMessage(data: unknown): string | undefined {
-  if (
-    data &&
-    typeof data === "object" &&
-    "message" in data &&
-    typeof data.message === "string"
-  ) {
-    return data.message;
-  }
+async function unwrapResponse<T>(
+  res: Response,
+  fallbackMessage: string,
+): Promise<T> {
+  const payload = await parseJsonSafe<(ApiOk<T> | ApiFail)>(res);
 
-  return undefined;
-}
-
-function buildListParams(params: {
-  page?: number;
-  pageSize?: number;
-  q?: string;
-  brandId?: number;
-  productSubcategoryId?: number;
-}) {
-  const search = new URLSearchParams();
-
-  if (params.page != null) search.set("page", String(params.page));
-  if (params.pageSize != null) search.set("pageSize", String(params.pageSize));
-  if (params.q?.trim()) search.set("q", params.q.trim());
-  if (params.brandId != null) search.set("brandId", String(params.brandId));
-  if (params.productSubcategoryId != null) {
-    search.set("productSubcategoryId", String(params.productSubcategoryId));
-  }
-
-  return search.toString();
-}
-
-export async function listProductsClient(params: {
-  page?: number;
-  pageSize?: number;
-  q?: string;
-  brandId?: number;
-  productSubcategoryId?: number;
-}): Promise<ProductListResult> {
-  const query = buildListParams(params);
-
-  const res = await staffApiFetch(
-    `/api/staff/products${query ? `?${query}` : ""}`,
-    { method: "GET", auth: true },
-  );
-
-  const data = await parseJsonSafe<ProductListResponse>(res);
-
-  if (!res.ok || !data?.ok) {
+  if (!res.ok || !payload || !("ok" in payload) || !payload.ok) {
     throw new ProductsClientError(
-      getApiErrorMessage(data) || "Erreur lors du chargement des produits",
+      payload && "message" in payload && payload.message
+        ? payload.message
+        : fallbackMessage,
       res.status,
     );
   }
 
-  return {
-    items: data.items,
-    total: data.total,
-    page: data.page,
-    pageSize: data.pageSize,
-  };
+  return payload;
 }
 
 export async function getProductFormOptionsClient(): Promise<ProductFormOptionsDto> {
@@ -105,96 +51,96 @@ export async function getProductFormOptionsClient(): Promise<ProductFormOptionsD
     method: "GET",
     auth: true,
   });
+  const payload = await unwrapResponse<{ options: ProductFormOptionsDto }>(
+    res,
+    "Impossible de charger les options produit.",
+  );
 
-  const data = await parseJsonSafe<ProductOptionsResponse>(res);
-
-  if (!res.ok || !data?.ok || !data.options) {
-    throw new ProductsClientError(
-      getApiErrorMessage(data) || "Erreur lors du chargement des options produit",
-      res.status,
-    );
-  }
-
-  return data.options;
+  return payload.options;
 }
 
-export async function getProductByIdClient(
-  productId: number,
-): Promise<ProductDetailDto> {
-  const res = await staffApiFetch(`/api/staff/products/${productId}`, {
+export async function listProductsClient(input: {
+  page: number;
+  pageSize: number;
+  q?: string;
+}): Promise<ProductFamilyListResult> {
+  const search = new URLSearchParams({
+    page: String(input.page),
+    pageSize: String(input.pageSize),
+  });
+  if (input.q?.trim()) {
+    search.set("q", input.q.trim());
+  }
+
+  const res = await staffApiFetch(`/api/staff/products?${search.toString()}`, {
     method: "GET",
     auth: true,
   });
+  return unwrapResponse<ProductFamilyListResult>(
+    res,
+    "Impossible de charger les familles produit.",
+  );
+}
 
-  const data = await parseJsonSafe<ProductDetailResponse>(res);
+export async function getProductClient(id: number): Promise<ProductFamilyDetailDto> {
+  const res = await staffApiFetch(`/api/staff/products/${id}`, {
+    method: "GET",
+    auth: true,
+  });
+  const payload = await unwrapResponse<{ product: ProductFamilyDetailDto }>(
+    res,
+    "Impossible de charger la famille produit.",
+  );
 
-  if (!res.ok || !data?.ok || !data.product) {
-    throw new ProductsClientError(
-      getApiErrorMessage(data) || "Erreur lors du chargement du produit",
-      res.status,
-    );
-  }
-
-  return data.product;
+  return payload.product;
 }
 
 export async function createProductClient(
-  input: ProductCreateInput,
-): Promise<ProductDetailDto> {
+  input: ProductFamilyUpsertInput,
+): Promise<ProductFamilyDetailDto> {
   const res = await staffApiFetch("/api/staff/products", {
     method: "POST",
     auth: true,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(input),
   });
+  const payload = await unwrapResponse<{ product: ProductFamilyDetailDto }>(
+    res,
+    "Impossible de créer la famille produit.",
+  );
 
-  const data = await parseJsonSafe<ProductDetailResponse>(res);
-
-  if (!res.ok || !data?.ok || !data.product) {
-    throw new ProductsClientError(
-      getApiErrorMessage(data) || "Erreur lors de la création du produit",
-      res.status,
-    );
-  }
-
-  return data.product;
+  return payload.product;
 }
 
 export async function updateProductClient(
-  productId: number,
-  input: ProductUpdateInput,
-): Promise<ProductDetailDto> {
-  const res = await staffApiFetch(`/api/staff/products/${productId}`, {
+  id: number,
+  input: ProductFamilyUpsertInput,
+): Promise<ProductFamilyDetailDto> {
+  const res = await staffApiFetch(`/api/staff/products/${id}`, {
     method: "PUT",
     auth: true,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(input),
   });
+  const payload = await unwrapResponse<{ product: ProductFamilyDetailDto }>(
+    res,
+    "Impossible de mettre à jour la famille produit.",
+  );
 
-  const data = await parseJsonSafe<ProductDetailResponse>(res);
-
-  if (!res.ok || !data?.ok || !data.product) {
-    throw new ProductsClientError(
-      getApiErrorMessage(data) || "Erreur lors de la mise à jour du produit",
-      res.status,
-    );
-  }
-
-  return data.product;
+  return payload.product;
 }
 
-export async function deleteProductClient(productId: number): Promise<void> {
-  const res = await staffApiFetch(`/api/staff/products/${productId}`, {
+export async function deleteProductClient(id: number) {
+  const res = await staffApiFetch(`/api/staff/products/${id}`, {
     method: "DELETE",
     auth: true,
   });
-
-  const data = await parseJsonSafe<ProductDeleteResponse>(res);
-
-  if (!res.ok || !data?.ok) {
-    throw new ProductsClientError(
-      getApiErrorMessage(data) || "Erreur lors de la suppression du produit",
-      res.status,
-    );
-  }
+  await unwrapResponse<Record<string, never>>(
+    res,
+    "Impossible de supprimer la famille produit.",
+  );
 }

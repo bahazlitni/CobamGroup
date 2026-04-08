@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { makeMediaPublicMany } from "@/features/media/repository";
 import { prisma } from "@/lib/server/db/prisma";
+import { resolveColorHex } from "@/lib/static_tables/colors";
 import type {
   PublicMegaMenuProductCategory,
   PublicProductCategoryPageData,
@@ -18,6 +19,7 @@ type PublicProductCategoryRecord = {
   name: string;
   subtitle: string | null;
   slug: string;
+  themeColor: string | null;
   description: string | null;
   descriptionSeo: string | null;
   imageMediaId: bigint | null;
@@ -49,6 +51,7 @@ type PublicProductSubcategoryRecord = {
     id: bigint;
     name: string;
     slug: string;
+    themeColor: string | null;
   };
 };
 
@@ -57,6 +60,7 @@ const publicCategorySelect = {
   name: true,
   subtitle: true,
   slug: true,
+  themeColor: true,
   description: true,
   descriptionSeo: true,
   imageMediaId: true,
@@ -113,6 +117,7 @@ const publicSubcategorySelect = {
       id: true,
       name: true,
       slug: true,
+      themeColor: true,
     },
   },
 } satisfies Prisma.ProductSubcategorySelect;
@@ -205,11 +210,12 @@ function mapRootCategoryToMenuItem(
     imageUrlHD: images.imageUrlHD,
     slug: category.slug,
     parent: null,
+    themeColor: resolveColorHex(category.themeColor),
   };
 }
 
 function mapSubcategoryToMenuItem(
-  category: Pick<PublicProductCategoryRecord, "slug">,
+  category: Pick<PublicProductCategoryRecord, "slug" | "themeColor">,
   subcategory: PublicProductCategoryRecord["subcategories"][number],
 ): PublicMegaMenuProductCategory {
   const images = getPublicImageUrls(subcategory);
@@ -227,6 +233,7 @@ function mapSubcategoryToMenuItem(
     imageUrlHD: images.imageUrlHD,
     slug: subcategory.slug,
     parent: category.slug,
+    themeColor: resolveColorHex(category.themeColor),
   };
 }
 
@@ -240,6 +247,7 @@ function mapCategoryToPageData(
     name: category.name,
     subtitle: category.subtitle?.trim() ?? "",
     slug: category.slug,
+    themeColor: resolveColorHex(category.themeColor),
     description: category.description?.trim() ?? "",
     descriptionSEO:
       category.descriptionSeo?.trim() ?? category.description?.trim() ?? "",
@@ -261,6 +269,7 @@ function mapSubcategoryToPageData(
     name: subcategory.name,
     subtitle: subcategory.subtitle?.trim() ?? "",
     slug: subcategory.slug,
+    themeColor: resolveColorHex(subcategory.category.themeColor),
     description: subcategory.description?.trim() ?? "",
     descriptionSEO:
       subcategory.descriptionSeo?.trim() ?? subcategory.description?.trim() ?? "",
@@ -275,7 +284,7 @@ function mapSubcategoryToPageData(
 function mapSubcategoryToCardData(
   category: Pick<PublicProductCategoryRecord, "slug">,
   subcategory: PublicProductCategoryRecord["subcategories"][number] & {
-    productFamilies?: Array<{ id: bigint }>;
+    productLinks?: Array<{ productId: bigint }>;
   },
 ): PublicProductSubcategoryCardData {
   const images = getPublicImageUrls(subcategory);
@@ -291,7 +300,7 @@ function mapSubcategoryToCardData(
     href: `/produits/${category.slug}/${subcategory.slug}`,
     imageUrl: images.imageOriginalUrl,
     imageThumbnailUrl: images.imageThumbnailUrl,
-    productCount: subcategory.productFamilies?.length ?? 0,
+    productCount: subcategory.productLinks?.length ?? 0,
   };
 }
 
@@ -373,6 +382,7 @@ export async function listPublicProductSubcategoryCardsByCategorySlug(
       name: true,
       subtitle: true,
       slug: true,
+      themeColor: true,
       description: true,
       descriptionSeo: true,
       imageMediaId: true,
@@ -404,20 +414,18 @@ export async function listPublicProductSubcategoryCardsByCategorySlug(
               deletedAt: true,
             },
           },
-          productFamilies: {
+          productLinks: {
             where: {
-              brand: {
-                deletedAt: null,
-              },
-              variants: {
-                some: {
-                  lifecycleStatus: "ACTIVE",
-                  visibility: "PUBLIC",
+              product: {
+                lifecycle: "ACTIVE",
+                visibility: true,
+                kind: {
+                  in: ["SINGLE", "VARIANT", "PACK"],
                 },
               },
             },
             select: {
-              id: true,
+              productId: true,
             },
           },
         },

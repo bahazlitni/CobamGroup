@@ -13,9 +13,13 @@ export function mapMediaListItemToProductMedia(
     originalFilename: media.originalFilename,
     altText: media.altText,
     mimeType: media.mimeType,
-    extension: media.extension,
     widthPx: media.widthPx,
     heightPx: media.heightPx,
-    sizeBytes: media.sizeBytes,
+    durationSeconds:
+      media.durationSeconds == null ? null : String(media.durationSeconds),
+    sizeBytes: media.sizeBytes == null ? null : String(media.sizeBytes),
+    url: media.publicFileEndpoint || media.fileEndpoint,
+    thumbnailUrl:
+      media.kind === "IMAGE" ? `${media.publicFileEndpoint || media.fileEndpoint}?variant=thumbnail` : null,
   };
 }

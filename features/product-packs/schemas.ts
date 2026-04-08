@@ -1,19 +1,4 @@
-import {
-  PRODUCT_COMMERCIAL_MODE_OPTIONS,
-  PRODUCT_LIFECYCLE_STATUS_OPTIONS,
-  PRODUCT_PRICE_VISIBILITY_OPTIONS,
-  PRODUCT_VISIBILITY_OPTIONS,
-} from "@/features/products/types";
-import {
-  PRODUCT_PACK_OVERRIDE_MODE_OPTIONS,
-  PRODUCT_PACK_PAGE_SIZE_OPTIONS,
-  type ProductPackCreateInput,
-  type ProductPackLineInput,
-  type ProductPackListQuery,
-  type ProductPackOverrideMode,
-  type ProductPackPageSize,
-  type ProductPackUpdateInput,
-} from "./types";
+import type { ProductPackUpsertInput } from "./types";
 
 export class ProductPackValidationError extends Error {
   status: number;
@@ -24,222 +9,111 @@ export class ProductPackValidationError extends Error {
   }
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function parseRequiredString(value: unknown, fieldName: string) {
-  if (typeof value !== "string" || !value.trim()) {
-    throw new ProductPackValidationError(`Missing or invalid field "${fieldName}"`);
-  }
-
-  return value.trim();
+function parsePositiveInteger(value: string | null | undefined, fallback: number) {
+  const parsed = value == null ? fallback : Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
 function parseOptionalString(value: unknown) {
-  if (value == null) return null;
-  if (typeof value !== "string") {
-    throw new ProductPackValidationError("Invalid optional string field");
+  if (value == null) {
+    return null;
   }
 
-  const trimmed = value.trim();
-  return trimmed ? trimmed : null;
+  const normalized = String(value).trim();
+  return normalized ? normalized : null;
 }
 
-function parsePositiveInteger(value: unknown, fieldName: string): number {
-  const parsed =
-    typeof value === "number" ? value : typeof value === "string" ? Number(value) : Number.NaN;
+function parseRequiredString(value: unknown, fieldName: string) {
+  const normalized = parseOptionalString(value);
+  if (!normalized) {
+    throw new ProductPackValidationError(`Champ requis: ${fieldName}.`);
+  }
+  return normalized;
+}
 
+export function parseProductPackListQuery(searchParams: URLSearchParams) {
+  return {
+    page: parsePositiveInteger(searchParams.get("page"), 1),
+    pageSize: parsePositiveInteger(searchParams.get("pageSize"), 20),
+    q: parseOptionalString(searchParams.get("q")),
+  };
+}
+
+export function parseProductPackIdParam(value: string) {
+  const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new ProductPackValidationError(`Invalid ${fieldName}`);
+    throw new ProductPackValidationError("Identifiant de pack invalide.");
   }
-
   return parsed;
 }
 
-function parseNonNegativeInteger(value: unknown, fieldName: string): number {
-  const parsed =
-    typeof value === "number" ? value : typeof value === "string" ? Number(value) : Number.NaN;
-
-  if (!Number.isInteger(parsed) || parsed < 0) {
-    throw new ProductPackValidationError(`Invalid ${fieldName}`);
+export function parseProductPackCreateInput(input: unknown): ProductPackUpsertInput {
+  if (!input || typeof input !== "object") {
+    throw new ProductPackValidationError("Corps de requête invalide.");
   }
 
-  return parsed;
-}
-
-function parsePositiveIntegerArray(value: unknown, fieldName: string): number[] {
-  if (!Array.isArray(value)) {
-    throw new ProductPackValidationError(`Invalid ${fieldName}`);
-  }
-
-  const parsed = Array.from(
-    new Set(value.map((item, index) => parsePositiveInteger(item, `${fieldName}[${index}]`))),
-  );
-
-  if (parsed.length === 0) {
-    throw new ProductPackValidationError(`Missing ${fieldName}`);
-  }
-
-  return parsed;
-}
-
-function parseOptionalPositiveIntegerCollection(
-  value: unknown,
-  arrayFieldName: string,
-  singleFieldName = arrayFieldName,
-): number[] {
-  if (value == null || value === "") {
-    return [];
-  }
-
-  if (Array.isArray(value)) {
-    if (value.length === 0) {
-      return [];
-    }
-
-    return parsePositiveIntegerArray(value, arrayFieldName);
-  }
-
-  return [parsePositiveInteger(value, singleFieldName)];
-}
-
-function parseOptionalId(value: unknown, fieldName: string) {
-  if (value == null || value === "") {
-    return null;
-  }
-
-  return parsePositiveInteger(value, fieldName);
-}
-
-function parseEnumValue<T extends readonly string[]>(
-  value: unknown,
-  options: T,
-  fieldName: string,
-): T[number] {
-  if (typeof value !== "string" || !options.includes(value)) {
-    throw new ProductPackValidationError(`Invalid ${fieldName}`);
-  }
-
-  return value as T[number];
-}
-
-function parseOptionalEnumValue<T extends readonly string[]>(
-  value: unknown,
-  options: T,
-  fieldName: string,
-): T[number] | null {
-  if (value == null || value === "") {
-    return null;
-  }
-
-  return parseEnumValue(value, options, fieldName);
-}
-
-function parsePackLine(raw: unknown, index: number): ProductPackLineInput {
-  if (!isRecord(raw)) {
-    throw new ProductPackValidationError(`Invalid lines[${index}]`);
-  }
+  const record = input as Record<string, unknown>;
+  const lines = Array.isArray(record.lines) ? record.lines : [];
 
   return {
-    variantId: parsePositiveInteger(raw.variantId, `lines[${index}].variantId`),
-    quantity: parsePositiveInteger(raw.quantity ?? 1, `lines[${index}].quantity`),
-    sortOrder: parseNonNegativeInteger(raw.sortOrder ?? index, `lines[${index}].sortOrder`),
+    sku: parseRequiredString(record.sku, "sku"),
+    slug: parseRequiredString(record.slug, "slug"),
+    name: parseRequiredString(record.name, "name"),
+    description: parseOptionalString(record.description),
+    descriptionSeo: parseOptionalString(record.descriptionSeo),
+    subcategoryIds: (Array.isArray(record.subcategoryIds) ? record.subcategoryIds : []).map((entry) => {
+      const parsed = Number(entry);
+      if (!Number.isInteger(parsed) || parsed <= 0) {
+        throw new ProductPackValidationError("Sous-catégorie de pack invalide.");
+      }
+      return parsed;
+    }),
+    media: (Array.isArray(record.media) ? record.media : []).map((entry) => {
+      if (!entry || typeof entry !== "object") {
+        throw new ProductPackValidationError("Média de pack invalide.");
+      }
+      const mediaRecord = entry as Record<string, unknown>;
+      const parsedId = Number(mediaRecord.id);
+      if (!Number.isInteger(parsedId) || parsedId <= 0) {
+        throw new ProductPackValidationError("Identifiant de média invalide.");
+      }
+      return {
+        id: parsedId,
+        kind: "kind" in mediaRecord ? String(mediaRecord.kind) as "IMAGE" | "VIDEO" | "DOCUMENT" : "IMAGE",
+        title: parseOptionalString(mediaRecord.title),
+        originalFilename: parseOptionalString(mediaRecord.originalFilename),
+        mimeType: parseOptionalString(mediaRecord.mimeType),
+        altText: parseOptionalString(mediaRecord.altText),
+        widthPx: mediaRecord.widthPx == null ? null : Number(mediaRecord.widthPx),
+        heightPx: mediaRecord.heightPx == null ? null : Number(mediaRecord.heightPx),
+        durationSeconds: mediaRecord.durationSeconds == null ? null : String(mediaRecord.durationSeconds),
+        sizeBytes: mediaRecord.sizeBytes == null ? null : String(mediaRecord.sizeBytes),
+        url: typeof mediaRecord.url === "string" ? mediaRecord.url : "",
+        thumbnailUrl:
+          typeof mediaRecord.thumbnailUrl === "string"
+            ? mediaRecord.thumbnailUrl
+            : null,
+      };
+    }),
+    lines: lines.map((entry) => {
+      if (!entry || typeof entry !== "object") {
+        throw new ProductPackValidationError("Ligne de pack invalide.");
+      }
+      const lineRecord = entry as Record<string, unknown>;
+      const productId = Number(lineRecord.productId);
+      const quantity = Number(lineRecord.quantity);
+      if (!Number.isInteger(productId) || productId <= 0) {
+        throw new ProductPackValidationError("Produit de pack invalide.");
+      }
+      if (!Number.isInteger(quantity) || quantity <= 0) {
+        throw new ProductPackValidationError("Quantité de pack invalide.");
+      }
+      return {
+        productId,
+        quantity,
+      };
+    }),
   };
 }
 
-function parsePackLines(value: unknown) {
-  if (!Array.isArray(value) || value.length === 0) {
-    throw new ProductPackValidationError("Missing lines");
-  }
-
-  return value.map((item, index) => parsePackLine(item, index));
-}
-
-function parseProductPackInputBase(raw: unknown): ProductPackCreateInput {
-  if (!isRecord(raw)) {
-    throw new ProductPackValidationError("Invalid request body");
-  }
-
-  return {
-    name: parseRequiredString(raw.name, "name"),
-    sku: parseRequiredString(raw.sku, "sku"),
-    description: parseOptionalString(raw.description),
-    descriptionSeo: parseOptionalString(raw.descriptionSeo),
-    productSubcategoryIds: parsePositiveIntegerArray(
-      raw.productSubcategoryIds,
-      "productSubcategoryIds",
-    ),
-    commercialMode: parseEnumValue(
-      raw.commercialMode,
-      PRODUCT_COMMERCIAL_MODE_OPTIONS,
-      "commercialMode",
-    ),
-    lifecycleStatusMode: parseEnumValue(
-      raw.lifecycleStatusMode ?? "AUTO",
-      PRODUCT_PACK_OVERRIDE_MODE_OPTIONS,
-      "lifecycleStatusMode",
-    ) as ProductPackOverrideMode,
-    manualLifecycleStatus: parseOptionalEnumValue(
-      raw.manualLifecycleStatus,
-      PRODUCT_LIFECYCLE_STATUS_OPTIONS,
-      "manualLifecycleStatus",
-    ),
-    visibilityMode: parseEnumValue(
-      raw.visibilityMode ?? "AUTO",
-      PRODUCT_PACK_OVERRIDE_MODE_OPTIONS,
-      "visibilityMode",
-    ) as ProductPackOverrideMode,
-    manualVisibility: parseOptionalEnumValue(
-      raw.manualVisibility,
-      PRODUCT_VISIBILITY_OPTIONS,
-      "manualVisibility",
-    ),
-    priceVisibilityMode: parseEnumValue(
-      raw.priceVisibilityMode ?? "AUTO",
-      PRODUCT_PACK_OVERRIDE_MODE_OPTIONS,
-      "priceVisibilityMode",
-    ) as ProductPackOverrideMode,
-    manualPriceVisibility: parseOptionalEnumValue(
-      raw.manualPriceVisibility,
-      PRODUCT_PRICE_VISIBILITY_OPTIONS,
-      "manualPriceVisibility",
-    ),
-    mainImageMediaId: parseOptionalId(raw.mainImageMediaId, "mainImageMediaId"),
-    mediaIds: parseOptionalPositiveIntegerCollection(raw.mediaIds, "mediaIds"),
-    lines: parsePackLines(raw.lines),
-  };
-}
-
-export function parseProductPackCreateInput(raw: unknown): ProductPackCreateInput {
-  return parseProductPackInputBase(raw);
-}
-
-export function parseProductPackUpdateInput(raw: unknown): ProductPackUpdateInput {
-  return parseProductPackInputBase(raw);
-}
-
-export function parseProductPackIdParam(idParam: string) {
-  return parsePositiveInteger(idParam, "id");
-}
-
-export function parseProductPackListQuery(searchParams: URLSearchParams): ProductPackListQuery {
-  const pageRaw = Number(searchParams.get("page") ?? "1");
-  const page = Number.isInteger(pageRaw) && pageRaw > 0 ? pageRaw : 1;
-
-  const pageSizeRaw = Number(searchParams.get("pageSize") ?? "20");
-  const pageSize = (
-    PRODUCT_PACK_PAGE_SIZE_OPTIONS.includes(pageSizeRaw as ProductPackPageSize)
-      ? pageSizeRaw
-      : 20
-  ) as ProductPackPageSize;
-
-  const qRaw = searchParams.get("q");
-  const q = qRaw?.trim() ? qRaw.trim() : undefined;
-
-  return {
-    page,
-    pageSize,
-    q,
-  };
-}
+export const parseProductPackUpdateInput = parseProductPackCreateInput;

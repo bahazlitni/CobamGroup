@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Check, File, FileText, Upload, Video } from "lucide-react";
 import {
@@ -118,6 +118,8 @@ export default function ProductMediaPickerDialog({
   onOpenChange,
   title,
   description,
+  mediaKind = "ALL",
+  documentExtensions = [],
   excludedMediaIds = [],
   onSelect,
 }: {
@@ -125,6 +127,8 @@ export default function ProductMediaPickerDialog({
   onOpenChange: (open: boolean) => void;
   title: string;
   description: string;
+  mediaKind?: ProductMediaDto["kind"] | "ALL";
+  documentExtensions?: string[];
   excludedMediaIds?: number[];
   onSelect: (media: ProductMediaDto) => void;
 }) {
@@ -141,7 +145,36 @@ export default function ProductMediaPickerDialog({
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadPreviewUrl, setUploadPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const loadRequestIdRef = useRef(0);
+  const isClosingRef = useRef(false);
+  const normalizedDocumentExtensions = useMemo(
+    () =>
+      documentExtensions
+        .map((extension) => extension.trim().toLowerCase().replace(/^\./, ""))
+        .filter(Boolean),
+    [documentExtensions],
+  );
+  const mediaKindLabel =
+    mediaKind === "DOCUMENT"
+      ? normalizedDocumentExtensions.length > 0
+        ? `${normalizedDocumentExtensions.join(", ").toUpperCase()}`
+        : "documents"
+      : mediaKind === "VIDEO"
+        ? "videos"
+        : mediaKind === "IMAGE"
+          ? "images"
+          : "medias";
   const scopedLibraryDescription = `Cette bibliotheque affiche uniquement les medias du dossier ${PRODUCTS_MEDIA_FOLDER_PATH} et de ses sous-dossiers.`;
+  const uploadAccept =
+    mediaKind === "DOCUMENT"
+      ? normalizedDocumentExtensions.length > 0
+        ? normalizedDocumentExtensions.map((extension) => `.${extension}`).join(",")
+        : ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+      : mediaKind === "VIDEO"
+        ? "video/*"
+        : mediaKind === "IMAGE"
+          ? "image/*"
+          : undefined;
 
   const resolveProductsFolderId = useCallback(async () => {
     const folderId = await findMediaFolderIdByPathClient(PRODUCTS_MEDIA_FOLDER_PATH);
@@ -176,9 +209,11 @@ export default function ProductMediaPickerDialog({
 
   const loadMedia = useCallback(
     async (nextPage: number, reset: boolean) => {
-      if (!open) {
+      if (!open || isClosingRef.current) {
         return;
       }
+
+      const requestId = ++loadRequestIdRef.current;
 
       setError(null);
       if (reset) {
@@ -194,18 +229,38 @@ export default function ProductMediaPickerDialog({
           page: nextPage,
           pageSize: PAGE_SIZE,
           q: deferredSearch,
+          kind: mediaKind,
           sortBy: "date",
           sortDirection: "desc",
           folderId,
           includeDescendantFolders: true,
         });
+        const filteredItems =
+          mediaKind === "DOCUMENT" && normalizedDocumentExtensions.length > 0
+            ? result.items.filter((item) => {
+                const extension = item.extension?.trim().toLowerCase().replace(/^\./, "") ?? "";
+                return normalizedDocumentExtensions.includes(extension);
+              })
+            : result.items;
 
-        setItems((current) => (reset ? result.items : [...current, ...result.items]));
+        if (requestId !== loadRequestIdRef.current || isClosingRef.current) {
+          return;
+        }
+
+        setItems((current) => (reset ? filteredItems : [...current, ...filteredItems]));
         setPage(nextPage);
         setHasMore(nextPage * PAGE_SIZE < result.total);
       } catch (err: unknown) {
+        if (requestId !== loadRequestIdRef.current || isClosingRef.current) {
+          return;
+        }
+
         setError(err instanceof Error ? err.message : "Erreur lors du chargement des medias.");
       } finally {
+        if (requestId !== loadRequestIdRef.current) {
+          return;
+        }
+
         if (reset) {
           setIsLoading(false);
         } else {
@@ -213,14 +268,28 @@ export default function ProductMediaPickerDialog({
         }
       }
     },
-    [deferredSearch, open, resolveProductsFolderId],
+    [deferredSearch, mediaKind, normalizedDocumentExtensions, open, resolveProductsFolderId],
   );
 
   useEffect(() => {
     if (!open) {
+      loadRequestIdRef.current += 1;
+      isClosingRef.current = false;
+      setActiveTab("library");
+      setSearch("");
+      setItems([]);
+      setPage(1);
+      setHasMore(true);
+      setIsLoading(false);
+      setIsLoadingMore(false);
+      setUploadFile(null);
+      setUploadPreviewUrl(null);
+      setSelectedMedia(null);
+      setError(null);
       return;
     }
 
+    isClosingRef.current = false;
     setSelectedMedia(null);
     void loadMedia(1, true);
   }, [loadMedia, open]);
@@ -232,18 +301,28 @@ export default function ProductMediaPickerDialog({
       return;
     }
 
-    setActiveTab("library");
-    setSearch("");
-    setUploadFile(null);
-    setUploadPreviewUrl(null);
-    setSelectedMedia(null);
-    setError(null);
+    isClosingRef.current = true;
+    loadRequestIdRef.current += 1;
+    setIsLoading(false);
+    setIsLoadingMore(false);
     onOpenChange(false);
   };
 
   const handleUpload = async () => {
     if (!uploadFile) {
       return;
+    }
+
+    if (mediaKind === "DOCUMENT" && normalizedDocumentExtensions.length > 0) {
+      const uploadExtension = uploadFile.name.split(".").pop()?.trim().toLowerCase() ?? "";
+      if (!normalizedDocumentExtensions.includes(uploadExtension)) {
+        setError(
+          `Seuls les fichiers ${normalizedDocumentExtensions
+            .map((extension) => extension.toUpperCase())
+            .join(", ")} sont acceptes.`,
+        );
+        return;
+      }
     }
 
     setIsUploading(true);
@@ -325,7 +404,7 @@ export default function ProductMediaPickerDialog({
               </div>
             ) : null}
 
-            {isLoading ? (
+            {isLoading && items.length === 0 ? (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {Array.from({ length: 6 }).map((_, index) => (
                   <div
@@ -336,7 +415,7 @@ export default function ProductMediaPickerDialog({
               </div>
             ) : items.length === 0 ? (
               <div className="flex min-h-56 items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500">
-                Aucun media disponible dans {PRODUCTS_MEDIA_FOLDER_PATH} pour le moment.
+                Aucun {mediaKindLabel} disponible dans {PRODUCTS_MEDIA_FOLDER_PATH} pour le moment.
               </div>
             ) : (
               <div className="space-y-4">
@@ -382,11 +461,11 @@ export default function ProductMediaPickerDialog({
               </div>
               <Input
                 type="file"
+                accept={uploadAccept}
                 onChange={(event) => setUploadFile(event.target.files?.[0] ?? null)}
               />
               <p className="text-sm leading-6 text-slate-500">
-                Vous pouvez importer une image, une video ou un document puis l&apos;ajouter
-                directement a cette variante.
+                Vous pouvez importer un nouveau fichier puis l&apos;ajouter directement.
               </p>
             </div>
 

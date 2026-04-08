@@ -8,9 +8,8 @@ import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 import BrandSlider from "@/components/ui/custom/BrandSlider";
 import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
-import { listPublicBrandShowcaseData } from "@/features/brands/public";
 import SuivezNousSection from "@/layout/SuivezNousSection";
-import { PatternLosangeOnWhiteVerticalBottomless } from "@/components/ui/custom/PatternLosange";
+import { PARTNER_BRANDS, REFERENCE_BRANDS } from "@/lib/static_tables/brands";
 
 const newProducts = [
   { name: "AMB ARENISCA PERLA", category: "Sol Intérieur", imageUrl: "/images/collections/amb-arenisca-perla-353x353.jpg", href: "#" },
@@ -58,7 +57,6 @@ const showrooms = ["houmt-souk", "midoun", "centrale", "ceram"];
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const { partners, references } = await listPublicBrandShowcaseData();
 
   return (
     <main className="bg-white text-cobam-dark-blue">
@@ -79,7 +77,6 @@ export default async function Home() {
 
       {/* New Collection */}
       <section className="relative py-24 bg-white">
-          <PatternLosangeOnWhiteVerticalBottomless />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-12 flex-wrap gap-4">
@@ -148,7 +145,7 @@ export default async function Home() {
             centered
             voirPlusLink="/partenaires"
           />
-          <BrandSlider href="/partenaires" brands={partners} />
+          <BrandSlider href="/partenaires" brands={PARTNER_BRANDS} />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -159,7 +156,7 @@ export default async function Home() {
             centered
             voirPlusLink="/references"
           />
-          <BrandSlider href="/references" brands={references} />
+          <BrandSlider href="/references" brands={REFERENCE_BRANDS} />
         </div>
       </section>
 

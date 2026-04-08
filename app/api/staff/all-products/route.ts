@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { AuthError, requireStaffSession } from "@/features/auth/server/session";
 import {
-  AllProductValidationError,
-  parseAllProductListQuery,
+  AllProductsValidationError,
+  parseAllProductsListQuery,
 } from "@/features/all-products/schemas";
 import {
-  AllProductServiceError,
+  AllProductsServiceError,
   listAllProductsService,
 } from "@/features/all-products/service";
 
@@ -13,7 +13,7 @@ export async function GET(req: Request) {
   try {
     const session = await requireStaffSession(req);
     const { searchParams } = new URL(req.url);
-    const query = parseAllProductListQuery(searchParams);
+    const query = parseAllProductsListQuery(searchParams);
 
     const result = await listAllProductsService(session, query);
 
@@ -27,8 +27,8 @@ export async function GET(req: Request) {
   } catch (error: unknown) {
     if (
       error instanceof AuthError ||
-      error instanceof AllProductValidationError ||
-      error instanceof AllProductServiceError
+      error instanceof AllProductsValidationError ||
+      error instanceof AllProductsServiceError
     ) {
       return NextResponse.json(
         { ok: false, message: error.message },

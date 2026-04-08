@@ -2,21 +2,21 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { AnimatedUIButton } from "../components/ui/custom/Buttons";
 
 const slides = [
   {
     id: 1,
-    preTitle: "Carrelage & Revêtements",
-    title: "Créez des espaces uniques",
+    preTitle: "Depuis 1994",
+    title: "Votre partenaire de confiance en Tunisie",
     subtitle:
-      "Découvrez notre collection exclusive de carrelage, faïence et revêtements muraux pour sublimer vos intérieurs.",
-    cta: "Voir les produits",
-    ctaHref: "#produits",
-    image: "/images/hero-section/hero-slider-1.png",
+      "Plus de 30 ans d'expertise au service de vos projets de construction et de rénovation à travers toute la Tunisie.",
+    cta: "Notre histoire",
+    ctaHref: "#societe",
+    image: "/images/hero-section/1.jpg",
   },
+
   {
     id: 2,
     preTitle: "Sanitaire & Bain",
@@ -25,17 +25,17 @@ const slides = [
       "Meubles, vasques, douches et baignoires haut de gamme pour créer votre espace bien-être idéal.",
     cta: "Découvrir",
     ctaHref: "#sanitaires",
-    image: "/images/hero-section/hero-slider-2.png",
+    image: "/images/hero-section/2.jpg",
   },
   {
     id: 3,
-    preTitle: "Depuis 1994",
-    title: "Votre partenaire de confiance en Tunisie",
+    preTitle: "Carrelage & Revêtements",
+    title: "Créez des espaces uniques",
     subtitle:
-      "Plus de 30 ans d'expertise au service de vos projets de construction et de rénovation à travers toute la Tunisie.",
-    cta: "Notre histoire",
-    ctaHref: "#societe",
-    image: "/images/hero-section/hero-slider-3.png",
+      "Découvrez notre collection exclusive de carrelage, faïence et revêtements muraux pour sublimer vos intérieurs.",
+    cta: "Voir les produits",
+    ctaHref: "#produits",
+    image: "/images/hero-section/1.jpg",
   },
 ];
 
@@ -59,7 +59,7 @@ export default function HeroSlider() {
   const prev = useCallback(() => goTo(current - 1), [current, goTo]);
 
   useEffect(() => {
-    const timer = setInterval(next, 5000);
+    const timer = setInterval(next, 10000);
     return () => clearInterval(timer);
   }, [next]);
 
@@ -78,16 +78,17 @@ export default function HeroSlider() {
           src={slide.image}
           alt={slide.title}
           fill
-          className="object-cover object-center"
+          className="object-cover object-center z-0"
           priority
           quality={100}
         />
+        
       </div>
 
 
       {/* Content */}
-      <div className="relative z-10 h-full flex items-center">
-        <div className="rounded-4xl absolute backdrop-blur-md left-1/2 -translate-x-1/2 bg-cobam-dark-blue/50 p-12">
+      <div className="relative z-10 h-full">
+        <div className="rounded-4xl absolute left-1/2 rounded-t-full w-164 h-164 p-20 bg-cobam-dark-blue grid place-items-center -translate-x-1/2 bottom-0">
           <div
             className={`text-center flex flex-col items-center justify-center max-w-2xl transition-all duration-500 ${
               animating

@@ -68,6 +68,7 @@ import {
   getMediaStorageDriver,
   getMediaStorageInfo,
 } from "@/lib/server/storage/media";
+import { normalizeMediaFolderPath } from "./folder-path";
 
 export class MediaServiceError extends Error {
   status: number;
@@ -452,6 +453,33 @@ export async function listMediaService(
     stats: mapMediaStatsDto(stats),
     storage: getMediaStorageInfo(),
   };
+}
+
+export async function resolveMediaFolderIdByPathService(session: StaffSession, path: string) {
+  if (!canAccessMediaLibrary(session)) {
+    throw new MediaServiceError("Acces refuse.", 403);
+  }
+
+  const normalizedPath = normalizeMediaFolderPath(path);
+
+  if (!normalizedPath) {
+    return null;
+  }
+
+  const ownerUserId = getOwnerScope(session);
+  const allFolders = await listAllMediaFolders(ownerUserId);
+  const { buildBreadcrumbsForFolder } = buildMediaFolderPathData(allFolders);
+
+  const folder =
+    allFolders.find((candidate) => {
+      const candidatePath = buildBreadcrumbsForFolder(candidate.id)
+        .map((crumb) => crumb.name)
+        .join("/");
+
+      return normalizeMediaFolderPath(candidatePath) === normalizedPath;
+    }) ?? null;
+
+  return folder ? Number(folder.id) : null;
 }
 
 export async function uploadMediaService(session: StaffSession, input: MediaUploadInput) {

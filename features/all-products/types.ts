@@ -1,52 +1,38 @@
-import type {
-  ProductCommercialMode,
-  ProductLifecycleStatus,
-  ProductPriceUnit,
-  ProductPriceVisibility,
-  ProductVisibility,
-} from "@/features/products/types";
+import type { ProductKind, ProductLifecycle } from "@prisma/client";
 
-export const ALL_PRODUCT_PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
-export type AllProductPageSize = (typeof ALL_PRODUCT_PAGE_SIZE_OPTIONS)[number];
-
-export const ALL_PRODUCT_SOURCE_TYPE_OPTIONS = ["VARIANT", "PACK"] as const;
-export type AllProductSourceType = (typeof ALL_PRODUCT_SOURCE_TYPE_OPTIONS)[number];
-
-export type AllProductListQuery = {
-  page: number;
-  pageSize: AllProductPageSize;
-  q?: string;
-  sourceType?: AllProductSourceType;
-};
-
-export type AllProductListItemDto = {
+export type AllProductsListItemDto = {
   id: number;
-  sourceType: AllProductSourceType;
-  sourceId: number;
-  productFamilyId: number | null;
-  productPackId: number | null;
-  name: string;
-  slug: string;
+  kind: ProductKind;
   sku: string;
+  slug: string;
+  name: string;
   description: string | null;
-  descriptionSeo: string | null;
-  lifecycleStatus: ProductLifecycleStatus;
-  visibility: ProductVisibility;
-  commercialMode: ProductCommercialMode;
-  priceVisibility: ProductPriceVisibility;
+  brandCode: string | null;
   basePriceAmount: string | null;
-  priceUnit: ProductPriceUnit;
-  vatRate: number;
-  brandIds: number[];
-  tags: string[];
-  subcategoryIds: number[];
-  coverMediaId: number | null;
-  createdAt: string;
+  stock: string | null;
+  stockUnit: string | null;
+  hasImage: boolean;
+  hasDatasheet: boolean;
+  subcategories: {
+    id: number;
+    name: string;
+    slug: string;
+    categorySlug: string;
+  }[];
+  visibility: boolean | null;
+  lifecycle: ProductLifecycle | null;
   updatedAt: string;
+  family:
+    | {
+        id: number;
+        name: string;
+        slug: string;
+      }
+    | null;
 };
 
-export type AllProductListResult = {
-  items: AllProductListItemDto[];
+export type AllProductsListResult = {
+  items: AllProductsListItemDto[];
   total: number;
   page: number;
   pageSize: number;

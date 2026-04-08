@@ -30,7 +30,7 @@ import {
   type ProductSubcategoryEditorState,
 } from "@/features/product-categories/form";
 import { useProductCategoryDetail } from "@/features/product-categories/hooks/use-product-category-detail";
-import { slugifyProductCategoryName } from "@/features/product-categories/slug";
+import { slugify } from "@/lib/slugify";
 
 type EditableField = keyof ProductCategoryEditorFormState;
 type EditableSubcategoryField = keyof ProductSubcategoryEditorState;
@@ -101,9 +101,9 @@ function NewProductCategoryEditor() {
 
         if (
           form.slug === "" ||
-          form.slug === slugifyProductCategoryName(form.name)
+          form.slug === slugify(form.name)
         ) {
-          setField("slug", slugifyProductCategoryName(nextName));
+          setField("slug", slugify(nextName));
         }
         return;
       }
@@ -153,14 +153,12 @@ function NewProductCategoryEditor() {
             const nextName = value as ProductSubcategoryEditorState["name"];
             const shouldSyncSlug =
               subcategory.slug === "" ||
-              subcategory.slug === slugifyProductCategoryName(subcategory.name);
+              subcategory.slug === slugify(subcategory.name);
 
             return {
               ...subcategory,
               name: nextName,
-              slug: shouldSyncSlug
-                ? slugifyProductCategoryName(nextName)
-                : subcategory.slug,
+              slug: shouldSyncSlug ? slugify(nextName) : subcategory.slug,
             };
           }
 
@@ -300,9 +298,9 @@ function ExistingProductCategoryEditor({
 
         if (
           form.slug === "" ||
-          form.slug === slugifyProductCategoryName(form.name)
+          form.slug === slugify(form.name)
         ) {
-          setField("slug", slugifyProductCategoryName(nextName));
+          setField("slug", slugify(nextName));
         }
         return;
       }
@@ -355,14 +353,12 @@ function ExistingProductCategoryEditor({
             const nextName = value as ProductSubcategoryEditorState["name"];
             const shouldSyncSlug =
               subcategory.slug === "" ||
-              subcategory.slug === slugifyProductCategoryName(subcategory.name);
+              subcategory.slug === slugify(subcategory.name);
 
             return {
               ...subcategory,
               name: nextName,
-              slug: shouldSyncSlug
-                ? slugifyProductCategoryName(nextName)
-                : subcategory.slug,
+              slug: shouldSyncSlug ? slugify(nextName) : subcategory.slug,
             };
           }
 

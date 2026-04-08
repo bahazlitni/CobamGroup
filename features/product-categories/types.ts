@@ -25,6 +25,7 @@ export type ProductCategoryCreateInput = {
   name: string;
   subtitle: string | null;
   slug: string;
+  themeColor: string | null;
   description: string | null;
   descriptionSeo: string | null;
   imageMediaId: number | null;
@@ -58,6 +59,7 @@ export type ProductCategoryListItemDto = {
   name: string;
   subtitle: string | null;
   slug: string;
+  themeColor: string | null;
   description: string | null;
   descriptionSeo: string | null;
   imageMediaId: number | null;

@@ -4,12 +4,14 @@ import { useCallback, useDeferredValue, useEffect, useRef, useState } from "reac
 import { Loader2, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { PublicProductListResult } from "@/features/products/public";
+import { normalizeThemeColor, withThemeAlpha } from "@/lib/theme-color";
 import PublicProductCard from "./public-product-card";
 
 type PublicProductGridProps = {
   categorySlug: string;
   subcategorySlug: string;
   initialResult: PublicProductListResult;
+  themeColor?: string | null;
 };
 
 type PublicProductsApiResponse =
@@ -18,6 +20,24 @@ type PublicProductsApiResponse =
 
 function normalizeSearchQuery(value: string) {
   return value.trim().replace(/\s+/g, " ");
+}
+
+function buildPublicProductHref(input: {
+  categorySlug: string;
+  subcategorySlug: string;
+  product: PublicProductListResult["items"][number];
+}) {
+  const originPath = encodeURIComponent(`${input.categorySlug}/${input.subcategorySlug}`);
+
+  if (input.product.entityType === "SINGLE") {
+    return `/produits/${input.product.slug}?originPath=${originPath}`;
+  }
+
+  if (input.product.entityType === "PACK") {
+    return `/produits/packs/${input.product.slug}?originPath=${originPath}`;
+  }
+
+  return `/produits/familles/${input.product.slug}?originPath=${originPath}`;
 }
 
 function PublicProductCardSkeleton() {
@@ -38,7 +58,9 @@ export default function PublicProductGrid({
   categorySlug,
   subcategorySlug,
   initialResult,
+  themeColor,
 }: PublicProductGridProps) {
+  const resolvedThemeColor = normalizeThemeColor(themeColor);
   const [items, setItems] = useState(initialResult.items);
   const [page, setPage] = useState(initialResult.page);
   const [total, setTotal] = useState(initialResult.total);
@@ -89,7 +111,7 @@ export default function PublicProductGrid({
         throw new Error(
           "message" in payload && payload.message
             ? payload.message
-            : "Impossible de charger les familles de produits.",
+            : "Impossible de charger les produits.",
         );
       }
 
@@ -151,7 +173,7 @@ export default function PublicProductGrid({
           setErrorMessage(
             error instanceof Error
               ? error.message
-              : "Impossible de charger les familles de produits.",
+              : "Impossible de charger les produits.",
           );
         } finally {
           if (searchControllerRef.current === controller) {
@@ -193,8 +215,10 @@ export default function PublicProductGrid({
       const payload = await fetchProductsPage(page + 1, activeSearchQuery);
 
       setItems((currentItems) => {
-        const seenIds = new Set(currentItems.map((item) => item.id));
-        const nextItems = payload.items.filter((item) => !seenIds.has(item.id));
+        const seenIds = new Set(currentItems.map((item) => `${item.entityType}-${item.id}`));
+        const nextItems = payload.items.filter(
+          (item) => !seenIds.has(`${item.entityType}-${item.id}`),
+        );
         return [...currentItems, ...nextItems];
       });
       setPage(payload.page);
@@ -203,7 +227,7 @@ export default function PublicProductGrid({
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Impossible de charger plus de familles de produits.",
+          : "Impossible de charger plus de produits.",
       );
     } finally {
       requestInFlightRef.current = false;
@@ -241,25 +265,28 @@ export default function PublicProductGrid({
       <div className="space-y-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-slate-500">
-              0 famille dans cette sous-catégorie
+            <p
+              className="text-sm font-medium"
+              style={{ color: resolvedThemeColor }}
+            >
+              0 produit
             </p>
           </div>
 
           <div className="relative w-full md:max-w-md">
-            <Search className="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="search"
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
               placeholder="Rechercher par nom, SKU, marque ou tag..."
-              className="h-12 w-full rounded-full border border-slate-300 bg-white pr-12 pl-11 text-sm text-cobam-dark-blue shadow-sm outline-none transition focus:border-cobam-water-blue focus:ring-2 focus:ring-cobam-water-blue/20"
+              className="h-12 w-full rounded-full border border-slate-300 bg-white pl-11 pr-12 text-sm text-cobam-dark-blue shadow-sm outline-none transition focus:border-cobam-water-blue focus:ring-2 focus:ring-cobam-water-blue/20"
             />
             {searchInput ? (
               <button
                 type="button"
                 onClick={() => setSearchInput("")}
-                className="absolute top-1/2 right-3 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                className="absolute right-3 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
                 aria-label="Effacer la recherche"
               >
                 <X className="h-4 w-4" />
@@ -268,10 +295,16 @@ export default function PublicProductGrid({
           </div>
         </div>
 
-        <div className="rounded-[28px] border border-dashed border-slate-300 bg-white/80 px-6 py-14 text-center text-slate-500">
+        <div
+          className="rounded-[28px] border border-dashed bg-white/80 px-6 py-14 text-center text-slate-500"
+          style={{
+            borderColor: withThemeAlpha(resolvedThemeColor, 0.24),
+            backgroundColor: withThemeAlpha(resolvedThemeColor, 0.05),
+          }}
+        >
           {activeSearchQuery
-            ? "Aucune famille ne correspond a cette recherche dans cette sous-catégorie."
-            : "Aucune famille publique n'est disponible pour le moment dans cette sous-catégorie."}
+            ? "Aucun produit ne correspond a cette recherche."
+            : "Aucun produit public n'est disponible pour le moment."}
         </div>
       </div>
     );
@@ -281,29 +314,32 @@ export default function PublicProductGrid({
     <div className="space-y-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-slate-500">
+          <p
+            className="text-sm font-medium"
+            style={{ color: resolvedThemeColor }}
+          >
             {isRefreshing
-              ? "Recherche des familles en cours..."
+              ? "Recherche des produits en cours..."
               : activeSearchQuery
-                ? `${total} famille${total > 1 ? "s" : ""} trouvee${total > 1 ? "s" : ""}`
-                : `${total} famille${total > 1 ? "s" : ""} dans cette sous-catégorie`}
+                ? `${total} produit${total > 1 ? "s" : ""} trouve${total > 1 ? "s" : ""}`
+                : `${total} produit${total > 1 ? "s" : ""}`}
           </p>
         </div>
 
         <div className="relative w-full md:max-w-md">
-          <Search className="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="search"
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Rechercher par nom, SKU, marque ou tag..."
-            className="h-12 w-full rounded-full border border-slate-300 bg-white pr-12 pl-11 text-sm text-cobam-dark-blue shadow-sm outline-none transition focus:border-cobam-water-blue focus:ring-2 focus:ring-cobam-water-blue/20"
+            className="h-12 w-full rounded-full border border-slate-300 bg-white pl-11 pr-12 text-sm text-cobam-dark-blue shadow-sm outline-none transition focus:border-cobam-water-blue focus:ring-2 focus:ring-cobam-water-blue/20"
           />
           {searchInput ? (
             <button
               type="button"
               onClick={() => setSearchInput("")}
-              className="absolute top-1/2 right-3 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+              className="absolute right-3 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
               aria-label="Effacer la recherche"
             >
               <X className="h-4 w-4" />
@@ -340,9 +376,14 @@ export default function PublicProductGrid({
             ))
           : items.map((product) => (
               <PublicProductCard
-                key={product.id}
+                key={`${product.entityType}-${product.id}`}
                 product={product}
-                href={`/produits/${categorySlug}/${subcategorySlug}/${product.slug}`}
+                themeColor={resolvedThemeColor}
+                href={buildPublicProductHref({
+                  categorySlug,
+                  subcategorySlug,
+                  product,
+                })}
               />
             ))}
 
@@ -367,17 +408,24 @@ export default function PublicProductGrid({
             </Button>
           </div>
         ) : hasMore ? (
-          <div className="inline-flex items-center gap-3 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-500 shadow-sm">
+          <div
+            className="inline-flex items-center gap-3 rounded-full border bg-white px-4 py-2 text-sm font-medium text-slate-500 shadow-sm"
+            style={{
+              borderColor: withThemeAlpha(resolvedThemeColor, 0.22),
+              backgroundColor: withThemeAlpha(resolvedThemeColor, 0.06),
+            }}
+          >
             <Loader2
-              className={`h-4 w-4 text-cobam-water-blue ${isLoadingMore ? "animate-spin" : ""}`}
+              className={`h-4 w-4 ${isLoadingMore ? "animate-spin" : ""}`}
+              style={{ color: resolvedThemeColor }}
             />
             {isLoadingMore
-              ? "Chargement d'autres familles..."
+              ? "Chargement d'autres produits..."
               : "Chargement automatique..."}
           </div>
         ) : !isRefreshing && items.length > 0 ? (
           <p className="text-sm font-medium text-slate-400">
-            Toutes les familles visibles de cette sous-catégorie sont affichees.
+            Tous les produits visibles de cette sous-categorie sont affiches.
           </p>
         ) : null}
       </div>

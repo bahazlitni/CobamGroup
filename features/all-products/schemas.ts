@@ -1,11 +1,6 @@
-import {
-  ALL_PRODUCT_PAGE_SIZE_OPTIONS,
-  ALL_PRODUCT_SOURCE_TYPE_OPTIONS,
-  type AllProductListQuery,
-  type AllProductPageSize,
-} from "./types";
+import { ProductLifecycle } from "@prisma/client";
 
-export class AllProductValidationError extends Error {
+export class AllProductsValidationError extends Error {
   status: number;
 
   constructor(message: string, status = 400) {
@@ -14,32 +9,49 @@ export class AllProductValidationError extends Error {
   }
 }
 
-export function parseAllProductListQuery(
-  searchParams: URLSearchParams,
-): AllProductListQuery {
-  const pageRaw = Number(searchParams.get("page") ?? "1");
-  const page = Number.isInteger(pageRaw) && pageRaw > 0 ? pageRaw : 1;
+function parsePositiveInteger(value: string | null | undefined, fallback: number) {
+  const parsed = value == null ? fallback : Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
 
-  const pageSizeRaw = Number(searchParams.get("pageSize") ?? "20");
-  const pageSize = (
-    ALL_PRODUCT_PAGE_SIZE_OPTIONS.includes(pageSizeRaw as AllProductPageSize)
-      ? pageSizeRaw
-      : 20
-  ) as AllProductPageSize;
+function parseOptionalString(value: string | null | undefined) {
+  const normalized = value?.trim();
+  return normalized ? normalized : null;
+}
 
-  const qRaw = searchParams.get("q");
-  const q = qRaw?.trim() ? qRaw.trim() : undefined;
-
-  const sourceTypeRaw = searchParams.get("sourceType");
-  const sourceType =
-    sourceTypeRaw && ALL_PRODUCT_SOURCE_TYPE_OPTIONS.includes(sourceTypeRaw as "VARIANT" | "PACK")
-      ? (sourceTypeRaw as "VARIANT" | "PACK")
-      : undefined;
-
+export function parseAllProductsListQuery(searchParams: URLSearchParams) {
   return {
-    page,
-    pageSize,
-    q,
-    sourceType,
+    page: parsePositiveInteger(searchParams.get("page"), 1),
+    pageSize: parsePositiveInteger(searchParams.get("pageSize"), 20),
+    q: parseOptionalString(searchParams.get("q")),
   };
+}
+
+export function parseAllProductIdParam(value: string) {
+  const parsed = Number(value);
+
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new AllProductsValidationError("Identifiant produit invalide.", 400);
+  }
+
+  return parsed;
+}
+
+export function parseAllProductLifecycleInput(input: unknown): ProductLifecycle {
+  if (
+    !input ||
+    typeof input !== "object" ||
+    !("lifecycle" in input) ||
+    (input as { lifecycle?: unknown }).lifecycle == null
+  ) {
+    throw new AllProductsValidationError("Cycle de vie invalide.", 400);
+  }
+
+  const lifecycle = String((input as { lifecycle: unknown }).lifecycle);
+
+  if (lifecycle !== ProductLifecycle.ACTIVE && lifecycle !== ProductLifecycle.DRAFT) {
+    throw new AllProductsValidationError("Cycle de vie invalide.", 400);
+  }
+
+  return lifecycle;
 }

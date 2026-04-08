@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/server/db/prisma";
+import { slugify } from "@/lib/slugify";
 import { normalizeOwnedTagNames } from "./owned";
-import { slugifyTagName } from "./slug";
 import type {
   TagCreateInput,
   TagListQuery,
@@ -105,7 +105,7 @@ export async function listTagSuggestions(query: TagSuggestionQuery) {
     where: {
       OR: [
         { name: { contains: normalizedQuery, mode: "insensitive" } },
-        { slug: { contains: slugifyTagName(normalizedQuery), mode: "insensitive" } },
+        { slug: { contains: slugify(normalizedQuery), mode: "insensitive" } },
       ],
     },
     orderBy: [{ name: "asc" }],
@@ -121,7 +121,7 @@ export async function listTagSuggestions(query: TagSuggestionQuery) {
 export async function resolveOrCreateTagsByNames(tagNames: readonly string[]) {
   const normalizedEntries = normalizeOwnedTagNames(tagNames).map((name) => ({
     name,
-    slug: slugifyTagName(name),
+    slug: slugify(name),
   }));
 
   if (normalizedEntries.length === 0) {

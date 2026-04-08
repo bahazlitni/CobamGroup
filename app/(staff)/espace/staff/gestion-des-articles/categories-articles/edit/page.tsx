@@ -23,7 +23,7 @@ import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
 import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
 import { canCreateArticleCategories } from "@/features/article-categories/access";
 import { useArticleCategoryEditor } from "@/features/article-categories/hooks/use-article-category-editor";
-import { slugifyArticleCategoryName } from "@/features/article-categories/slug";
+import { slugify } from "@/lib/slugify";
 
 export default function ArticleCategoryEditPage() {
   return (
@@ -80,7 +80,7 @@ function ArticleCategoryEditPageContent() {
   }, [category, error]);
 
   const previewSlug = useMemo(
-    () => form.slug.trim() || slugifyArticleCategoryName(form.name),
+    () => form.slug.trim() || slugify(form.name),
     [form.name, form.slug],
   );
 
@@ -93,12 +93,12 @@ function ArticleCategoryEditPageContent() {
   const handleNameChange = (value: string) => {
     const nextName = value;
     const shouldRegenerateSlug =
-      form.slug === "" || form.slug === slugifyArticleCategoryName(form.name);
+      form.slug === "" || form.slug === slugify(form.name);
 
     setField("name", nextName);
 
     if (shouldRegenerateSlug) {
-      setField("slug", slugifyArticleCategoryName(nextName));
+      setField("slug", slugify(nextName));
     }
   };
 
@@ -338,14 +338,14 @@ function ArticleCategoryEditPageContent() {
                   id="article-category-slug"
                   value={form.slug}
                   onChange={(event) =>
-                    setField("slug", slugifyArticleCategoryName(event.target.value))
+                    setField("slug", slugify(event.target.value))
                   }
                   placeholder="actualites-cobam"
                   fullWidth
                 />
                 <AnimatedUIButton
                   type="button"
-                  onClick={() => setField("slug", slugifyArticleCategoryName(form.name))}
+                  onClick={() => setField("slug", slugify(form.name))}
                   variant="light"
                   size="sm"
                 >

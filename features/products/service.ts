@@ -1,46 +1,24 @@
 import { Prisma } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
-import { findActiveMediaByIds, findImageMediaById } from "@/features/media/repository";
-import {
-  findProductPacksBySkus,
-  findProductPacksBySlugs,
-} from "@/features/product-packs/repository";
-import { serializeOwnedTagNames } from "@/features/tags/owned";
-import { resolveOrCreateTagsByNames } from "@/features/tags/repository";
-import { parseRawProductAttributeValue } from "./attribute-values";
+import { prisma } from "@/lib/server/db/prisma";
 import { canAccessProducts, canCreateProducts, canManageProducts } from "./access";
 import {
-  countProducts,
-  createProduct,
-  createProductAuditLog,
-  deleteProduct,
-  findBrandOptionById,
-  findProductById,
-  findProductBySignature,
-  findProductBySlug,
-  findProductSubcategoryOptionsByIds,
-  findProductVariantsBySkus,
-  findProductVariantsBySlugs,
-  listProductBrands,
-  listProductSubcategoriesOptions,
-  listProducts,
-  updateProduct,
-} from "./repository";
+  buildDuplicateAttributeKindMessage,
+  findDuplicateAttributeKind,
+} from "./attribute-kinds";
+import { assertProductDatasheetMedia } from "./datasheet";
 import {
-  mapProductBrandOptionDto,
-  mapProductSubcategoryOptionDto,
-  mapProductToDetailDto,
-  mapProductToListItemDto,
-  toProductAuditSnapshot,
-} from "./mappers";
-import { slugifyProductName, slugifyProductReference } from "./slug";
+  formatProductAttributeKind,
+} from "@/lib/static_tables/attributes";
+import { formatProductBrandValue } from "@/lib/static_tables/brands";
 import type {
-  ProductCreateInput,
+  ProductFamilyDetailDto,
+  ProductFamilyListItemDto,
+  ProductFamilyListResult,
+  ProductFamilyUpsertInput,
   ProductFormOptionsDto,
-  ProductListQuery,
-  ProductListResult,
-  ProductUpdateInput,
-  ProductVariantInput,
+  ProductMediaDto,
+  ProductVariantInputDto,
 } from "./types";
 
 export class ProductServiceError extends Error {
@@ -52,413 +30,598 @@ export class ProductServiceError extends Error {
   }
 }
 
-async function writeProductAuditLogSafely(data: Parameters<typeof createProductAuditLog>[0]) {
-  try {
-    await createProductAuditLog(data);
-  } catch (error) {
-    console.error("PRODUCT_AUDIT_LOG_ERROR:", error);
-  }
-}
+const STAFF_MEDIA_SELECT = {
+  id: true,
+  kind: true,
+  title: true,
+  originalFilename: true,
+  mimeType: true,
+  altText: true,
+  widthPx: true,
+  heightPx: true,
+  durationSeconds: true,
+  sizeBytes: true,
+} satisfies Prisma.MediaSelect;
 
-function buildFamilySlug(name: string) {
-  const slug = slugifyProductName(name);
-
-  if (!slug) {
-    throw new ProductServiceError("Le nom de la famille ne permet pas de générer un slug.", 400);
-  }
-
-  return slug;
-}
-
-function buildVariantSlug(name: string) {
-  const slug = slugifyProductReference(name);
-
-  if (!slug) {
-    throw new ProductServiceError("Le nom d'une variante ne permet pas de générer un slug.", 400);
-  }
-
-  return slug;
-}
-
-function normalizeVariantIds<
-  T extends ProductVariantInput & {
-    slug?: string | null;
+const STAFF_PRODUCT_SELECT = {
+  id: true,
+  sku: true,
+  slug: true,
+  name: true,
+  description: true,
+  descriptionSeo: true,
+  brandCode: true,
+  basePriceAmount: true,
+  vatRate: true,
+  stock: true,
+  stockUnit: true,
+  visibility: true,
+  priceVisibility: true,
+  stockVisibility: true,
+  lifecycle: true,
+  commercialMode: true,
+  tags: true,
+  datasheetMedia: {
+    select: STAFF_MEDIA_SELECT,
   },
->(input: {
-  variants: T[];
-}) {
-  return input.variants.map((variant) => ({
-    ...variant,
-    id: variant.id ?? null,
-    mediaIds: Array.from(new Set(variant.mediaIds)),
-    attributeValues: variant.attributeValues.map((attributeValue) => ({
-      ...attributeValue,
-      attributeId: attributeValue.attributeId ?? null,
-      attributeTempKey: attributeValue.attributeTempKey ?? null,
-    })),
-  }));
+  subcategoryLinks: {
+    select: {
+      subcategoryId: true,
+      subcategory: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          category: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+        },
+      },
+    },
+  },
+  mediaLinks: {
+    orderBy: [{ sortOrder: "asc" }, { mediaId: "asc" }],
+    select: {
+      media: {
+        select: STAFF_MEDIA_SELECT,
+      },
+    },
+  },
+  attributes: {
+    orderBy: [{ sortOrder: "asc" }, { kind: "asc" }],
+    select: {
+      kind: true,
+      value: true,
+      sortOrder: true,
+    },
+  },
+  packLinesAsComponent: {
+    select: {
+      packProductId: true,
+    },
+    take: 1,
+  },
+} satisfies Prisma.ProductSelect;
+
+const STAFF_FAMILY_DETAIL_SELECT = {
+  id: true,
+  name: true,
+  slug: true,
+  subtitle: true,
+  description: true,
+  descriptionSeo: true,
+  mainImageMediaId: true,
+  defaultProductId: true,
+  createdAt: true,
+  updatedAt: true,
+  members: {
+    orderBy: [{ sortOrder: "asc" }, { productId: "asc" }],
+    select: {
+      sortOrder: true,
+      product: {
+        select: STAFF_PRODUCT_SELECT,
+      },
+    },
+  },
+} satisfies Prisma.ProductFamilySelect;
+
+const STAFF_FAMILY_LIST_SELECT = {
+  id: true,
+  name: true,
+  slug: true,
+  subtitle: true,
+  description: true,
+  updatedAt: true,
+  mainImageMediaId: true,
+  defaultProduct: {
+    select: {
+      id: true,
+      sku: true,
+      brandCode: true,
+      basePriceAmount: true,
+      stock: true,
+      stockUnit: true,
+      subcategoryLinks: {
+        select: {
+          subcategory: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              category: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  members: {
+    select: {
+      productId: true,
+    },
+  },
+} satisfies Prisma.ProductFamilySelect;
+
+type StaffFamilyDetailRecord = Prisma.ProductFamilyGetPayload<{
+  select: typeof STAFF_FAMILY_DETAIL_SELECT;
+}>;
+
+type StaffFamilyListRecord = Prisma.ProductFamilyGetPayload<{
+  select: typeof STAFF_FAMILY_LIST_SELECT;
+}>;
+
+function buildMediaUrl(mediaId: bigint | number, variant: "original" | "thumbnail" = "original") {
+  const query = variant === "thumbnail" ? "?variant=thumbnail" : "";
+  return `/api/media/${mediaId.toString()}/file${query}`;
 }
 
-function normalizeAttributeIds(input: Pick<ProductCreateInput, "attributes">) {
-  return input.attributes.map((attribute) => ({
-    ...attribute,
-    id: attribute.id ?? null,
-  }));
-}
-
-function assertProductHasAtLeastOneVariant(input: Pick<ProductCreateInput, "variants">) {
-  if (input.variants.length === 0) {
-    throw new ProductServiceError(
-      "Une famille produit doit contenir au moins une variante par défaut.",
-      400,
-    );
-  }
-}
-
-function materializeDefaultVariantFields(variant: ProductVariantInput): ProductVariantInput {
+function mapMedia(media: Prisma.MediaGetPayload<{ select: typeof STAFF_MEDIA_SELECT }>): ProductMediaDto {
   return {
-    ...variant,
-    lifecycleStatus: variant.lifecycleStatus ?? "DRAFT",
-    visibility: variant.visibility ?? "HIDDEN",
-    commercialMode: variant.commercialMode ?? "REFERENCE_ONLY",
-    priceVisibility: variant.priceVisibility ?? "HIDDEN",
+    id: Number(media.id),
+    kind: media.kind,
+    title: media.title,
+    originalFilename: media.originalFilename,
+    mimeType: media.mimeType,
+    altText: media.altText,
+    widthPx: media.widthPx,
+    heightPx: media.heightPx,
+    durationSeconds: media.durationSeconds?.toString() ?? null,
+    sizeBytes: media.sizeBytes?.toString() ?? null,
+    url: buildMediaUrl(media.id, "original"),
+    thumbnailUrl: media.kind === "IMAGE" ? buildMediaUrl(media.id, "thumbnail") : null,
   };
 }
 
-function materializeVariantDefaults(input: Pick<ProductCreateInput, "variants">) {
-  assertProductHasAtLeastOneVariant(input);
-
-  const [defaultVariantRaw, ...remainingVariants] = input.variants;
-  const defaultVariant = materializeDefaultVariantFields(defaultVariantRaw);
-
-  return [
-    defaultVariant,
-    ...remainingVariants.map((variant) => ({
-      ...variant,
-      lifecycleStatus: variant.lifecycleStatus ?? defaultVariant.lifecycleStatus,
-      visibility: variant.visibility ?? defaultVariant.visibility,
-      commercialMode: variant.commercialMode ?? defaultVariant.commercialMode,
-      priceVisibility: variant.priceVisibility ?? defaultVariant.priceVisibility,
-      basePriceAmount: variant.basePriceAmount ?? defaultVariant.basePriceAmount,
+function mapVariant(record: StaffFamilyDetailRecord["members"][number]["product"]): ProductVariantInputDto {
+  return {
+    id: Number(record.id),
+    sku: record.sku,
+    slug: record.slug,
+    name: record.name,
+    description: record.description,
+    descriptionSeo: record.descriptionSeo,
+    brandCode: formatProductBrandValue(record.brandCode),
+    basePriceAmount: record.basePriceAmount?.toString() ?? null,
+    vatRate: record.vatRate,
+    stock: record.stock?.toString() ?? null,
+    stockUnit: record.stockUnit,
+    visibility: record.visibility ?? true,
+    priceVisibility: record.priceVisibility ?? true,
+    stockVisibility: record.stockVisibility ?? true,
+    lifecycle: record.lifecycle ?? "DRAFT",
+    commercialMode: record.commercialMode ?? "ON_REQUEST_ONLY",
+    tags: record.tags,
+    subcategoryIds: record.subcategoryLinks.map((link) => Number(link.subcategoryId)),
+    datasheet: record.datasheetMedia ? mapMedia(record.datasheetMedia) : null,
+    media: record.mediaLinks.map((link) => mapMedia(link.media)),
+    attributes: record.attributes.map((attribute) => ({
+      kind: formatProductAttributeKind(attribute.kind),
+      value: attribute.value,
     })),
-  ];
+  };
 }
 
-function withComputedVariantSlugs(variants: ProductVariantInput[]) {
-  return variants.map((variant) => ({
-    ...variant,
-    slug: buildVariantSlug(variant.name),
-  }));
-}
-
-function assertValidProductAttributes(
-  input: Pick<ProductCreateInput, "attributes" | "variants">,
-  options?: { allowedAttributeIds?: readonly number[] },
-) {
-  const seenAttributeNames = new Set<string>();
-  const seenTempKeys = new Set<string>();
-  const allowedAttributeIds = new Set(options?.allowedAttributeIds ?? []);
-  const attributesById = new Map<number, ProductCreateInput["attributes"][number]>();
-  const attributesByTempKey = new Map<string, ProductCreateInput["attributes"][number]>();
-
-  for (const attribute of input.attributes) {
-    const normalizedName = attribute.name.trim().toLocaleLowerCase("fr");
-    if (seenAttributeNames.has(normalizedName)) {
-      throw new ProductServiceError(
-        "Deux attributs de famille ne peuvent pas partager le même nom.",
-        400,
-      );
-    }
-
-    if (seenTempKeys.has(attribute.tempKey)) {
-      throw new ProductServiceError(
-        "Deux attributs de famille utilisent la même clé temporaire.",
-        400,
-      );
-    }
-
-    if (attribute.id != null && !allowedAttributeIds.has(attribute.id)) {
-      throw new ProductServiceError(
-        "Un attribut transmis n'appartient pas à cette famille produit.",
-        400,
-      );
-    }
-
-    seenAttributeNames.add(normalizedName);
-    seenTempKeys.add(attribute.tempKey);
-
-    if (attribute.id != null) {
-      attributesById.set(attribute.id, attribute);
-    }
-    attributesByTempKey.set(attribute.tempKey, attribute);
-  }
-
-  for (const variant of input.variants) {
-    const seenVariantAttributes = new Set<string>();
-
-    for (const attributeValue of variant.attributeValues) {
-      const attribute =
-        (attributeValue.attributeId != null
-          ? attributesById.get(attributeValue.attributeId)
-          : undefined) ??
-        (attributeValue.attributeTempKey != null
-          ? attributesByTempKey.get(attributeValue.attributeTempKey)
-          : undefined);
-
-      if (!attribute) {
-        throw new ProductServiceError(
-          "Une valeur de variante référence un attribut inexistant.",
-          400,
-        );
-      }
-
-      const attributeKey =
-        attribute.id != null ? `id:${attribute.id}` : `temp:${attribute.tempKey}`;
-
-      if (seenVariantAttributes.has(attributeKey)) {
-        throw new ProductServiceError(
-          "Une variante ne peut pas définir deux fois le même attribut.",
-          400,
-        );
-      }
-
-      seenVariantAttributes.add(attributeKey);
-
-      try {
-        parseRawProductAttributeValue(attribute.dataType, attributeValue.value);
-      } catch (error: unknown) {
-        throw new ProductServiceError(
-          error instanceof Error
-            ? error.message
-            : "Une valeur d'attribut de variante est invalide.",
-          400,
-        );
-      }
-    }
-  }
-}
-
-function assertValidDefaultVariant(variant: ProductVariantInput | undefined) {
-  if (!variant) {
-    throw new ProductServiceError(
-      "Une famille produit doit contenir au moins une variante par défaut.",
-      400,
-    );
-  }
-
-  if (
-    variant.lifecycleStatus == null ||
-    variant.visibility == null ||
-    variant.commercialMode == null ||
-    variant.priceVisibility == null
-  ) {
-    throw new ProductServiceError(
-      "La variante par défaut doit définir le cycle de vie, la visibilité, le mode commercial et la visibilité du prix.",
-      400,
-    );
-  }
-}
-
-async function assertValidProductVariants(
-  input: Pick<ProductCreateInput, "variants">,
-  options?: { allowedVariantIds?: readonly number[] },
-) {
-  const seenSlugs = new Set<string>();
-  const seenSkus = new Set<string>();
-
-  for (const [index, variant] of input.variants.entries()) {
-    const variantSlug = buildVariantSlug(variant.name);
-
-    if (seenSlugs.has(variantSlug)) {
-      throw new ProductServiceError(
-        `Deux variantes génèrent le même slug (${variantSlug}).`,
-        400,
-      );
-    }
-
-    if (seenSkus.has(variant.sku)) {
-      throw new ProductServiceError("Deux variantes ne peuvent pas partager le même SKU.", 400);
-    }
-
-    if (!variant.name.trim() || !variant.description.trim() || !variant.descriptionSeo.trim()) {
-      throw new ProductServiceError(
-        `La variante ${index + 1} doit définir un nom, une description et une description SEO.`,
-        400,
-      );
-    }
-
-    seenSlugs.add(variantSlug);
-    seenSkus.add(variant.sku);
-  }
-
-  const allowedIds = new Set(options?.allowedVariantIds ?? []);
-
-  for (const variant of input.variants) {
-    if (variant.id != null && !allowedIds.has(variant.id)) {
-      throw new ProductServiceError(
-        "Une variante transmise n'appartient pas à cette famille produit.",
-        400,
-      );
-    }
-  }
-
-  const [existingBySlug, existingBySku] = await Promise.all([
-    findProductVariantsBySlugs(input.variants.map((variant) => buildVariantSlug(variant.name))),
-    findProductVariantsBySkus(input.variants.map((variant) => variant.sku)),
-  ]);
-  const [existingPacksBySlug, existingPacksBySku] = await Promise.all([
-    findProductPacksBySlugs(input.variants.map((variant) => buildVariantSlug(variant.name))),
-    findProductPacksBySkus(input.variants.map((variant) => variant.sku)),
-  ]);
-
-  const allowedBigIntIds = new Set(
-    input.variants
-      .map((variant) => variant.id)
-      .filter((variantId): variantId is number => variantId != null)
-      .map((variantId) => BigInt(variantId)),
+function mapFamilyDetail(record: StaffFamilyDetailRecord): ProductFamilyDetailDto {
+  const defaultProductId =
+    record.defaultProductId == null ? null : Number(record.defaultProductId);
+  const defaultVariantIndex = Math.max(
+    0,
+    record.members.findIndex(
+      (member) => Number(member.product.id) === defaultProductId,
+    ),
   );
 
-  for (const existingVariant of existingBySlug) {
-    if (!allowedBigIntIds.has(existingVariant.id)) {
-      throw new ProductServiceError(
-        `Le slug de variante "${existingVariant.slug}" est déjà utilisé.`,
-        400,
-      );
-    }
-  }
+  return {
+    id: Number(record.id),
+    name: record.name,
+    slug: record.slug,
+    subtitle: record.subtitle,
+    description: record.description,
+    descriptionSeo: record.descriptionSeo,
+    mainImageMediaId: record.mainImageMediaId == null ? null : Number(record.mainImageMediaId),
+    defaultVariantIndex,
+    variants: record.members.map((member) => mapVariant(member.product)),
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
+  };
+}
 
-  for (const existingVariant of existingBySku) {
-    if (!allowedBigIntIds.has(existingVariant.id)) {
-      throw new ProductServiceError(`Le SKU "${existingVariant.sku}" est déjà utilisé.`, 400);
-    }
-  }
+function mapFamilyListItem(record: StaffFamilyListRecord): ProductFamilyListItemDto {
+  return {
+    id: Number(record.id),
+    name: record.name,
+    slug: record.slug,
+    subtitle: record.subtitle,
+    description: record.description,
+    mainImageUrl:
+      record.mainImageMediaId == null
+        ? null
+        : buildMediaUrl(record.mainImageMediaId, "thumbnail"),
+    variantCount: record.members.length,
+    defaultVariantSku: record.defaultProduct?.sku ?? null,
+    brandCode: formatProductBrandValue(record.defaultProduct?.brandCode ?? null),
+    basePriceAmount: record.defaultProduct?.basePriceAmount?.toString() ?? null,
+    stock: record.defaultProduct?.stock?.toString() ?? null,
+    stockUnit: record.defaultProduct?.stockUnit ?? null,
+    subcategories:
+      record.defaultProduct?.subcategoryLinks.map(({ subcategory }) => ({
+        id: Number(subcategory.id),
+        categoryId: Number(subcategory.category.id),
+        categoryName: subcategory.category.name,
+        categorySlug: subcategory.category.slug,
+        name: subcategory.name,
+        slug: subcategory.slug,
+      })) ?? [],
+    updatedAt: record.updatedAt.toISOString(),
+  };
+}
 
-  for (const existingPack of existingPacksBySlug) {
-    throw new ProductServiceError(
-      `Le slug de variante "${existingPack.slug}" est déjà utilisé par un pack.`,
-      400,
-    );
-  }
+async function assertFamilySlugAvailable(slug: string, excludeFamilyId?: number) {
+  const existing = await prisma.productFamily.findUnique({
+    where: { slug },
+    select: { id: true },
+  });
 
-  for (const existingPack of existingPacksBySku) {
-    throw new ProductServiceError(
-      `Le SKU "${existingPack.sku}" est déjà utilisé par un pack.`,
-      400,
-    );
+  if (existing && Number(existing.id) !== (excludeFamilyId ?? -1)) {
+    throw new ProductServiceError("Une famille avec ce slug existe déjà.");
   }
 }
 
-async function assertUniqueProductInput(
-  input: Pick<ProductCreateInput, "brandId" | "name">,
-  options?: { excludeProductId?: number },
+async function assertVariantUniqueConstraints(
+  variants: ProductFamilyUpsertInput["variants"],
+  excludeById: Map<number, { sku: string; slug: string }>,
 ) {
-  const familySlug = buildFamilySlug(input.name);
-  const [sameSlug, sameSignature] = await Promise.all([
-    findProductBySlug(familySlug),
-    input.brandId != null
-      ? findProductBySignature(input.brandId, input.name)
-      : Promise.resolve(null),
-  ]);
+  const seenSkus = new Set<string>();
+  const seenSlugs = new Set<string>();
 
-  if (sameSlug && Number(sameSlug.id) !== (options?.excludeProductId ?? -1)) {
-    throw new ProductServiceError("Une famille produit avec ce slug existe déjà.", 400);
+  for (const variant of variants) {
+    if (seenSkus.has(variant.sku) || seenSlugs.has(variant.slug)) {
+      throw new ProductServiceError("Les variantes doivent avoir des SKU et slugs uniques.");
+    }
+
+    seenSkus.add(variant.sku);
+    seenSlugs.add(variant.slug);
   }
 
-  if (sameSignature && Number(sameSignature.id) !== (options?.excludeProductId ?? -1)) {
-    throw new ProductServiceError("Un produit avec cette marque et ce nom existe déjà.", 400);
-  }
+  const existing = await prisma.product.findMany({
+    where: {
+      OR: [
+        { sku: { in: [...seenSkus] } },
+        { slug: { in: [...seenSlugs] } },
+      ],
+    },
+    select: {
+      id: true,
+      sku: true,
+      slug: true,
+    },
+  });
 
-  const conflictingPackBySlug = await findProductPacksBySlugs([familySlug]);
+  for (const record of existing) {
+    const allowed = excludeById.get(Number(record.id));
+    if (allowed && allowed.sku === record.sku && allowed.slug === record.slug) {
+      continue;
+    }
 
-  if (conflictingPackBySlug.length > 0) {
-    throw new ProductServiceError("Une famille produit avec ce slug existe déjà sous forme de pack.", 400);
-  }
-}
-
-async function assertValidProductRelations(
-  input: ProductCreateInput,
-  options?: { currentBrandId?: number | null },
-) {
-  const [brand, productSubcategories] = await Promise.all([
-    input.brandId != null ? findBrandOptionById(input.brandId) : Promise.resolve(null),
-    findProductSubcategoryOptionsByIds(input.productSubcategoryIds),
-  ]);
-
-  if (input.brandId != null && !brand) {
-    throw new ProductServiceError("Marque introuvable.", 400);
-  }
-
-  if (
-    input.brandId != null &&
-    brand != null &&
-    !brand.isProductBrand &&
-    input.brandId !== (options?.currentBrandId ?? -1)
-  ) {
-    throw new ProductServiceError("Cette marque ne peut pas être utilisée pour les produits.", 400);
-  }
-
-  if (productSubcategories.length !== new Set(input.productSubcategoryIds).size) {
-    throw new ProductServiceError("Au moins une sous-catégorie produit est introuvable.", 400);
-  }
-}
-
-
-async function assertValidProductMedia(
-  input: Pick<ProductCreateInput, "mainImageMediaId" | "variants">,
-) {
-  if (input.mainImageMediaId != null) {
-    const mainImage = await findImageMediaById(input.mainImageMediaId);
-
-    if (!mainImage) {
-      throw new ProductServiceError(
-        "L'image principale sélectionnée est introuvable ou invalide.",
-        400,
-      );
+    if (seenSkus.has(record.sku) || seenSlugs.has(record.slug)) {
+      throw new ProductServiceError("Un produit existe déjà avec l'un des SKU ou slugs fournis.");
     }
   }
+}
 
-  const variantMediaIds = input.variants.flatMap((variant) => variant.mediaIds);
-  if (variantMediaIds.length === 0) {
+async function assertVariantsRemovable(productIds: number[]) {
+  if (productIds.length === 0) {
     return;
   }
 
-  const media = await findActiveMediaByIds(variantMediaIds);
+  const linked = await prisma.product.findFirst({
+    where: {
+      id: {
+        in: productIds.map((id) => BigInt(id)),
+      },
+      packLinesAsComponent: {
+        some: {},
+      },
+    },
+    select: {
+      name: true,
+    },
+  });
 
-  if (media.length !== new Set(variantMediaIds).size) {
-    throw new ProductServiceError("Au moins un média de variante est introuvable ou inactif.", 400);
+  if (linked) {
+    throw new ProductServiceError(
+      `Impossible de supprimer la variante "${linked.name}" car elle est utilisée dans un pack.`,
+    );
   }
 }
 
-function isGlobalProductProjectionConflict(error: unknown) {
-  return (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === "P2002"
-  );
-}
+async function syncVariantRelations(
+  tx: Prisma.TransactionClient,
+  productId: bigint,
+  variant: ProductVariantInputDto,
+) {
+  await tx.productSubcategoryLink.deleteMany({
+    where: {
+      productId,
+    },
+  });
 
-function isVariantReferencedByPack(error: unknown) {
-  return (
-    error instanceof Prisma.PrismaClientKnownRequestError &&
-    error.code === "P2003"
-  );
-}
-
-export async function listProductsService(
-  session: StaffSession,
-  query: ProductListQuery,
-): Promise<ProductListResult> {
-  if (!canAccessProducts(session)) {
-    throw new ProductServiceError("Accès refusé.", 403);
+  if (variant.subcategoryIds.length > 0) {
+    await tx.productSubcategoryLink.createMany({
+      data: variant.subcategoryIds.map((subcategoryId) => ({
+        productId,
+        subcategoryId: BigInt(subcategoryId),
+      })),
+    });
   }
 
-  const [items, total] = await Promise.all([listProducts(query), countProducts(query)]);
+  await tx.productMediaLink.deleteMany({
+    where: {
+      productId,
+    },
+  });
 
-  return {
-    items: items.map(mapProductToListItemDto),
-    total,
-    page: query.page,
-    pageSize: query.pageSize,
-  };
+  if (variant.media.length > 0) {
+    await tx.productMediaLink.createMany({
+      data: variant.media.map((media, index) => ({
+        productId,
+        mediaId: BigInt(media.id),
+        sortOrder: index,
+      })),
+    });
+  }
+
+  await tx.productAttribute.deleteMany({
+    where: {
+      productId,
+    },
+  });
+
+  if (variant.attributes.length > 0) {
+    await tx.productAttribute.createMany({
+      data: variant.attributes.map((attribute, index) => ({
+        productId,
+        kind: attribute.kind,
+        value: attribute.value,
+        sortOrder: index,
+      })),
+    });
+  }
+}
+
+async function writeFamily(
+  familyId: number | null,
+  input: ProductFamilyUpsertInput,
+) {
+  for (const variant of input.variants) {
+    const duplicateAttributeKind = findDuplicateAttributeKind(variant.attributes);
+
+    if (duplicateAttributeKind) {
+      throw new ProductServiceError(
+        buildDuplicateAttributeKindMessage(
+          duplicateAttributeKind,
+          `La variante "${variant.name}"`,
+        ),
+      );
+    }
+  }
+
+  return prisma.$transaction(async (tx) => {
+    try {
+      for (const variant of input.variants) {
+        await assertProductDatasheetMedia(tx, variant.datasheet?.id ?? null);
+      }
+    } catch (error: unknown) {
+      throw new ProductServiceError(
+        error instanceof Error ? error.message : "Fiche technique invalide.",
+      );
+    }
+
+    const existingFamily = familyId == null
+      ? null
+      : await tx.productFamily.findUnique({
+          where: { id: BigInt(familyId) },
+          select: {
+            id: true,
+            members: {
+              select: {
+                productId: true,
+                product: {
+                  select: {
+                    id: true,
+                    sku: true,
+                    slug: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+    if (familyId != null && !existingFamily) {
+      throw new ProductServiceError("Famille introuvable.", 404);
+    }
+
+    const existingById = new Map(
+      (existingFamily?.members ?? []).map((member) => [
+        Number(member.productId),
+        {
+          sku: member.product.sku,
+          slug: member.product.slug,
+        },
+      ]),
+    );
+
+    await assertFamilySlugAvailable(input.slug, familyId ?? undefined);
+    await assertVariantUniqueConstraints(input.variants, existingById);
+
+    const family =
+      familyId == null
+        ? await tx.productFamily.create({
+            data: {
+              name: input.name,
+              slug: input.slug,
+              subtitle: input.subtitle,
+              description: input.description,
+              descriptionSeo: input.descriptionSeo,
+              mainImageMediaId:
+                input.mainImageMediaId == null ? null : BigInt(input.mainImageMediaId),
+            },
+            select: {
+              id: true,
+            },
+          })
+        : await tx.productFamily.update({
+            where: { id: BigInt(familyId) },
+            data: {
+              name: input.name,
+              slug: input.slug,
+              subtitle: input.subtitle,
+              description: input.description,
+              descriptionSeo: input.descriptionSeo,
+              mainImageMediaId:
+                input.mainImageMediaId == null ? null : BigInt(input.mainImageMediaId),
+            },
+            select: {
+              id: true,
+            },
+          });
+
+    const keptProductIds = input.variants
+      .map((variant) => variant.id)
+      .filter((variantId): variantId is number => variantId != null);
+
+    const removedProductIds = (existingFamily?.members ?? [])
+      .map((member) => Number(member.productId))
+      .filter((productId) => !keptProductIds.includes(productId));
+
+    await assertVariantsRemovable(removedProductIds);
+
+    if (removedProductIds.length > 0) {
+      await tx.productFamilyMember.deleteMany({
+        where: {
+          familyId: family.id,
+          productId: {
+            in: removedProductIds.map((id) => BigInt(id)),
+          },
+        },
+      });
+
+      await tx.product.deleteMany({
+        where: {
+          id: {
+            in: removedProductIds.map((id) => BigInt(id)),
+          },
+        },
+      });
+    }
+
+    const createdOrUpdatedIds: bigint[] = [];
+
+    for (const [index, variant] of input.variants.entries()) {
+      const productData: Prisma.ProductUncheckedCreateInput = {
+        sku: variant.sku,
+        slug: variant.slug,
+        kind: "VARIANT",
+        name: variant.name,
+        description: variant.description,
+        descriptionSeo: variant.descriptionSeo,
+        brandCode: variant.brandCode,
+        basePriceAmount:
+          variant.basePriceAmount == null
+            ? null
+            : new Prisma.Decimal(variant.basePriceAmount),
+        vatRate: variant.vatRate,
+        stock:
+          variant.stock == null ? null : new Prisma.Decimal(variant.stock),
+        stockUnit: variant.stockUnit,
+        visibility: variant.visibility,
+        priceVisibility: variant.priceVisibility,
+        stockVisibility: variant.stockVisibility,
+        lifecycle: variant.lifecycle,
+        commercialMode: variant.commercialMode,
+        tags: variant.tags,
+        datasheetMediaId:
+          variant.datasheet?.id == null ? null : BigInt(variant.datasheet.id),
+      };
+
+      const product =
+        variant.id == null
+          ? await tx.product.create({
+              data: productData,
+              select: { id: true },
+            })
+          : await tx.product.update({
+              where: { id: BigInt(variant.id) },
+              data: productData,
+              select: { id: true },
+            });
+
+      await syncVariantRelations(tx, product.id, variant);
+
+      await tx.productFamilyMember.upsert({
+        where: {
+          productId: product.id,
+        },
+        update: {
+          familyId: family.id,
+          sortOrder: index,
+        },
+        create: {
+          familyId: family.id,
+          productId: product.id,
+          sortOrder: index,
+        },
+      });
+
+      createdOrUpdatedIds.push(product.id);
+    }
+
+    const defaultProductId =
+      createdOrUpdatedIds[input.defaultVariantIndex] ?? createdOrUpdatedIds[0] ?? null;
+
+    await tx.productFamily.update({
+      where: { id: family.id },
+      data: {
+        defaultProductId,
+      },
+    });
+
+    return tx.productFamily.findUniqueOrThrow({
+      where: { id: family.id },
+      select: STAFF_FAMILY_DETAIL_SELECT,
+    });
+  });
 }
 
 export async function getProductFormOptionsService(
@@ -468,197 +631,178 @@ export async function getProductFormOptionsService(
     throw new ProductServiceError("Accès refusé.", 403);
   }
 
-  const [brands, productSubcategories] = await Promise.all([
-    listProductBrands(),
-    listProductSubcategoriesOptions(),
-  ]);
+  const subcategories = await prisma.productSubcategory.findMany({
+    where: {
+      isActive: true,
+      category: {
+        isActive: true,
+      },
+    },
+    orderBy: [{ category: { sortOrder: "asc" } }, { sortOrder: "asc" }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      categoryId: true,
+      category: {
+        select: {
+          name: true,
+          slug: true,
+        },
+      },
+    },
+  });
 
   return {
-    brands: brands.map(mapProductBrandOptionDto),
-    productSubcategories: productSubcategories.map(mapProductSubcategoryOptionDto),
+    productSubcategories: subcategories.map((subcategory) => ({
+      id: Number(subcategory.id),
+      categoryId: Number(subcategory.categoryId),
+      categoryName: subcategory.category.name,
+      categorySlug: subcategory.category.slug,
+      name: subcategory.name,
+      slug: subcategory.slug,
+    })),
   };
 }
 
-export async function getProductByIdService(session: StaffSession, productId: number) {
+export async function listProductsService(
+  session: StaffSession,
+  query: { page: number; pageSize: number; q: string | null },
+): Promise<ProductFamilyListResult> {
   if (!canAccessProducts(session)) {
     throw new ProductServiceError("Accès refusé.", 403);
   }
 
-  const product = await findProductById(productId);
-  if (!product) {
-    throw new ProductServiceError("Produit introuvable.", 404);
-  }
+  const where: Prisma.ProductFamilyWhereInput = query.q
+    ? {
+        OR: [
+          { name: { contains: query.q, mode: "insensitive" } },
+          { slug: { contains: query.q, mode: "insensitive" } },
+          { subtitle: { contains: query.q, mode: "insensitive" } },
+          { description: { contains: query.q, mode: "insensitive" } },
+          {
+            members: {
+              some: {
+                product: {
+                  OR: [
+                    { sku: { contains: query.q, mode: "insensitive" } },
+                    { slug: { contains: query.q, mode: "insensitive" } },
+                    { name: { contains: query.q, mode: "insensitive" } },
+                  ],
+                },
+              },
+            },
+          },
+        ],
+      }
+    : {};
 
-  return mapProductToDetailDto(product);
+  const [items, total] = await Promise.all([
+    prisma.productFamily.findMany({
+      where,
+      orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
+      skip: (query.page - 1) * query.pageSize,
+      take: query.pageSize,
+      select: STAFF_FAMILY_LIST_SELECT,
+    }),
+    prisma.productFamily.count({ where }),
+  ]);
+
+  return {
+    items: items.map(mapFamilyListItem),
+    total,
+    page: query.page,
+    pageSize: query.pageSize,
+  };
 }
 
-export async function createProductService(session: StaffSession, input: ProductCreateInput) {
+export async function getProductByIdService(session: StaffSession, familyId: number) {
+  if (!canAccessProducts(session)) {
+    throw new ProductServiceError("Accès refusé.", 403);
+  }
+
+  const family = await prisma.productFamily.findUnique({
+    where: { id: BigInt(familyId) },
+    select: STAFF_FAMILY_DETAIL_SELECT,
+  });
+
+  if (!family) {
+    throw new ProductServiceError("Famille introuvable.", 404);
+  }
+
+  return mapFamilyDetail(family);
+}
+
+export async function createProductService(
+  session: StaffSession,
+  input: ProductFamilyUpsertInput,
+) {
   if (!canCreateProducts(session)) {
     throw new ProductServiceError("Accès refusé.", 403);
   }
 
-  const materializedVariants = materializeVariantDefaults({ variants: input.variants });
-  assertValidDefaultVariant(materializedVariants[0]);
-  await assertUniqueProductInput(input);
-  await assertValidProductRelations(input);
-  await assertValidProductMedia({ ...input, variants: materializedVariants });
-  assertValidProductAttributes({ ...input, variants: materializedVariants });
-  await assertValidProductVariants({ variants: materializedVariants });
-
-  await resolveOrCreateTagsByNames(input.tagNames);
-  const attributes = normalizeAttributeIds(input);
-  const variants = normalizeVariantIds({
-    variants: withComputedVariantSlugs(materializedVariants),
-  });
-
-  let product;
-
-  try {
-    product = await createProduct({
-      ...input,
-      slug: buildFamilySlug(input.name),
-      tags: serializeOwnedTagNames(input.tagNames),
-      attributes,
-      variants,
-    });
-  } catch (error) {
-    if (isGlobalProductProjectionConflict(error)) {
-      throw new ProductServiceError(
-        "Le slug ou le SKU d'une variante entre en conflit avec un autre produit.",
-        400,
-      );
-    }
-
-    throw error;
-  }
-
-  await writeProductAuditLogSafely({
-    actorUserId: session.id,
-    actionType: "CREATE",
-    entityId: String(product.id),
-    targetLabel: product.name,
-    summary: "Création d'une nouvelle famille produit",
-    afterSnapshotJson: toProductAuditSnapshot(product),
-  });
-
-  return mapProductToDetailDto(product);
+  const family = await writeFamily(null, input);
+  return mapFamilyDetail(family);
 }
 
 export async function updateProductService(
   session: StaffSession,
-  productId: number,
-  input: ProductUpdateInput,
+  familyId: number,
+  input: ProductFamilyUpsertInput,
 ) {
   if (!canManageProducts(session)) {
     throw new ProductServiceError("Accès refusé.", 403);
   }
 
-  const before = await findProductById(productId);
-  if (!before) {
-    throw new ProductServiceError("Produit introuvable.", 404);
-  }
-
-  const materializedVariants = materializeVariantDefaults({ variants: input.variants });
-  assertValidDefaultVariant(materializedVariants[0]);
-  await assertUniqueProductInput(input, { excludeProductId: productId });
-  await assertValidProductRelations(input, {
-    currentBrandId: before.brand != null ? Number(before.brand.id) : null,
-  });
-  await assertValidProductMedia({ ...input, variants: materializedVariants });
-  assertValidProductAttributes(
-    { ...input, variants: materializedVariants },
-    {
-      allowedAttributeIds: before.attributeValues.map((attributeLink) =>
-        Number(attributeLink.attribute.id),
-      ),
-    },
-  );
-  await assertValidProductVariants(
-    { variants: materializedVariants },
-    {
-      allowedVariantIds: before.variants.map((variant) => Number(variant.id)),
-    },
-  );
-
-  await resolveOrCreateTagsByNames(input.tagNames);
-  const attributes = normalizeAttributeIds(input);
-  const variants = normalizeVariantIds({
-    variants: withComputedVariantSlugs(materializedVariants),
-  });
-
-  let product;
-
-  try {
-    product = await updateProduct(productId, {
-      ...input,
-      slug: buildFamilySlug(input.name),
-      tags: serializeOwnedTagNames(input.tagNames),
-      attributes,
-      variants,
-    });
-  } catch (error) {
-    if (isGlobalProductProjectionConflict(error)) {
-      throw new ProductServiceError(
-        "Le slug ou le SKU d'une variante entre en conflit avec un autre produit.",
-        400,
-      );
-    }
-
-    if (isVariantReferencedByPack(error)) {
-      throw new ProductServiceError(
-        "Impossible de modifier cette famille car une ou plusieurs variantes sont utilisees dans un pack.",
-        400,
-      );
-    }
-
-    throw error;
-  }
-
-  await writeProductAuditLogSafely({
-    actorUserId: session.id,
-    actionType: "UPDATE",
-    entityId: String(product.id),
-    targetLabel: product.name,
-    summary: "Mise à jour d'une famille produit",
-    beforeSnapshotJson: toProductAuditSnapshot(before),
-    afterSnapshotJson: toProductAuditSnapshot(product),
-  });
-
-  return mapProductToDetailDto(product);
+  const family = await writeFamily(familyId, input);
+  return mapFamilyDetail(family);
 }
 
-export async function deleteProductService(session: StaffSession, productId: number) {
+export async function deleteProductService(session: StaffSession, familyId: number) {
   if (!canManageProducts(session)) {
     throw new ProductServiceError("Accès refusé.", 403);
   }
 
-  const before = await findProductById(productId);
-  if (!before) {
-    throw new ProductServiceError("Produit introuvable.", 404);
+  const family = await prisma.productFamily.findUnique({
+    where: { id: BigInt(familyId) },
+    select: {
+      id: true,
+      members: {
+        select: {
+          productId: true,
+        },
+      },
+    },
+  });
+
+  if (!family) {
+    throw new ProductServiceError("Famille introuvable.", 404);
   }
 
-  let deleted;
+  const productIds = family.members.map((member) => Number(member.productId));
+  await assertVariantsRemovable(productIds);
 
-  try {
-    deleted = await deleteProduct(productId);
-  } catch (error) {
-    if (isVariantReferencedByPack(error)) {
-      throw new ProductServiceError(
-        "Impossible de supprimer cette famille car une ou plusieurs variantes sont utilisees dans un pack.",
-        400,
-      );
+  await prisma.$transaction(async (tx) => {
+    await tx.productFamilyMember.deleteMany({
+      where: {
+        familyId: family.id,
+      },
+    });
+
+    if (productIds.length > 0) {
+      await tx.product.deleteMany({
+        where: {
+          id: {
+            in: productIds.map((id) => BigInt(id)),
+          },
+        },
+      });
     }
 
-    throw error;
-  }
-
-  await writeProductAuditLogSafely({
-    actorUserId: session.id,
-    actionType: "DELETE",
-    entityId: String(deleted.id),
-    targetLabel: deleted.name,
-    summary: "Suppression d'une famille produit",
-    beforeSnapshotJson: toProductAuditSnapshot(before),
+    await tx.productFamily.delete({
+      where: {
+        id: family.id,
+      },
+    });
   });
 }
-

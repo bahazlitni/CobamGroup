@@ -1,1024 +1,993 @@
 import { Prisma } from "@prisma/client";
-import {
-  extractArticleMediaIds,
-  getArticleFirstParagraphText,
-  replaceArticleImageSources,
-} from "@/features/articles/document";
+import { getArticlePlainText } from "@/features/articles/document";
 import { makeMediaPublicMany } from "@/features/media/repository";
-import { listProductColorCandidates } from "@/features/product-colors/repository";
-import { listProductFinishCandidates } from "@/features/product-finishes/repository";
-import { parseOwnedTagString } from "@/features/tags/owned";
-import { slugifyTagName } from "@/features/tags/slug";
 import { prisma } from "@/lib/server/db/prisma";
-import { formatStoredProductAttributeValue } from "./attribute-values";
-import { resolveVariantEffectiveValues } from "./overrides";
+import {
+  formatProductAttributeKind,
+  getProductAttributeUnit,
+  normalizeProductAttributeKind,
+  resolveProductAttribute,
+} from "@/lib/static_tables/attributes";
+import { formatProductBrandValue } from "@/lib/static_tables/brands";
+import { COLORS } from "@/lib/static_tables/colors";
+import {
+  resolveFinish,
+} from "@/lib/static_tables/finishes";
 import type {
-  ProductCommercialMode,
-  ProductLifecycleStatus,
-  ProductPriceUnit,
-  ProductPriceVisibility,
-  ProductVisibility,
+  PublicProductColorReference,
+  PublicProductFinishReference,
+  PublicProductInspector,
+  PublicProductInspectorAttribute,
+  PublicProductInspectorMedia,
+  PublicProductInspectorVariant,
+  PublicProductListResult,
+  PublicProductSubcategoryLink,
+  PublicProductSummary,
+  PublicSimpleProductInspector,
 } from "./types";
 
-export const PUBLIC_PRODUCTS_PAGE_SIZE = 6;
+export type {
+  PublicProductColorReference,
+  PublicProductFinishReference,
+  PublicProductInspector,
+  PublicProductInspectorAttribute,
+  PublicProductInspectorMedia,
+  PublicProductInspectorVariant,
+  PublicProductListResult,
+  PublicProductSubcategoryLink,
+  PublicProductSummary,
+  PublicSimpleProductInspector,
+} from "./types";
 
-export type PublicProductSummary = {
-  id: number;
-  name: string;
-  slug: string;
-  subtitle: string;
-  description: string;
-  brandName: string | null;
-  price: string | null;
-  imageUrl: string | null;
-  imageThumbnailUrl: string | null;
-  imageAlt: string | null;
-};
+export const PUBLIC_PRODUCTS_PAGE_SIZE = 24;
 
-export type PublicProductListQuery = {
-  categorySlug: string;
-  subcategorySlug: string;
-  page: number;
-  pageSize: number;
-  q?: string | null;
-};
-
-export type PublicProductListResult = {
-  items: PublicProductSummary[];
-  total: number;
-  page: number;
-  pageSize: number;
-};
-
-export type PublicProductInspectorMedia = {
-  id: number;
-  kind: "IMAGE" | "VIDEO" | "DOCUMENT";
-  url: string;
-  thumbnailUrl: string | null;
-  altText: string | null;
-  title: string | null;
-  mimeType: string | null;
-  widthPx: number | null;
-  heightPx: number | null;
-};
-
-export type PublicProductInspectorAttribute = {
-  attributeId: number;
-  key: string;
-  slug: string;
-  name: string;
-  unit: string | null;
-  value: string;
-  specialType: "COLOR" | "FINISH" | null;
-};
-
-export type PublicProductInspectorVariant = {
-  id: number;
-  sku: string;
-  slug: string | null;
-  name: string;
-  description: string;
-  descriptionSeo: string;
-  lifecycleStatus: ProductLifecycleStatus;
-  visibility: ProductVisibility;
-  commercialMode: ProductCommercialMode;
-  priceVisibility: ProductPriceVisibility;
-  basePriceAmount: string | null;
-  sortOrder: number;
-  media: PublicProductInspectorMedia[];
-  attributes: PublicProductInspectorAttribute[];
-};
-
-export type PublicProductColorReference = {
-  key: string;
-  name: string;
-  hexValue: string;
-};
-
-export type PublicProductFinishReference = {
-  key: string;
-  name: string;
-  colorHex: string;
-  mediaUrl: string | null;
-  mediaThumbnailUrl: string | null;
-};
-
-export type PublicProductInspector = {
-  id: number;
-  name: string;
-  slug: string;
-  subtitle: string;
-  description: string;
-  descriptionSeo: string;
-  brandName: string | null;
-  subcategories: Array<{
-    name: string;
-    slug: string;
-    categorySlug: string;
-  }>;
-  priceUnit: ProductPriceUnit;
-  vatRate: number;
-  defaultVariantId: number | null;
-  coverMedia: PublicProductInspectorMedia | null;
-  variants: PublicProductInspectorVariant[];
-  colorReferences: PublicProductColorReference[];
-  finishReferences: PublicProductFinishReference[];
-};
-
-type PublicProductImageRelation = {
-  id: bigint;
-  altText: string | null;
-  title: string | null;
-  isActive: boolean;
-  deletedAt: Date | null;
-} | null;
-
-type PublicProductRecord = {
-  id: bigint;
-  name: string;
-  slug: string;
-  subtitle: string | null;
-  description: string | null;
-  descriptionSeo: string | null;
-  tags: string;
-  brand: {
-    name: string;
-  } | null;
-  variants: Array<{
-    sku: string;
-    slug: string | null;
-    name: string | null;
-    description: string | null;
-    descriptionSeo: string | null;
-    lifecycleStatus: "DRAFT" | "ACTIVE" | "ARCHIVED" | null;
-    visibility: "HIDDEN" | "PUBLIC" | null;
-    priceVisibility: "HIDDEN" | "VISIBLE" | null;
-    basePriceAmount: { toString(): string } | number | null;
-  }>;
-  mediaLinks: Array<{
-    mediaId: bigint;
-    media: PublicProductImageRelation;
-  }>;
-};
-
-type PublicInspectorMediaRecord = {
-  id: bigint;
-  kind: "IMAGE" | "VIDEO" | "DOCUMENT";
-  title: string | null;
-  originalFilename: string | null;
-  altText: string | null;
-  mimeType: string | null;
-  extension: string | null;
-  widthPx: number | null;
-  heightPx: number | null;
-  sizeBytes: bigint | number | null;
-};
-
-type PublicProductDetailRecord = {
-  id: bigint;
-  name: string;
-  slug: string;
-  subtitle: string | null;
-  description: string | null;
-  descriptionSeo: string | null;
-  priceUnit: ProductPriceUnit;
-  vatRate: number;
-  defaultVariantId: bigint | null;
-  brand: {
-    name: string;
-  } | null;
-  subcategories: Array<{
-    name: string;
-    slug: string;
-    category: {
-      slug: string;
-    };
-  }>;
-  mediaLinks: Array<{
-    mediaId: bigint;
-    media: PublicInspectorMediaRecord;
-  }>;
-  variants: Array<{
-    id: bigint;
-    sku: string;
-    slug: string | null;
-    name: string | null;
-    description: string | null;
-    descriptionSeo: string | null;
-    lifecycleStatus: ProductLifecycleStatus | null;
-    visibility: ProductVisibility | null;
-    commercialMode: ProductCommercialMode | null;
-    priceVisibility: ProductPriceVisibility | null;
-    basePriceAmount: { toString(): string } | number | null;
-    sortOrder: number;
-    mediaLinks: Array<{
-      mediaId: bigint;
-      media: PublicInspectorMediaRecord;
-    }>;
-    attributeValues: Array<{
-      attributeId: bigint;
-      valueText: string | null;
-      valueNumber: { toString(): string } | number | null;
-      valueBoolean: boolean | null;
-      valueJson: unknown | null;
-      attribute: {
-        key: string;
-        slug: string;
-        name: string;
-        dataType: "TEXT" | "NUMBER" | "BOOLEAN";
-        unit: string | null;
-        sortOrder: number;
-      };
-    }>;
-  }>;
-};
-
-const publicProductSelect = {
-  id: true,
-  name: true,
-  slug: true,
-  subtitle: true,
-  description: true,
-  descriptionSeo: true,
-  tags: true,
-  brand: {
-    select: {
-      name: true,
-    },
-  },
-  variants: {
-    where: {
-      lifecycleStatus: "ACTIVE",
-      visibility: "PUBLIC",
-    },
-    orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
-    select: {
-      sku: true,
-      slug: true,
-      name: true,
-      description: true,
-      descriptionSeo: true,
-      lifecycleStatus: true,
-      visibility: true,
-      priceVisibility: true,
-      basePriceAmount: true,
-    },
-  },
-  mediaLinks: {
-    where: {
-      role: "COVER",
-    },
-    orderBy: [{ sortOrder: "asc" }, { mediaId: "asc" }],
-    select: {
-      mediaId: true,
-      media: {
-        select: {
-          id: true,
-          altText: true,
-          title: true,
-          isActive: true,
-          deletedAt: true,
-        },
-      },
-    },
-  },
-} satisfies Prisma.ProductFamilySelect;
-
-const publicInspectorMediaSelect = {
+const MEDIA_SELECT = {
   id: true,
   kind: true,
   title: true,
-  originalFilename: true,
   altText: true,
   mimeType: true,
-  extension: true,
-  widthPx: true,
-  heightPx: true,
-  sizeBytes: true,
+  isActive: true,
+  deletedAt: true,
 } satisfies Prisma.MediaSelect;
 
-const publicProductDetailSelect = {
+const PUBLIC_PRODUCT_SELECT = {
   id: true,
-  name: true,
+  sku: true,
   slug: true,
-  subtitle: true,
+  kind: true,
+  name: true,
   description: true,
   descriptionSeo: true,
-  priceUnit: true,
+  brandCode: true,
+  basePriceAmount: true,
   vatRate: true,
-  defaultVariantId: true,
-  brand: {
+  visibility: true,
+  priceVisibility: true,
+  stockVisibility: true,
+  lifecycle: true,
+  commercialMode: true,
+  tags: true,
+  subcategoryLinks: {
     select: {
-      name: true,
-    },
-  },
-  subcategories: {
-    where: {
-      isActive: true,
-    },
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: {
-      name: true,
-      slug: true,
-      category: {
+      subcategory: {
         select: {
+          id: true,
+          name: true,
           slug: true,
-        },
-      },
-    },
-  },
-  mediaLinks: {
-    where: {
-      role: "COVER",
-      media: {
-        isActive: true,
-        deletedAt: null,
-      },
-    },
-    orderBy: [{ sortOrder: "asc" }, { mediaId: "asc" }],
-    select: {
-      mediaId: true,
-      media: {
-        select: publicInspectorMediaSelect,
-      },
-    },
-  },
-  variants: {
-    orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
-    select: {
-      id: true,
-      sku: true,
-      slug: true,
-      name: true,
-      description: true,
-      descriptionSeo: true,
-      lifecycleStatus: true,
-      visibility: true,
-      commercialMode: true,
-      priceVisibility: true,
-      basePriceAmount: true,
-      sortOrder: true,
-      mediaLinks: {
-        where: {
-          media: {
-            isActive: true,
-            deletedAt: null,
-          },
-        },
-        orderBy: [{ sortOrder: "asc" }, { mediaId: "asc" }],
-        select: {
-          mediaId: true,
-          media: {
-            select: publicInspectorMediaSelect,
-          },
-        },
-      },
-      attributeValues: {
-        orderBy: [{ attribute: { sortOrder: "asc" } }, { attribute: { name: "asc" } }],
-        select: {
-          attributeId: true,
-          valueText: true,
-          valueNumber: true,
-          valueBoolean: true,
-          valueJson: true,
-          attribute: {
+          category: {
             select: {
-              key: true,
-              slug: true,
+              id: true,
               name: true,
-              dataType: true,
-              unit: true,
-              sortOrder: true,
+              slug: true,
             },
           },
         },
       },
     },
   },
+  mediaLinks: {
+    orderBy: [{ sortOrder: "asc" }, { mediaId: "asc" }],
+    select: {
+      media: {
+        select: MEDIA_SELECT,
+      },
+    },
+  },
+  attributes: {
+    orderBy: [{ sortOrder: "asc" }, { kind: "asc" }],
+    select: {
+      kind: true,
+      value: true,
+      sortOrder: true,
+    },
+  },
+} satisfies Prisma.ProductSelect;
+
+const PACK_COMPONENT_SELECT = {
+  id: true,
+  sku: true,
+  slug: true,
+  kind: true,
+  name: true,
+  description: true,
+  descriptionSeo: true,
+  brandCode: true,
+  basePriceAmount: true,
+  vatRate: true,
+  visibility: true,
+  priceVisibility: true,
+  stockVisibility: true,
+  lifecycle: true,
+  commercialMode: true,
+  tags: true,
+} satisfies Prisma.ProductSelect;
+
+const PUBLIC_PACK_SELECT = {
+  ...PUBLIC_PRODUCT_SELECT,
+  packLinesAsPack: {
+    orderBy: [{ sortOrder: "asc" }, { productId: "asc" }],
+    select: {
+      quantity: true,
+      product: {
+        select: PACK_COMPONENT_SELECT,
+      },
+    },
+  },
+} satisfies Prisma.ProductSelect;
+
+const PUBLIC_FAMILY_SELECT = {
+  id: true,
+  name: true,
+  slug: true,
+  subtitle: true,
+  description: true,
+  descriptionSeo: true,
+  mainImageMediaId: true,
+  defaultProductId: true,
+  mainImage: {
+    select: MEDIA_SELECT,
+  },
+  members: {
+    orderBy: [{ sortOrder: "asc" }, { productId: "asc" }],
+    select: {
+      sortOrder: true,
+      product: {
+        select: PUBLIC_PRODUCT_SELECT,
+      },
+    },
+  },
 } satisfies Prisma.ProductFamilySelect;
 
-function buildPublicMediaUrl(
-  mediaId: bigint | number,
-  variant: "original" | "thumbnail" = "original",
-) {
+type PublicFamilyRecord = Prisma.ProductFamilyGetPayload<{
+  select: typeof PUBLIC_FAMILY_SELECT;
+}>;
+
+type PublicProductRecord = Prisma.ProductGetPayload<{
+  select: typeof PUBLIC_PRODUCT_SELECT;
+}>;
+
+type PublicPackRecord = Prisma.ProductGetPayload<{
+  select: typeof PUBLIC_PACK_SELECT;
+}>;
+
+function normalizeComparableValue(value: string | null | undefined) {
+  return (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+function buildPublicMediaUrl(mediaId: bigint | number, variant: "original" | "thumbnail" = "original") {
   const query = variant === "thumbnail" ? "?variant=thumbnail" : "";
   return `/api/media/${mediaId.toString()}/file${query}`;
 }
 
-function buildPublicProductsWhere(
-  input: Pick<PublicProductListQuery, "categorySlug" | "subcategorySlug">,
-): Prisma.ProductFamilyWhereInput {
-  return {
-    variants: {
-      some: {
-        lifecycleStatus: "ACTIVE",
-        visibility: "PUBLIC",
-      },
-    },
-    subcategories: {
-      some: {
-        isActive: true,
-        slug: input.subcategorySlug,
-        category: {
-          isActive: true,
-          slug: input.categorySlug,
-        },
-      },
-    },
-  };
-}
-
-function normalizeLookupKey(value: string | null | undefined) {
-  return (value ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLocaleLowerCase("fr-FR");
-}
-
-function getSpecialAttributeType(attribute: {
-  name: string;
-  slug: string;
-  key: string;
+function isRenderableMedia(input: {
+  id: bigint;
+  isActive: boolean;
+  deletedAt: Date | null;
 }) {
-  const candidates = [attribute.name, attribute.slug, attribute.key].map(normalizeLookupKey);
-
-  if (
-    candidates.some(
-      (candidate) =>
-        candidate === "couleur" ||
-        candidate.startsWith("couleur ") ||
-        candidate.startsWith("couleur-"),
-    )
-  ) {
-    return "COLOR" as const;
-  }
-
-  if (
-    candidates.some(
-      (candidate) =>
-        candidate === "finition" ||
-        candidate.startsWith("finition ") ||
-        candidate.startsWith("finition-"),
-    )
-  ) {
-    return "FINISH" as const;
-  }
-
-  return null;
+  return input.isActive && input.deletedAt == null;
 }
 
-type ComparableSearchValue = {
-  canonical: string;
-  compact: string;
-};
-
-function normalizeComparableSearchValue(value: string | null | undefined): ComparableSearchValue {
-  const canonical = (value ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim()
-    .replace(/\s+/g, " ");
-
-  return {
-    canonical,
-    compact: canonical.replace(/\s+/g, ""),
-  };
-}
-
-function hasStartsWithMatch(
-  field: string | null | undefined,
-  query: ComparableSearchValue,
-) {
-  if (!query.canonical || !query.compact) {
-    return false;
+function mapMediaRecord(
+  media: { id: bigint; kind: "IMAGE" | "VIDEO" | "DOCUMENT"; title: string | null; altText: string | null; mimeType: string | null; isActive: boolean; deletedAt: Date | null } | null,
+): PublicProductInspectorMedia | null {
+  if (!media || !isRenderableMedia(media)) {
+    return null;
   }
 
-  const normalizedField = normalizeComparableSearchValue(field);
-
-  return (
-    normalizedField.canonical.startsWith(query.canonical) ||
-    normalizedField.compact.startsWith(query.compact)
-  );
-}
-
-function getIncludesMatchIndex(
-  field: string | null | undefined,
-  query: ComparableSearchValue,
-) {
-  if (!query.canonical || !query.compact) {
-    return -1;
-  }
-
-  const normalizedField = normalizeComparableSearchValue(field);
-  const canonicalIndex = normalizedField.canonical.indexOf(query.canonical);
-
-  if (canonicalIndex >= 0) {
-    return canonicalIndex;
-  }
-
-  return normalizedField.compact.indexOf(query.compact);
-}
-
-function getStartsWithScore(
-  field: string | null | undefined,
-  query: ComparableSearchValue,
-  baseScore: number,
-) {
-  if (!hasStartsWithMatch(field, query)) {
-    return 0;
-  }
-
-  const normalizedField = normalizeComparableSearchValue(field);
-  const exactMatch =
-    normalizedField.canonical === query.canonical ||
-    normalizedField.compact === query.compact;
-  const tightnessBonus = Math.max(
-    0,
-    240 - Math.max(0, normalizedField.compact.length - query.compact.length),
-  );
-
-  return baseScore + tightnessBonus + (exactMatch ? 600 : 0);
-}
-
-function getIncludesScore(
-  field: string | null | undefined,
-  query: ComparableSearchValue,
-  baseScore: number,
-) {
-  const matchIndex = getIncludesMatchIndex(field, query);
-
-  if (matchIndex < 0) {
-    return 0;
-  }
-
-  return baseScore + Math.max(0, 120 - matchIndex);
-}
-
-function getPublicProductSearchScore(
-  product: PublicProductRecord,
-  query: ComparableSearchValue,
-) {
-  let bestScore = 0;
-
-  for (const variant of product.variants) {
-    bestScore = Math.max(
-      bestScore,
-      getStartsWithScore(variant.sku, query, 100000),
-      getStartsWithScore(variant.name, query, 96000),
-      getStartsWithScore(variant.slug, query, 92000),
-      getIncludesScore(variant.description, query, 30000),
-      getIncludesScore(variant.descriptionSeo, query, 30000),
-    );
-  }
-
-  bestScore = Math.max(
-    bestScore,
-    getStartsWithScore(product.name, query, 84000),
-    getStartsWithScore(product.slug, query, 80000),
-    getStartsWithScore(product.subtitle, query, 76000),
-    getStartsWithScore(product.brand?.name, query, 68000),
-    getIncludesScore(product.description, query, 42000),
-    getIncludesScore(product.descriptionSeo, query, 42000),
-  );
-
-  for (const tagName of parseOwnedTagString(product.tags)) {
-    bestScore = Math.max(
-      bestScore,
-      getIncludesScore(tagName, query, 60000),
-      getIncludesScore(slugifyTagName(tagName), query, 60000),
-    );
-  }
-
-  return bestScore;
-}
-
-function sortPublicProductsBySearchScore(
-  left: { product: PublicProductRecord; score: number },
-  right: { product: PublicProductRecord; score: number },
-) {
-  if (right.score !== left.score) {
-    return right.score - left.score;
-  }
-
-  const leftName = left.product.name.localeCompare(right.product.name, "fr-FR", {
-    sensitivity: "base",
-  });
-
-  if (leftName !== 0) {
-    return leftName;
-  }
-
-  return Number(left.product.id - right.product.id);
-}
-
-function formatDecimalValue(value: { toString(): string } | number | null) {
-  return value != null ? String(value) : null;
-}
-
-function mapPublicInspectorMedia(
-  media: PublicInspectorMediaRecord,
-): PublicProductInspectorMedia {
   return {
     id: Number(media.id),
     kind: media.kind,
     url: buildPublicMediaUrl(media.id, "original"),
     thumbnailUrl: media.kind === "IMAGE" ? buildPublicMediaUrl(media.id, "thumbnail") : null,
-    altText: media.altText ?? media.title ?? media.originalFilename,
+    altText: media.altText,
     title: media.title,
     mimeType: media.mimeType,
-    widthPx: media.widthPx,
-    heightPx: media.heightPx,
   };
 }
 
-function normalizePublicRichTextContent(value: string | null | undefined) {
-  return replaceArticleImageSources(
-    value,
-    (mediaId) => buildPublicMediaUrl(mediaId, "original"),
-  );
+function collectMediaIdsForPublishing(record: PublicFamilyRecord) {
+  const ids = new Set<number>();
+
+  if (record.mainImage && isRenderableMedia(record.mainImage)) {
+    ids.add(Number(record.mainImage.id));
+  }
+
+  for (const member of record.members) {
+    for (const link of member.product.mediaLinks) {
+      if (isRenderableMedia(link.media)) {
+        ids.add(Number(link.media.id));
+      }
+    }
+  }
+
+  return [...ids];
 }
 
-function buildPublicDefaultVariantFallback(
-  product: Pick<PublicProductDetailRecord, "defaultVariantId" | "variants">,
+function collectProductMediaIdsForPublishing(
+  records: Array<Pick<PublicProductRecord, "mediaLinks">>,
 ) {
-  const defaultVariant =
-    product.variants.find((variant) => variant.id === product.defaultVariantId) ??
-    product.variants[0] ??
-    null;
+  const ids = new Set<number>();
+
+  for (const record of records) {
+    for (const link of record.mediaLinks) {
+      if (isRenderableMedia(link.media)) {
+        ids.add(Number(link.media.id));
+      }
+    }
+  }
+
+  return [...ids];
+}
+
+function isPublicProduct(product: PublicProductRecord) {
+  return product.kind === "VARIANT" && product.lifecycle === "ACTIVE" && product.visibility === true;
+}
+
+function isPublicSingleProduct(product: PublicProductRecord) {
+  return product.kind === "SINGLE" && product.lifecycle === "ACTIVE" && product.visibility === true;
+}
+
+function getBrandName(brandCode: string | null | undefined) {
+  return formatProductBrandValue(brandCode);
+}
+
+function parseRichTextPreview(value: string | null | undefined) {
+  const text = getArticlePlainText(value ?? "").trim();
+  return text || null;
+}
+
+function formatDecimal(value: Prisma.Decimal | null | undefined) {
+  return value == null ? null : value.toString();
+}
+
+function mapSubcategoryLinks(
+  links: PublicProductRecord["subcategoryLinks"],
+): PublicProductSubcategoryLink[] {
+  return links.map((link) => ({
+    id: Number(link.subcategory.id),
+    name: link.subcategory.name,
+    slug: link.subcategory.slug,
+    categorySlug: link.subcategory.category.slug,
+    categoryName: link.subcategory.category.name,
+  }));
+}
+
+function getAttributePresentation(kind: string) {
+  const canonicalKind = normalizeProductAttributeKind(kind);
+  const resolvedAttribute = resolveProductAttribute(kind);
 
   return {
-    id: defaultVariant?.id ?? null,
-    lifecycleStatus: defaultVariant?.lifecycleStatus ?? "DRAFT",
-    visibility: defaultVariant?.visibility ?? "HIDDEN",
-    commercialMode: defaultVariant?.commercialMode ?? "REFERENCE_ONLY",
-    priceVisibility: defaultVariant?.priceVisibility ?? "HIDDEN",
-    basePriceAmount: formatDecimalValue(defaultVariant?.basePriceAmount ?? null),
+    attributeId: canonicalKind || kind,
+    kind: canonicalKind || kind,
+    name: formatProductAttributeKind(kind),
+    unit: getProductAttributeUnit(kind),
+    specialType:
+      resolvedAttribute?.value === "FINISH"
+        ? ("FINISH" as const)
+        : resolvedAttribute?.value === "COLOR"
+          ? ("COLOR" as const)
+          : null,
   };
 }
 
-function mapPublicInspectorVariant(
-  product: Pick<
-    PublicProductDetailRecord,
-    "defaultVariantId" | "variants" | "name" | "description" | "descriptionSeo"
-  >,
-  variant: PublicProductDetailRecord["variants"][number],
-): PublicProductInspectorVariant {
-  const defaultVariant = buildPublicDefaultVariantFallback(product);
-  const effectiveValues = resolveVariantEffectiveValues(defaultVariant, {
-    lifecycleStatus: variant.lifecycleStatus,
-    visibility: variant.visibility,
-    commercialMode: variant.commercialMode,
-    priceVisibility: variant.priceVisibility,
-    basePriceAmount: formatDecimalValue(variant.basePriceAmount),
-  });
+function formatAttributeValue(kind: string, value: string) {
+  if (normalizeProductAttributeKind(kind) !== "FINISH") {
+    return value;
+  }
 
-  return {
-    id: Number(variant.id),
-    sku: variant.sku,
-    slug: variant.slug,
-    name: variant.name?.trim() || product.name,
-    description:
-      variant.description?.trim() || product.description?.trim()
-        ? normalizePublicRichTextContent(
-            variant.description?.trim() || product.description?.trim() || "",
-          )
-        : "",
-    descriptionSeo:
-      variant.descriptionSeo?.trim() || product.descriptionSeo?.trim() || "",
-    lifecycleStatus: effectiveValues.effectiveLifecycleStatus,
-    visibility: effectiveValues.effectiveVisibility,
-    commercialMode: effectiveValues.effectiveCommercialMode,
-    priceVisibility: effectiveValues.effectivePriceVisibility,
-    basePriceAmount: effectiveValues.effectiveBasePriceAmount,
-    sortOrder: variant.sortOrder,
-    media: variant.mediaLinks.map((link) => mapPublicInspectorMedia(link.media)),
-    attributes: variant.attributeValues
-      .map((attributeValue) => {
-        const value = formatStoredProductAttributeValue({
-          dataType: attributeValue.attribute.dataType,
-          valueText: attributeValue.valueText,
-          valueNumber: attributeValue.valueNumber,
-          valueBoolean: attributeValue.valueBoolean,
-          valueJson: attributeValue.valueJson,
-        });
-
-        if (!value) {
-          return null;
-        }
-
-        return {
-          attributeId: Number(attributeValue.attributeId),
-          key: attributeValue.attribute.key,
-          slug: attributeValue.attribute.slug,
-          name: attributeValue.attribute.name,
-          unit: attributeValue.attribute.unit,
-          value,
-          specialType: getSpecialAttributeType(attributeValue.attribute),
-        } satisfies PublicProductInspectorAttribute;
-      })
-      .filter(
-        (attribute): attribute is PublicProductInspectorAttribute => attribute != null,
-      ),
-  };
+  return resolveFinish(value)?.label ?? value;
 }
 
-function isPublicInspectorVariant(variant: PublicProductInspectorVariant) {
-  return variant.lifecycleStatus === "ACTIVE" && variant.visibility === "PUBLIC";
-}
+function mapVariantAttributes(product: PublicProductRecord): PublicProductInspectorAttribute[] {
+  return product.attributes.map((attribute) => {
+    const presentation = getAttributePresentation(attribute.kind);
 
-function sortPublicInspectorVariants(
-  defaultVariantId: number | null,
-  variants: PublicProductInspectorVariant[],
-) {
-  return [...variants].sort((left, right) => {
-    const leftIsDefault = defaultVariantId != null && left.id === defaultVariantId;
-    const rightIsDefault = defaultVariantId != null && right.id === defaultVariantId;
-
-    if (leftIsDefault !== rightIsDefault) {
-      return leftIsDefault ? -1 : 1;
-    }
-
-    if (left.sortOrder !== right.sortOrder) {
-      return left.sortOrder - right.sortOrder;
-    }
-
-    return left.id - right.id;
+    return {
+      attributeId: presentation.attributeId,
+      kind: presentation.kind,
+      name: presentation.name,
+      value: formatAttributeValue(attribute.kind, attribute.value),
+      unit: presentation.unit,
+      specialType: presentation.specialType,
+    };
   });
 }
 
-async function buildPublicSpecialReferences(variants: PublicProductInspectorVariant[]) {
-  const colorKeys = new Set<string>();
-  const finishKeys = new Set<string>();
+function mapVariantMedia(product: PublicProductRecord) {
+  return product.mediaLinks
+    .map((link) => mapMediaRecord(link.media))
+    .filter((media): media is PublicProductInspectorMedia => media != null);
+}
+
+function buildProductCoverMedia(product: Pick<PublicProductRecord, "mediaLinks">) {
+  return mapVariantMedia(product as PublicProductRecord)[0] ?? null;
+}
+
+function derivePack(record: PublicPackRecord) {
+  const brandNames = [
+    ...new Set(
+      record.packLinesAsPack.flatMap((line) => {
+        const brandName = getBrandName(line.product.brandCode);
+        return brandName ? [brandName] : [];
+      }),
+    ),
+  ];
+  const visibility =
+    record.packLinesAsPack.length > 0 &&
+    record.packLinesAsPack.every((line) => line.product.visibility === true);
+  const priceVisibility =
+    record.packLinesAsPack.length > 0 &&
+    record.packLinesAsPack.every((line) => line.product.priceVisibility === true);
+  const lifecycle =
+    record.packLinesAsPack.length > 0 &&
+    record.packLinesAsPack.every((line) => line.product.lifecycle === "ACTIVE")
+      ? "ACTIVE"
+      : "DRAFT";
+
+  let priceTotal = new Prisma.Decimal(0);
+  let vatWeighted = new Prisma.Decimal(0);
+  let missingPrice = false;
+  let commercialMode: PublicPackRecord["packLinesAsPack"][number]["product"]["commercialMode"] | null = null;
+  const tagValues = new Set<string>();
+
+  for (const line of record.packLinesAsPack) {
+    const componentPrice = line.product.basePriceAmount;
+    if (componentPrice == null) {
+      missingPrice = true;
+    } else {
+      const lineTotal = componentPrice.mul(line.quantity);
+      priceTotal = priceTotal.add(lineTotal);
+      vatWeighted = vatWeighted.add(lineTotal.mul(line.product.vatRate ?? 0));
+    }
+
+    for (const tag of line.product.tags.split(/\s+/).filter(Boolean)) {
+      tagValues.add(tag);
+    }
+
+    commercialMode =
+      commercialMode == null
+        ? line.product.commercialMode
+        : commercialMode === "ON_REQUEST_ONLY" || line.product.commercialMode === "ON_REQUEST_ONLY"
+          ? "ON_REQUEST_ONLY"
+          : commercialMode === "ON_REQUEST_OR_ONLINE" || line.product.commercialMode === "ON_REQUEST_OR_ONLINE"
+            ? "ON_REQUEST_OR_ONLINE"
+            : "ONLINE_ONLY";
+  }
+
+  return {
+    brandNames,
+    visibility,
+    priceVisibility,
+    lifecycle,
+    commercialMode,
+    basePriceAmount: missingPrice ? null : priceTotal.toString(),
+    vatRate: priceTotal.equals(0) ? 0 : Number(vatWeighted.div(priceTotal).toFixed(4)),
+    tags: [...tagValues].sort((left, right) => left.localeCompare(right, "fr-FR")).join(" "),
+    searchProducts: record.packLinesAsPack.map((line) => line.product),
+  };
+}
+
+function pickDefaultPublicVariant(record: PublicFamilyRecord) {
+  const publicVariants = record.members
+    .map((member) => member.product)
+    .filter(isPublicProduct);
+  const defaultProductId =
+    record.defaultProductId == null ? null : Number(record.defaultProductId);
+
+  if (publicVariants.length === 0) {
+    return {
+      publicVariants,
+      defaultVariant:
+        publicVariants.find((variant) => Number(variant.id) === defaultProductId) ??
+        publicVariants[0] ??
+        null,
+    };
+  }
+
+  return {
+    publicVariants,
+    defaultVariant:
+      publicVariants.find((variant) => Number(variant.id) === defaultProductId) ??
+      publicVariants[0],
+  };
+}
+
+function buildFamilyCoverMedia(record: PublicFamilyRecord, defaultVariant: PublicProductRecord | null) {
+  const familyMainImage = mapMediaRecord(record.mainImage);
+  if (familyMainImage) {
+    return familyMainImage;
+  }
+
+  return defaultVariant ? mapVariantMedia(defaultVariant)[0] ?? null : null;
+}
+
+function scoreFamilySearch(record: PublicFamilyRecord, variants: PublicProductRecord[], normalizedQuery: string) {
+  if (!normalizedQuery) {
+    return 0;
+  }
+
+  let score = 0;
+  const familyName = normalizeComparableValue(record.name);
+  const familySlug = normalizeComparableValue(record.slug);
+  const familySubtitle = normalizeComparableValue(record.subtitle);
+  const familyDescription = normalizeComparableValue(parseRichTextPreview(record.description));
+
+  if (familyName.startsWith(normalizedQuery)) score = Math.max(score, 700);
+  if (familySlug.startsWith(normalizedQuery)) score = Math.max(score, 680);
+  if (familySubtitle.startsWith(normalizedQuery)) score = Math.max(score, 650);
+  if (familyDescription.includes(normalizedQuery)) score = Math.max(score, 300);
 
   for (const variant of variants) {
-    for (const attribute of variant.attributes) {
-      const normalizedValue = normalizeLookupKey(attribute.value);
+    if (normalizeComparableValue(variant.sku).startsWith(normalizedQuery)) score = Math.max(score, 1000);
+    if (normalizeComparableValue(variant.name).startsWith(normalizedQuery)) score = Math.max(score, 980);
+    if (normalizeComparableValue(variant.slug).startsWith(normalizedQuery)) score = Math.max(score, 960);
+    if (normalizeComparableValue(parseRichTextPreview(variant.description)).includes(normalizedQuery)) {
+      score = Math.max(score, 280);
+    }
+    if (normalizeComparableValue(getBrandName(variant.brandCode)).startsWith(normalizedQuery)) {
+      score = Math.max(score, 500);
+    }
+    if (normalizeComparableValue(variant.tags).includes(normalizedQuery)) {
+      score = Math.max(score, 350);
+    }
+  }
 
-      if (!normalizedValue) {
+  return score;
+}
+
+function scoreConcreteProductSearch(
+  product: Pick<
+    PublicProductRecord,
+    "sku" | "name" | "slug" | "description" | "descriptionSeo" | "tags"
+  >,
+  input: {
+    normalizedQuery: string;
+    brandName?: string | null;
+    extraProducts?: Array<
+      Pick<PublicProductRecord, "sku" | "name" | "slug" | "description" | "descriptionSeo">
+    >;
+    extraTags?: string | null;
+  } = { normalizedQuery: "" },
+) {
+  const { normalizedQuery, brandName, extraProducts = [], extraTags } = input;
+
+  if (!normalizedQuery) {
+    return 0;
+  }
+
+  let score = 0;
+  const productSku = normalizeComparableValue(product.sku);
+  const productName = normalizeComparableValue(product.name);
+  const productSlug = normalizeComparableValue(product.slug);
+  const productDescription = normalizeComparableValue(parseRichTextPreview(product.description));
+  const productDescriptionSeo = normalizeComparableValue(parseRichTextPreview(product.descriptionSeo));
+  const productTags = normalizeComparableValue([product.tags, extraTags].filter(Boolean).join(" "));
+
+  if (productSku.startsWith(normalizedQuery)) score = Math.max(score, 1000);
+  if (productName.startsWith(normalizedQuery)) score = Math.max(score, 980);
+  if (productSlug.startsWith(normalizedQuery)) score = Math.max(score, 960);
+  if (normalizeComparableValue(brandName).startsWith(normalizedQuery)) score = Math.max(score, 500);
+  if (productTags.includes(normalizedQuery)) score = Math.max(score, 350);
+  if (productDescription.includes(normalizedQuery) || productDescriptionSeo.includes(normalizedQuery)) {
+    score = Math.max(score, 280);
+  }
+
+  for (const extraProduct of extraProducts) {
+    if (normalizeComparableValue(extraProduct.sku).startsWith(normalizedQuery)) score = Math.max(score, 900);
+    if (normalizeComparableValue(extraProduct.name).startsWith(normalizedQuery)) score = Math.max(score, 880);
+    if (normalizeComparableValue(extraProduct.slug).startsWith(normalizedQuery)) score = Math.max(score, 860);
+    if (
+      normalizeComparableValue(parseRichTextPreview(extraProduct.description)).includes(normalizedQuery) ||
+      normalizeComparableValue(parseRichTextPreview(extraProduct.descriptionSeo)).includes(normalizedQuery)
+    ) {
+      score = Math.max(score, 260);
+    }
+  }
+
+  return score;
+}
+
+function mapFamilySummary(record: PublicFamilyRecord, defaultVariant: PublicProductRecord | null): PublicProductSummary {
+  const coverMedia = buildFamilyCoverMedia(record, defaultVariant);
+
+  return {
+    id: Number(record.id),
+    entityType: "FAMILY",
+    name: record.name,
+    slug: record.slug,
+    subtitle: record.subtitle,
+    description: parseRichTextPreview(record.description) ?? parseRichTextPreview(defaultVariant?.description ?? null),
+    brandName: getBrandName(defaultVariant?.brandCode ?? null),
+    imageUrl: coverMedia?.url ?? null,
+    imageThumbnailUrl: coverMedia?.thumbnailUrl ?? null,
+    imageAlt: coverMedia?.altText ?? record.name,
+    price:
+      defaultVariant?.priceVisibility && defaultVariant.basePriceAmount != null
+        ? formatDecimal(defaultVariant.basePriceAmount)
+        : null,
+  };
+}
+
+function mapSingleProductSummary(record: PublicProductRecord): PublicProductSummary {
+  const coverMedia = buildProductCoverMedia(record);
+
+  return {
+    id: Number(record.id),
+    entityType: "SINGLE",
+    name: record.name,
+    slug: record.slug,
+    subtitle: null,
+    description: parseRichTextPreview(record.description),
+    brandName: getBrandName(record.brandCode),
+    imageUrl: coverMedia?.kind === "IMAGE" ? coverMedia.url : null,
+    imageThumbnailUrl: coverMedia?.kind === "IMAGE" ? coverMedia.thumbnailUrl : null,
+    imageAlt: coverMedia?.altText ?? record.name,
+    price:
+      record.priceVisibility && record.basePriceAmount != null
+        ? formatDecimal(record.basePriceAmount)
+        : null,
+  };
+}
+
+function mapPackSummary(record: PublicPackRecord, derived: ReturnType<typeof derivePack>): PublicProductSummary {
+  const coverMedia = buildProductCoverMedia(record);
+
+  return {
+    id: Number(record.id),
+    entityType: "PACK",
+    name: record.name,
+    slug: record.slug,
+    subtitle: null,
+    description: parseRichTextPreview(record.description),
+    brandName: derived.brandNames.length > 0 ? derived.brandNames.join(" · ") : null,
+    imageUrl: coverMedia?.kind === "IMAGE" ? coverMedia.url : null,
+    imageThumbnailUrl: coverMedia?.kind === "IMAGE" ? coverMedia.thumbnailUrl : null,
+    imageAlt: coverMedia?.altText ?? record.name,
+    price: derived.priceVisibility ? derived.basePriceAmount : null,
+  };
+}
+
+function buildColorReferencesFromAttributes(
+  attributeGroups: PublicProductInspectorAttribute[][],
+): PublicProductColorReference[] {
+  const seen = new Map<string, PublicProductColorReference>();
+
+  for (const attributes of attributeGroups) {
+    for (const attribute of attributes) {
+      if (attribute.specialType !== "COLOR") {
         continue;
       }
 
-      if (attribute.specialType === "COLOR") {
-        colorKeys.add(normalizedValue);
+      const key = normalizeComparableValue(attribute.value);
+      if (seen.has(key)) {
+        continue;
       }
 
-      if (attribute.specialType === "FINISH") {
-        finishKeys.add(normalizedValue);
-      }
+      const color = COLORS.find(
+        (entry) => normalizeComparableValue(entry.label) === key,
+      );
+
+      seen.set(key, {
+        key,
+        label: attribute.value,
+        hexValue:
+          color?.value ??
+          (/^#[0-9a-f]{3,8}$/i.test(attribute.value) ? attribute.value : null),
+      } as PublicProductColorReference);
     }
   }
 
-  if (colorKeys.size === 0 && finishKeys.size === 0) {
-    return {
-      colorReferences: [] as PublicProductColorReference[],
-      finishReferences: [] as PublicProductFinishReference[],
-    };
+  return [...seen.values()];
+}
+
+function buildFinishReferencesFromAttributes(
+  attributeGroups: PublicProductInspectorAttribute[][],
+): PublicProductFinishReference[] {
+  const seen = new Map<string, PublicProductFinishReference>();
+
+  for (const attributes of attributeGroups) {
+    for (const attribute of attributes) {
+      if (attribute.specialType !== "FINISH") {
+        continue;
+      }
+
+      const key = normalizeComparableValue(attribute.value);
+      if (seen.has(key)) {
+        continue;
+      }
+
+      seen.set(key, {
+        key,
+        name: attribute.value,
+        colorHex: null,
+        mediaUrl: null,
+        mediaThumbnailUrl: null,
+      });
+    }
   }
 
-  const [colors, finishes] = await Promise.all([
-    colorKeys.size > 0 ? listProductColorCandidates() : Promise.resolve([]),
-    finishKeys.size > 0 ? listProductFinishCandidates() : Promise.resolve([]),
-  ]);
-  const finishMediaIds = finishes
-    .filter((finish) => finish.mediaId != null && finishKeys.has(normalizeLookupKey(finish.name)))
-    .map((finish) => Number(finish.mediaId));
-
-  await makeMediaPublicMany(finishMediaIds);
-
-  return {
-    colorReferences: colors
-      .filter((color) => colorKeys.has(normalizeLookupKey(color.name)))
-      .map((color) => ({
-        key: normalizeLookupKey(color.name),
-        name: color.name,
-        hexValue: color.hexValue,
-      })),
-    finishReferences: finishes
-      .filter((finish) => finishKeys.has(normalizeLookupKey(finish.name)))
-      .map((finish) => ({
-        key: normalizeLookupKey(finish.name),
-        name: finish.name,
-        colorHex: finish.colorHex,
-        mediaUrl:
-          finish.mediaId != null ? buildPublicMediaUrl(Number(finish.mediaId), "original") : null,
-        mediaThumbnailUrl:
-          finish.mediaId != null
-            ? buildPublicMediaUrl(Number(finish.mediaId), "thumbnail")
-            : null,
-      })),
-  };
+  return [...seen.values()];
 }
 
-async function ensurePublicProductDetailMedia(record: PublicProductDetailRecord) {
-  const mediaIds = [
-    ...record.mediaLinks.map((link) => Number(link.mediaId)),
-    ...record.variants.flatMap((variant) =>
-      variant.mediaLinks.map((link) => Number(link.mediaId)),
-    ),
-    ...extractArticleMediaIds(record.description),
-    ...record.variants.flatMap((variant) => extractArticleMediaIds(variant.description)),
-  ];
-
-  await makeMediaPublicMany(mediaIds);
+function buildColorReferences(variants: PublicProductInspectorVariant[]) {
+  return buildColorReferencesFromAttributes(variants.map((variant) => variant.attributes));
 }
 
-async function ensurePublicProductImages(records: PublicProductRecord[]) {
-  const mediaIds = records.flatMap((record) => {
-    const coverMedia = record.mediaLinks[0];
-
-    if (
-      coverMedia?.mediaId == null ||
-      coverMedia.media == null ||
-      !coverMedia.media.isActive ||
-      coverMedia.media.deletedAt != null
-    ) {
-      return [];
-    }
-
-    return [Number(coverMedia.mediaId)];
-  });
-
-  await makeMediaPublicMany(mediaIds);
+function buildFinishReferences(variants: PublicProductInspectorVariant[]) {
+  return buildFinishReferencesFromAttributes(variants.map((variant) => variant.attributes));
 }
 
-function mapPublicProductSummary(product: PublicProductRecord): PublicProductSummary {
-  const coverMedia = product.mediaLinks[0];
-  const hasCover =
-    coverMedia?.mediaId != null &&
-    coverMedia.media != null &&
-    coverMedia.media.isActive &&
-    coverMedia.media.deletedAt == null;
-  const descriptionPreview = getArticleFirstParagraphText(product.description);
-  const visiblePriceVariant =
-    product.variants.find(
-      (variant) =>
-        variant.lifecycleStatus === "ACTIVE" &&
-        variant.visibility === "PUBLIC" &&
-        variant.priceVisibility === "VISIBLE" &&
-        variant.basePriceAmount != null,
-    ) ?? null;
-
+function mapInspectorVariant(product: PublicProductRecord): PublicProductInspectorVariant {
   return {
     id: Number(product.id),
-    name: product.name,
+    sku: product.sku,
     slug: product.slug,
-    subtitle: product.subtitle?.trim() ?? "",
-    description: descriptionPreview || "Découvrez cette famille produit COBAM GROUP.",
-    brandName: product.brand?.name ?? null,
-    price: visiblePriceVariant?.basePriceAmount != null ? String(visiblePriceVariant.basePriceAmount) : null,
-    imageUrl:
-      hasCover && coverMedia?.mediaId != null
-        ? buildPublicMediaUrl(coverMedia.mediaId, "original")
+    name: product.name,
+    description: product.description,
+    basePriceAmount:
+      product.priceVisibility && product.basePriceAmount != null
+        ? formatDecimal(product.basePriceAmount)
         : null,
-    imageThumbnailUrl:
-      hasCover && coverMedia?.mediaId != null
-        ? buildPublicMediaUrl(coverMedia.mediaId, "thumbnail")
-        : null,
-    imageAlt: coverMedia?.media?.altText ?? coverMedia?.media?.title ?? product.name,
+    priceVisibility: product.priceVisibility ?? false,
+    commercialMode: product.commercialMode,
+    media: mapVariantMedia(product),
+    attributes: mapVariantAttributes(product),
   };
 }
 
-export async function findPublicProductBySlugs(input: {
-  categorySlug: string;
-  subcategorySlug: string;
-  productSlug: string;
-}): Promise<PublicProductInspector | null> {
-  const product = await prisma.productFamily.findFirst({
+function mapSimpleInspector(record: PublicProductRecord, input: {
+  kind: "PACK" | "SINGLE";
+  brandNames: string[];
+  basePriceAmount: string | null;
+  priceVisibility: boolean;
+  commercialMode: PublicProductRecord["commercialMode"] | null;
+}): PublicSimpleProductInspector {
+  const media = mapVariantMedia(record);
+  const attributes = mapVariantAttributes(record);
+
+  return {
+    id: Number(record.id),
+    kind: input.kind,
+    sku: record.sku,
+    slug: record.slug,
+    name: record.name,
+    description: record.description,
+    descriptionSeo: record.descriptionSeo,
+    brandNames: input.brandNames,
+    media,
+    basePriceAmount: input.priceVisibility ? input.basePriceAmount : null,
+    priceVisibility: input.priceVisibility,
+    commercialMode: input.commercialMode,
+    subcategories: mapSubcategoryLinks(record.subcategoryLinks),
+    attributes,
+    colorReferences: buildColorReferencesFromAttributes([attributes]),
+    finishReferences: buildFinishReferencesFromAttributes([attributes]),
+  };
+}
+
+async function listCandidateFamilies(input: { categorySlug: string; subcategorySlug: string }) {
+  const families = await prisma.productFamily.findMany({
     where: {
-      slug: input.productSlug,
-      subcategories: {
+      members: {
         some: {
-          isActive: true,
-          slug: input.subcategorySlug,
-          category: {
-            isActive: true,
-            slug: input.categorySlug,
+          product: {
+            kind: "VARIANT",
+            subcategoryLinks: {
+              some: {
+                subcategory: {
+                  slug: input.subcategorySlug,
+                  category: {
+                    slug: input.categorySlug,
+                    isActive: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
-      variants: {
+    },
+    orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
+    select: PUBLIC_FAMILY_SELECT,
+  });
+
+  await makeMediaPublicMany(
+    families.flatMap(collectMediaIdsForPublishing),
+  );
+
+  return families;
+}
+
+async function listCandidateSingles(input: { categorySlug: string; subcategorySlug: string }) {
+  const singles = await prisma.product.findMany({
+    where: {
+      kind: "SINGLE",
+      lifecycle: "ACTIVE",
+      visibility: true,
+      subcategoryLinks: {
         some: {
-          lifecycleStatus: "ACTIVE",
-          visibility: "PUBLIC",
+          subcategory: {
+            slug: input.subcategorySlug,
+            category: {
+              slug: input.categorySlug,
+              isActive: true,
+            },
+          },
         },
       },
     },
-    select: publicProductDetailSelect,
+    orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
+    select: PUBLIC_PRODUCT_SELECT,
   });
 
-  if (!product) {
-    return null;
+  await makeMediaPublicMany(collectProductMediaIdsForPublishing(singles));
+
+  return singles;
+}
+
+async function listCandidatePacks(input: { categorySlug: string; subcategorySlug: string }) {
+  const packs = await prisma.product.findMany({
+    where: {
+      kind: "PACK",
+      subcategoryLinks: {
+        some: {
+          subcategory: {
+            slug: input.subcategorySlug,
+            category: {
+              slug: input.categorySlug,
+              isActive: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
+    select: PUBLIC_PACK_SELECT,
+  });
+
+  await makeMediaPublicMany(collectProductMediaIdsForPublishing(packs));
+
+  return packs;
+}
+
+function buildFamilySubcategories(publicVariants: PublicProductRecord[]) {
+  const subcategories = new Map<number, PublicProductSubcategoryLink>();
+
+  for (const variant of publicVariants) {
+    for (const link of variant.subcategoryLinks) {
+      subcategories.set(Number(link.subcategory.id), {
+        id: Number(link.subcategory.id),
+        name: link.subcategory.name,
+        slug: link.subcategory.slug,
+        categorySlug: link.subcategory.category.slug,
+        categoryName: link.subcategory.category.name,
+      });
+    }
   }
 
-  await ensurePublicProductDetailMedia(product);
+  return [...subcategories.values()];
+}
 
-  const defaultVariantId =
-    product.defaultVariantId != null ? Number(product.defaultVariantId) : null;
-  const publicVariants = sortPublicInspectorVariants(
-    defaultVariantId,
-    product.variants.map((variant) => mapPublicInspectorVariant(product, variant)).filter(isPublicInspectorVariant),
-  );
+export async function listPublicProductsBySubcategory(input: {
+  categorySlug: string;
+  subcategorySlug: string;
+  page: number;
+  pageSize?: number;
+  q?: string | null;
+}): Promise<PublicProductListResult> {
+  const [families, singles, packs] = await Promise.all([
+    listCandidateFamilies(input),
+    listCandidateSingles(input),
+    listCandidatePacks(input),
+  ]);
+  const normalizedQuery = normalizeComparableValue(input.q);
 
-  if (publicVariants.length === 0) {
-    return null;
-  }
+  const rankedFamilies = families
+    .map((family): { score: number; summary: PublicProductSummary } | null => {
+      const { publicVariants, defaultVariant } = pickDefaultPublicVariant(family);
+      if (!defaultVariant) {
+        return null;
+      }
 
-  const coverMedia =
-    product.mediaLinks[0] != null ? mapPublicInspectorMedia(product.mediaLinks[0].media) : null;
-  const specialReferences = await buildPublicSpecialReferences(publicVariants);
-  const resolvedDefaultVariantId =
-    defaultVariantId != null && publicVariants.some((variant) => variant.id === defaultVariantId)
-      ? defaultVariantId
-      : publicVariants[0]?.id ?? null;
+      const score = scoreFamilySearch(family, publicVariants, normalizedQuery);
+
+      if (normalizedQuery && score === 0) {
+        return null;
+      }
+
+      return {
+        score,
+        summary: mapFamilySummary(family, defaultVariant),
+      };
+    });
+
+  const rankedSingles = singles
+    .map((product): { score: number; summary: PublicProductSummary } | null => {
+      const score = scoreConcreteProductSearch(product, {
+        normalizedQuery,
+        brandName: getBrandName(product.brandCode),
+      });
+
+      if (normalizedQuery && score === 0) {
+        return null;
+      }
+
+      return {
+        score,
+        summary: mapSingleProductSummary(product),
+      };
+    });
+
+  const rankedPacks = packs
+    .map((pack): { score: number; summary: PublicProductSummary } | null => {
+      const derived = derivePack(pack);
+
+      if (!derived.visibility || derived.lifecycle !== "ACTIVE") {
+        return null;
+      }
+
+      const score = scoreConcreteProductSearch(pack, {
+        normalizedQuery,
+        brandName: derived.brandNames.join(" "),
+        extraProducts: derived.searchProducts,
+        extraTags: derived.tags,
+      });
+
+      if (normalizedQuery && score === 0) {
+        return null;
+      }
+
+      return {
+        score,
+        summary: mapPackSummary(pack, derived),
+      };
+    });
+
+  const ranked = [...rankedFamilies, ...rankedSingles, ...rankedPacks]
+    .filter((item): item is { score: number; summary: PublicProductSummary } => item != null)
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        left.summary.name.localeCompare(right.summary.name, "fr-FR"),
+    );
+
+  const pageSize = input.pageSize ?? PUBLIC_PRODUCTS_PAGE_SIZE;
+  const start = (input.page - 1) * pageSize;
+  const items = ranked.slice(start, start + pageSize).map((item) => item.summary);
 
   return {
-    id: Number(product.id),
-    name: product.name,
-    slug: product.slug,
-    subtitle: product.subtitle?.trim() ?? "",
-    description: normalizePublicRichTextContent(product.description?.trim() ?? ""),
-    descriptionSeo: product.descriptionSeo?.trim() ?? product.description?.trim() ?? "",
-    brandName: product.brand?.name ?? null,
-    subcategories: product.subcategories.map((subcategory) => ({
-      name: subcategory.name,
-      slug: subcategory.slug,
-      categorySlug: subcategory.category.slug,
-    })),
-    priceUnit: product.priceUnit,
-    vatRate: product.vatRate,
-    defaultVariantId: resolvedDefaultVariantId,
-    coverMedia,
-    variants: publicVariants,
-    colorReferences: specialReferences.colorReferences,
-    finishReferences: specialReferences.finishReferences,
+    items,
+    total: ranked.length,
+    page: input.page,
+    pageSize,
   };
 }
 
-export async function listPublicProductsBySubcategory(
-  input: PublicProductListQuery,
-): Promise<PublicProductListResult> {
-  const normalizedPage = Number.isInteger(input.page) && input.page > 0 ? input.page : 1;
-  const normalizedPageSize =
-    Number.isInteger(input.pageSize) && input.pageSize > 0
-      ? Math.min(input.pageSize, 24)
-      : PUBLIC_PRODUCTS_PAGE_SIZE;
-  const where = buildPublicProductsWhere(input);
-  const normalizedQuery = normalizeComparableSearchValue(input.q);
-  const hasSearchQuery = normalizedQuery.compact.length > 0;
+export async function findPublicFamilyBySlug(
+  familySlug: string,
+): Promise<PublicProductInspector | null> {
+  const record = await prisma.productFamily.findFirst({
+    where: {
+      slug: familySlug,
+    },
+    select: PUBLIC_FAMILY_SELECT,
+  });
 
-  if (hasSearchQuery) {
-    const products = await prisma.productFamily.findMany({
-      where,
-      orderBy: [{ name: "asc" }, { id: "asc" }],
-      select: publicProductSelect,
-    });
-    const rankedProducts = products
-      .map((product) => ({
-        product,
-        score: getPublicProductSearchScore(product, normalizedQuery),
-      }))
-      .filter((entry) => entry.score > 0)
-      .sort(sortPublicProductsBySearchScore);
-    const paginatedProducts = rankedProducts
-      .slice(
-        (normalizedPage - 1) * normalizedPageSize,
-        normalizedPage * normalizedPageSize,
-      )
-      .map((entry) => entry.product);
-
-    await ensurePublicProductImages(paginatedProducts);
-
-    return {
-      items: paginatedProducts.map(mapPublicProductSummary),
-      total: rankedProducts.length,
-      page: normalizedPage,
-      pageSize: normalizedPageSize,
-    };
+  if (!record) {
+    return null;
   }
 
-  const [items, total] = await Promise.all([
-    prisma.productFamily.findMany({
-      where,
-      orderBy: [{ name: "asc" }, { id: "asc" }],
-      skip: (normalizedPage - 1) * normalizedPageSize,
-      take: normalizedPageSize,
-      select: publicProductSelect,
-    }),
-    prisma.productFamily.count({
-      where,
-    }),
-  ]);
+  await makeMediaPublicMany(collectMediaIdsForPublishing(record));
 
-  await ensurePublicProductImages(items);
+  const { publicVariants, defaultVariant } = pickDefaultPublicVariant(record);
+  if (!defaultVariant) {
+    return null;
+  }
+
+  const variants = publicVariants.map(mapInspectorVariant);
+  const coverMedia = buildFamilyCoverMedia(record, defaultVariant);
 
   return {
-    items: items.map(mapPublicProductSummary),
-    total,
-    page: normalizedPage,
-    pageSize: normalizedPageSize,
+    id: Number(record.id),
+    name: record.name,
+    slug: record.slug,
+    subtitle: record.subtitle,
+    description: record.description,
+    descriptionSeo: record.descriptionSeo,
+    brandName: getBrandName(defaultVariant.brandCode),
+    coverMedia,
+    defaultVariantId: Number(defaultVariant.id),
+    variants,
+    subcategories: buildFamilySubcategories(publicVariants),
+    colorReferences: buildColorReferences(variants),
+    finishReferences: buildFinishReferences(variants),
   };
+}
+
+export async function findPublicSingleProductBySlug(
+  productSlug: string,
+): Promise<PublicSimpleProductInspector | null> {
+  const record = await prisma.product.findFirst({
+    where: {
+      slug: productSlug,
+      kind: "SINGLE",
+      lifecycle: "ACTIVE",
+      visibility: true,
+    },
+    select: PUBLIC_PRODUCT_SELECT,
+  });
+
+  if (!record || !isPublicSingleProduct(record)) {
+    return null;
+  }
+
+  await makeMediaPublicMany(collectProductMediaIdsForPublishing([record]));
+
+  const brandName = getBrandName(record.brandCode);
+
+  return mapSimpleInspector(record, {
+    kind: "SINGLE",
+    brandNames: brandName ? [brandName] : [],
+    basePriceAmount: formatDecimal(record.basePriceAmount),
+    priceVisibility: record.priceVisibility ?? false,
+    commercialMode: record.commercialMode,
+  });
+}
+
+export async function findPublicPackBySlug(
+  packSlug: string,
+): Promise<PublicSimpleProductInspector | null> {
+  const record = await prisma.product.findFirst({
+    where: {
+      slug: packSlug,
+      kind: "PACK",
+    },
+    select: PUBLIC_PACK_SELECT,
+  });
+
+  if (!record) {
+    return null;
+  }
+
+  const derived = derivePack(record);
+
+  if (!derived.visibility || derived.lifecycle !== "ACTIVE") {
+    return null;
+  }
+
+  await makeMediaPublicMany(collectProductMediaIdsForPublishing([record]));
+
+  return mapSimpleInspector(record, {
+    kind: "PACK",
+    brandNames: derived.brandNames,
+    basePriceAmount: derived.basePriceAmount,
+    priceVisibility: derived.priceVisibility,
+    commercialMode: derived.commercialMode,
+  });
 }

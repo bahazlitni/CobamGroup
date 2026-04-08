@@ -27,13 +27,25 @@ function moveItem<T>(items: T[], fromIndex: number, toIndex: number) {
 export default function ProductMediaGrid({
   items,
   onChange,
-  title = "Médias",
-  description = "Optionnel : ajoutez des médias si nécessaire, puis glissez-les pour réorganiser leur ordre.",
+  title = "Medias",
+  description = "Optionnel : ajoutez des medias si necessaire, puis glissez-les pour reorganiser leur ordre.",
+  pickerTitle = "Ajouter un media",
+  pickerDescription = "Optionnel : choisissez un media existant ou importez-en un nouveau.",
+  addButtonLabel = "Ajouter un media",
+  addButtonHint = "Optionnel : image, video ou document",
+  mediaKind = "ALL",
+  maxItems,
 }: {
   items: ProductMediaDto[];
   onChange: (items: ProductMediaDto[]) => void;
   title?: string;
   description?: string;
+  pickerTitle?: string;
+  pickerDescription?: string;
+  addButtonLabel?: string;
+  addButtonHint?: string;
+  mediaKind?: ProductMediaDto["kind"] | "ALL";
+  maxItems?: number;
 }) {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -53,16 +65,14 @@ export default function ProductMediaGrid({
             media={media}
             isDragging={draggedIndex === index}
             isDragOver={dragOverIndex === index}
-            onRemove={() =>
-              onChange(items.filter((item) => item.id !== media.id))
-            }
+            onRemove={() => onChange(items.filter((item) => item.id !== media.id))}
             onDragStart={() => {
               setDraggedIndex(index);
               setDragOverIndex(index);
             }}
             onDragOver={() => setDragOverIndex(index)}
             onDrop={() => {
-              if (draggedIndex == null) {
+              if (draggedIndex == null || maxItems === 1) {
                 return;
               }
 
@@ -88,23 +98,20 @@ export default function ProductMediaGrid({
           <span className="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-300 bg-white text-cobam-water-blue shadow-sm transition group-hover:border-cobam-water-blue/30">
             <ImagePlus className="h-6 w-6" />
           </span>
-          <p className="text-sm font-semibold text-cobam-dark-blue">
-            Ajouter un média
-          </p>
-          <p className="mt-1 text-xs leading-5 text-slate-500">
-            Optionnel : image, vidéo ou document
-          </p>
+          <p className="text-sm font-semibold text-cobam-dark-blue">{addButtonLabel}</p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">{addButtonHint}</p>
         </button>
       </div>
 
       <ProductMediaPickerDialog
         open={isPickerOpen}
         onOpenChange={setIsPickerOpen}
-        title="Ajouter un média de variante"
-        description="Optionnel : choisissez un média existant ou importez-en un nouveau pour cette variante."
-        excludedMediaIds={items.map((item) => item.id)}
+        title={pickerTitle}
+        description={pickerDescription}
+        mediaKind={mediaKind}
+        excludedMediaIds={maxItems === 1 ? [] : items.map((item) => item.id)}
         onSelect={(media) => {
-          onChange([...items, media]);
+          onChange(maxItems === 1 ? [media] : [...items, media]);
           setIsPickerOpen(false);
         }}
       />

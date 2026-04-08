@@ -282,16 +282,24 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
   const [
     productFamilyLinks,
     productVariantLinks,
-    brandLogos,
     productCategoryImages,
-    productFinishImages,
     productSubcategoryImages,
     staffAvatars,
     articleAttachments,
     articleCovers,
     articleOgImages,
   ] = await Promise.all([
-    prisma.productFamilyMediaLink.findMany({
+    prisma.productFamily.findMany({
+      where: {
+        mainImageMediaId: {
+          in: mediaIds,
+        },
+      },
+      select: {
+        mainImageMediaId: true,
+      },
+    }),
+    prisma.productMediaLink.findMany({
       where: {
         mediaId: {
           in: mediaIds,
@@ -299,27 +307,6 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
       },
       select: {
         mediaId: true,
-      },
-    }),
-    prisma.productVariantMediaLink.findMany({
-      where: {
-        mediaId: {
-          in: mediaIds,
-        },
-      },
-      select: {
-        mediaId: true,
-      },
-    }),
-    prisma.productBrand.findMany({
-      where: {
-        deletedAt: null,
-        logoMediaId: {
-          in: mediaIds,
-        },
-      },
-      select: {
-        logoMediaId: true,
       },
     }),
     prisma.productCategory.findMany({
@@ -330,16 +317,6 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
       },
       select: {
         imageMediaId: true,
-      },
-    }),
-    prisma.productFinish.findMany({
-      where: {
-        mediaId: {
-          in: mediaIds,
-        },
-      },
-      select: {
-        mediaId: true,
       },
     }),
     prisma.productSubcategory.findMany({
@@ -400,23 +377,15 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
   ]);
 
   for (const link of productFamilyLinks) {
-    incrementUsageCount(countsByMediaId, link.mediaId, "productFamilyLinks");
+    incrementUsageCount(countsByMediaId, link.mainImageMediaId, "productFamilyLinks");
   }
 
   for (const link of productVariantLinks) {
     incrementUsageCount(countsByMediaId, link.mediaId, "productVariantLinks");
   }
 
-  for (const brand of brandLogos) {
-    incrementUsageCount(countsByMediaId, brand.logoMediaId, "brandLogoFor");
-  }
-
   for (const category of productCategoryImages) {
     incrementUsageCount(countsByMediaId, category.imageMediaId, "productCategoryImageFor");
-  }
-
-  for (const finish of productFinishImages) {
-    incrementUsageCount(countsByMediaId, finish.mediaId, "productFinishImageFor");
   }
 
   for (const subcategory of productSubcategoryImages) {
@@ -943,22 +912,17 @@ export async function detachMediaReferencesAndDeleteMediaRecord(mediaId: number)
   const mediaIdValue = BigInt(mediaId);
 
   return prisma.$transaction(async (tx) => {
-    const productFamilyLinks = await tx.productFamilyMediaLink.deleteMany({
+    const productFamilyLinks = await tx.productFamily.updateMany({
       where: {
-        mediaId: mediaIdValue,
-      },
-    });
-    const productVariantLinks = await tx.productVariantMediaLink.deleteMany({
-      where: {
-        mediaId: mediaIdValue,
-      },
-    });
-    const brandLogos = await tx.productBrand.updateMany({
-      where: {
-        logoMediaId: mediaIdValue,
+        mainImageMediaId: mediaIdValue,
       },
       data: {
-        logoMediaId: null,
+        mainImageMediaId: null,
+      },
+    });
+    const productVariantLinks = await tx.productMediaLink.deleteMany({
+      where: {
+        mediaId: mediaIdValue,
       },
     });
     const productCategoryImages = await tx.productCategory.updateMany({
@@ -967,14 +931,6 @@ export async function detachMediaReferencesAndDeleteMediaRecord(mediaId: number)
       },
       data: {
         imageMediaId: null,
-      },
-    });
-    const productFinishImages = await tx.productFinish.updateMany({
-      where: {
-        mediaId: mediaIdValue,
-      },
-      data: {
-        mediaId: null,
       },
     });
     const productSubcategoryImages = await tx.productSubcategory.updateMany({
@@ -1022,9 +978,9 @@ export async function detachMediaReferencesAndDeleteMediaRecord(mediaId: number)
     const detachedReferences: DetachedMediaReferenceCounts = {
       productFamilyLinks: productFamilyLinks.count,
       productVariantLinks: productVariantLinks.count,
-      brandLogos: brandLogos.count,
+      brandLogos: 0,
       productCategoryImages: productCategoryImages.count,
-      productFinishImages: productFinishImages.count,
+      productFinishImages: 0,
       productSubcategoryImages: productSubcategoryImages.count,
       staffAvatars: staffAvatars.count,
       articleAttachments: articleAttachments.count,
@@ -1033,9 +989,7 @@ export async function detachMediaReferencesAndDeleteMediaRecord(mediaId: number)
       total:
         productFamilyLinks.count +
         productVariantLinks.count +
-        brandLogos.count +
         productCategoryImages.count +
-        productFinishImages.count +
         productSubcategoryImages.count +
         staffAvatars.count +
         articleAttachments.count +

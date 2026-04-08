@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useMotionValue, useSpring, animate } from "framer-motion";
-import type { PublicBrand } from "@/features/brands/types";
+import type { Brand as PublicBrand } from "@/lib/static_tables/brands";
 import { cn } from "@/lib/utils";
 
 interface BrandSliderProps {

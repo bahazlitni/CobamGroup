@@ -1,25 +1,17 @@
 import {
-  PRODUCT_ATTRIBUTE_DATA_TYPE_OPTIONS,
-  PRODUCT_COMMERCIAL_MODE_OPTIONS,
-  PRODUCT_LIFECYCLE_STATUS_OPTIONS,
-  PRODUCT_PAGE_SIZE_OPTIONS,
-  PRODUCT_PRICE_UNIT_OPTIONS,
-  PRODUCT_PRICE_VISIBILITY_OPTIONS,
-  PRODUCT_VISIBILITY_OPTIONS,
-  type ProductAttributeDataType,
-  type ProductAttributeInput,
-  type ProductCreateInput,
-  type ProductCommercialMode,
-  type ProductLifecycleStatus,
-  type ProductListQuery,
-  type ProductPageSize,
-  type ProductPriceUnit,
-  type ProductPriceVisibility,
-  type ProductUpdateInput,
-  type ProductVariantAttributeValueInput,
-  type ProductVariantInput,
-  type ProductVisibility,
-} from "./types";
+  ProductCommercialMode,
+  ProductLifecycle,
+  ProductStockUnit,
+} from "@prisma/client";
+import {
+  buildDuplicateAttributeKindMessage,
+  findDuplicateAttributeKind,
+} from "./attribute-kinds";
+import {
+  normalizeProductAttributeKind,
+} from "@/lib/static_tables/attributes";
+import { normalizeProductBrandValue as normalizeProductBrandString } from "@/lib/static_tables/brands";
+import type { ProductFamilyUpsertInput, ProductVariantInputDto } from "./types";
 
 export class ProductValidationError extends Error {
   status: number;
@@ -30,380 +22,278 @@ export class ProductValidationError extends Error {
   }
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+function parsePositiveInteger(value: string | null | undefined, fallback: number) {
+  const parsed = value == null ? fallback : Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function parseRequiredString(value: unknown, fieldName: string): string {
-  if (typeof value !== "string" || !value.trim()) {
-    throw new ProductValidationError(`Missing or invalid field "${fieldName}"`);
+function parseOptionalString(value: unknown) {
+  if (value == null) {
+    return null;
   }
 
-  return value.trim();
+  const normalized = String(value).trim();
+  return normalized ? normalized : null;
 }
 
-function parseOptionalString(value: unknown): string | null {
-  if (value == null) return null;
-  if (typeof value !== "string") {
-    throw new ProductValidationError("Invalid optional string field");
+function parseRequiredString(value: unknown, fieldName: string) {
+  const normalized = parseOptionalString(value);
+  if (!normalized) {
+    throw new ProductValidationError(`Champ requis: ${fieldName}.`);
+  }
+  return normalized;
+}
+
+function parseEnumValue<T extends string>(
+  value: unknown,
+  allowedValues: readonly T[],
+  fieldName: string,
+): T {
+  const normalized = parseRequiredString(value, fieldName) as T;
+  if (!allowedValues.includes(normalized)) {
+    throw new ProductValidationError(`Valeur invalide pour ${fieldName}.`);
+  }
+  return normalized;
+}
+
+function parseBoolean(value: unknown, fieldName: string) {
+  if (typeof value === "boolean") {
+    return value;
   }
 
-  const trimmed = value.trim();
-  return trimmed ? trimmed : null;
+  throw new ProductValidationError(`Valeur booléenne invalide pour ${fieldName}.`);
 }
 
-function parseOptionalPriceString(value: unknown, fieldName: string) {
+function parseOptionalNumber(value: unknown, fieldName: string) {
   if (value == null || value === "") {
     return null;
   }
 
-  if (typeof value !== "string" && typeof value !== "number") {
-    throw new ProductValidationError(`Invalid ${fieldName}`);
-  }
-
-  const normalizedValue = String(value).replace(",", ".").trim();
-
-  if (!/^\d+(\.\d{1,2})?$/.test(normalizedValue)) {
-    throw new ProductValidationError(`Invalid ${fieldName}`);
-  }
-
-  return normalizedValue;
-}
-
-function parseNonNegativeFloat(value: unknown, fieldName: string) {
-  if (value == null || value === "") {
-    return 19;
-  }
-
-  const normalizedValue =
-    typeof value === "string" ? value.replace(",", ".").trim() : String(value);
-  const parsed = Number(normalizedValue);
-
-  if (!Number.isFinite(parsed) || parsed < 0) {
-    throw new ProductValidationError(`Invalid ${fieldName}`);
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    throw new ProductValidationError(`Valeur numérique invalide pour ${fieldName}.`);
   }
 
   return parsed;
 }
 
-function parsePositiveInteger(value: unknown, fieldName: string): number {
-  const parsed =
-    typeof value === "number" ? value : typeof value === "string" ? Number(value) : Number.NaN;
-
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new ProductValidationError(`Invalid ${fieldName}`);
-  }
-
-  return parsed;
-}
-
-function parseNonNegativeInteger(value: unknown, fieldName: string): number {
-  const parsed =
-    typeof value === "number" ? value : typeof value === "string" ? Number(value) : Number.NaN;
-
-  if (!Number.isInteger(parsed) || parsed < 0) {
-    throw new ProductValidationError(`Invalid ${fieldName}`);
-  }
-
-  return parsed;
-}
-
-function parsePositiveIntegerArray(value: unknown, fieldName: string): number[] {
+function parseOptionalIntegerArray(value: unknown, fieldName: string) {
   if (!Array.isArray(value)) {
-    throw new ProductValidationError(`Invalid ${fieldName}`);
+    throw new ProductValidationError(`Liste invalide pour ${fieldName}.`);
   }
 
-  const parsed = Array.from(
-    new Set(value.map((item, index) => parsePositiveInteger(item, `${fieldName}[${index}]`))),
-  );
-
-  if (parsed.length === 0) {
-    throw new ProductValidationError(`Missing ${fieldName}`);
-  }
-
-  return parsed;
+  return value.map((entry) => {
+    const parsed = Number(entry);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      throw new ProductValidationError(`Identifiant invalide dans ${fieldName}.`);
+    }
+    return parsed;
+  });
 }
 
-function parseOptionalPositiveIntegerCollection(
-  value: unknown,
-  arrayFieldName: string,
-  singleFieldName = arrayFieldName,
-): number[] {
-  if (value == null || value === "") {
-    return [];
+function parseVariant(input: unknown): ProductVariantInputDto {
+  if (!input || typeof input !== "object") {
+    throw new ProductValidationError("Variante invalide.");
   }
 
-  if (Array.isArray(value)) {
-    if (value.length === 0) {
-      return [];
+  const record = input as Record<string, unknown>;
+  const media = Array.isArray(record.media) ? record.media : [];
+  const attributes = Array.isArray(record.attributes) ? record.attributes : [];
+  const datasheet =
+    record.datasheet != null && typeof record.datasheet === "object"
+      ? (record.datasheet as Record<string, unknown>)
+      : null;
+
+  const parsedAttributes = attributes.map((entry) => {
+    if (!entry || typeof entry !== "object") {
+      throw new ProductValidationError("Attribut de variante invalide.");
     }
 
-    return parsePositiveIntegerArray(value, arrayFieldName);
+    const attributeRecord = entry as Record<string, unknown>;
+    return {
+      kind: normalizeProductAttributeKind(
+        parseRequiredString(attributeRecord.kind, "variant.attribute.kind"),
+      ),
+      value: parseRequiredString(attributeRecord.value, "variant.attribute.value"),
+    };
+  });
+
+  const duplicateAttributeKind = findDuplicateAttributeKind(parsedAttributes);
+
+  if (duplicateAttributeKind) {
+    throw new ProductValidationError(
+      buildDuplicateAttributeKindMessage(duplicateAttributeKind, "Une variante"),
+    );
   }
 
-  return [parsePositiveInteger(value, singleFieldName)];
-}
+  return {
+    id:
+      record.id == null
+        ? undefined
+        : (() => {
+            const parsed = Number(record.id);
+            if (!Number.isInteger(parsed) || parsed <= 0) {
+              throw new ProductValidationError("Identifiant de variante invalide.");
+            }
+            return parsed;
+          })(),
+    sku: parseRequiredString(record.sku, "variant.sku"),
+    slug: parseRequiredString(record.slug, "variant.slug"),
+    name: parseRequiredString(record.name, "variant.name"),
+    description: parseOptionalString(record.description),
+    descriptionSeo: parseOptionalString(record.descriptionSeo),
+    brandCode:
+      record.brandCode == null || record.brandCode === ""
+        ? null
+        : normalizeProductBrandString(String(record.brandCode)),
+    basePriceAmount:
+      record.basePriceAmount == null || record.basePriceAmount === ""
+        ? null
+        : String(record.basePriceAmount),
+    vatRate: parseOptionalNumber(record.vatRate, "variant.vatRate"),
+    stock:
+      record.stock == null || record.stock === "" ? null : String(record.stock),
+    stockUnit:
+      record.stockUnit == null || record.stockUnit === ""
+        ? null
+        : parseEnumValue(
+            record.stockUnit,
+            Object.values(ProductStockUnit),
+            "variant.stockUnit",
+          ),
+    visibility: parseBoolean(record.visibility, "variant.visibility"),
+    priceVisibility: parseBoolean(record.priceVisibility, "variant.priceVisibility"),
+    stockVisibility: parseBoolean(record.stockVisibility, "variant.stockVisibility"),
+    lifecycle: parseEnumValue(
+      record.lifecycle,
+      Object.values(ProductLifecycle),
+      "variant.lifecycle",
+    ),
+    commercialMode: parseEnumValue(
+      record.commercialMode,
+      Object.values(ProductCommercialMode),
+      "variant.commercialMode",
+    ),
+    tags: parseOptionalString(record.tags) ?? "",
+    subcategoryIds: parseOptionalIntegerArray(
+      Array.isArray(record.subcategoryIds) ? record.subcategoryIds : [],
+      "variant.subcategoryIds",
+    ),
+    datasheet:
+      datasheet == null
+        ? null
+        : (() => {
+            const parsedId = Number(datasheet.id);
+            if (!Number.isInteger(parsedId) || parsedId <= 0) {
+              throw new ProductValidationError(
+                "Identifiant de fiche technique invalide.",
+              );
+            }
 
-function parseEnumValue<T extends readonly string[]>(
-  value: unknown,
-  options: T,
-  fieldName: string,
-): T[number] {
-  if (typeof value !== "string" || !options.includes(value)) {
-    throw new ProductValidationError(`Invalid ${fieldName}`);
-  }
-
-  return value as T[number];
-}
-
-function parseOptionalEnumValue<T extends readonly string[]>(
-  value: unknown,
-  options: T,
-  fieldName: string,
-): T[number] | null {
-  if (value == null || value === "") {
-    return null;
-  }
-
-  return parseEnumValue(value, options, fieldName);
-}
-
-function parseStringArray(value: unknown, fieldName: string): string[] {
-  if (value == null) return [];
-  if (!Array.isArray(value)) {
-    throw new ProductValidationError(`Invalid ${fieldName}`);
-  }
-
-  return Array.from(
-    new Set(
-      value.map((item) => {
-        if (typeof item !== "string") {
-          throw new ProductValidationError(`Invalid ${fieldName}`);
+            return {
+              id: parsedId,
+              kind:
+                "kind" in datasheet
+                  ? (String(datasheet.kind) as ProductVariantInputDto["media"][number]["kind"])
+                  : "DOCUMENT",
+              title: parseOptionalString(datasheet.title),
+              originalFilename: parseOptionalString(datasheet.originalFilename),
+              mimeType: parseOptionalString(datasheet.mimeType),
+              altText: parseOptionalString(datasheet.altText),
+              widthPx: datasheet.widthPx == null ? null : Number(datasheet.widthPx),
+              heightPx: datasheet.heightPx == null ? null : Number(datasheet.heightPx),
+              durationSeconds:
+                datasheet.durationSeconds == null ? null : String(datasheet.durationSeconds),
+              sizeBytes: datasheet.sizeBytes == null ? null : String(datasheet.sizeBytes),
+              url: typeof datasheet.url === "string" ? datasheet.url : "",
+              thumbnailUrl:
+                typeof datasheet.thumbnailUrl === "string" ? datasheet.thumbnailUrl : null,
+            };
+          })(),
+    media: media
+      .map((entry) => {
+        if (!entry || typeof entry !== "object") {
+          throw new ProductValidationError("Media de variante invalide.");
         }
 
-        const normalized = item.replace(/\s+/g, " ").trim();
-
-        if (!normalized) {
-          throw new ProductValidationError(`Invalid ${fieldName}`);
+        const mediaRecord = entry as Record<string, unknown>;
+        const parsedId = Number(mediaRecord.id);
+        if (!Number.isInteger(parsedId) || parsedId <= 0) {
+          throw new ProductValidationError("Identifiant de média invalide.");
         }
 
-        return normalized;
+        return {
+          id: parsedId,
+          kind: "kind" in mediaRecord ? String(mediaRecord.kind) as ProductVariantInputDto["media"][number]["kind"] : "IMAGE",
+          title: parseOptionalString(mediaRecord.title),
+          originalFilename: parseOptionalString(mediaRecord.originalFilename),
+          mimeType: parseOptionalString(mediaRecord.mimeType),
+          altText: parseOptionalString(mediaRecord.altText),
+          widthPx: mediaRecord.widthPx == null ? null : Number(mediaRecord.widthPx),
+          heightPx: mediaRecord.heightPx == null ? null : Number(mediaRecord.heightPx),
+          durationSeconds: mediaRecord.durationSeconds == null ? null : String(mediaRecord.durationSeconds),
+          sizeBytes: mediaRecord.sizeBytes == null ? null : String(mediaRecord.sizeBytes),
+          url: typeof mediaRecord.url === "string" ? mediaRecord.url : "",
+          thumbnailUrl:
+            typeof mediaRecord.thumbnailUrl === "string"
+              ? mediaRecord.thumbnailUrl
+              : null,
+        };
       }),
-    ),
-  );
-}
-
-function parseOptionalQueryInteger(value: string | null, fieldName: string) {
-  if (!value?.trim()) return undefined;
-  return parsePositiveInteger(value, fieldName);
-}
-
-function parseOptionalId(value: unknown, fieldName: string) {
-  if (value == null || value === "") {
-    return null;
-  }
-
-  return parsePositiveInteger(value, fieldName);
-}
-
-function parseProductAttributeInput(raw: unknown, index: number): ProductAttributeInput {
-  if (!isRecord(raw)) {
-    throw new ProductValidationError(`Invalid attributes[${index}]`);
-  }
-
-  const dataType = parseEnumValue(
-    raw.dataType,
-    PRODUCT_ATTRIBUTE_DATA_TYPE_OPTIONS,
-    `attributes[${index}].dataType`,
-  ) as ProductAttributeDataType;
-
-  return {
-    tempKey: parseRequiredString(raw.tempKey, `attributes[${index}].tempKey`),
-    id: parseOptionalId(raw.id, `attributes[${index}].id`),
-    name: parseRequiredString(raw.name, `attributes[${index}].name`),
-    dataType,
-    unit: dataType === "NUMBER" ? parseOptionalString(raw.unit) : null,
-    sortOrder: parseNonNegativeInteger(raw.sortOrder ?? index, `attributes[${index}].sortOrder`),
+    attributes: parsedAttributes,
   };
 }
 
-function parseAttributes(value: unknown): ProductAttributeInput[] {
-  if (value == null) {
-    return [];
-  }
-
-  if (!Array.isArray(value)) {
-    throw new ProductValidationError("Invalid attributes");
-  }
-
-  return value.map((item, index) => parseProductAttributeInput(item, index));
-}
-
-function parseProductVariantAttributeValueInput(
-  raw: unknown,
-  variantIndex: number,
-  valueIndex: number,
-): ProductVariantAttributeValueInput {
-  if (!isRecord(raw)) {
-    throw new ProductValidationError(
-      `Invalid variants[${variantIndex}].attributeValues[${valueIndex}]`,
-    );
-  }
-
-  const value = parseOptionalString(raw.value);
-  const attributeId = parseOptionalId(
-    raw.attributeId,
-    `variants[${variantIndex}].attributeValues[${valueIndex}].attributeId`,
-  );
-  const attributeTempKey = parseOptionalString(raw.attributeTempKey);
-
-  if (attributeId == null && !attributeTempKey) {
-    throw new ProductValidationError(
-      `Missing attribute reference for variants[${variantIndex}].attributeValues[${valueIndex}]`,
-    );
-  }
-
+export function parseProductListQuery(searchParams: URLSearchParams) {
   return {
-    attributeId,
-    attributeTempKey,
-    value,
+    page: parsePositiveInteger(searchParams.get("page"), 1),
+    pageSize: parsePositiveInteger(searchParams.get("pageSize"), 20),
+    q: parseOptionalString(searchParams.get("q")),
   };
 }
 
-function parseVariantAttributeValues(
-  value: unknown,
-  variantIndex: number,
-): ProductVariantAttributeValueInput[] {
-  if (value == null) {
-    return [];
+export function parseProductIdParam(value: string) {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new ProductValidationError("Identifiant de famille invalide.");
   }
-
-  if (!Array.isArray(value)) {
-    throw new ProductValidationError(`Invalid variants[${variantIndex}].attributeValues`);
-  }
-
-  return value.map((item, valueIndex) =>
-    parseProductVariantAttributeValueInput(item, variantIndex, valueIndex),
-  );
+  return parsed;
 }
 
-function parseProductVariantInput(raw: unknown, index: number): ProductVariantInput {
-  if (!isRecord(raw)) {
-    throw new ProductValidationError(`Invalid variants[${index}]`);
+export function parseProductCreateInput(input: unknown): ProductFamilyUpsertInput {
+  if (!input || typeof input !== "object") {
+    throw new ProductValidationError("Corps de requête invalide.");
   }
 
-  return {
-    id: parseOptionalId(raw.id, `variants[${index}].id`),
-    sku: parseRequiredString(raw.sku, `variants[${index}].sku`),
-    name: parseRequiredString(raw.name, `variants[${index}].name`),
-    description: parseRequiredString(raw.description, `variants[${index}].description`),
-    descriptionSeo: parseRequiredString(raw.descriptionSeo, `variants[${index}].descriptionSeo`),
-    lifecycleStatus: parseOptionalEnumValue(
-      raw.lifecycleStatus,
-      PRODUCT_LIFECYCLE_STATUS_OPTIONS,
-      `variants[${index}].lifecycleStatus`,
-    ) as ProductLifecycleStatus | null,
-    visibility: parseOptionalEnumValue(
-      raw.visibility,
-      PRODUCT_VISIBILITY_OPTIONS,
-      `variants[${index}].visibility`,
-    ) as ProductVisibility | null,
-    commercialMode: parseOptionalEnumValue(
-      raw.commercialMode,
-      PRODUCT_COMMERCIAL_MODE_OPTIONS,
-      `variants[${index}].commercialMode`,
-    ) as ProductCommercialMode | null,
-    priceVisibility: parseOptionalEnumValue(
-      raw.priceVisibility,
-      PRODUCT_PRICE_VISIBILITY_OPTIONS,
-      `variants[${index}].priceVisibility`,
-    ) as ProductPriceVisibility | null,
-    basePriceAmount: parseOptionalPriceString(
-      raw.basePriceAmount,
-      `variants[${index}].basePriceAmount`,
-    ),
-    sortOrder: parseNonNegativeInteger(raw.sortOrder ?? index, `variants[${index}].sortOrder`),
-    mediaIds: parseOptionalPositiveIntegerCollection(
-      raw.mediaIds ?? raw.mediaId,
-      `variants[${index}].mediaIds`,
-      `variants[${index}].mediaId`,
-    ),
-    attributeValues: parseVariantAttributeValues(raw.attributeValues, index),
-  };
-}
+  const record = input as Record<string, unknown>;
+  const variantsInput = Array.isArray(record.variants) ? record.variants : [];
 
-function parseVariants(value: unknown): ProductVariantInput[] {
-  if (value == null) {
-    return [];
+  if (variantsInput.length === 0) {
+    throw new ProductValidationError("Une famille doit contenir au moins une variante.");
   }
 
-  if (!Array.isArray(value)) {
-    throw new ProductValidationError("Invalid variants");
-  }
-
-  return value.map((item, index) => parseProductVariantInput(item, index));
-}
-
-export function parseProductIdParam(idParam: string): number {
-  return parsePositiveInteger(idParam, "id");
-}
-
-export function parseProductListQuery(searchParams: URLSearchParams): ProductListQuery {
-  const pageRaw = Number(searchParams.get("page") ?? "1");
-  const page = Number.isInteger(pageRaw) && pageRaw > 0 ? pageRaw : 1;
-
-  const pageSizeRaw = Number(searchParams.get("pageSize") ?? "20");
-  const pageSize = (
-    PRODUCT_PAGE_SIZE_OPTIONS.includes(pageSizeRaw as ProductPageSize) ? pageSizeRaw : 20
-  ) as ProductPageSize;
-
-  const qRaw = searchParams.get("q");
-  const q = qRaw?.trim() ? qRaw.trim() : undefined;
-
-  return {
-    page,
-    pageSize,
-    q,
-    brandId: parseOptionalQueryInteger(searchParams.get("brandId"), "brandId"),
-    productSubcategoryId: parseOptionalQueryInteger(
-      searchParams.get("productSubcategoryId"),
-      "productSubcategoryId",
-    ),
-  };
-}
-
-function parseProductInputBase(raw: unknown): ProductCreateInput {
-  if (!isRecord(raw)) {
-    throw new ProductValidationError("Invalid request body");
+  const defaultVariantIndex = Number(record.defaultVariantIndex ?? 0);
+  if (
+    !Number.isInteger(defaultVariantIndex) ||
+    defaultVariantIndex < 0 ||
+    defaultVariantIndex >= variantsInput.length
+  ) {
+    throw new ProductValidationError("Variante par défaut invalide.");
   }
 
   return {
-    brandId: parseOptionalId(raw.brandId, "brandId"),
-    productSubcategoryIds: parsePositiveIntegerArray(
-      raw.productSubcategoryIds,
-      "productSubcategoryIds",
-    ),
-    mainImageMediaId: parseOptionalId(raw.mainImageMediaId, "mainImageMediaId"),
-    name: parseRequiredString(raw.name, "name"),
-    subtitle: parseOptionalString(raw.subtitle),
-    description: parseOptionalString(raw.description),
-    descriptionSeo: parseOptionalString(raw.descriptionSeo),
-    priceUnit: parseEnumValue(
-      raw.priceUnit ?? "ITEM",
-      PRODUCT_PRICE_UNIT_OPTIONS,
-      "priceUnit",
-    ) as ProductPriceUnit,
-    vatRate: parseNonNegativeFloat(raw.vatRate ?? 19, "vatRate"),
-    tagNames: parseStringArray(raw.tagNames, "tagNames"),
-    attributes: parseAttributes(raw.attributes),
-    variants: parseVariants(raw.variants),
+    name: parseRequiredString(record.name, "name"),
+    slug: parseRequiredString(record.slug, "slug"),
+    subtitle: parseOptionalString(record.subtitle),
+    description: parseOptionalString(record.description),
+    descriptionSeo: parseOptionalString(record.descriptionSeo),
+    mainImageMediaId:
+      record.mainImageMediaId == null || record.mainImageMediaId === ""
+        ? null
+        : parseProductIdParam(String(record.mainImageMediaId)),
+    defaultVariantIndex,
+    variants: variantsInput.map(parseVariant),
   };
 }
 
-export function parseProductCreateInput(raw: unknown): ProductCreateInput {
-  return parseProductInputBase(raw);
-}
-
-export function parseProductUpdateInput(raw: unknown): ProductUpdateInput {
-  return parseProductInputBase(raw);
-}
+export const parseProductUpdateInput = parseProductCreateInput;

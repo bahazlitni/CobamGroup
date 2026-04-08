@@ -12,7 +12,6 @@ import {
   createProductCategory,
   createProductCategoryAuditLog,
   deleteProductCategory,
-  findProductCategoriesBySlugs,
   findProductCategoryById,
   findProductCategoryBySlug,
   findProductSubcategoriesByCategoryAndSlugs,
@@ -160,7 +159,7 @@ async function assertSafeRemovedSubcategories(
 
   const usage = await countProductFamiliesForSubcategories(removedIds);
   const linked = usage.find(
-    (subcategory) => subcategory._count.productFamilies > 0,
+    (subcategory) => subcategory._count.productLinks > 0,
   );
 
   if (linked) {

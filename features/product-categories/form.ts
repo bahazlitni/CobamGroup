@@ -21,6 +21,7 @@ export type ProductCategoryEditorFormState = {
   name: string;
   subtitle: string;
   slug: string;
+  themeColor: string;
   description: string;
   descriptionSeo: string;
   imageMediaId: number | null;
@@ -55,6 +56,7 @@ export function createEmptyProductCategoryEditorFormState(): ProductCategoryEdit
     name: "",
     subtitle: "",
     slug: "",
+    themeColor: "",
     description: "",
     descriptionSeo: "",
     imageMediaId: null,
@@ -84,6 +86,7 @@ export function productCategoryDetailToFormState(
     name: category.name,
     subtitle: category.subtitle ?? "",
     slug: category.slug,
+    themeColor: category.themeColor ?? "",
     description: category.description ?? "",
     descriptionSeo: category.descriptionSeo ?? "",
     imageMediaId: category.imageMediaId ?? null,
@@ -147,6 +150,7 @@ export function productCategoryEditorFormToPayload(
     name: state.name.trim(),
     subtitle: state.subtitle.trim() || null,
     slug: state.slug.trim(),
+    themeColor: state.themeColor.trim() || null,
     description: state.description.trim() || null,
     descriptionSeo: state.descriptionSeo.trim() || null,
     imageMediaId: state.imageMediaId,

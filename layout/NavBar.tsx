@@ -19,7 +19,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
-import MegaMenu from "@/components/ui/custom/MegaMenu";
+import MegaMenu from "@/layout/MegaMenu";
 import type { PublicMegaMenuProductCategory } from "@/features/product-categories/public-types";
 
 const societyLinks = [
@@ -91,16 +91,15 @@ export default function NavBar({
   };
 
   return (
-    <header className="sticky top-0 left-0 right-0 z-50 bg-white shadow-sm border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 gap-6">
-          <Link href="/" className="flex-shrink-0">
+    <header className="sticky top-0 left-0 z-50 bg-white shadow-sm h-16">
+        <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20 gap-6">
+          <Link href="/" className="flex-shrink-0 z-100">
             <Image
               src="/images/logos/cobam-group/logo-vector.svg"
               alt="COBAM GROUP"
               width={843}
               height={289}
-              className="hidden xl:block object-contain h-10 w-auto"
+              className="hidden lg:block object-contain h-10 w-auto"
               priority
             />
             <Image
@@ -108,12 +107,12 @@ export default function NavBar({
               alt="COBAM GROUP"
               width={48}
               height={48}
-              className="xl:hidden object-contain h-10 w-auto"
+              className="lg:hidden object-contain h-7 w-auto"
               priority
             />
           </Link>
 
-          <nav className="hidden xl:flex items-center gap-5">
+          <nav className="hidden lg:flex items-center gap-5">
             {mainLinks.map((link) => {
               if (link.hasMega) {
                 return (
@@ -218,14 +217,6 @@ export default function NavBar({
               </div>
             </div>
 
-            <Button
-              size="sm"
-              className="hidden md:inline-flex xl:hidden bg-cobam-water-blue hover:bg-cobam-water-blue/80 text-white font-semibold text-xs px-4"
-              asChild
-            >
-              <a href="#devis">Devis</a>
-            </Button>
-
             <Sheet
               open={sheetOpen}
               onOpenChange={(value) => {
@@ -239,10 +230,10 @@ export default function NavBar({
             >
               <SheetTrigger asChild>
                 <button
-                  className="xl:hidden text-cobam-dark-blue hover:text-cobam-water-blue transition-colors"
+                  className="lg:hidden text-cobam-dark-blue hover:text-cobam-water-blue transition-colors"
                   aria-label="Menu"
                 >
-                  <Menu size={22} />
+                  <Menu size={20} />
                 </button>
               </SheetTrigger>
 
@@ -421,7 +412,6 @@ export default function NavBar({
               </SheetContent>
             </Sheet>
           </div>
-        </div>
       </div>
     </header>
   );
