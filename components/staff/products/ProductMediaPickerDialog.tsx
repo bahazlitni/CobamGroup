@@ -30,6 +30,8 @@ import { mapMediaListItemToProductMedia } from "./product-media-utils";
 type PickerTab = "library" | "upload";
 const PAGE_SIZE = 18;
 const PRODUCTS_MEDIA_FOLDER_PATH = "/produits";
+const EMPTY_DOCUMENT_EXTENSIONS: string[] = [];
+const EMPTY_EXCLUDED_MEDIA_IDS: number[] = [];
 
 function MediaKindIcon({ kind }: { kind: ProductMediaDto["kind"] | MediaListItemDto["kind"] }) {
   if (kind === "VIDEO") {
@@ -119,8 +121,8 @@ export default function ProductMediaPickerDialog({
   title,
   description,
   mediaKind = "ALL",
-  documentExtensions = [],
-  excludedMediaIds = [],
+  documentExtensions = EMPTY_DOCUMENT_EXTENSIONS,
+  excludedMediaIds = EMPTY_EXCLUDED_MEDIA_IDS,
   onSelect,
 }: {
   open: boolean;
@@ -154,6 +156,7 @@ export default function ProductMediaPickerDialog({
         .filter(Boolean),
     [documentExtensions],
   );
+  const normalizedDocumentExtensionsKey = normalizedDocumentExtensions.join("|");
   const mediaKindLabel =
     mediaKind === "DOCUMENT"
       ? normalizedDocumentExtensions.length > 0
@@ -186,6 +189,20 @@ export default function ProductMediaPickerDialog({
     }
 
     return folderId;
+  }, []);
+
+  const resetDialogState = useCallback(() => {
+    setActiveTab("library");
+    setSearch("");
+    setItems([]);
+    setPage(1);
+    setHasMore(true);
+    setIsLoading(false);
+    setIsLoadingMore(false);
+    setUploadFile(null);
+    setUploadPreviewUrl(null);
+    setSelectedMedia(null);
+    setError(null);
   }, []);
 
   useEffect(() => {
@@ -272,27 +289,24 @@ export default function ProductMediaPickerDialog({
   );
 
   useEffect(() => {
+    if (open) {
+      return;
+    }
+
+    loadRequestIdRef.current += 1;
+    isClosingRef.current = false;
+    resetDialogState();
+  }, [open, resetDialogState]);
+
+  useEffect(() => {
     if (!open) {
-      loadRequestIdRef.current += 1;
-      isClosingRef.current = false;
-      setActiveTab("library");
-      setSearch("");
-      setItems([]);
-      setPage(1);
-      setHasMore(true);
-      setIsLoading(false);
-      setIsLoadingMore(false);
-      setUploadFile(null);
-      setUploadPreviewUrl(null);
-      setSelectedMedia(null);
-      setError(null);
       return;
     }
 
     isClosingRef.current = false;
     setSelectedMedia(null);
     void loadMedia(1, true);
-  }, [loadMedia, open]);
+  }, [loadMedia, mediaKind, normalizedDocumentExtensionsKey, open]);
 
   const excludedSet = useMemo(() => new Set(excludedMediaIds), [excludedMediaIds]);
 

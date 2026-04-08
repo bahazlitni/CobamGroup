@@ -24,7 +24,9 @@ import {
 import {
   PanelAutoCompleteInput,
   PanelAttributeKindsInput,
+  StaffImageImporter,
   StaffPageHeader,
+  StaffPdfImporter,
   StaffSelect,
   StaffStateCard,
   UnsavedChangesGuard,
@@ -507,6 +509,20 @@ function ProductEditPageContent() {
           <PanelField id="family-description-seo" label="Description SEO">
             <Textarea id="family-description-seo" value={form.descriptionSeo ?? ""} onChange={(event) => setForm((current) => ({ ...current, descriptionSeo: event.target.value || null }))} />
           </PanelField>
+
+          <StaffImageImporter
+            label="Image principale"
+            description="Optionnel : cette image represente la famille dans le catalogue."
+            dialogTitle="Choisir l'image principale"
+            dialogDescription="Selectionnez une image existante ou importez-en une nouvelle pour cette famille."
+            mediaId={form.mainImageMediaId}
+            onChange={(mediaId) =>
+              setForm((current) => ({
+                ...current,
+                mainImageMediaId: mediaId,
+              }))
+            }
+          />
         </Panel>
 
         <Panel
@@ -843,28 +859,20 @@ function ProductEditPageContent() {
                 }
               />
 
-              <ProductMediaGrid
-                items={variant.datasheet ? [variant.datasheet] : []}
-                onChange={(items) =>
+              <StaffPdfImporter
+                label="Fiche technique"
+                description="Optionnel : associez une fiche technique PDF a cette variante."
+                dialogTitle="Ajouter une fiche technique"
+                dialogDescription="Choisissez un PDF existant ou importez-en un nouveau pour cette variante."
+                value={variant.datasheet}
+                onChange={(datasheet) =>
                   setForm((current) =>
                     updateVariantState(current, variant.formKey, (entry) => ({
                       ...entry,
-                      datasheet: items[0] ?? null,
+                      datasheet,
                     })),
                   )
                 }
-                title="Fiche technique"
-                description="Optionnel : associez un document technique a cette variante."
-                pickerTitle="Ajouter une fiche technique"
-                pickerDescription="Choisissez un document existant ou importez-en un nouveau pour cette variante."
-                addButtonLabel={
-                  variant.datasheet
-                    ? "Remplacer la fiche technique"
-                    : "Ajouter une fiche technique"
-                }
-                addButtonHint="Optionnel : document PDF ou bureautique"
-                mediaKind="DOCUMENT"
-                maxItems={1}
               />
 
               {variant.attributes.length > 0 ? (

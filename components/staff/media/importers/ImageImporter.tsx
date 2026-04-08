@@ -22,7 +22,8 @@ type MediaImageFieldProps = {
   previewClassName?: string;
   previewImageClassName?: string;
   fallback?: ReactNode;
-  noImagePreview?: boolean
+  noImagePreview?: boolean;
+  folderPath?: string;
 };
 
 export default function ImageImporter({
@@ -36,7 +37,8 @@ export default function ImageImporter({
   previewClassName,
   previewImageClassName,
   fallback,
-  noImagePreview = false
+  noImagePreview = false,
+  folderPath,
 }: MediaImageFieldProps) {
   const [open, setOpen] = useState(false);
   const [loadedState, setLoadedState] = useState<{
@@ -178,21 +180,24 @@ export default function ImageImporter({
         </CardContent>
       </Card>
 
-      <ImagePickerDialog
-        open={open}
-        onOpenChange={setOpen}
-        title={dialogTitle}
-        description={dialogDescription}
-        selectedMediaId={mediaId}
-        onSelect={(selectedMedia) => {
-          setLoadedState({
-            mediaId: selectedMedia.id,
-            media: selectedMedia,
-            error: null,
-          });
-          onChange(selectedMedia.id);
-        }}
-      />
+      {open ? (
+        <ImagePickerDialog
+          open={open}
+          onOpenChange={setOpen}
+          title={dialogTitle}
+          description={dialogDescription}
+          selectedMediaId={mediaId}
+          onSelect={(selectedMedia) => {
+            setLoadedState({
+              mediaId: selectedMedia.id,
+              media: selectedMedia,
+              error: null,
+            });
+            onChange(selectedMedia.id);
+          }}
+          folderPath={folderPath}
+        />
+      ) : null}
     </>
   );
 }

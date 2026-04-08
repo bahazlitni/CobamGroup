@@ -1,31 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FileText, RefreshCcw, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
-import { getMediaByIdClient, MediaClientError } from "@/features/media/client";
-import type { MediaListItemDto } from "@/features/media/types";
-import { formatBytes, getMediaDisplayTitle } from "@/components/staff/media/utils";
+import { formatBytes } from "@/components/staff/media/utils";
 import ProductMediaPickerDialog from "@/components/staff/products/ProductMediaPickerDialog";
+import type { ProductMediaDto } from "@/features/products/types";
 
 type StaffPdfImporterProps = {
   label: string;
   description: string;
   dialogTitle: string;
   dialogDescription: string;
-  mediaId: number | null;
-  onChange: (mediaId: number | null) => void;
+  value: ProductMediaDto | null;
+  onChange: (value: ProductMediaDto | null) => void;
   emptyLabel?: string;
 };
 
-function isPdfMedia(media: MediaListItemDto | null) {
+function isPdfMedia(media: ProductMediaDto | null) {
   if (!media) {
     return false;
   }
 
-  const extension = media.extension?.trim().toLowerCase().replace(/^\./, "") ?? "";
-  return media.kind === "DOCUMENT" && extension === "pdf";
+  const extension = media.originalFilename?.split(".").pop()?.trim().toLowerCase() ?? "";
+  return (
+    media.kind === "DOCUMENT" &&
+    (extension === "pdf" || media.mimeType?.toLowerCase() === "application/pdf")
+  );
+}
+
+function getPdfLabel(media: ProductMediaDto) {
+  return media.title?.trim() || media.originalFilename || `Media #${media.id}`;
 }
 
 export default function StaffPdfImporter({
@@ -33,62 +39,13 @@ export default function StaffPdfImporter({
   description,
   dialogTitle,
   dialogDescription,
-  mediaId,
+  value,
   onChange,
   emptyLabel = "Aucun PDF selectionne.",
 }: StaffPdfImporterProps) {
   const [open, setOpen] = useState(false);
-  const [loadedState, setLoadedState] = useState<{
-    mediaId: number;
-    media: MediaListItemDto | null;
-    error: string | null;
-  } | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    if (mediaId == null) {
-      return;
-    }
-
-    void getMediaByIdClient(mediaId)
-      .then((result) => {
-        if (!isMounted) {
-          return;
-        }
-
-        setLoadedState({
-          mediaId,
-          media: result,
-          error: isPdfMedia(result) ? null : "Le media selectionne n'est pas un PDF.",
-        });
-      })
-      .catch((err: unknown) => {
-        if (!isMounted) {
-          return;
-        }
-
-        setLoadedState({
-          mediaId,
-          media: null,
-          error:
-            err instanceof MediaClientError || err instanceof Error
-              ? err.message
-              : "Erreur lors du chargement du PDF",
-        });
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [mediaId]);
-
-  const media =
-    mediaId != null && loadedState?.mediaId === mediaId && isPdfMedia(loadedState.media)
-      ? loadedState.media
-      : null;
-  const error = mediaId != null && loadedState?.mediaId === mediaId ? loadedState.error : null;
-  const isLoading = mediaId != null && loadedState?.mediaId !== mediaId;
+  const media = isPdfMedia(value) ? value : null;
+  const error = value != null && !isPdfMedia(value) ? "Le media selectionne n'est pas un PDF." : null;
 
   return (
     <>
@@ -108,11 +65,11 @@ export default function StaffPdfImporter({
               {media ? (
                 <div className="space-y-1 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3">
                   <p className="truncate text-sm font-medium text-cobam-dark-blue">
-                    {getMediaDisplayTitle(media)}
+                    {getPdfLabel(media)}
                   </p>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
                     <span>ID #{media.id}</span>
-                    <span>{formatBytes(media.sizeBytes)}</span>
+                    <span>{formatBytes(media.sizeBytes == null ? null : Number(media.sizeBytes))}</span>
                     {media.originalFilename ? (
                       <span className="truncate">{media.originalFilename}</span>
                     ) : null}
@@ -120,7 +77,7 @@ export default function StaffPdfImporter({
                 </div>
               ) : (
                 <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-                  {isLoading ? "Chargement du PDF..." : error ? error : emptyLabel}
+                  {error ? error : emptyLabel}
                 </div>
               )}
             </div>
@@ -131,13 +88,13 @@ export default function StaffPdfImporter({
               type="button"
               onClick={() => setOpen(true)}
               variant="primary"
-              icon={mediaId != null ? "modify" : "plus"}
+              icon={value != null ? "modify" : "plus"}
               iconPosition="left"
             >
-              {mediaId != null ? "Changer le PDF" : "Choisir un PDF"}
+              {value != null ? "Changer le PDF" : "Choisir un PDF"}
             </AnimatedUIButton>
 
-            {mediaId != null ? (
+            {value != null ? (
               <AnimatedUIButton
                 type="button"
                 onClick={() => onChange(null)}
@@ -151,7 +108,7 @@ export default function StaffPdfImporter({
               </AnimatedUIButton>
             ) : null}
 
-            {error && mediaId != null ? (
+            {error && value != null ? (
               <AnimatedUIButton type="button" onClick={() => setOpen(true)} variant="light">
                 <span className="inline-flex items-center gap-2">
                   <RefreshCcw className="h-4 w-4" />
@@ -163,18 +120,20 @@ export default function StaffPdfImporter({
         </CardContent>
       </Card>
 
-      <ProductMediaPickerDialog
-        open={open}
-        onOpenChange={setOpen}
-        title={dialogTitle}
-        description={dialogDescription}
-        mediaKind="DOCUMENT"
-        documentExtensions={["pdf"]}
-        onSelect={(selectedMedia) => {
-          onChange(selectedMedia.id);
-          setOpen(false);
-        }}
-      />
+      {open ? (
+        <ProductMediaPickerDialog
+          open={open}
+          onOpenChange={setOpen}
+          title={dialogTitle}
+          description={dialogDescription}
+          mediaKind="DOCUMENT"
+          documentExtensions={["pdf"]}
+          onSelect={(selectedMedia) => {
+            onChange(selectedMedia);
+            setOpen(false);
+          }}
+        />
+      ) : null}
     </>
   );
 }

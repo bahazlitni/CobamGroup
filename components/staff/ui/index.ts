@@ -12,6 +12,7 @@ export { default as StaffPageHeader } from "./page-header";
 export { default as StaffSelect } from "./PanelSelect";
 export { default as PanelAutoCompleteInput } from "./PanelAutoCompleteInput";
 export { default as PanelAttributeKindsInput } from "./PanelAttributeKindsInput";
+export { default as StaffImageImporter } from "./StaffImageImporter";
 export { default as StaffPdfImporter } from "./StaffPdfImporter";
 export { default as StaffSearchSelect } from "./search-select";
 export { default as StaffTagInput } from "./tag-input";

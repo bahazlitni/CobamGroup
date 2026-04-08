@@ -19,6 +19,7 @@ import PanelInput from "@/components/staff/ui/PanelInput";
 import {
   PanelAutoCompleteInput,
   StaffPageHeader,
+  StaffPdfImporter,
   StaffSelect,
   StaffStateCard,
   StaffTagInput,
@@ -512,22 +513,18 @@ function SingleProductEditPageContent() {
       </Panel>
 
       <Panel pretitle="Documentation" title="Fiche technique">
-        <ProductMediaGrid
-          items={form.datasheet ? [form.datasheet] : []}
-          onChange={(items) =>
+        <StaffPdfImporter
+          label="Document technique"
+          description="Optionnel : associez une fiche technique PDF a ce produit simple."
+          dialogTitle="Ajouter une fiche technique"
+          dialogDescription="Choisissez un PDF existant ou importez-en un nouveau pour ce produit."
+          value={form.datasheet}
+          onChange={(datasheet) =>
             setForm((current) => ({
               ...current,
-              datasheet: items[0] ?? null,
+              datasheet,
             }))
           }
-          title="Document technique"
-          description="Optionnel : associez une fiche technique a ce produit simple."
-          pickerTitle="Ajouter une fiche technique"
-          pickerDescription="Choisissez un document existant ou importez-en un nouveau pour ce produit."
-          addButtonLabel={form.datasheet ? "Remplacer la fiche technique" : "Ajouter une fiche technique"}
-          addButtonHint="Optionnel : document PDF ou bureautique"
-          mediaKind="DOCUMENT"
-          maxItems={1}
         />
       </Panel>
 

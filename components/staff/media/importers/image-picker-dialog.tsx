@@ -210,6 +210,20 @@ export default function ImagePickerDialog({
     return folderId;
   }, [folderPath]);
 
+  const resetDialogState = useCallback(() => {
+    setActiveTab("library");
+    setSearch("");
+    setItems([]);
+    setPage(1);
+    setHasMore(true);
+    setIsLoading(false);
+    setIsLoadingMore(false);
+    setError(null);
+    setSelectedExistingId(null);
+    setUploadFile(null);
+    setUploadDimensions(null);
+  }, []);
+
   useEffect(() => {
     if (!open) {
       return;
@@ -305,20 +319,17 @@ export default function ImagePickerDialog({
   );
 
   useEffect(() => {
+    if (open) {
+      return;
+    }
+
+    loadRequestIdRef.current += 1;
+    isClosingRef.current = false;
+    resetDialogState();
+  }, [open, resetDialogState]);
+
+  useEffect(() => {
     if (!open) {
-      loadRequestIdRef.current += 1;
-      isClosingRef.current = false;
-      setActiveTab("library");
-      setSearch("");
-      setItems([]);
-      setPage(1);
-      setHasMore(true);
-      setIsLoading(false);
-      setIsLoadingMore(false);
-      setError(null);
-      setSelectedExistingId(null);
-      setUploadFile(null);
-      setUploadDimensions(null);
       return;
     }
 

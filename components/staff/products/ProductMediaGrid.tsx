@@ -103,18 +103,20 @@ export default function ProductMediaGrid({
         </button>
       </div>
 
-      <ProductMediaPickerDialog
-        open={isPickerOpen}
-        onOpenChange={setIsPickerOpen}
-        title={pickerTitle}
-        description={pickerDescription}
-        mediaKind={mediaKind}
-        excludedMediaIds={maxItems === 1 ? [] : items.map((item) => item.id)}
-        onSelect={(media) => {
-          onChange(maxItems === 1 ? [media] : [...items, media]);
-          setIsPickerOpen(false);
-        }}
-      />
+      {isPickerOpen ? (
+        <ProductMediaPickerDialog
+          open={isPickerOpen}
+          onOpenChange={setIsPickerOpen}
+          title={pickerTitle}
+          description={pickerDescription}
+          mediaKind={mediaKind}
+          excludedMediaIds={maxItems === 1 ? [] : items.map((item) => item.id)}
+          onSelect={(media) => {
+            onChange(maxItems === 1 ? [media] : [...items, media]);
+            setIsPickerOpen(false);
+          }}
+        />
+      ) : null}
     </div>
   );
 }
