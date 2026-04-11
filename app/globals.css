@@ -8,13 +8,13 @@
 /* -------------------------------------------------- */
 
 :root {
-  --radius: 1rem;
+  --radius: 1.1rem;
   --font-montserrat: "Sora", "Aptos", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --font-playfair: "Source Serif 4", Georgia, "Times New Roman", serif;
 
   /* shadcn semantic tokens */
-  --background: #f8f9fb;
-  --foreground: #14202e;
+  --background: #fafaf9; /* Lighter, cleaner premium background */
+  --foreground: #14202e; /* Brand Dark Blue */
 
   --card: #ffffff;
   --card-foreground: #14202e;
@@ -22,31 +22,31 @@
   --popover: #ffffff;
   --popover-foreground: #14202e;
 
-  --primary: #14202e;
+  --primary: #14202e; /* Brand Dark Blue */
   --primary-foreground: #ffffff;
 
-  --secondary: #eef3f7;
+  --secondary: #f3f4f6;
   --secondary-foreground: #14202e;
 
-  --muted: #f3f6f9;
-  --muted-foreground: #6b7a8c;
+  --muted: #f3f4f6;
+  --muted-foreground: #5e5e5e; /* Brand Carbon Grey */
 
-  --accent: #e9f6fb;
-  --accent-foreground: #14202e;
+  --accent: #f0f7fb; /* Very subtle water blue tint */
+  --accent-foreground: #0a8dc1; /* Brand Water Blue */
 
-  --destructive: #dc2626;
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
 
-  --border: #dbe3ea;
-  --input: #dbe3ea;
+  --border: #d3d3d3; /* Brand Quill Grey */
+  --input: #d3d3d3;
   --ring: #0a8dc1;
 
   /* optional chart tokens */
   --chart-1: #0a8dc1;
-  --chart-2: #14202e;
-  --chart-3: #5e5e5e;
-  --chart-4: #7fc7df;
-  --chart-5: #d3d3d3;
+  --chart-2: #1b232b;
+  --chart-3: #5f6a6a;
+  --chart-4: #84c6dd;
+  --chart-5: #d9d2c6;
 
   /* optional sidebar tokens if you use shadcn sidebar */
   --sidebar: #ffffff;
@@ -160,7 +160,11 @@
   --color-cobam-water-blue: #0a8dc1;
   --color-cobam-carbon-grey: #5e5e5e;
   --color-cobam-quill-grey: #d3d3d3;
-  --color-cobam-light-bg: #f8f9fb;
+  --color-cobam-light-bg: #fafaf9;
+
+  --color-cobam-stone: #cfc7bb;
+  --color-cobam-sand: #e7dfd4;
+  --color-cobam-brass: #b08a5a;
 
   --article-heading-h1: #0a8dc1;
   --article-heading-h2: #14202e;
@@ -210,6 +214,10 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  .animate-float-slow {
+    animation: floatSlow 12s ease-in-out infinite;
+  }
 }
 
 /* -------------------------------------------------- */
@@ -224,6 +232,12 @@
 @keyframes slideOutToRight {
   from { transform: translateX(0); }
   to   { transform: translateX(100%); }
+}
+
+@keyframes floatSlow {
+  0% { transform: translateY(0px) translateX(0px); }
+  50% { transform: translateY(-12px) translateX(6px); }
+  100% { transform: translateY(0px) translateX(0px); }
 }
 
 @keyframes slideInPanel {

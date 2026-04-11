@@ -17,10 +17,7 @@ import PanelAttributesInput from "@/components/staff/ui/PanelAttributesInput";
 import Panel from "@/components/staff/ui/Panel";
 import PanelField from "@/components/staff/ui/PanelField";
 import PanelInput from "@/components/staff/ui/PanelInput";
-import {
-  formatProductAttributeKind,
-  normalizeProductAttributeKind,
-} from "@/lib/static_tables/attributes";
+import { normalizeProductAttributeKind } from "@/lib/static_tables/attributes";
 import {
   PanelAutoCompleteInput,
   PanelAttributeKindsInput,
@@ -147,7 +144,7 @@ function buildSharedAttributeKinds(variants: VariantEditorState[]) {
       }
 
       seenKinds.add(normalizedKind);
-      orderedKinds.push(formatProductAttributeKind(normalizedKind));
+      orderedKinds.push(normalizedKind);
     }
   }
 
@@ -172,7 +169,7 @@ function syncAttributesToKinds(
       const existingAttribute = attributeMap.get(kind);
 
       return {
-        kind: formatProductAttributeKind(kind),
+        kind,
         value: existingAttribute?.value ?? "",
       };
     });
@@ -447,6 +444,34 @@ function ProductEditPageContent() {
     }));
   };
 
+  const moveVariant = (index: number, direction: "up" | "down") => {
+    setForm((current) => {
+      const nextIndex = direction === "up" ? index - 1 : index + 1;
+      if (nextIndex < 0 || nextIndex >= current.variants.length) {
+        return current;
+      }
+
+      const nextVariants = [...current.variants];
+      [nextVariants[index], nextVariants[nextIndex]] = [
+        nextVariants[nextIndex],
+        nextVariants[index],
+      ];
+
+      let nextDefaultIndex = current.defaultVariantIndex;
+      if (nextDefaultIndex === index) {
+        nextDefaultIndex = nextIndex;
+      } else if (nextDefaultIndex === nextIndex) {
+        nextDefaultIndex = index;
+      }
+
+      return {
+        ...current,
+        variants: nextVariants,
+        defaultVariantIndex: nextDefaultIndex,
+      };
+    });
+  };
+
   if (isLoading) {
     return <EditorLoading />;
   }
@@ -699,7 +724,25 @@ function ProductEditPageContent() {
             title={variant.name || variant.sku || `Variante ${index + 1}`}
             description="Chaque variante est un produit concret rattaché à la famille."
           >
-            <div className="flex justify-end">
+            <div className="flex flex-wrap justify-end gap-2">
+              <AnimatedUIButton
+                type="button"
+                variant="outline"
+                icon="chevron-up"
+                onClick={() => moveVariant(index, "up")}
+                disabled={index === 0}
+              >
+                Monter
+              </AnimatedUIButton>
+              <AnimatedUIButton
+                type="button"
+                variant="outline"
+                icon="chevron-down"
+                onClick={() => moveVariant(index, "down")}
+                disabled={index === form.variants.length - 1}
+              >
+                Descendre
+              </AnimatedUIButton>
               <AnimatedUIButton
                 type="button"
                 variant="light"

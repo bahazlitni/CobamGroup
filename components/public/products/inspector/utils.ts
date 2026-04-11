@@ -52,6 +52,7 @@ export type NormalAttributeGroup = {
 
 export type SelectorPillProps = {
   label: string;
+  unit: null | string;
   active: boolean;
   onClick: () => void;
 };

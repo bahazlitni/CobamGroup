@@ -33,34 +33,17 @@ export default function ProductCard({
     >
       <article
         className="
-          flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-border
-          bg-card text-card-foreground shadow-[0_5px_10px_rgba(20,32,46,0.06)]
-          transition-all duration-300
-          group-hover:-translate-y-1 group-hover:shadow-[0_10px_20px_rgba(20,32,46,0.12)]
+          flex h-full flex-col overflow-hidden rounded-3xl border border-cobam-quill-grey/30 bg-white
+          transition-all duration-500 hover:shadow-[0_20px_40px_rgba(20,32,46,0.06)] group-hover:-translate-y-1
         "
-        style={{
-          borderColor: withThemeAlpha(resolvedThemeColor, 0.18),
-          background: `linear-gradient(180deg, rgba(255,255,255,1), ${withThemeAlpha(
-            resolvedThemeColor,
-            0.06,
-          )})`,
-        }}
       >
-        <div
-          className="relative aspect-[4/3] w-full overflow-hidden bg-muted"
-          style={{
-            background: `linear-gradient(135deg, ${withThemeAlpha(
-              resolvedThemeColor,
-              0.12,
-            )}, rgba(255,255,255,0.98))`,
-          }}
-        >
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-50">
           {imageSrc ? (
             <Image
               src={imageSrc}
               alt={product.imageAlt || product.name}
               fill
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+              className="object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-[1.08]"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
           ) : (
@@ -70,14 +53,14 @@ export default function ProductCard({
           )}
         </div>
 
-        <div className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
+        <div className="flex flex-1 flex-col gap-4 p-6 sm:p-7">
           {/* Top row */}
           <div className="flex items-start justify-between gap-3">
             {product.brandName && (
               <span
                 className="
-                  inline-flex max-w-fit items-center rounded-full border px-3 py-1 text-[11px]
-                  font-semibold uppercase tracking-[0.16em]
+                  inline-flex max-w-fit items-center rounded-full border px-3 py-1 text-[10px]
+                  font-semibold uppercase tracking-[0.22em]
                 "
                 style={{
                   borderColor: withThemeAlpha(resolvedThemeColor, 0.18),
@@ -91,15 +74,18 @@ export default function ProductCard({
           </div>
 
           {/* Content */}
-          <div className="space-y-2">
-            <h3 className="line-clamp-2 text-lg font-semibold tracking-tight text-cobam-dark-blue sm:text-xl">
+          <div className="space-y-3 pb-3">
+            <h3
+              className="line-clamp-2 text-2xl font-light leading-tight text-[#14202e] transition-colors"
+              style={{ fontFamily: "var(--font-playfair), serif" }}
+            >
               {product.name}
             </h3>
 
             {product.subtitle && (
               <p
                 className="line-clamp-2 text-sm font-medium"
-                style={{ color: resolvedThemeColor }}
+                style={{ color: resolvedThemeColor || "#5e5e5e" }}
               >
                 {product.subtitle}
               </p>
@@ -112,11 +98,11 @@ export default function ProductCard({
             )}
           </div>
 
-          {/* Price (moved here) */}
+          {/* Price */}
           {price && (
             <div className="pt-1">
-              <span className="text-base font-semibold text-cobam-dark-blue">
-                {price} DT
+              <span className="text-lg font-medium text-[#14202e]">
+                {price} TND
               </span>
             </div>
           )}
@@ -124,10 +110,10 @@ export default function ProductCard({
           {/* CTA */}
           <div className="mt-auto flex items-center justify-between pt-2">
             <span
-              className="text-sm font-medium text-foreground transition-colors"
-              style={{ color: resolvedThemeColor }}
+              className="text-xs font-bold uppercase tracking-[0.1em] transition-colors"
+              style={{ color: resolvedThemeColor || "#14202e" }}
             >
-              Voir le produit
+              Plus de details
             </span>
 
             <AnimatedUIButton

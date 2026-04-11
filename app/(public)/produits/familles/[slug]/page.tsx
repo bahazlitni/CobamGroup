@@ -29,8 +29,8 @@ export default async function PublicFamilyPage({
   });
 
   return (
-    <main className="min-h-screen bg-slate-50 text-cobam-dark-blue">
-      <section className="py-10 sm:py-12 lg:py-16">
+    <main className="min-h-screen bg-white text-cobam-dark-blue">
+      <section className="py-10 sm:py-12 lg:py-20 border-t border-cobam-quill-grey/30">
         <div className="mx-auto max-w-[92rem] px-4 sm:px-6 lg:px-8">
           <PublicProductInspectorView product={family} breadcrumb={breadcrumb} />
         </div>

@@ -19,22 +19,23 @@ import VariantRail from "./inspector/VariantsRail";
 import ColorsList from "./inspector/ColorsList";
 import FinishesList from "./inspector/FinishesList";
 import NormalAttributesList from "./inspector/NormalAttributesList";
+import DatasheetLink from "./inspector/DatasheetLink";
 
 
-function SelectorPill({ label, active, onClick }: SelectorPillProps) {
+function SelectorPill({ label, unit, active, onClick }: SelectorPillProps) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "rounded-full border px-3.5 py-2 text-sm font-medium transition",
-        active
-          ? "border-cobam-dark-blue bg-cobam-dark-blue text-white"
-          : "border-slate-200 bg-white text-cobam-dark-blue hover:border-slate-300",
-      )}
-    >
-      {label}
-    </button>
+      <button
+        type="button"
+        onClick={onClick}
+        className={cn(
+          "rounded-full border px-4 py-2 text-[13px] font-semibold tracking-wide transition-all",
+          active
+            ? "border-[#14202e] bg-[#14202e] text-white shadow-md"
+            : "border-cobam-quill-grey/50 bg-[#fafaf9] text-[#5e5e5e] hover:border-[#14202e] hover:text-[#14202e]",
+        )}
+      >
+        {label}{unit}
+      </button>
   );
 }
 
@@ -125,8 +126,8 @@ export default function PublicProductInspectorView({
           title={selectedVariant.name}
         />
 
-        <div className="space-y-6">
-          <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 sm:p-8">
+        <div className="space-y-10 lg:pl-10">
+          <div className="pb-8 border-b border-cobam-quill-grey/30">
             <div className="space-y-6">
               <div className="space-y-3">
                 <BreadCrumb
@@ -135,26 +136,16 @@ export default function PublicProductInspectorView({
                   subcategorySlug={breadcrumb?.subcategorySlug}
                   subcategoryName={breadcrumb?.subcategoryName} 
                 />
-                <div className="space-y-2">
+                <div className="space-y-4">
                   <Title title={selectedVariant.name} />
-                  <Property name="SKU" value={selectedVariant.sku} isCopiable={true} isFemale={false} isPlural={false}/>
-                  <Property name="Marque" value={normalizedProduct.brandName} isCopiable={false} isFemale={true} isPlural={true}/>
-                  {selectedVariant.datasheet ? (
-                    <div className="w-fit">
-                      <AnimatedUIButton
-                        href={selectedVariant.datasheet.url}
-                        download
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        size="sm"
-                        variant="light"
-                        icon="download"
-                        iconPosition="right"
-                      >
-                        Fiche technique
-                      </AnimatedUIButton>
+
+                  <div className="flex justify-between items-end">
+                    <div className="flex flex-col gap-1">
+                    <Property name="SKU" value={selectedVariant.sku} isCopiable={true} isFemale={false} isPlural={false}/>
+                    <Property name="Marque" value={normalizedProduct.brandName} isCopiable={false} isFemale={true} isPlural={true}/>
                     </div>
-                  ) : null}
+                    {selectedVariant.datasheet && <DatasheetLink url={selectedVariant.datasheet.url} />}
+                  </div>
                 </div>
               </div>
 
@@ -176,7 +167,7 @@ export default function PublicProductInspectorView({
           </div>
 
           {shouldShowVariantRail && normalAttributeGroups.length > 0 ? (
-            <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 sm:p-8">
+            <div className="pb-8 border-b border-cobam-quill-grey/30">
               <div className="space-y-5">
                 {normalAttributeGroups.map((group) => {
                   const selectedValue = getVariantAttributeValue(selectedVariant, group.attributeId);
@@ -189,15 +180,13 @@ export default function PublicProductInspectorView({
                     <div key={group.attributeId} className="space-y-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-sm text-slate-500">{group.name}</p>
-                        {group.unit ? (
-                          <p className="text-xs text-slate-400">{group.unit}</p>
-                        ) : null}
                       </div>
                       <div className="flex flex-wrap gap-2.5">
                         {group.options.map((option) => (
                           <SelectorPill
                             key={`${group.attributeId}-${option.key}`}
                             label={option.label}
+                            unit={group.unit}
                             active={selectedKey === option.key}
                             onClick={() =>
                               handleNormalAttributeSelect(group.attributeId, option.key)

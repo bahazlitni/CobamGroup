@@ -299,9 +299,9 @@ function getAttributePresentation(kind: string) {
     name: formatProductAttributeKind(kind),
     unit: getProductAttributeUnit(kind),
     specialType:
-      resolvedAttribute?.value === "FINISH"
+      resolvedAttribute?.key === "FINISH"
         ? ("FINISH" as const)
-        : resolvedAttribute?.value === "COLOR"
+        : resolvedAttribute?.key === "COLOR"
           ? ("COLOR" as const)
           : null,
   };

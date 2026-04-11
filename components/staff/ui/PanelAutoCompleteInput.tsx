@@ -16,7 +16,8 @@ import { cn } from "@/lib/utils";
 import PanelInput from "./PanelInput";
 
 export type PanelAutoCompleteOption = {
-  value: string;
+  value?: string;
+  key?: string;
   label?: string;
   tag?: string;
 };
@@ -53,9 +54,11 @@ function normalizeSuggestion(
     };
   }
 
+  const normalizedValue = suggestion.value ?? suggestion.key ?? "";
+
   return {
-    value: suggestion.value,
-    label: suggestion.label ?? suggestion.value,
+    value: normalizedValue,
+    label: suggestion.label ?? normalizedValue,
     tag: suggestion.tag?.trim() || undefined,
   };
 }
@@ -74,17 +77,16 @@ function dedupeSuggestions(
   );
 }
 
-function normalizeText(value: string): string {
-  return value.trim().toLocaleLowerCase("fr-FR");
+function normalizeText(value?: string | null): string {
+  return (value ?? "").trim().toLocaleLowerCase("fr-FR");
 }
 
 function getSuggestionOutput(
   suggestion: PanelAutoCompleteOption,
   emitSuggestionValue: boolean,
 ): string {
-  return emitSuggestionValue
-    ? suggestion.value
-    : (suggestion.label ?? suggestion.value);
+  const outputValue = suggestion.value ?? suggestion.key ?? suggestion.label ?? "";
+  return emitSuggestionValue ? outputValue : (suggestion.label ?? outputValue);
 }
 
 export default function PanelAutoCompleteInput({
@@ -110,7 +112,7 @@ export default function PanelAutoCompleteInput({
   const [isFocused, setIsFocused] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
 
-  const inputValue = displayValue ?? value;
+  const inputValue = displayValue ?? value ?? "";
   const normalizedInputValue = normalizeText(inputValue);
 
   const normalizedSuggestions = useMemo(
@@ -119,7 +121,7 @@ export default function PanelAutoCompleteInput({
         (suggestions ?? [])
           .filter(Boolean)
           .map(normalizeSuggestion)
-          .filter((suggestion) => (suggestion.label ?? suggestion.value).trim()),
+          .filter((suggestion) => (suggestion.label ?? suggestion.value ?? "").trim()),
       ),
     [suggestions],
   );
@@ -133,7 +135,7 @@ export default function PanelAutoCompleteInput({
 
     const scored = normalizedSuggestions
       .map((suggestion) => {
-        const label = suggestion.label ?? suggestion.value;
+        const label = suggestion.label ?? suggestion.value ?? "";
         const normalizedLabel = normalizeText(label);
 
         let score = -1;
@@ -157,21 +159,14 @@ export default function PanelAutoCompleteInput({
     return scored.map((item) => item.suggestion);
   }, [normalizedInputValue, normalizedSuggestions]);
 
-  useEffect(() => {
-    if (!displayedSuggestions.length) {
-      setHighlightedIndex(0);
-      return;
-    }
-
-    setHighlightedIndex((current) =>
-      Math.min(Math.max(current, 0), displayedSuggestions.length - 1),
-    );
-  }, [displayedSuggestions]);
+  const safeHighlightedIndex = displayedSuggestions.length
+    ? Math.min(Math.max(highlightedIndex, 0), displayedSuggestions.length - 1)
+    : 0;
 
   useEffect(() => {
-    const highlightedOption = optionRefs.current[highlightedIndex];
+    const highlightedOption = optionRefs.current[safeHighlightedIndex];
     highlightedOption?.scrollIntoView({ block: "nearest" });
-  }, [highlightedIndex]);
+  }, [safeHighlightedIndex]);
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent | TouchEvent) {
@@ -197,7 +192,7 @@ export default function PanelAutoCompleteInput({
     displayedSuggestions.length > 0;
 
   const selectedSuggestion =
-    displayedSuggestions[highlightedIndex] ?? displayedSuggestions[0] ?? null;
+    displayedSuggestions[safeHighlightedIndex] ?? displayedSuggestions[0] ?? null;
 
   const selectedSuggestionLabel = selectedSuggestion?.label ?? null;
 
@@ -345,7 +340,7 @@ export default function PanelAutoCompleteInput({
           aria-controls={menuOpen ? listboxId : undefined}
           aria-activedescendant={
             menuOpen && selectedSuggestion
-              ? `${listboxId}-option-${highlightedIndex}`
+              ? `${listboxId}-option-${safeHighlightedIndex}`
               : undefined
           }
           autoComplete={autoComplete ?? "off"}

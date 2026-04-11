@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import type { PublicProductListResult } from "@/features/products/public";
 import { normalizeThemeColor, withThemeAlpha } from "@/lib/theme-color";
 import PublicProductCard from "./public-product-card";
+import { motion } from "framer-motion";
 
 type PublicProductGridProps = {
   categorySlug: string;
@@ -280,7 +281,7 @@ export default function PublicProductGrid({
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
               placeholder="Rechercher par nom, SKU, marque ou tag..."
-              className="h-12 w-full rounded-full border border-slate-300 bg-white pl-11 pr-12 text-sm text-cobam-dark-blue shadow-sm outline-none transition focus:border-cobam-water-blue focus:ring-2 focus:ring-cobam-water-blue/20"
+              className="h-14 w-full rounded-full border border-cobam-quill-grey/40 bg-[#fafaf9] pl-12 pr-12 text-sm text-[#14202e] shadow-sm outline-none transition focus:border-[#0a8dc1] focus:ring-1 focus:ring-[#0a8dc1]/10"
             />
             {searchInput ? (
               <button
@@ -333,7 +334,7 @@ export default function PublicProductGrid({
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Rechercher par nom, SKU, marque ou tag..."
-            className="h-12 w-full rounded-full border border-slate-300 bg-white pl-11 pr-12 text-sm text-cobam-dark-blue shadow-sm outline-none transition focus:border-cobam-water-blue focus:ring-2 focus:ring-cobam-water-blue/20"
+            className="h-14 w-full rounded-full border border-cobam-quill-grey/40 bg-[#fafaf9] pl-12 pr-12 text-sm text-[#14202e] shadow-sm outline-none transition focus:border-[#0a8dc1] focus:ring-1 focus:ring-[#0a8dc1]/10"
           />
           {searchInput ? (
             <button
@@ -374,17 +375,23 @@ export default function PublicProductGrid({
           ? Array.from({ length: Math.min(initialResult.pageSize, 6) }).map((_, index) => (
               <PublicProductCardSkeleton key={`refresh-skeleton-${index}`} />
             ))
-          : items.map((product) => (
-              <PublicProductCard
+          : items.map((product, index) => (
+              <motion.div
                 key={`${product.entityType}-${product.id}`}
-                product={product}
-                themeColor={resolvedThemeColor}
-                href={buildPublicProductHref({
-                  categorySlug,
-                  subcategorySlug,
-                  product,
-                })}
-              />
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: (index % 12) * 0.05, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <PublicProductCard
+                  product={product}
+                  themeColor={resolvedThemeColor}
+                  href={buildPublicProductHref({
+                    categorySlug,
+                    subcategorySlug,
+                    product,
+                  })}
+                />
+              </motion.div>
             ))}
 
         {!isRefreshing && isLoadingMore

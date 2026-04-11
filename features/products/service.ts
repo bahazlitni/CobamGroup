@@ -7,9 +7,6 @@ import {
   findDuplicateAttributeKind,
 } from "./attribute-kinds";
 import { assertProductDatasheetMedia } from "./datasheet";
-import {
-  formatProductAttributeKind,
-} from "@/lib/static_tables/attributes";
 import { formatProductBrandValue } from "@/lib/static_tables/brands";
 import type {
   ProductFamilyDetailDto,
@@ -225,7 +222,7 @@ function mapVariant(record: StaffFamilyDetailRecord["members"][number]["product"
     datasheet: record.datasheetMedia ? mapMedia(record.datasheetMedia) : null,
     media: record.mediaLinks.map((link) => mapMedia(link.media)),
     attributes: record.attributes.map((attribute) => ({
-      kind: formatProductAttributeKind(attribute.kind),
+      kind: attribute.kind,
       value: attribute.value,
     })),
   };

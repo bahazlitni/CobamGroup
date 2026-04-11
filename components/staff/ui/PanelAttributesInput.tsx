@@ -77,9 +77,8 @@ function AttributeCard({
           <PanelAutoCompleteInput
             id={`attribute-type-${index}`}
             value={kind}
-            displayValue={formatProductAttributeKind(kind) || kind}
             suggestions={getAttributeNameSuggestions(
-              formatProductAttributeKind(kind) || kind,
+              kind,
             )}
             emitSuggestionValue
             onValueChange={onKindChange}

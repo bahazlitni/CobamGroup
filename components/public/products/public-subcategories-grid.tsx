@@ -1,6 +1,9 @@
+"use client";
+
 import type { PublicProductSubcategoryCardData } from "@/features/product-categories/public-types";
 import { withThemeAlpha } from "@/lib/theme-color";
 import PublicSubcategoryCard from "./public-subcategory-card";
+import { motion } from "framer-motion";
 
 type PublicSubcategoriesGridProps = {
   subcategories: PublicProductSubcategoryCardData[];
@@ -27,12 +30,18 @@ export default function PublicSubcategoriesGrid({
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-      {subcategories.map((subcategory) => (
-        <PublicSubcategoryCard
-          key={subcategory.id}
-          subcategory={subcategory}
-          themeColor={themeColor}
-        />
+      {subcategories.map((subcategory, index) => (
+        <motion.div
+           key={subcategory.id}
+           initial={{ opacity: 0, y: 30 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ duration: 0.6, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <PublicSubcategoryCard
+            subcategory={subcategory}
+            themeColor={themeColor}
+          />
+        </motion.div>
       ))}
     </div>
   );

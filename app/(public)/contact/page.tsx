@@ -1,4 +1,5 @@
-import { Clock3, Mail, MessageCircle, Phone } from "lucide-react";
+import { Clock3, Mail, MessageCircle, Phone, MapPin } from "lucide-react";
+import StaticHighway from "@/components/ui/custom/StaticHighway";
 import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
 import PublicContactForm from "@/components/public/contact/public-contact-form";
 import {
@@ -8,6 +9,7 @@ import {
   getPhoneHref,
   getWhatsAppHref,
 } from "@/data/contact-details";
+import { PremiumReveal } from "@/components/ui/custom/PremiumReveal";
 
 const contactChannels = [
   {
@@ -38,111 +40,84 @@ const contactChannels = [
 
 export default function ContactPage() {
   return (
-    <main className="text-cobam-dark-blue">
-      <section className="border-b border-cobam-quill-grey/45">
-        <div className="border-cobam-quill-grey/45 mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cobam-water-blue">
-              Contact
-            </p>
-            <h1
-              className="mt-4 text-4xl font-semibold sm:text-5xl"
-              style={{ fontFamily: "var(--font-playfair), serif" }}
-            >
-              Toujours à votre service.
-            </h1>
-            <p className="mt-4 max-w-2xl text-base leading-8 text-cobam-carbon-grey">
-              E-mail, téléphone ou WhatsApp. Choisissez le moyen qui vous convient.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <AnimatedUIButton
-                href={`mailto:${COBAM_CONTACT_DETAILS.email}`}
-                size="lg"
-                variant="primary"
-                icon="arrow-right"
+    <main className="relative text-cobam-dark-blue bg-white min-h-screen">
+      <StaticHighway direction="right" />
+      <section className="relative overflow-hidden bg-cobam-light-bg py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 md:px-12">
+          <PremiumReveal direction="up" blur>
+            <div className="max-w-3xl">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.4em] text-cobam-carbon-grey">
+                Contact & Showrooms
+              </p>
+              <h1
+                className="mt-6 text-5xl font-light sm:text-6xl lg:text-7xl"
+                style={{ fontFamily: "var(--font-playfair), serif" }}
               >
-                Envoyer un e-mail
-              </AnimatedUIButton>
-              <AnimatedUIButton
-                href={getWhatsAppHref(COBAM_CONTACT_DETAILS.whatsapp)}
-                size="lg"
-                variant="outline"
-                icon="arrow-right"
-              >
-                Ouvrir WhatsApp
-              </AnimatedUIButton>
+                Parlez-nous de <br/> votre projet.
+              </h1>
+              <p className="mt-8 max-w-xl text-lg font-light leading-relaxed text-cobam-carbon-grey">
+                Qu'il s'agisse de conseils en aménagement, de commandes spécifiques 
+                ou d'un accompagnement personnalisé pour vos chantiers, nos experts 
+                sont à votre écoute.
+              </p>
+              <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+                <AnimatedUIButton
+                  href={`mailto:${COBAM_CONTACT_DETAILS.email}`}
+                  size="xl"
+                  variant="dark"
+                  icon="arrow-right"
+                >
+                  Envoyer un message
+                </AnimatedUIButton>
+                <AnimatedUIButton
+                  href={getWhatsAppHref(COBAM_CONTACT_DETAILS.whatsapp)}
+                  size="xl"
+                  variant="outline-dark"
+                  icon="arrow-right"
+                >
+                  Contacter via WhatsApp
+                </AnimatedUIButton>
+              </div>
             </div>
-          </div>
+          </PremiumReveal>
         </div>
       </section>
 
-      <section className="bg-cobam-light-bg">
-        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-12 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:py-16">
-          <div className="space-y-6">
-            <div className="border border-cobam-quill-grey/45 rounded-lg bg-white p-6 shadow-md">
-              <h2 className="text-lg font-semibold text-cobam-dark-blue">
+      <section className="relative py-24 sm:py-32">
+        <div className="mx-auto grid max-w-7xl gap-16 px-6 md:px-12 lg:grid-cols-[1fr_1.2fr]">
+          <div className="space-y-12">
+            <PremiumReveal direction="right" blur delay={0.1}>
+              <h2 className="text-2xl font-normal" style={{ fontFamily: "var(--font-playfair), serif" }}>
                 Coordonnées
               </h2>
-              <div className="mt-5 space-y-3">
+              <div className="mt-8 grid gap-4">
                 {contactChannels.map(({ label, value, href, Icon }) => (
                   <a
                     key={label}
                     href={href}
                     target={label === "WhatsApp" ? "_blank" : undefined}
                     rel={label === "WhatsApp" ? "noreferrer" : undefined}
-                    className="flex items-start gap-3 rounded-lg border border-cobam-dark-blue/20 px-4 py-4 transition-colors hover:border-cobam-water-blue/40"
+                    className="group flex flex-col gap-2 rounded-2xl border border-cobam-quill-grey/40 bg-cobam-light-bg p-6 transition-colors hover:border-cobam-water-blue/40 hover:bg-white"
                   >
-                    <div className="rounded-xl bg-cobam-light-bg p-2 text-cobam-water-blue">
-                      <Icon className="h-4 w-4" />
-                    </div>
+                    <Icon className="h-5 w-5 text-cobam-water-blue transition-transform group-hover:scale-110" />
                     <div>
-                      <p className="text-xs uppercase tracking-[0.18em] text-cobam-carbon-grey">
+                      <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-cobam-carbon-grey">
                         {label}
                       </p>
-                      <p className="mt-1 text-sm font-medium text-cobam-dark-blue">
+                      <p className="mt-1 text-base font-medium text-cobam-dark-blue">
                         {value}
                       </p>
                     </div>
                   </a>
                 ))}
               </div>
-            </div>
+            </PremiumReveal>
 
-            <div className="border border-cobam-quill-grey/45 rounded-lg bg-white p-6 shadow-md">
-              <div className="flex items-center gap-3 ">
-                <div className="rounded-xl bg-cobam-light-bg p-2 text-cobam-water-blue">
-                  <Clock3 className="h-4 w-4" />
-                </div>
-                <h2 className="text-lg font-semibold text-cobam-dark-blue">
-                  Horaires
-                </h2>
-              </div>
-              <div className="mt-5 space-y-3">
-                {COBAM_OPENING_HOURS.map((slot) => (
-                  <div
-                    key={slot.label}
-                    className="flex items-center justify-between rounded-lg border border-cobam-dark-blue/20 px-4 py-3"
-                  >
-                    <span className="text-sm text-cobam-dark-blue">
-                      {slot.label}
-                    </span>
-                    <span
-                      className={`text-sm font-medium ${
-                        slot.closed ? "text-cobam-carbon-grey" : "text-cobam-dark-blue"
-                      }`}
-                    >
-                      {slot.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="border border-cobam-quill-grey/45 rounded-lg bg-white p-6 shadow-md">
-              <h2 className="text-lg font-semibold text-cobam-dark-blue">
+            <PremiumReveal direction="right" blur delay={0.2}>
+              <h2 className="text-2xl font-normal" style={{ fontFamily: "var(--font-playfair), serif" }}>
                 Réseaux sociaux
               </h2>
-              <div className="mt-5 flex flex-wrap gap-3">
+              <div className="mt-6 flex flex-wrap gap-4">
                 {COBAM_SOCIAL_LINKS.map(({ label, href, Icon }) => (
                   <a
                     key={label}
@@ -150,17 +125,48 @@ export default function ContactPage() {
                     target="_blank"
                     rel="noreferrer"
                     aria-label={label}
-                    title={label}
-                    className="flex h-11 w-11 items-center justify-center rounded-lg border border-cobam-dark-blue/20 text-cobam-dark-blue transition-colors hover:border-cobam-water-blue/35 hover:text-cobam-water-blue"
+                    className="flex h-14 w-14 items-center justify-center rounded-full border border-cobam-quill-grey/40 bg-cobam-light-bg text-cobam-dark-blue transition-colors hover:border-cobam-water-blue hover:text-cobam-water-blue"
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-5 w-5" />
                   </a>
                 ))}
               </div>
-            </div>
+            </PremiumReveal>
+
+            <PremiumReveal direction="right" blur delay={0.3}>
+              <h2 className="text-2xl font-normal flex items-center gap-3" style={{ fontFamily: "var(--font-playfair), serif" }}>
+                Horaires d'ouverture
+              </h2>
+              <div className="mt-6 space-y-3 rounded-2xl border border-cobam-quill-grey/40 bg-cobam-light-bg p-6">
+                {COBAM_OPENING_HOURS.map((slot) => (
+                  <div
+                    key={slot.label}
+                    className="flex items-center justify-between border-b border-cobam-quill-grey/40 pb-3 last:border-0 last:pb-0"
+                  >
+                    <span className="text-sm font-medium text-cobam-dark-blue/80">
+                      {slot.label}
+                    </span>
+                    <span
+                      className={`text-sm ${
+                        slot.closed ? "text-cobam-carbon-grey" : "text-cobam-dark-blue font-semibold"
+                      }`}
+                    >
+                      {slot.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </PremiumReveal>
           </div>
 
-          <PublicContactForm />
+          <PremiumReveal direction="up" blur delay={0.4}>
+            <div className="rounded-3xl bg-cobam-light-bg p-8 shadow-sm sm:p-12">
+              <h2 className="text-3xl font-light mb-8" style={{ fontFamily: "var(--font-playfair), serif" }}>
+                Envoyez-nous un message
+              </h2>
+              <PublicContactForm />
+            </div>
+          </PremiumReveal>
         </div>
       </section>
     </main>

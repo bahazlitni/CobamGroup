@@ -62,8 +62,8 @@ export default function PublicContactForm() {
   }
 
   return (
-    <div className="border border-cobam-quill-grey/45 rounded-lg bg-white p-6 sm:p-8 shadow-md">
-      <div className="mb-6">
+    <div className="flex flex-col h-full w-full">
+      <div className="mb-10">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cobam-water-blue">
           Formulaire
         </p>
@@ -133,12 +133,11 @@ export default function PublicContactForm() {
             onChange={handleChange}
             disabled={isSubmitting}
             className="
-              w-full rounded-md border border-cobam-dark-blue/20
-              bg-white px-4 py-3 text-sm text-cobam-dark-blue
+              w-full border-b border-cobam-quill-grey/60
+              bg-transparent py-3 text-base text-[#14202e]
               outline-none transition-colors
-              placeholder:text-cobam-carbon-grey/70
-              focus:border-cobam-water-blue
-              focus:ring-2 focus:ring-cobam-water-blue/15
+              placeholder:text-[#5e5e5e]/50
+              focus:border-[#0a8dc1]
               disabled:cursor-not-allowed disabled:opacity-60
             "
             placeholder="Décrivez votre besoin..."
@@ -213,12 +212,11 @@ function Field({
         required={required}
         disabled={disabled}
         className="
-          h-10 w-full rounded-md border border-cobam-dark-blue/20
-          bg-white px-4 text-sm text-cobam-dark-blue
+          w-full border-b border-cobam-quill-grey/60
+          bg-transparent py-3 text-base text-[#14202e]
           outline-none transition-colors
-          placeholder:text-cobam-carbon-grey/70
-          focus:border-cobam-water-blue
-          focus:ring-2 focus:ring-cobam-water-blue/15
+          placeholder:text-[#5e5e5e]/50
+          focus:border-[#0a8dc1]
           disabled:cursor-not-allowed disabled:opacity-60
         "
       />

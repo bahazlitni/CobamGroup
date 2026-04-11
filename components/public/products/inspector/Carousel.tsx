@@ -13,8 +13,8 @@ type CarouselProps = {
 export default function Carousel({ media, title }: CarouselProps) {
     const [activeIndex, setActiveIndex] = useState(0);
     const activeMedia = media[activeIndex] ?? media[0] ?? null;
-    const containerCls = "relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-white w-full"
-    const containerCls2 = "relative grid place-items-center text-center text-slate-500 w-full h-full"
+    const containerCls = "relative aspect-[4/3] sm:aspect-square overflow-hidden rounded-[2rem] border border-cobam-quill-grey/30 bg-[#fafaf9] w-full"
+    const containerCls2 = "relative grid place-items-center text-center text-[#5e5e5e] w-full h-full"
 
     if (!activeMedia) {
         return (
@@ -79,13 +79,13 @@ export default function Carousel({ media, title }: CarouselProps) {
                     type="button"
                     onClick={() => setActiveIndex(index)}
                     className={cn(
-                        "overflow-hidden rounded-[1rem] border bg-white transition",
+                        "overflow-hidden rounded-2xl border bg-[#fafaf9] transition-all duration-300",
                         isActive
-                        ? "border-cobam-dark-blue"
-                        : "border-slate-200 hover:border-slate-300",
+                        ? "border-[#14202e] shadow-md ring-2 ring-[#14202e]/10 -translate-y-1"
+                        : "border-cobam-quill-grey/30 hover:border-cobam-water-blue/50",
                     )}
                     >
-                    <div className="relative aspect-square overflow-hidden bg-slate-100">
+                    <div className="relative aspect-square overflow-hidden bg-transparent">
                         {entry.kind === "IMAGE" ? (
                         <Image
                             src={entry.thumbnailUrl ?? entry.url}

@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import FooterColumn from "@/components/ui/custom/FooterColumn";
-import { FaFacebook, FaInstagram, FaLinkedin } from "react-icons/fa";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -47,7 +46,7 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer id="contact" className="bg-cobam-dark-blue pt-16 pb-8">
+    <footer id="contact" className="bg-cobam-dark-blue pt-20 pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
 
@@ -58,13 +57,13 @@ export default function Footer() {
               alt="COBAM GROUP"
               width={843}
               height={289}
-              className="object-contain h-16 w-auto"
+              className="object-contain h-14 w-auto"
             />
 
             {/* Animated slogan */}
             <div className="h-8 overflow-hidden">
               <p
-                className="text-cobam-water-blue text-m text-center font-bold transition-all duration-400 ease-in-out"
+                className="text-cobam-water-blue text-sm text-left font-semibold tracking-[0.2em] uppercase transition-all duration-400 ease-in-out"
                 style={{
                   opacity: visible ? 1 : 0,
                   transform: visible ? "translateY(0)" : "translateY(8px)",
@@ -75,7 +74,7 @@ export default function Footer() {
               </p>
             </div>
 
-            <div className="flex gap-4 mt-2 justify-center">
+            <div className="flex gap-4 mt-2">
               {COBAM_SOCIAL_LINKS.map((social) => (
                 <a
                   key={social.label}

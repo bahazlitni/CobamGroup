@@ -4,7 +4,6 @@ import { useMemo } from "react"
 import { PanelAutoCompleteInput, StaffField } from "."
 import { AnimatedUIButton } from "@/components/ui/custom/Buttons"
 import {
-  formatProductAttributeKind,
   getAttributeNameSuggestions,
   normalizeProductAttributeKind,
 } from "@/lib/static_tables/attributes"
@@ -35,9 +34,8 @@ function AttributeKindCard({
           id={`family-attribute-kind-${index}`}
           fullWidth
           value={kind}
-          displayValue={formatProductAttributeKind(kind) || kind}
           suggestions={getAttributeNameSuggestions(
-            formatProductAttributeKind(kind) || kind,
+            kind,
           )}
           emitSuggestionValue
           onValueChange={onKindChange}

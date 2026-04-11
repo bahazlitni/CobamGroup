@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+
 import {
   Search,
   Menu,
@@ -9,6 +10,7 @@ import {
   ChevronRight,
   X,
 } from "lucide-react";
+
 import {
   Sheet,
   SheetContent,
@@ -21,6 +23,7 @@ import Image from "next/image";
 import Link from "next/link";
 import MegaMenu from "@/layout/MegaMenu";
 import type { PublicMegaMenuProductCategory } from "@/features/product-categories/public-types";
+import { motion, AnimatePresence } from "framer-motion";
 
 const societyLinks = [
   { label: "Notre Histoire", href: "/notre-histoire" },
@@ -91,8 +94,8 @@ export default function NavBar({
   };
 
   return (
-    <header className="sticky top-0 left-0 z-50 bg-white shadow-sm h-16">
-        <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20 gap-6">
+    <header className="sticky top-0 left-0 z-50 border-b border-cobam-quill-grey/60 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20 gap-6">
           <Link href="/" className="flex-shrink-0 z-100">
             <Image
               src="/images/logos/cobam-group/logo-vector.svg"
@@ -112,7 +115,7 @@ export default function NavBar({
             />
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-5">
+          <nav className="hidden lg:flex items-center gap-6">
             {mainLinks.map((link) => {
               if (link.hasMega) {
                 return (
@@ -136,7 +139,7 @@ export default function NavBar({
                     onMouseEnter={() => setOpen(true)}
                     onMouseLeave={() => setOpen(false)}
                   >
-                    <button className="flex items-center gap-1 text-cobam-dark-blue hover:text-cobam-water-blue font-semibold text-sm transition-colors">
+                    <button className="flex items-center gap-1 text-cobam-dark-blue hover:text-cobam-water-blue font-semibold text-[13px] tracking-[0.18em] uppercase transition-colors">
                       {link.label}
                       <ChevronDown
                         size={13}
@@ -146,19 +149,27 @@ export default function NavBar({
                       />
                     </button>
 
+                    <AnimatePresence>
                     {isOpen && (
-                      <div className="absolute top-full left-0 bg-white shadow-xl border border-gray-100 rounded-lg py-2 w-56 z-50">
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.98 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="absolute top-full left-0 bg-white shadow-[0_20px_40px_rgba(20,32,46,0.08)] border border-cobam-quill-grey/30 rounded-2xl py-3 w-64 z-50 mt-1"
+                      >
                         {link.children.map((child) => (
                           <a
                             key={child.label}
                             href={child.href}
-                            className="block px-4 py-2.5 text-sm text-cobam-dark-blue hover:bg-cobam-light-bg hover:text-cobam-water-blue transition-colors"
+                            className="block px-5 py-3 text-sm text-[#5e5e5e] hover:bg-cobam-light-bg hover:text-[#14202e] hover:font-medium transition-all"
                           >
                             {child.label}
                           </a>
                         ))}
-                      </div>
+                      </motion.div>
                     )}
+                    </AnimatePresence>
                   </div>
                 );
               }
@@ -167,7 +178,7 @@ export default function NavBar({
                 <a
                   key={link.label}
                   href={link.href}
-                  className="text-cobam-dark-blue hover:text-cobam-water-blue font-semibold text-sm transition-colors whitespace-nowrap"
+                  className="text-cobam-dark-blue hover:text-cobam-water-blue font-semibold text-[13px] tracking-[0.18em] uppercase transition-colors whitespace-nowrap"
                 >
                   {link.label}
                 </a>

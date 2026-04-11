@@ -1,77 +1,87 @@
 export type ProductAttribute = {
 	label: string;
-	value: string;
+	key: string;
 	unit?: string;
 }
 
 export type ProductAttributeSuggestion = {
-	value: string;
+	key: string;
 	label: string;
 	tag?: string;
 }
 
 export const PRODUCT_ATTRIBUTES: ProductAttribute[] = [
 	{
-		value: "FINISH",
+		key: "FINISH",
 		label: "Finition",
 	},
 	{
-		value: "COLOR",
+		key: "COLOR",
 		label: "Couleur",
 	},
 	{
-		value: "SIZE",
+		key: "SIZE",
 		label: "Taille",
 	},
 	{
-		value: "WIDTH_MM",
+		key: "WIDTH_MM",
 		label: "Largeur",
 		unit: "mm"
 	},
 	{
-		value: "HEIGHT_MM",
+		key: "HEIGHT_MM",
 		label: "Hauteur",
 		unit: "mm"
 	},
 	{
-		value: "DEPTH_MM",
+		key: "DEPTH_MM",
 		label: "Profondeur",
 		unit: "mm"
 	},
 	{
-		value: "THICKNESS_MM",
+		key: "THICKNESS_MM",
 		label: "Epaisseur",
 		unit: "mm"
 	},
 	{
-		value: "VOLUME_M3",
+		key: "VOLUME_M3",
 		label: "Volume",
 		unit: "m3"
 	},
 	{
-		value: "VOLUME_L",
+		key: "VOLUME_L",
 		label: "Volume",
 		unit: "L"
 	},
 	{
-		value: "SURFACE_M2",
+		key: "SURFACE_M2",
 		label: "Surface",
 		unit: "m2"
 	},
 	{
-		value: "LENGTH_MM",
+		key: "LENGTH_MM",
 		label: "Longueur",
 		unit: "mm"
 	},
 	{
-		value: "WEIGHT_KG",
+		key: "WEIGHT_KG",
 		label: "Poids",
 		unit: "Kg"
+	},
+	{
+		key: "GRID_SPACING",
+		label: "Mailles",
+		unit: "cm"
+	},
+	{
+		key: "NUMBER",
+		label: "Nombre",
 	}
+
 ] as const;
 
-function normalizeAttributeKey(value: string | null | undefined) {
-	return (value ?? "")
+function normalizeAttributeKey(key: string | null | undefined) {
+	return (key ?? "")
 		.normalize("NFD")
 		.replace(/[\u0300-\u036f]/g, "")
 		.trim()
@@ -79,65 +89,56 @@ function normalizeAttributeKey(value: string | null | undefined) {
 		.replace(/\s+/g, " ");
 }
 
-export const PRODUCT_ATTRIBUTE_KINDS = PRODUCT_ATTRIBUTES.map((attribute) => attribute.value);
+export const PRODUCT_ATTRIBUTE_KINDS = PRODUCT_ATTRIBUTES.map((attribute) => attribute.key);
 
-export function resolveProductAttribute(value: string | null | undefined): ProductAttribute | null {
-	const normalizedValue = normalizeAttributeKey(value);
+export function resolveProductAttribute(key: string | null | undefined): ProductAttribute | null {
+	const normalizedkey = normalizeAttributeKey(key);
 
-	if (!normalizedValue) {
+	if (!normalizedkey) {
 		return null;
 	}
 
-	const exactValueMatch =
+	return (
 		PRODUCT_ATTRIBUTES.find(
-			(attribute) => normalizeAttributeKey(attribute.value) === normalizedValue,
-		) ?? null;
-
-	if (exactValueMatch) {
-		return exactValueMatch;
-	}
-
-	const labelMatches = PRODUCT_ATTRIBUTES.filter(
-		(attribute) => normalizeAttributeKey(attribute.label) === normalizedValue,
+			(attribute) => normalizeAttributeKey(attribute.key) === normalizedkey,
+		) ?? null
 	);
-
-	return labelMatches.length === 1 ? labelMatches[0] : null;
 }
 
-export function normalizeProductAttributeKind(value: string | null | undefined) {
-	const trimmedValue = (value ?? "").trim();
+export function normalizeProductAttributeKind(key: string | null | undefined) {
+	const trimmedkey = (key ?? "").trim();
 
-	if (!trimmedValue) {
+	if (!trimmedkey) {
 		return "";
 	}
 
-	return resolveProductAttribute(trimmedValue)?.value ?? trimmedValue;
+	return resolveProductAttribute(trimmedkey)?.key ?? trimmedkey;
 }
 
-export function formatProductAttributeKind(value: string | null | undefined) {
-	if (!value) {
+export function formatProductAttributeKind(key: string | null | undefined) {
+	if (!key) {
 		return "";
 	}
 
-	return resolveProductAttribute(value)?.label ?? value;
+	return resolveProductAttribute(key)?.label ?? key;
 }
 
-export function getProductAttributeUnit(value: string | null | undefined) {
-	return resolveProductAttribute(value)?.unit ?? null;
+export function getProductAttributeUnit(key: string | null | undefined) {
+	return resolveProductAttribute(key)?.unit ?? null;
 }
 
 export function getAttributeNameSuggestions(query: string): ProductAttributeSuggestion[] {
 	if(!query) return [];
 	const lowerQuery = normalizeAttributeKey(query);
 	return PRODUCT_ATTRIBUTES
-		.filter((attr) => normalizeAttributeKey(attr.label).startsWith(lowerQuery))
+		.filter((attr) => normalizeAttributeKey(attr.key).startsWith(lowerQuery))
 		.map((attr) => ({
-			value: attr.value,
-			label: attr.label,
+			key: attr.key,
+			label: attr.key,
 			tag: attr.unit,
 		}));
 }
 
-export function enumProductAttributKindToLabel(value: string) {
-	return formatProductAttributeKind(value);
+export function enumProductAttributKindToLabel(key: string) {
+	return formatProductAttributeKind(key);
 }

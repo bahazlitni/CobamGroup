@@ -9,7 +9,6 @@ import { canAccessProducts, canCreateProducts, canManageProducts } from "@/featu
 import { getProductFormOptionsService } from "@/features/products/service";
 import type { ProductMediaDto } from "@/features/products/types";
 import { prisma } from "@/lib/server/db/prisma";
-import { formatProductAttributeKind } from "@/lib/static_tables/attributes";
 import { formatProductBrandValue } from "@/lib/static_tables/brands";
 import type {
   SingleProductDetailDto,
@@ -135,7 +134,7 @@ function mapSingleProductDetail(record: SingleProductRecord): SingleProductDetai
     datasheet: record.datasheetMedia ? mapMedia(record.datasheetMedia) : null,
     media: record.mediaLinks.map((link) => mapMedia(link.media)),
     attributes: record.attributes.map((attribute) => ({
-      kind: formatProductAttributeKind(attribute.kind),
+      kind: attribute.kind,
       value: attribute.value,
     })),
     createdAt: record.createdAt.toISOString(),
