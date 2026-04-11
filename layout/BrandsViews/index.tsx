@@ -13,7 +13,7 @@ export default function BrandsViews({ brands }: { brands: PublicBrand[] }) {
   if (brands.length === 0) {
     return (
       <div className="rounded-3xl border border-dashed border-cobam-quill-grey/60 bg-white/80 px-6 py-12 text-center text-cobam-carbon-grey">
-        Aucune marque n&apos;est disponible pour le moment.
+        Aucune marque n'est disponible pour le moment.
       </div>
     );
   }

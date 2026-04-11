@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import PublicProductGrid from "@/components/public/products/public-product-grid";
-import PublicSimpleProductInspector from "@/components/public/products/public-simple-product-inspector";
+import PublicProductInspectorView from "@/components/public/products/public-product-inspector";
 import PublicSubcategoriesGrid from "@/components/public/products/public-subcategories-grid";
 import PageHeader from "@/components/ui/custom/PageHeader";
 import {
@@ -167,7 +167,7 @@ export default async function ProductsCatchAllPage({
     <main className="min-h-screen bg-slate-50 text-cobam-dark-blue">
       <section className="py-10 sm:py-12 lg:py-16">
         <div className="mx-auto max-w-[92rem] px-4 sm:px-6 lg:px-8">
-          <PublicSimpleProductInspector
+          <PublicProductInspectorView
             product={productData}
             breadcrumb={breadcrumb}
           />

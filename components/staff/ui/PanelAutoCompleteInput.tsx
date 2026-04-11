@@ -5,15 +5,13 @@ import {
   type ChangeEventHandler,
   type ComponentProps,
   type KeyboardEvent,
+  useEffect,
+  useId,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverAnchor,
-  PopoverContent,
-} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import PanelInput from "./PanelInput";
 
@@ -64,7 +62,7 @@ function normalizeSuggestion(
 
 function dedupeSuggestions(
   suggestions: readonly PanelAutoCompleteOption[],
-) {
+): PanelAutoCompleteOption[] {
   return suggestions.filter(
     (suggestion, index) =>
       suggestions.findIndex(
@@ -74,6 +72,19 @@ function dedupeSuggestions(
           candidate.tag === suggestion.tag,
       ) === index,
   );
+}
+
+function normalizeText(value: string): string {
+  return value.trim().toLocaleLowerCase("fr-FR");
+}
+
+function getSuggestionOutput(
+  suggestion: PanelAutoCompleteOption,
+  emitSuggestionValue: boolean,
+): string {
+  return emitSuggestionValue
+    ? suggestion.value
+    : (suggestion.label ?? suggestion.value);
 }
 
 export default function PanelAutoCompleteInput({
@@ -91,9 +102,16 @@ export default function PanelAutoCompleteInput({
   autoComplete,
   ...props
 }: Props) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const listboxId = useId();
+
   const [isFocused, setIsFocused] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+
   const inputValue = displayValue ?? value;
+  const normalizedInputValue = normalizeText(inputValue);
 
   const normalizedSuggestions = useMemo(
     () =>
@@ -101,32 +119,92 @@ export default function PanelAutoCompleteInput({
         (suggestions ?? [])
           .filter(Boolean)
           .map(normalizeSuggestion)
-          .filter((suggestion) => suggestion.label?.trim()),
+          .filter((suggestion) => (suggestion.label ?? suggestion.value).trim()),
       ),
     [suggestions],
   );
 
-  const hasSuggestions = normalizedSuggestions.length > 0;
-
   const displayedSuggestions = useMemo(() => {
-    if (!hasSuggestions) {
-      return [];
+    if (!normalizedSuggestions.length) return [];
+
+    if (!normalizedInputValue) {
+      return normalizedSuggestions;
     }
 
-    return normalizedSuggestions;
-  }, [hasSuggestions, normalizedSuggestions]);
+    const scored = normalizedSuggestions
+      .map((suggestion) => {
+        const label = suggestion.label ?? suggestion.value;
+        const normalizedLabel = normalizeText(label);
 
-  const menuOpen = !disabled && isFocused && displayedSuggestions.length > 0;
+        let score = -1;
+
+        if (normalizedLabel === normalizedInputValue) {
+          score = 0;
+        } else if (normalizedLabel.startsWith(normalizedInputValue)) {
+          score = 1;
+        } else if (normalizedLabel.includes(normalizedInputValue)) {
+          score = 2;
+        }
+
+        return { suggestion, score, label };
+      })
+      .filter((item) => item.score >= 0)
+      .sort((a, b) => {
+        if (a.score !== b.score) return a.score - b.score;
+        return a.label.localeCompare(b.label, "fr");
+      });
+
+    return scored.map((item) => item.suggestion);
+  }, [normalizedInputValue, normalizedSuggestions]);
+
+  useEffect(() => {
+    if (!displayedSuggestions.length) {
+      setHighlightedIndex(0);
+      return;
+    }
+
+    setHighlightedIndex((current) =>
+      Math.min(Math.max(current, 0), displayedSuggestions.length - 1),
+    );
+  }, [displayedSuggestions]);
+
+  useEffect(() => {
+    const highlightedOption = optionRefs.current[highlightedIndex];
+    highlightedOption?.scrollIntoView({ block: "nearest" });
+  }, [highlightedIndex]);
+
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent | TouchEvent) {
+      const target = event.target as Node | null;
+      if (!target) return;
+
+      if (rootRef.current?.contains(target)) return;
+      setIsFocused(false);
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+    };
+  }, []);
+
+  const menuOpen =
+    !disabled &&
+    isFocused &&
+    displayedSuggestions.length > 0;
+
   const selectedSuggestion =
     displayedSuggestions[highlightedIndex] ?? displayedSuggestions[0] ?? null;
+
   const selectedSuggestionLabel = selectedSuggestion?.label ?? null;
 
   const ghostSuffix =
     selectedSuggestionLabel &&
     inputValue &&
-    selectedSuggestionLabel.toLocaleLowerCase("fr-FR").startsWith(
-      inputValue.toLocaleLowerCase("fr-FR"),
-    ) &&
+    normalizeText(selectedSuggestionLabel).startsWith(normalizedInputValue) &&
     selectedSuggestionLabel.length > inputValue.length
       ? selectedSuggestionLabel.slice(inputValue.length)
       : "";
@@ -137,36 +215,38 @@ export default function PanelAutoCompleteInput({
   };
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setIsFocused(true);
     setHighlightedIndex(0);
     onChange?.(event);
     onValueChange?.(event.target.value);
   };
 
-  const handleSuggestionSelect = (nextValue: string) => {
-    emitValue(nextValue);
+  const handleSuggestionSelect = (suggestion: PanelAutoCompleteOption) => {
+    emitValue(getSuggestionOutput(suggestion, emitSuggestionValue));
     setHighlightedIndex(0);
     setIsFocused(false);
+
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      const nextValue = getSuggestionOutput(suggestion, emitSuggestionValue);
+      inputRef.current?.setSelectionRange(nextValue.length, nextValue.length);
+    });
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     onKeyDown?.(event);
 
-    if (event.defaultPrevented || !menuOpen) {
-      return;
-    }
-
-    if (event.key === "Tab" && selectedSuggestion) {
-      event.preventDefault();
-      handleSuggestionSelect(
-        emitSuggestionValue
-          ? selectedSuggestion.value
-          : (selectedSuggestion.label ?? selectedSuggestion.value),
-      );
-      return;
-    }
+    if (event.defaultPrevented) return;
 
     if (event.key === "ArrowDown") {
       event.preventDefault();
+
+      if (!menuOpen && displayedSuggestions.length > 0) {
+        setIsFocused(true);
+        setHighlightedIndex(0);
+        return;
+      }
+
       setHighlightedIndex((current) =>
         Math.min(current + 1, displayedSuggestions.length - 1),
       );
@@ -175,114 +255,172 @@ export default function PanelAutoCompleteInput({
 
     if (event.key === "ArrowUp") {
       event.preventDefault();
+
+      if (!menuOpen && displayedSuggestions.length > 0) {
+        setIsFocused(true);
+        setHighlightedIndex(displayedSuggestions.length - 1);
+        return;
+      }
+
       setHighlightedIndex((current) => Math.max(current - 1, 0));
       return;
     }
 
-    if (event.key === "Enter" && selectedSuggestion) {
+    if (event.key === "Escape") {
+      if (menuOpen) {
+        event.preventDefault();
+        setIsFocused(false);
+      }
+      return;
+    }
+
+    if (!menuOpen || !selectedSuggestion) return;
+
+    if (event.key === "Tab") {
       event.preventDefault();
-      handleSuggestionSelect(
-        emitSuggestionValue
-          ? selectedSuggestion.value
-          : (selectedSuggestion.label ?? selectedSuggestion.value),
-      );
+      handleSuggestionSelect(selectedSuggestion);
+      return;
+    }
+
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleSuggestionSelect(selectedSuggestion);
     }
   };
 
-  if (!hasSuggestions) {
+  const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
+    setIsFocused(true);
+    setHighlightedIndex(0);
+    onFocus?.(event);
+  };
+
+  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    const nextFocusedElement = event.relatedTarget as Node | null;
+
+    if (nextFocusedElement && rootRef.current?.contains(nextFocusedElement)) {
+      return;
+    }
+
+    // Delay slightly so mouse selection can happen first
+    requestAnimationFrame(() => {
+      const activeElement = document.activeElement;
+      if (activeElement && rootRef.current?.contains(activeElement)) {
+        return;
+      }
+
+      setIsFocused(false);
+      onBlur?.(event);
+    });
+  };
+
+  if (!normalizedSuggestions.length) {
     return (
       <PanelInput
         {...props}
+        ref={inputRef}
         autoComplete={autoComplete ?? "off"}
         disabled={disabled}
         fullWidth={fullWidth}
         value={inputValue}
         onChange={handleInputChange}
-        onFocus={onFocus}
-        onBlur={onBlur}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         onKeyDown={handleKeyDown}
       />
     );
   }
 
   return (
-    <Popover open={menuOpen} modal={false}>
-      <PopoverAnchor asChild>
-        <div className="relative">
-          <PanelInput
-            {...props}
-            autoComplete={autoComplete ?? "off"}
-            disabled={disabled}
-            fullWidth={fullWidth}
-            value={inputValue}
-            onChange={handleInputChange}
-            onFocus={(event) => {
-              setIsFocused(true);
-              setHighlightedIndex(0);
-              onFocus?.(event);
-            }}
-            onBlur={(event) => {
-              window.setTimeout(() => {
-                setIsFocused(false);
-              }, 100);
-              onBlur?.(event);
-            }}
-            onKeyDown={handleKeyDown}
-          />
+    <div
+      ref={rootRef}
+      className={cn("relative", fullWidth && "w-full")}
+    >
+      <div className="relative">
+        <PanelInput
+          {...props}
+          ref={inputRef}
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={menuOpen}
+          aria-controls={menuOpen ? listboxId : undefined}
+          aria-activedescendant={
+            menuOpen && selectedSuggestion
+              ? `${listboxId}-option-${highlightedIndex}`
+              : undefined
+          }
+          autoComplete={autoComplete ?? "off"}
+          disabled={disabled}
+          fullWidth={fullWidth}
+          value={inputValue}
+          onChange={handleInputChange}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+        />
 
-          {ghostSuffix && inputValue ? (
-            <div
-              aria-hidden="true"
-              className={cn(
-                "pointer-events-none absolute inset-0 flex h-10 items-center text-base",
-                fullWidth ? "w-full" : "w-auto",
-              )}
-            >
-              <span className="invisible whitespace-pre px-2">{inputValue}</span>
-              <span className="whitespace-pre text-slate-300">{ghostSuffix}</span>
-            </div>
-          ) : null}
-        </div>
-      </PopoverAnchor>
-
-      <PopoverContent
-        align="start"
-        side="bottom"
-        sideOffset={8}
-        onOpenAutoFocus={(event) => event.preventDefault()}
-        onCloseAutoFocus={(event) => event.preventDefault()}
-        className="z-[80] w-[var(--radix-popper-anchor-width)] min-w-[18rem] rounded-md border border-slate-300 bg-white p-1 shadow-sm"
-      >
-        {displayedSuggestions.map((suggestion, index) => (
-          <button
-            key={`${suggestion.value}-${suggestion.label}-${suggestion.tag ?? ""}`}
-            type="button"
+        {ghostSuffix && inputValue ? (
+          <div
+            aria-hidden="true"
             className={cn(
-              "flex w-full items-center gap-3 rounded-sm px-3 py-2 text-left text-sm transition-colors",
-              index === highlightedIndex
-                ? "bg-slate-100 text-cobam-dark-blue"
-                : "text-slate-700 hover:bg-slate-100",
+              "pointer-events-none absolute inset-0 flex h-10 items-center text-base",
+              fullWidth ? "w-full" : "w-auto",
             )}
-            onMouseDown={(event) => {
-              event.preventDefault();
-              handleSuggestionSelect(
-                emitSuggestionValue
-                  ? suggestion.value
-                  : (suggestion.label ?? suggestion.value),
-              );
-            }}
           >
-            <span className="min-w-0 flex-1 truncate">
-              {suggestion.label ?? suggestion.value}
-            </span>
-            {suggestion.tag ? (
-              <span className="ml-4 shrink-0 text-xs text-slate-400">
-                {suggestion.tag}
-              </span>
-            ) : null}
-          </button>
-        ))}
-      </PopoverContent>
-    </Popover>
+            <span className="invisible whitespace-pre px-2">{inputValue}</span>
+            <span className="whitespace-pre text-slate-300">{ghostSuffix}</span>
+          </div>
+        ) : null}
+      </div>
+
+      {menuOpen ? (
+        <div
+          id={listboxId}
+          role="listbox"
+          className="absolute left-0 right-0 top-full z-[80] mt-2 max-h-72 overflow-y-auto rounded-md border border-slate-300 bg-white p-1 shadow-sm"
+        >
+          {displayedSuggestions.map((suggestion, index) => {
+            const isHighlighted = index === highlightedIndex;
+
+            return (
+              <button
+                key={`${suggestion.value}-${suggestion.label}-${suggestion.tag ?? ""}`}
+                id={`${listboxId}-option-${index}`}
+                ref={(node) => {
+                  optionRefs.current[index] = node;
+                }}
+                type="button"
+                role="option"
+                aria-selected={isHighlighted}
+                tabIndex={-1}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-sm px-3 py-2 text-left text-sm transition-colors",
+                  isHighlighted
+                    ? "bg-slate-100 text-cobam-dark-blue"
+                    : "text-slate-700 hover:bg-slate-100",
+                )}
+                onMouseEnter={() => {
+                  setHighlightedIndex(index);
+                }}
+                onMouseDown={(event) => {
+                  // Prevent input blur before selection
+                  event.preventDefault();
+                  handleSuggestionSelect(suggestion);
+                }}
+              >
+                <span className="min-w-0 flex-1 truncate">
+                  {suggestion.label ?? suggestion.value}
+                </span>
+
+                {suggestion.tag ? (
+                  <span className="ml-4 shrink-0 text-xs text-slate-400">
+                    {suggestion.tag}
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
   );
 }

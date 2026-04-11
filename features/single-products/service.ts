@@ -46,7 +46,7 @@ const SINGLE_PRODUCT_SELECT = {
   name: true,
   description: true,
   descriptionSeo: true,
-  brandCode: true,
+  brand: true,
   basePriceAmount: true,
   vatRate: true,
   stock: true,
@@ -120,7 +120,7 @@ function mapSingleProductDetail(record: SingleProductRecord): SingleProductDetai
     name: record.name,
     description: record.description,
     descriptionSeo: record.descriptionSeo,
-    brandCode: formatProductBrandValue(record.brandCode),
+    brand: formatProductBrandValue(record.brand),
     basePriceAmount: record.basePriceAmount?.toString() ?? null,
     vatRate: record.vatRate,
     stock: record.stock?.toString() ?? null,
@@ -273,7 +273,7 @@ async function writeSingleProduct(productId: number | null, input: SingleProduct
               name: input.name,
               description: input.description,
               descriptionSeo: input.descriptionSeo,
-              brandCode: input.brandCode,
+              brand: input.brand,
               basePriceAmount:
                 input.basePriceAmount == null
                   ? null
@@ -304,7 +304,7 @@ async function writeSingleProduct(productId: number | null, input: SingleProduct
               name: input.name,
               description: input.description,
               descriptionSeo: input.descriptionSeo,
-              brandCode: input.brandCode,
+              brand: input.brand,
               basePriceAmount:
                 input.basePriceAmount == null
                   ? null

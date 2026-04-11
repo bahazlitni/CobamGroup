@@ -19,7 +19,7 @@ import {
 } from "./animated-ui.shared";
 import { cn } from "@/lib/utils";
 
-type ButtonVariant =
+export type ButtonVariant =
   | "primary"
   | "secondary"
   | "outline"
@@ -29,9 +29,9 @@ type ButtonVariant =
   | "dark"
   | "light";
 
-type IconPosition = "left" | "right";
+export type IconPosition = "left" | "right";
 
-type VariantClasses = {
+export type VariantClasses = {
   root: string;
   text: string;
   iconColor?: StaffColorName;

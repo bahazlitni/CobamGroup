@@ -37,7 +37,7 @@ export type ProductPackListItemDto = {
   name: string;
   description: string | null;
   lineCount: number;
-  brandCodes: string[];
+  brands: string[];
   basePriceAmount: string | null;
   stock: string | null;
   visibility: boolean;
@@ -58,7 +58,7 @@ export type ProductPackDetailDto = ProductPackUpsertInput & {
   createdAt: string;
   updatedAt: string;
   derived: {
-    brandCodes: string[];
+    brands: string[];
     basePriceAmount: string | null;
     visibility: boolean;
     priceVisibility: boolean;

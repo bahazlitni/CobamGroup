@@ -1,0 +1,113 @@
+import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { PublicProductInspectorMedia } from "@/features/products/types";
+import { useState } from "react";
+import MediaFrame from "./MediaFrame";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
+
+type CarouselProps = {
+  media: PublicProductInspectorMedia[];
+  title: string;
+};
+
+export default function Carousel({ media, title }: CarouselProps) {
+    const [activeIndex, setActiveIndex] = useState(0);
+    const activeMedia = media[activeIndex] ?? media[0] ?? null;
+    const containerCls = "relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-white w-full"
+    const containerCls2 = "relative grid place-items-center text-center text-slate-500 w-full h-full"
+
+    if (!activeMedia) {
+        return (
+            <div className={containerCls}>
+                <div className={containerCls2}>
+                    Aucun media disponible.
+                </div>
+            </div>
+        );
+    }
+
+    if (media.length === 1) {
+        return (
+            <div className={containerCls}>
+                <div className={containerCls2}>
+                    <MediaFrame media={activeMedia} />
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-3 max-w-[720px]">
+            <div className={containerCls}>
+                <div className={containerCls2}>
+                    <MediaFrame media={activeMedia} />
+                </div>
+
+                <AnimatedUIButton
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                        setActiveIndex((currentIndex) =>
+                        currentIndex === 0 ? media.length - 1 : currentIndex - 1,
+                        )
+                    }
+                    className="absolute left-3 top-1/2 h-10 w-10 min-h-0 -translate-y-1/2"
+                    aria-label="Media precedente"
+                    icon="chevron-left"
+                />
+                <AnimatedUIButton
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                        setActiveIndex((currentIndex) =>
+                        currentIndex === media.length - 1 ? 0 : currentIndex + 1,
+                        )
+                    }
+                    className="absolute right-3 top-1/2 h-10 w-10 min-h-0 -translate-y-1/2"
+                    aria-label="Media suivante"
+                    icon="chevron-right"
+                />
+            </div>
+
+            <div className="grid grid-cols-4 gap-3 sm:grid-cols-5">
+                {media.map((entry, index) => {
+                const isActive = index === activeIndex;
+
+                return (
+                    <button
+                    key={entry.id}
+                    type="button"
+                    onClick={() => setActiveIndex(index)}
+                    className={cn(
+                        "overflow-hidden rounded-[1rem] border bg-white transition",
+                        isActive
+                        ? "border-cobam-dark-blue"
+                        : "border-slate-200 hover:border-slate-300",
+                    )}
+                    >
+                    <div className="relative aspect-square overflow-hidden bg-slate-100">
+                        {entry.kind === "IMAGE" ? (
+                        <Image
+                            src={entry.thumbnailUrl ?? entry.url}
+                            alt={entry.altText ?? entry.title ?? title}
+                            fill
+                            sizes="96px"
+                            className="object-cover"
+                        />
+                        ) : entry.kind === "VIDEO" ? (
+                        <div className="flex h-full items-center justify-center text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                            Video
+                        </div>
+                        ) : (
+                        <div className="flex h-full items-center justify-center text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                            Fichier
+                        </div>
+                        )}
+                    </div>
+                    </button>
+                );
+                })}
+            </div>
+        </div>
+    );
+}

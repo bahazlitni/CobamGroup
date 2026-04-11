@@ -158,9 +158,9 @@ export default function ProductsListPage() {
               {family.defaultVariantSku ?? "-"}
             </td>
             <td className="px-4 py-3 align-top">
-              {family.brandCode ? (
+              {family.brand ? (
                 <StaffBadge size="sm" color="secondary">
-                  {family.brandCode}
+                  {family.brand}
                 </StaffBadge>
               ) : (
                 <span className="text-sm text-slate-400">-</span>

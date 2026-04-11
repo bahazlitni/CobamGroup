@@ -50,7 +50,7 @@ const STAFF_PRODUCT_SELECT = {
   name: true,
   description: true,
   descriptionSeo: true,
-  brandCode: true,
+  brand: true,
   basePriceAmount: true,
   vatRate: true,
   stock: true,
@@ -141,7 +141,7 @@ const STAFF_FAMILY_LIST_SELECT = {
     select: {
       id: true,
       sku: true,
-      brandCode: true,
+      brand: true,
       basePriceAmount: true,
       stock: true,
       stockUnit: true,
@@ -210,7 +210,7 @@ function mapVariant(record: StaffFamilyDetailRecord["members"][number]["product"
     name: record.name,
     description: record.description,
     descriptionSeo: record.descriptionSeo,
-    brandCode: formatProductBrandValue(record.brandCode),
+    brand: formatProductBrandValue(record.brand),
     basePriceAmount: record.basePriceAmount?.toString() ?? null,
     vatRate: record.vatRate,
     stock: record.stock?.toString() ?? null,
@@ -269,7 +269,7 @@ function mapFamilyListItem(record: StaffFamilyListRecord): ProductFamilyListItem
         : buildMediaUrl(record.mainImageMediaId, "thumbnail"),
     variantCount: record.members.length,
     defaultVariantSku: record.defaultProduct?.sku ?? null,
-    brandCode: formatProductBrandValue(record.defaultProduct?.brandCode ?? null),
+    brand: formatProductBrandValue(record.defaultProduct?.brand ?? null),
     basePriceAmount: record.defaultProduct?.basePriceAmount?.toString() ?? null,
     stock: record.defaultProduct?.stock?.toString() ?? null,
     stockUnit: record.defaultProduct?.stockUnit ?? null,
@@ -556,7 +556,7 @@ async function writeFamily(
         name: variant.name,
         description: variant.description,
         descriptionSeo: variant.descriptionSeo,
-        brandCode: variant.brandCode,
+        brand: variant.brand,
         basePriceAmount:
           variant.basePriceAmount == null
             ? null

@@ -304,7 +304,7 @@ model Product {
   name            String                 @db.VarChar(255)
   description     String?                @db.Text
   descriptionSeo  String?                @map("description_seo") @db.Text
-  brandCode       String?                @map("brand_code")
+  brand           String?                @map("brand")
   basePriceAmount Decimal?               @map("base_price_amount") @db.Decimal(12, 3)
   vatRate         Float?                 @map("vat_rate")
   stock           Decimal?               @db.Decimal(14, 3)
@@ -329,7 +329,7 @@ model Product {
   packLinesAsComponent ProductPackLine[]        @relation("ProductPackComponents")
 
   @@index([kind])
-  @@index([brandCode])
+  @@index([brand])
   @@index([lifecycle])
   @@index([visibility])
   @@index([priceVisibility])
@@ -338,6 +338,8 @@ model Product {
   @@index([datasheetMediaId])
   @@map("products")
 }
+
+
 
 model ProductSubcategoryLink {
   productId     BigInt @map("product_id")
@@ -653,3 +655,4 @@ model AuditLogRelationChange {
   @@index([rightEntityType, rightEntityId])
   @@map("audit_log_relation_changes")
 }
+

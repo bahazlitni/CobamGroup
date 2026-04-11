@@ -41,7 +41,7 @@ export type ProductVariantInputDto = {
   name: string;
   description: string | null;
   descriptionSeo: string | null;
-  brandCode: string | null;
+  brand: string | null;
   basePriceAmount: string | null;
   vatRate: number | null;
   stock: string | null;
@@ -78,7 +78,7 @@ export type ProductFamilyListItemDto = {
   mainImageUrl: string | null;
   variantCount: number;
   defaultVariantSku: string | null;
-  brandCode: string | null;
+  brand: string | null;
   basePriceAmount: string | null;
   stock: string | null;
   stockUnit: ProductStockUnit | null;
@@ -184,6 +184,7 @@ export type PublicProductInspectorVariant = {
   basePriceAmount: string | null;
   priceVisibility: boolean;
   commercialMode: ProductCommercialMode | null;
+  datasheet: PublicProductInspectorMedia | null;
   media: PublicProductInspectorMedia[];
   attributes: PublicProductInspectorAttribute[];
 };
@@ -214,6 +215,7 @@ export type PublicSimpleProductInspector = {
   descriptionSeo: string | null;
   brandNames: string[];
   media: PublicProductInspectorMedia[];
+  datasheet: PublicProductInspectorMedia | null;
   basePriceAmount: string | null;
   priceVisibility: boolean;
   commercialMode: ProductCommercialMode | null;

@@ -536,7 +536,7 @@ function ProductPackEditPageContent() {
                 Marques
               </p>
               <p className="mt-2 text-lg font-semibold text-cobam-dark-blue">
-                {savedPack.derived.brandCodes.length}
+                {savedPack.derived.brands.length}
               </p>
             </div>
           </div>

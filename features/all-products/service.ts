@@ -21,7 +21,7 @@ const ALL_PRODUCTS_LIST_SELECT = {
   slug: true,
   name: true,
   description: true,
-  brandCode: true,
+  brand: true,
   basePriceAmount: true,
   stock: true,
   stockUnit: true,
@@ -70,7 +70,7 @@ const ALL_PRODUCTS_LIST_SELECT = {
       quantity: true,
       product: {
         select: {
-          brandCode: true,
+          brand: true,
           basePriceAmount: true,
           stock: true,
           lifecycle: true,
@@ -87,13 +87,13 @@ type AllProductsListRecord = Prisma.ProductGetPayload<{
 
 function formatAllProductBrand(record: AllProductsListRecord) {
   if (record.kind !== "PACK") {
-    return formatProductBrandValue(record.brandCode);
+    return formatProductBrandValue(record.brand);
   }
 
   const brandLabels = [
     ...new Set(
       record.packLinesAsPack.flatMap((line) => {
-        const label = formatProductBrandValue(line.product.brandCode);
+        const label = formatProductBrandValue(line.product.brand);
         return label ? [label] : [];
       }),
     ),
@@ -153,7 +153,7 @@ function mapAllProductsListItem(record: AllProductsListRecord): AllProductsListI
     slug: record.slug,
     name: record.name,
     description: record.description,
-    brandCode: formatAllProductBrand(record),
+    brand: formatAllProductBrand(record),
     basePriceAmount: derivedPrice,
     stock: derivedStock,
     stockUnit: record.kind === "PACK" ? "ITEM" : record.stockUnit,

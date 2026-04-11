@@ -59,7 +59,7 @@ const PUBLIC_PRODUCT_SELECT = {
   name: true,
   description: true,
   descriptionSeo: true,
-  brandCode: true,
+  brand: true,
   basePriceAmount: true,
   vatRate: true,
   visibility: true,
@@ -68,6 +68,9 @@ const PUBLIC_PRODUCT_SELECT = {
   lifecycle: true,
   commercialMode: true,
   tags: true,
+  datasheetMedia: {
+    select: MEDIA_SELECT,
+  },
   subcategoryLinks: {
     select: {
       subcategory: {
@@ -112,7 +115,7 @@ const PACK_COMPONENT_SELECT = {
   name: true,
   description: true,
   descriptionSeo: true,
-  brandCode: true,
+  brand: true,
   basePriceAmount: true,
   vatRate: true,
   visibility: true,
@@ -219,6 +222,10 @@ function collectMediaIdsForPublishing(record: PublicFamilyRecord) {
   }
 
   for (const member of record.members) {
+    if (member.product.datasheetMedia && isRenderableMedia(member.product.datasheetMedia)) {
+      ids.add(Number(member.product.datasheetMedia.id));
+    }
+
     for (const link of member.product.mediaLinks) {
       if (isRenderableMedia(link.media)) {
         ids.add(Number(link.media.id));
@@ -230,11 +237,15 @@ function collectMediaIdsForPublishing(record: PublicFamilyRecord) {
 }
 
 function collectProductMediaIdsForPublishing(
-  records: Array<Pick<PublicProductRecord, "mediaLinks">>,
+  records: Array<Pick<PublicProductRecord, "mediaLinks" | "datasheetMedia">>,
 ) {
   const ids = new Set<number>();
 
   for (const record of records) {
+    if (record.datasheetMedia && isRenderableMedia(record.datasheetMedia)) {
+      ids.add(Number(record.datasheetMedia.id));
+    }
+
     for (const link of record.mediaLinks) {
       if (isRenderableMedia(link.media)) {
         ids.add(Number(link.media.id));
@@ -253,8 +264,8 @@ function isPublicSingleProduct(product: PublicProductRecord) {
   return product.kind === "SINGLE" && product.lifecycle === "ACTIVE" && product.visibility === true;
 }
 
-function getBrandName(brandCode: string | null | undefined) {
-  return formatProductBrandValue(brandCode);
+function getBrandName(brand: string | null | undefined) {
+  return formatProductBrandValue(brand);
 }
 
 function parseRichTextPreview(value: string | null | undefined) {
@@ -333,7 +344,7 @@ function derivePack(record: PublicPackRecord) {
   const brandNames = [
     ...new Set(
       record.packLinesAsPack.flatMap((line) => {
-        const brandName = getBrandName(line.product.brandCode);
+        const brandName = getBrandName(line.product.brand);
         return brandName ? [brandName] : [];
       }),
     ),
@@ -450,7 +461,7 @@ function scoreFamilySearch(record: PublicFamilyRecord, variants: PublicProductRe
     if (normalizeComparableValue(parseRichTextPreview(variant.description)).includes(normalizedQuery)) {
       score = Math.max(score, 280);
     }
-    if (normalizeComparableValue(getBrandName(variant.brandCode)).startsWith(normalizedQuery)) {
+    if (normalizeComparableValue(getBrandName(variant.brand)).startsWith(normalizedQuery)) {
       score = Math.max(score, 500);
     }
     if (normalizeComparableValue(variant.tags).includes(normalizedQuery)) {
@@ -523,7 +534,7 @@ function mapFamilySummary(record: PublicFamilyRecord, defaultVariant: PublicProd
     slug: record.slug,
     subtitle: record.subtitle,
     description: parseRichTextPreview(record.description) ?? parseRichTextPreview(defaultVariant?.description ?? null),
-    brandName: getBrandName(defaultVariant?.brandCode ?? null),
+    brandName: getBrandName(defaultVariant?.brand ?? null),
     imageUrl: coverMedia?.url ?? null,
     imageThumbnailUrl: coverMedia?.thumbnailUrl ?? null,
     imageAlt: coverMedia?.altText ?? record.name,
@@ -544,7 +555,7 @@ function mapSingleProductSummary(record: PublicProductRecord): PublicProductSumm
     slug: record.slug,
     subtitle: null,
     description: parseRichTextPreview(record.description),
-    brandName: getBrandName(record.brandCode),
+    brandName: getBrandName(record.brand),
     imageUrl: coverMedia?.kind === "IMAGE" ? coverMedia.url : null,
     imageThumbnailUrl: coverMedia?.kind === "IMAGE" ? coverMedia.thumbnailUrl : null,
     imageAlt: coverMedia?.altText ?? record.name,
@@ -590,12 +601,12 @@ function buildColorReferencesFromAttributes(
       }
 
       const color = COLORS.find(
-        (entry) => normalizeComparableValue(entry.label) === key,
+        (entry) => normalizeComparableValue(entry.key) === key,
       );
 
       seen.set(key, {
-        key,
-        label: attribute.value,
+        key: color?.key ?? key,
+        label: color?.label ?? attribute.value,
         hexValue:
           color?.value ??
           (/^#[0-9a-f]{3,8}$/i.test(attribute.value) ? attribute.value : null),
@@ -652,10 +663,11 @@ function mapInspectorVariant(product: PublicProductRecord): PublicProductInspect
     description: product.description,
     basePriceAmount:
       product.priceVisibility && product.basePriceAmount != null
-        ? formatDecimal(product.basePriceAmount)
-        : null,
+      ? formatDecimal(product.basePriceAmount)
+      : null,
     priceVisibility: product.priceVisibility ?? false,
     commercialMode: product.commercialMode,
+    datasheet: mapMediaRecord(product.datasheetMedia),
     media: mapVariantMedia(product),
     attributes: mapVariantAttributes(product),
   };
@@ -681,6 +693,7 @@ function mapSimpleInspector(record: PublicProductRecord, input: {
     descriptionSeo: record.descriptionSeo,
     brandNames: input.brandNames,
     media,
+    datasheet: input.kind === "SINGLE" ? mapMediaRecord(record.datasheetMedia) : null,
     basePriceAmount: input.priceVisibility ? input.basePriceAmount : null,
     priceVisibility: input.priceVisibility,
     commercialMode: input.commercialMode,
@@ -831,7 +844,7 @@ export async function listPublicProductsBySubcategory(input: {
     .map((product): { score: number; summary: PublicProductSummary } | null => {
       const score = scoreConcreteProductSearch(product, {
         normalizedQuery,
-        brandName: getBrandName(product.brandCode),
+        brandName: getBrandName(product.brand),
       });
 
       if (normalizedQuery && score === 0) {
@@ -920,7 +933,7 @@ export async function findPublicFamilyBySlug(
     subtitle: record.subtitle,
     description: record.description,
     descriptionSeo: record.descriptionSeo,
-    brandName: getBrandName(defaultVariant.brandCode),
+    brandName: getBrandName(defaultVariant.brand),
     coverMedia,
     defaultVariantId: Number(defaultVariant.id),
     variants,
@@ -949,7 +962,7 @@ export async function findPublicSingleProductBySlug(
 
   await makeMediaPublicMany(collectProductMediaIdsForPublishing([record]));
 
-  const brandName = getBrandName(record.brandCode);
+  const brandName = getBrandName(record.brand);
 
   return mapSimpleInspector(record, {
     kind: "SINGLE",

@@ -39,6 +39,11 @@ function getAttributeSuggestions(kind: string, value: string): string[] {
   }
 }
 
+function isSpecialAttributeKind(kind: string) {
+  const normalizedKind = normalizeProductAttributeKind(kind)
+  return normalizedKind === "FINISH" || normalizedKind === "COLOR" || normalizedKind === "SIZE"
+}
+
 function AttributeCard({
   index,
   kind,
@@ -49,17 +54,14 @@ function AttributeCard({
   lockKinds = false,
   canRemove = true,
 }: AttributeCardProps) {
-  const suggestions = useMemo(() => {
-    const normalizedValue = value.trim()
-
-    if (!normalizedValue) {
-      return []
-    }
-
-    return getAttributeSuggestions(kind, normalizedValue)
-      .filter((suggestion) => suggestion !== value)
-      .slice(0, 8)
-  }, [kind, value])
+  const suggestions = useMemo(
+    () =>
+      getAttributeSuggestions(kind, value.trim())
+        .filter((suggestion) => suggestion !== value)
+        .slice(0, 8),
+    [kind, value],
+  )
+  const shouldAutocompleteValue = isSpecialAttributeKind(kind)
 
   return (
     <div className="relative flex items-end gap-4 rounded-lg border border-slate-300 bg-slate-50 p-4">
@@ -87,13 +89,22 @@ function AttributeCard({
       </StaffField>
 
       <StaffField className="flex-2" id={`attribute-value-${index}`} label="Valeur">
-        <PanelAutoCompleteInput
-          id={`attribute-value-${index}`}
-          fullWidth
-          value={value}
-          suggestions={suggestions}
-          onValueChange={onValueChange}
-        />
+        {shouldAutocompleteValue ? (
+          <PanelAutoCompleteInput
+            id={`attribute-value-${index}`}
+            fullWidth
+            value={value}
+            suggestions={suggestions}
+            onValueChange={onValueChange}
+          />
+        ) : (
+          <PanelInput
+            id={`attribute-value-${index}`}
+            fullWidth
+            value={value}
+            onChange={(event) => onValueChange(event.target.value)}
+          />
+        )}
       </StaffField>
 
       {canRemove ? (

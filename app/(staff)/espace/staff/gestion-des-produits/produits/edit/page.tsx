@@ -54,7 +54,7 @@ function createEmptyFormState(): SingleProductUpsertInput {
     name: "",
     description: null,
     descriptionSeo: null,
-    brandCode: null,
+    brand: null,
     basePriceAmount: null,
     vatRate: 19,
     stock: null,
@@ -79,7 +79,7 @@ function mapProductToForm(product: SingleProductDetailDto): SingleProductUpsertI
     name: product.name,
     description: product.description,
     descriptionSeo: product.descriptionSeo,
-    brandCode: product.brandCode,
+    brand: product.brand,
     basePriceAmount: product.basePriceAmount,
     vatRate: product.vatRate,
     stock: product.stock,
@@ -307,12 +307,12 @@ function SingleProductEditPageContent() {
             <PanelAutoCompleteInput
               id="product-brand"
               fullWidth
-              value={form.brandCode ?? ""}
-              suggestions={getProductBrandSuggestions(form.brandCode ?? "")}
+              value={form.brand ?? ""}
+              suggestions={getProductBrandSuggestions(form.brand ?? "")}
               onValueChange={(value) =>
                 setForm((current) => ({
                   ...current,
-                  brandCode: value ?? null,
+                  brand: value ?? null,
                 }))
               }
             />

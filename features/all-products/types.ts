@@ -7,7 +7,7 @@ export type AllProductsListItemDto = {
   slug: string;
   name: string;
   description: string | null;
-  brandCode: string | null;
+  brand: string | null;
   basePriceAmount: string | null;
   stock: string | null;
   stockUnit: string | null;

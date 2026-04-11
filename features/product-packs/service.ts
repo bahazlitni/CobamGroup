@@ -40,7 +40,7 @@ const PACK_COMPONENT_SELECT = {
   slug: true,
   kind: true,
   name: true,
-  brandCode: true,
+  brand: true,
   basePriceAmount: true,
   priceVisibility: true,
   visibility: true,
@@ -127,11 +127,11 @@ function mapMedia(media: Prisma.MediaGetPayload<{ select: typeof MEDIA_SELECT }>
 }
 
 function derivePack(record: PackDetailRecord) {
-  const brandCodes = [
+  const brands = [
     ...new Set(
       record.packLinesAsPack.flatMap((line) => {
-        const brandCode = formatProductBrandValue(line.product.brandCode);
-        return brandCode ? [brandCode] : [];
+        const brand = formatProductBrandValue(line.product.brand);
+        return brand ? [brand] : [];
       }),
     ),
   ];
@@ -177,7 +177,7 @@ function derivePack(record: PackDetailRecord) {
   }
 
   return {
-    brandCodes,
+    brands,
     basePriceAmount: missingPrice ? null : priceTotal.toString(),
     visibility: visible,
     priceVisibility: priceVisible,
@@ -218,7 +218,7 @@ function mapPackListItem(record: PackDetailRecord): ProductPackListItemDto {
     name: record.name,
     description: record.description,
     lineCount: record.packLinesAsPack.length,
-    brandCodes: derived.brandCodes,
+    brands: derived.brands,
     basePriceAmount: derived.basePriceAmount,
     stock: derived.stock,
     visibility: derived.visibility,

@@ -283,7 +283,7 @@ export default function AllProductsPage() {
                 </div>
               </td>
               <td className="px-4 py-3 align-top text-sm text-slate-600">
-                {item.brandCode ?? "-"}
+                {item.brand ?? "-"}
               </td>
               <td className="px-4 py-3 align-top">
                 <StaffBadge size="sm" color={kindBadge.color}>

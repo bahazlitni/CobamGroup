@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import PublicSimpleProductInspector from "@/components/public/products/public-simple-product-inspector";
+import PublicProductInspectorView from "@/components/public/products/public-product-inspector";
 import { resolvePublicProductBreadcrumb } from "@/features/products/public-breadcrumb";
 import { findPublicPackBySlug } from "@/features/products/public";
 
@@ -32,7 +32,7 @@ export default async function PublicPackPage({
     <main className="min-h-screen bg-slate-50 text-cobam-dark-blue">
       <section className="py-10 sm:py-12 lg:py-16">
         <div className="mx-auto max-w-[92rem] px-4 sm:px-6 lg:px-8">
-          <PublicSimpleProductInspector product={pack} breadcrumb={breadcrumb} />
+          <PublicProductInspectorView product={pack} breadcrumb={breadcrumb} />
         </div>
       </section>
     </main>

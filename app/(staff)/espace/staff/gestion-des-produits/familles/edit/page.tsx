@@ -58,7 +58,7 @@ type FamilyEditorState = Omit<ProductFamilyUpsertInput, "variants"> & {
   variants: VariantEditorState[];
 };
 type FamilyCommonValuesState = {
-  brandCode: string;
+  brand: string;
   subcategoryIds: number[];
   lifecycle: ProductLifecycle;
   priceVisibility: boolean;
@@ -78,7 +78,7 @@ function createEmptyVariant(index: number): VariantEditorState {
     name: "",
     description: null,
     descriptionSeo: null,
-    brandCode: null,
+    brand: null,
     basePriceAmount: null,
     vatRate: 19,
     stock: null,
@@ -111,7 +111,7 @@ function createEmptyFormState(): FamilyEditorState {
 
 function createEmptyCommonValuesState(): FamilyCommonValuesState {
   return {
-    brandCode: "",
+    brand: "",
     subcategoryIds: [],
     lifecycle: "DRAFT",
     priceVisibility: true,
@@ -182,7 +182,7 @@ function deriveCommonValues(form: FamilyEditorState): FamilyCommonValuesState {
   const defaultVariant = getDefaultVariant(form);
 
   return {
-    brandCode: defaultVariant.brandCode ?? "",
+    brand: defaultVariant.brand ?? "",
     subcategoryIds: [...defaultVariant.subcategoryIds],
     lifecycle: defaultVariant.lifecycle,
     priceVisibility: defaultVariant.priceVisibility,
@@ -212,7 +212,7 @@ function applyCommonValuesToVariant(
 ): VariantEditorState {
   return {
     ...variant,
-    brandCode: commonValues.brandCode.trim() ? commonValues.brandCode.trim() : null,
+    brand: commonValues.brand.trim() ? commonValues.brand.trim() : null,
     subcategoryIds: [...commonValues.subcategoryIds],
     lifecycle: commonValues.lifecycle,
     priceVisibility: commonValues.priceVisibility,
@@ -535,12 +535,12 @@ function ProductEditPageContent() {
               <PanelAutoCompleteInput
                 id="family-common-brand"
                 fullWidth
-                value={commonValues.brandCode}
-                suggestions={getProductBrandSuggestions(commonValues.brandCode)}
+                value={commonValues.brand}
+                suggestions={getProductBrandSuggestions(commonValues.brand)}
                 onValueChange={(value) =>
                   setCommonValues((current) => ({
                     ...current,
-                    brandCode: value ?? "",
+                    brand: value ?? "",
                   }))
                 }
               />

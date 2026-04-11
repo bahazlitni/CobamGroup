@@ -250,7 +250,7 @@ export default function ProductPacksListPage() {
                   : "-"}
               </td>
               <td className="px-4 py-3 align-top text-sm text-slate-600">
-                {pack.brandCodes.length > 0 ? pack.brandCodes.join(", ") : "-"}
+                {pack.brands.length > 0 ? pack.brands.join(", ") : "-"}
               </td>
               <td className="px-4 py-3 align-top">
                 <StaffBadge size="md" color={lifecycleBadge.color} icon={lifecycleBadge.icon}>

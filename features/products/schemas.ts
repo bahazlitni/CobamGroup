@@ -142,10 +142,10 @@ function parseVariant(input: unknown): ProductVariantInputDto {
     name: parseRequiredString(record.name, "variant.name"),
     description: parseOptionalString(record.description),
     descriptionSeo: parseOptionalString(record.descriptionSeo),
-    brandCode:
-      record.brandCode == null || record.brandCode === ""
+    brand:
+      record.brand == null || record.brand === ""
         ? null
-        : normalizeProductBrandString(String(record.brandCode)),
+        : normalizeProductBrandString(String(record.brand)),
     basePriceAmount:
       record.basePriceAmount == null || record.basePriceAmount === ""
         ? null
