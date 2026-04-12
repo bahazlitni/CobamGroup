@@ -142,6 +142,39 @@ export type PublicProductListResult = {
   pageSize: number;
 };
 
+export type PublicProductIndexCategory = {
+  id: number;
+  name: string;
+  slug: string;
+  subtitle: string | null;
+  themeColor: string | null;
+  sortOrder: number;
+};
+
+export type PublicProductIndexSubcategory = {
+  id: number;
+  name: string;
+  slug: string;
+  subtitle: string | null;
+  description: string | null;
+  sortOrder: number;
+  categoryId: number;
+  categorySlug: string;
+};
+
+export type PublicProductIndexItem = {
+  product: PublicProductSummary;
+  category: PublicProductIndexCategory;
+  subcategory: PublicProductIndexSubcategory;
+};
+
+export type PublicProductIndexResult = {
+  items: PublicProductIndexItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
 export type PublicProductInspectorMedia = {
   id: number;
   kind: MediaKind;

@@ -270,7 +270,6 @@ function getHoverVariants(icon: AnimatedIconName): Variants {
   switch (icon) {
     case "arrow-right":
     case "external-link":
-    case "download":
       return {
         rest: { x: 0, y: 0, rotate: 0, scale: 1 },
         hover: { x: 4, y: icon === "external-link" ? -2 : 0, rotate: 0, scale: 1.04 },
@@ -286,9 +285,10 @@ function getHoverVariants(icon: AnimatedIconName): Variants {
         hover: { x: 0, y: -4, rotate: 0, scale: 1.04 },
       };
     case "arrow-down":
+    case "download":
       return {
         rest: { x: 0, y: 0, rotate: 0, scale: 1 },
-        hover: { x: 0, y: 4, rotate: 0, scale: 1.04 },
+        hover: { x: 0, y: 3, rotate: 0, scale: 1.04 },
       };
     case "chevron-right":
       return {

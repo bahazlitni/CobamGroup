@@ -14,7 +14,6 @@ import {
   listPublicProductsBySubcategory,
   PUBLIC_PRODUCTS_PAGE_SIZE,
 } from "@/features/products/public";
-import { withThemeAlpha } from "@/lib/theme-color";
 import StaticHighway from "@/components/ui/custom/StaticHighway";
 
 export const dynamic = "force-dynamic";
@@ -85,8 +84,8 @@ export default async function ProductsCatchAllPage({
           themeColor={subcategoryData.themeColor}
         />
 
-        <section className="py-12 sm:py-16 lg:py-20">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <section className="py-16 sm:py-24 lg:py-32">
+          <div className="mx-auto max-w-7xl px-6 md:px-12">
             <PublicProductGrid
               categorySlug={categorySlug}
               subcategorySlug={subcategorySlug}
@@ -118,35 +117,31 @@ export default async function ProductsCatchAllPage({
           themeColor={categoryData.themeColor}
         />
 
-        <section className="py-12 sm:py-16 lg:py-20">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-8 space-y-2">
+        <section className="py-16 sm:py-24 lg:py-32">
+          <div className="mx-auto max-w-7xl px-6 md:px-12">
+            <div className="mb-12 space-y-4">
               <p
-                className="text-sm font-semibold uppercase tracking-[0.24em]"
+                className="text-[10px] font-semibold uppercase tracking-[0.4em]"
                 style={{ color: categoryData.themeColor ?? undefined }}
               >
-                Navigation produits
+                Explorez les sous-catégories
               </p>
               <h2
-                className="text-3xl font-bold text-cobam-dark-blue"
+                className="text-3xl font-light text-cobam-dark-blue sm:text-4xl"
                 style={{ fontFamily: "var(--font-playfair), serif" }}
               >
-                Toutes les sous-categories
+                Toutes les sous-catégories
               </h2>
-            </div>
-
-            <div
-              className="rounded-[32px] border p-6 sm:p-8"
-              style={{
-                borderColor: withThemeAlpha(categoryData.themeColor, 0.16),
-                backgroundColor: withThemeAlpha(categoryData.themeColor, 0.04),
-              }}
-            >
-              <PublicSubcategoriesGrid
-                subcategories={subcategories}
-                themeColor={categoryData.themeColor}
+              <div
+                className="h-[1px] w-16"
+                style={{ backgroundColor: categoryData.themeColor ?? "#0a8dc1" }}
               />
             </div>
+
+            <PublicSubcategoriesGrid
+              subcategories={subcategories}
+              themeColor={categoryData.themeColor}
+            />
           </div>
         </section>
       </main>

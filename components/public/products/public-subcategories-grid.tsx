@@ -17,7 +17,7 @@ export default function PublicSubcategoriesGrid({
   if (subcategories.length === 0) {
     return (
       <div
-        className="rounded-[28px] border border-dashed bg-white/80 px-6 py-14 text-center text-slate-500"
+        className="rounded-sm border border-dashed bg-white/80 px-6 py-14 text-center text-slate-500"
         style={{
           borderColor: withThemeAlpha(themeColor, 0.22),
           backgroundColor: withThemeAlpha(themeColor, 0.05),
@@ -29,13 +29,13 @@ export default function PublicSubcategoriesGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
       {subcategories.map((subcategory, index) => (
         <motion.div
            key={subcategory.id}
-           initial={{ opacity: 0, y: 30 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ duration: 0.6, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
+           initial={{ opacity: 0, y: 40, filter: "blur(8px)" }}
+           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+           transition={{ duration: 0.9, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
         >
           <PublicSubcategoryCard
             subcategory={subcategory}

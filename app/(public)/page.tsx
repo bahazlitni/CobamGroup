@@ -92,7 +92,7 @@ export default async function Home() {
             <div className="mt-12 flex flex-col gap-4 sm:flex-row">
               <Magnetic strength={30}>
                 <Link
-                  href="/produits"
+                  href="/produits/tous"
                   className="group relative overflow-hidden rounded-full bg-white px-8 py-4 text-sm uppercase tracking-widest text-[#14202e] transition-transform duration-300 hover:scale-105 inline-block"
                 >
                   <div className="relative z-10 font-semibold">Nos produits</div>
@@ -112,7 +112,7 @@ export default async function Home() {
       </section>
 
       {/* MANIFESTO / STATS */}
-      <section id="section-manifesto" className="relative border-b border-cobam-quill-grey/30 bg-cobam-light-bg pt-24 pb-12 sm:pt-32 sm:pb-16">
+      <section id="section-manifesto" className="relative border-b border-cobam-quill-grey/30 bg-cobam-light-bg pt-24 sm:pt-32 sm:pb-16">
         <div className="absolute top-1/4 w-full opacity-[0.03] pointer-events-none z-0">
           <VelocityMarquee baseVelocity={1.5} className="text-[12rem] uppercase font-playfair text-[#14202e]">
             L'architecture des matières — Cobam Group —

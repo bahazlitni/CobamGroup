@@ -1,22 +1,29 @@
 "use client";
 
-import { useCallback, useDeferredValue, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Loader2, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { PublicProductListResult } from "@/features/products/public";
+import { cn } from "@/lib/utils";
 import { normalizeThemeColor, withThemeAlpha } from "@/lib/theme-color";
+import type { PublicProductIndexItem, PublicProductIndexResult } from "@/features/products/public";
 import PublicProductCard from "./public-product-card";
-import { motion } from "framer-motion";
 
-type PublicProductGridProps = {
-  categorySlug: string;
-  subcategorySlug: string;
-  initialResult: PublicProductListResult;
-  themeColor?: string | null;
+type PublicProductsIndexProps = {
+  initialResult: PublicProductIndexResult;
+  initialSearch?: string | null;
+  categorySlug?: string | null;
+  subcategorySlug?: string | null;
 };
 
-type PublicProductsApiResponse =
-  | (PublicProductListResult & { ok: true })
+type PublicProductsIndexApiResponse =
+  | (PublicProductIndexResult & { ok: true })
   | { ok: false; message?: string };
 
 function normalizeSearchQuery(value: string) {
@@ -26,7 +33,7 @@ function normalizeSearchQuery(value: string) {
 function buildPublicProductHref(input: {
   categorySlug: string;
   subcategorySlug: string;
-  product: PublicProductListResult["items"][number];
+  product: PublicProductIndexItem["product"];
 }) {
   const originPath = encodeURIComponent(`${input.categorySlug}/${input.subcategorySlug}`);
 
@@ -54,17 +61,94 @@ function PublicProductCardSkeleton() {
   );
 }
 
-export default function PublicProductGrid({
+function groupIndexItems(items: PublicProductIndexItem[]) {
+  const categories = new Map<
+    string,
+    {
+      id: number;
+      name: string;
+      slug: string;
+      subtitle: string | null;
+      themeColor: string | null;
+      sortOrder: number;
+      subcategories: Map<
+        string,
+        {
+          id: number;
+          name: string;
+          slug: string;
+          subtitle: string | null;
+          description: string | null;
+          sortOrder: number;
+          products: PublicProductIndexItem["product"][];
+        }
+      >;
+    }
+  >();
+
+  for (const item of items) {
+    const categoryKey = item.category.slug;
+    const subcategoryKey = item.subcategory.slug;
+
+    if (!categories.has(categoryKey)) {
+      categories.set(categoryKey, {
+        ...item.category,
+        subcategories: new Map(),
+      });
+    }
+
+    const category = categories.get(categoryKey)!;
+
+    if (!category.subcategories.has(subcategoryKey)) {
+      category.subcategories.set(subcategoryKey, {
+        id: item.subcategory.id,
+        name: item.subcategory.name,
+        slug: item.subcategory.slug,
+        subtitle: item.subcategory.subtitle,
+        description: item.subcategory.description,
+        sortOrder: item.subcategory.sortOrder,
+        products: [],
+      });
+    }
+
+    category.subcategories.get(subcategoryKey)!.products.push(item.product);
+  }
+
+  return [...categories.values()]
+    .sort((left, right) => {
+      if (left.sortOrder !== right.sortOrder) {
+        return left.sortOrder - right.sortOrder;
+      }
+      return left.name.localeCompare(right.name, "fr-FR");
+    })
+    .map((category) => ({
+      ...category,
+      subcategories: [...category.subcategories.values()]
+        .sort((left, right) => {
+          if (left.sortOrder !== right.sortOrder) {
+            return left.sortOrder - right.sortOrder;
+          }
+          return left.name.localeCompare(right.name, "fr-FR");
+        })
+        .map((subcategory) => ({
+          ...subcategory,
+          products: [...subcategory.products].sort((left, right) =>
+            left.slug.localeCompare(right.slug, "fr-FR"),
+          ),
+        })),
+    }));
+}
+
+export default function PublicProductsIndex({
+  initialResult,
+  initialSearch,
   categorySlug,
   subcategorySlug,
-  initialResult,
-  themeColor,
-}: PublicProductGridProps) {
-  const resolvedThemeColor = normalizeThemeColor(themeColor);
+}: PublicProductsIndexProps) {
   const [items, setItems] = useState(initialResult.items);
   const [page, setPage] = useState(initialResult.page);
   const [total, setTotal] = useState(initialResult.total);
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState(initialSearch ?? "");
   const deferredSearchInput = useDeferredValue(searchInput);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -78,34 +162,30 @@ export default function PublicProductGrid({
 
   const hasMore = !isRefreshing && items.length < total;
 
-  const resetToInitialResult = useCallback(() => {
-    setItems(initialResult.items);
-    setPage(initialResult.page);
-    setTotal(initialResult.total);
-    setErrorMessage(null);
-    requestInFlightRef.current = false;
-    setIsLoadingMore(false);
-    setIsRefreshing(false);
-  }, [initialResult]);
+  const groupedItems = useMemo(() => groupIndexItems(items), [items]);
 
   const fetchProductsPage = useCallback(
     async (nextPage: number, query: string, signal?: AbortSignal) => {
       const searchParams = new URLSearchParams({
-        category: categorySlug,
-        subcategory: subcategorySlug,
         page: String(nextPage),
         pageSize: String(initialResult.pageSize),
       });
 
+      if (categorySlug) {
+        searchParams.set("category", categorySlug);
+      }
+      if (subcategorySlug) {
+        searchParams.set("subcategory", subcategorySlug);
+      }
       if (query) {
-        searchParams.set("q", query);
+        searchParams.set("search", query);
       }
 
-      const response = await fetch(`/api/public/products?${searchParams.toString()}`, {
+      const response = await fetch(`/api/public/all-products?${searchParams.toString()}`, {
         method: "GET",
         signal,
       });
-      const payload = (await response.json()) as PublicProductsApiResponse;
+      const payload = (await response.json()) as PublicProductsIndexApiResponse;
 
       if (!response.ok || !payload.ok) {
         throw new Error(
@@ -120,11 +200,24 @@ export default function PublicProductGrid({
     [categorySlug, initialResult.pageSize, subcategorySlug],
   );
 
+  const resetToInitialResult = useCallback(() => {
+    setItems(initialResult.items);
+    setPage(initialResult.page);
+    setTotal(initialResult.total);
+    setErrorMessage(null);
+    requestInFlightRef.current = false;
+    setIsLoadingMore(false);
+    setIsRefreshing(false);
+  }, [initialResult]);
+
+  useEffect(() => {
+    setSearchInput(initialSearch ?? "");
+  }, [initialSearch]);
+
   useEffect(() => {
     searchControllerRef.current?.abort();
     searchControllerRef.current = null;
     hasMountedSearchEffectRef.current = false;
-    setSearchInput("");
     setSearchRefreshToken(0);
     resetToInitialResult();
   }, [categorySlug, subcategorySlug, initialResult, resetToInitialResult]);
@@ -199,11 +292,7 @@ export default function PublicProductGrid({
   ]);
 
   const loadMore = useCallback(async () => {
-    if (
-      !hasMore ||
-      requestInFlightRef.current ||
-      searchControllerRef.current != null
-    ) {
+    if (!hasMore || requestInFlightRef.current || searchControllerRef.current != null) {
       return;
     }
 
@@ -215,9 +304,16 @@ export default function PublicProductGrid({
       const payload = await fetchProductsPage(page + 1, activeSearchQuery);
 
       setItems((currentItems) => {
-        const seenIds = new Set(currentItems.map((item) => `${item.entityType}-${item.id}`));
+        const seenKeys = new Set(
+          currentItems.map(
+            (item) => `${item.product.entityType}-${item.product.id}`,
+          ),
+        );
         const nextItems = payload.items.filter(
-          (item) => !seenIds.has(`${item.entityType}-${item.id}`),
+          (item) =>
+            !seenKeys.has(
+              `${item.product.entityType}-${item.product.id}`,
+            ),
         );
         return [...currentItems, ...nextItems];
       });
@@ -245,22 +341,17 @@ export default function PublicProductGrid({
     const observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries;
-
         if (entry?.isIntersecting) {
           void loadMore();
         }
       },
-      {
-        rootMargin: "320px 0px",
-      },
+      { rootMargin: "320px 0px" },
     );
 
     observer.observe(sentinel);
-
     return () => observer.disconnect();
   }, [errorMessage, hasMore, isRefreshing, loadMore]);
 
-  /* ─── Shared search bar ─── */
   const searchBar = (
     <div className="relative w-full md:max-w-md">
       <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-cobam-carbon-grey/50" />
@@ -268,7 +359,7 @@ export default function PublicProductGrid({
         type="search"
         value={searchInput}
         onChange={(event) => setSearchInput(event.target.value)}
-        placeholder="Rechercher par nom, SKU, marque…"
+        placeholder="Rechercher par nom, SKU, marque..."
         className="h-12 w-full border-b border-cobam-quill-grey/40 bg-transparent pl-12 pr-12 text-sm text-[#14202e] outline-none transition-colors focus:border-cobam-water-blue placeholder:text-cobam-carbon-grey/40"
       />
       {searchInput ? (
@@ -284,56 +375,23 @@ export default function PublicProductGrid({
     </div>
   );
 
-  if (items.length === 0 && !isRefreshing && !errorMessage) {
-    return (
-      <div className="space-y-10">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+  return (
+    <div className="space-y-12">
+      <div className="sticky top-0 z-20 -mx-6 bg-cobam-light-bg/90 px-6 py-5 backdrop-blur-md md:-mx-12 md:px-12">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="space-y-1">
-            <p
-              className="text-[10px] font-semibold uppercase tracking-[0.3em]"
-              style={{ color: resolvedThemeColor }}
-            >
-              0 produit
+            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-cobam-carbon-grey">
+              {isRefreshing
+                ? "Recherche en cours..."
+                : activeSearchQuery
+                  ? `${total} produit${total > 1 ? "s" : ""} trouvé${total > 1 ? "s" : ""}`
+                  : `${total} produit${total > 1 ? "s" : ""}`}
             </p>
           </div>
           {searchBar}
         </div>
-
-        <div
-          className="border border-dashed bg-white/80 px-6 py-14 text-center text-sm text-cobam-carbon-grey font-light"
-          style={{
-            borderColor: withThemeAlpha(resolvedThemeColor, 0.24),
-            backgroundColor: withThemeAlpha(resolvedThemeColor, 0.04),
-          }}
-        >
-          {activeSearchQuery
-            ? "Aucun produit ne correspond a cette recherche."
-            : "Aucun produit public n'est disponible pour le moment."}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-10">
-      {/* Toolbar: count + search */}
-      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-        <div className="space-y-1">
-          <p
-            className="text-[10px] font-semibold uppercase tracking-[0.3em]"
-            style={{ color: resolvedThemeColor }}
-          >
-            {isRefreshing
-              ? "Recherche en cours…"
-              : activeSearchQuery
-                ? `${total} produit${total > 1 ? "s" : ""} trouvé${total > 1 ? "s" : ""}`
-                : `${total} produit${total > 1 ? "s" : ""}`}
-          </p>
-        </div>
-        {searchBar}
       </div>
 
-      {/* Error state — full width */}
       {errorMessage && items.length === 0 && !isRefreshing ? (
         <div className="flex flex-col items-center gap-3 border border-rose-200 bg-rose-50 px-5 py-6 text-center text-sm text-rose-700">
           <span>{errorMessage}</span>
@@ -355,39 +413,87 @@ export default function PublicProductGrid({
         </div>
       ) : null}
 
-      {/* Product Grid */}
-      <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      {groupedItems.length === 0 && !isRefreshing && !errorMessage ? (
+        <div className="border border-dashed bg-white/80 px-6 py-14 text-center text-sm font-light text-cobam-carbon-grey">
+          {activeSearchQuery
+            ? "Aucun produit ne correspond a cette recherche."
+            : "Aucun produit public n'est disponible pour le moment."}
+        </div>
+      ) : null}
+
+      <div className="space-y-14">
+        {groupedItems.map((category) => {
+          const themeColor = normalizeThemeColor(category.themeColor);
+
+          return (
+            <section key={category.slug} className="space-y-10">
+              <div className="space-y-3">
+                <p
+                  className="text-[10px] font-semibold uppercase tracking-[0.4em]"
+                  style={{ color: themeColor }}
+                >
+                  {category.subtitle ?? "Categorie"}
+                </p>
+                <h2
+                  className="text-3xl font-light text-cobam-dark-blue sm:text-4xl"
+                  style={{ fontFamily: "var(--font-playfair), serif" }}
+                >
+                  {category.name}
+                </h2>
+                <div className="h-[1px] w-14" style={{ backgroundColor: themeColor }} />
+              </div>
+
+              <div className="space-y-12">
+                {category.subcategories.map((subcategory) => (
+                  <div key={`${category.slug}-${subcategory.slug}`} className="space-y-6">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <h3 className="text-xl font-semibold text-cobam-dark-blue">
+                          {subcategory.name}
+                        </h3>
+                        {subcategory.subtitle ? (
+                          <span className="text-sm text-cobam-carbon-grey">
+                            {subcategory.subtitle}
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="h-px w-10 bg-cobam-quill-grey/50" />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                      {subcategory.products.map((product) => (
+                        <PublicProductCard
+                          key={`${product.entityType}-${product.id}-${subcategory.slug}`}
+                          product={product}
+                          themeColor={themeColor}
+                          href={buildPublicProductHref({
+                            categorySlug: category.slug,
+                            subcategorySlug: subcategory.slug,
+                            product,
+                          })}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          );
+        })}
+
         {isRefreshing
-          ? Array.from({ length: Math.min(initialResult.pageSize, 6) }).map((_, index) => (
+          ? Array.from({ length: 6 }).map((_, index) => (
               <PublicProductCardSkeleton key={`refresh-skeleton-${index}`} />
             ))
-          : items.map((product, index) => (
-              <motion.div
-                key={`${product.entityType}-${product.id}`}
-                initial={{ opacity: 0, y: 30, filter: "blur(6px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                transition={{ duration: 0.8, delay: (index % 12) * 0.06, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <PublicProductCard
-                  product={product}
-                  themeColor={resolvedThemeColor}
-                  href={buildPublicProductHref({
-                    categorySlug,
-                    subcategorySlug,
-                    product,
-                  })}
-                />
-              </motion.div>
-            ))}
+          : null}
 
         {!isRefreshing && isLoadingMore
-          ? Array.from({ length: Math.min(initialResult.pageSize, 3) }).map((_, index) => (
+          ? Array.from({ length: 3 }).map((_, index) => (
               <PublicProductCardSkeleton key={`append-skeleton-${index}`} />
             ))
           : null}
       </div>
 
-      {/* Sentinel / loading indicator */}
       <div ref={sentinelRef} className="flex min-h-10 items-center justify-center">
         {errorMessage && items.length > 0 ? (
           <div className="flex flex-col items-center gap-3 border border-rose-200 bg-rose-50 px-5 py-4 text-center text-sm text-rose-700">
@@ -403,19 +509,16 @@ export default function PublicProductGrid({
           </div>
         ) : hasMore ? (
           <div
-            className="inline-flex items-center gap-3 border-b px-2 py-2 text-[11px] font-medium uppercase tracking-[0.2em]"
+            className={cn(
+              "inline-flex items-center gap-3 border-b px-2 py-2 text-[11px] font-medium uppercase tracking-[0.2em]",
+              isLoadingMore ? "text-cobam-dark-blue" : "text-cobam-carbon-grey",
+            )}
             style={{
-              borderColor: withThemeAlpha(resolvedThemeColor, 0.3),
-              color: resolvedThemeColor,
+              borderColor: withThemeAlpha("#0a8dc1", 0.2),
             }}
           >
-            <Loader2
-              className={`h-4 w-4 ${isLoadingMore ? "animate-spin" : ""}`}
-              style={{ color: resolvedThemeColor }}
-            />
-            {isLoadingMore
-              ? "Chargement…"
-              : "Chargement automatique"}
+            <Loader2 className={`h-4 w-4 ${isLoadingMore ? "animate-spin" : ""}`} />
+            {isLoadingMore ? "Chargement..." : "Chargement automatique"}
           </div>
         ) : null}
       </div>

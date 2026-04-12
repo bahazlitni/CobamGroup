@@ -20,6 +20,10 @@ import type {
   PublicProductInspectorAttribute,
   PublicProductInspectorMedia,
   PublicProductInspectorVariant,
+  PublicProductIndexCategory,
+  PublicProductIndexItem,
+  PublicProductIndexResult,
+  PublicProductIndexSubcategory,
   PublicProductListResult,
   PublicProductSubcategoryLink,
   PublicProductSummary,
@@ -33,6 +37,8 @@ export type {
   PublicProductInspectorAttribute,
   PublicProductInspectorMedia,
   PublicProductInspectorVariant,
+  PublicProductIndexItem,
+  PublicProductIndexResult,
   PublicProductListResult,
   PublicProductSubcategoryLink,
   PublicProductSummary,
@@ -40,6 +46,7 @@ export type {
 } from "./types";
 
 export const PUBLIC_PRODUCTS_PAGE_SIZE = 24;
+export const PUBLIC_PRODUCTS_INDEX_PAGE_SIZE = 36;
 
 const MEDIA_SELECT = {
   id: true,
@@ -174,6 +181,25 @@ type PublicPackRecord = Prisma.ProductGetPayload<{
   select: typeof PUBLIC_PACK_SELECT;
 }>;
 
+type PublicIndexRow = {
+  entity_type: "FAMILY" | "SINGLE" | "PACK";
+  product_id: bigint | null;
+  family_id: bigint | null;
+  product_slug: string;
+  category_id: bigint;
+  category_name: string;
+  category_slug: string;
+  category_subtitle: string | null;
+  category_theme_color: string | null;
+  category_sort: number | null;
+  subcategory_id: bigint;
+  subcategory_name: string;
+  subcategory_slug: string;
+  subcategory_subtitle: string | null;
+  subcategory_description: string | null;
+  subcategory_sort: number | null;
+};
+
 function normalizeComparableValue(value: string | null | undefined) {
   return (value ?? "")
     .normalize("NFD")
@@ -287,6 +313,45 @@ function mapSubcategoryLinks(
     categorySlug: link.subcategory.category.slug,
     categoryName: link.subcategory.category.name,
   }));
+}
+
+function mapIndexCategory(record: {
+  id: bigint;
+  name: string;
+  slug: string;
+  subtitle: string | null;
+  themeColor: string | null;
+  sortOrder: number | null;
+}): PublicProductIndexCategory {
+  return {
+    id: Number(record.id),
+    name: record.name,
+    slug: record.slug,
+    subtitle: record.subtitle ?? null,
+    themeColor: record.themeColor ?? null,
+    sortOrder: record.sortOrder ?? 0,
+  };
+}
+
+function mapIndexSubcategory(record: {
+  id: bigint;
+  name: string;
+  slug: string;
+  subtitle: string | null;
+  description: string | null;
+  sortOrder: number | null;
+  category: { id: bigint; slug: string };
+}): PublicProductIndexSubcategory {
+  return {
+    id: Number(record.id),
+    name: record.name,
+    slug: record.slug,
+    subtitle: record.subtitle ?? null,
+    description: record.description ?? null,
+    sortOrder: record.sortOrder ?? 0,
+    categoryId: Number(record.category.id),
+    categorySlug: record.category.slug,
+  };
 }
 
 function getAttributePresentation(kind: string) {
@@ -438,91 +503,6 @@ function buildFamilyCoverMedia(record: PublicFamilyRecord, defaultVariant: Publi
   return defaultVariant ? mapVariantMedia(defaultVariant)[0] ?? null : null;
 }
 
-function scoreFamilySearch(record: PublicFamilyRecord, variants: PublicProductRecord[], normalizedQuery: string) {
-  if (!normalizedQuery) {
-    return 0;
-  }
-
-  let score = 0;
-  const familyName = normalizeComparableValue(record.name);
-  const familySlug = normalizeComparableValue(record.slug);
-  const familySubtitle = normalizeComparableValue(record.subtitle);
-  const familyDescription = normalizeComparableValue(parseRichTextPreview(record.description));
-
-  if (familyName.startsWith(normalizedQuery)) score = Math.max(score, 700);
-  if (familySlug.startsWith(normalizedQuery)) score = Math.max(score, 680);
-  if (familySubtitle.startsWith(normalizedQuery)) score = Math.max(score, 650);
-  if (familyDescription.includes(normalizedQuery)) score = Math.max(score, 300);
-
-  for (const variant of variants) {
-    if (normalizeComparableValue(variant.sku).startsWith(normalizedQuery)) score = Math.max(score, 1000);
-    if (normalizeComparableValue(variant.name).startsWith(normalizedQuery)) score = Math.max(score, 980);
-    if (normalizeComparableValue(variant.slug).startsWith(normalizedQuery)) score = Math.max(score, 960);
-    if (normalizeComparableValue(parseRichTextPreview(variant.description)).includes(normalizedQuery)) {
-      score = Math.max(score, 280);
-    }
-    if (normalizeComparableValue(getBrandName(variant.brand)).startsWith(normalizedQuery)) {
-      score = Math.max(score, 500);
-    }
-    if (normalizeComparableValue(variant.tags).includes(normalizedQuery)) {
-      score = Math.max(score, 350);
-    }
-  }
-
-  return score;
-}
-
-function scoreConcreteProductSearch(
-  product: Pick<
-    PublicProductRecord,
-    "sku" | "name" | "slug" | "description" | "descriptionSeo" | "tags"
-  >,
-  input: {
-    normalizedQuery: string;
-    brandName?: string | null;
-    extraProducts?: Array<
-      Pick<PublicProductRecord, "sku" | "name" | "slug" | "description" | "descriptionSeo">
-    >;
-    extraTags?: string | null;
-  } = { normalizedQuery: "" },
-) {
-  const { normalizedQuery, brandName, extraProducts = [], extraTags } = input;
-
-  if (!normalizedQuery) {
-    return 0;
-  }
-
-  let score = 0;
-  const productSku = normalizeComparableValue(product.sku);
-  const productName = normalizeComparableValue(product.name);
-  const productSlug = normalizeComparableValue(product.slug);
-  const productDescription = normalizeComparableValue(parseRichTextPreview(product.description));
-  const productDescriptionSeo = normalizeComparableValue(parseRichTextPreview(product.descriptionSeo));
-  const productTags = normalizeComparableValue([product.tags, extraTags].filter(Boolean).join(" "));
-
-  if (productSku.startsWith(normalizedQuery)) score = Math.max(score, 1000);
-  if (productName.startsWith(normalizedQuery)) score = Math.max(score, 980);
-  if (productSlug.startsWith(normalizedQuery)) score = Math.max(score, 960);
-  if (normalizeComparableValue(brandName).startsWith(normalizedQuery)) score = Math.max(score, 500);
-  if (productTags.includes(normalizedQuery)) score = Math.max(score, 350);
-  if (productDescription.includes(normalizedQuery) || productDescriptionSeo.includes(normalizedQuery)) {
-    score = Math.max(score, 280);
-  }
-
-  for (const extraProduct of extraProducts) {
-    if (normalizeComparableValue(extraProduct.sku).startsWith(normalizedQuery)) score = Math.max(score, 900);
-    if (normalizeComparableValue(extraProduct.name).startsWith(normalizedQuery)) score = Math.max(score, 880);
-    if (normalizeComparableValue(extraProduct.slug).startsWith(normalizedQuery)) score = Math.max(score, 860);
-    if (
-      normalizeComparableValue(parseRichTextPreview(extraProduct.description)).includes(normalizedQuery) ||
-      normalizeComparableValue(parseRichTextPreview(extraProduct.descriptionSeo)).includes(normalizedQuery)
-    ) {
-      score = Math.max(score, 260);
-    }
-  }
-
-  return score;
-}
 
 function mapFamilySummary(record: PublicFamilyRecord, defaultVariant: PublicProductRecord | null): PublicProductSummary {
   const coverMedia = buildFamilyCoverMedia(record, defaultVariant);
@@ -704,90 +684,6 @@ function mapSimpleInspector(record: PublicProductRecord, input: {
   };
 }
 
-async function listCandidateFamilies(input: { categorySlug: string; subcategorySlug: string }) {
-  const families = await prisma.productFamily.findMany({
-    where: {
-      members: {
-        some: {
-          product: {
-            kind: "VARIANT",
-            subcategoryLinks: {
-              some: {
-                subcategory: {
-                  slug: input.subcategorySlug,
-                  category: {
-                    slug: input.categorySlug,
-                    isActive: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-    orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
-    select: PUBLIC_FAMILY_SELECT,
-  });
-
-  await makeMediaPublicMany(
-    families.flatMap(collectMediaIdsForPublishing),
-  );
-
-  return families;
-}
-
-async function listCandidateSingles(input: { categorySlug: string; subcategorySlug: string }) {
-  const singles = await prisma.product.findMany({
-    where: {
-      kind: "SINGLE",
-      lifecycle: "ACTIVE",
-      visibility: true,
-      subcategoryLinks: {
-        some: {
-          subcategory: {
-            slug: input.subcategorySlug,
-            category: {
-              slug: input.categorySlug,
-              isActive: true,
-            },
-          },
-        },
-      },
-    },
-    orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
-    select: PUBLIC_PRODUCT_SELECT,
-  });
-
-  await makeMediaPublicMany(collectProductMediaIdsForPublishing(singles));
-
-  return singles;
-}
-
-async function listCandidatePacks(input: { categorySlug: string; subcategorySlug: string }) {
-  const packs = await prisma.product.findMany({
-    where: {
-      kind: "PACK",
-      subcategoryLinks: {
-        some: {
-          subcategory: {
-            slug: input.subcategorySlug,
-            category: {
-              slug: input.categorySlug,
-              isActive: true,
-            },
-          },
-        },
-      },
-    },
-    orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
-    select: PUBLIC_PACK_SELECT,
-  });
-
-  await makeMediaPublicMany(collectProductMediaIdsForPublishing(packs));
-
-  return packs;
-}
 
 function buildFamilySubcategories(publicVariants: PublicProductRecord[]) {
   const subcategories = new Map<number, PublicProductSubcategoryLink>();
@@ -814,89 +710,255 @@ export async function listPublicProductsBySubcategory(input: {
   pageSize?: number;
   q?: string | null;
 }): Promise<PublicProductListResult> {
-  const [families, singles, packs] = await Promise.all([
-    listCandidateFamilies(input),
-    listCandidateSingles(input),
-    listCandidatePacks(input),
-  ]);
-  const normalizedQuery = normalizeComparableValue(input.q);
-
-  const rankedFamilies = families
-    .map((family): { score: number; summary: PublicProductSummary } | null => {
-      const { publicVariants, defaultVariant } = pickDefaultPublicVariant(family);
-      if (!defaultVariant) {
-        return null;
-      }
-
-      const score = scoreFamilySearch(family, publicVariants, normalizedQuery);
-
-      if (normalizedQuery && score === 0) {
-        return null;
-      }
-
-      return {
-        score,
-        summary: mapFamilySummary(family, defaultVariant),
-      };
-    });
-
-  const rankedSingles = singles
-    .map((product): { score: number; summary: PublicProductSummary } | null => {
-      const score = scoreConcreteProductSearch(product, {
-        normalizedQuery,
-        brandName: getBrandName(product.brand),
-      });
-
-      if (normalizedQuery && score === 0) {
-        return null;
-      }
-
-      return {
-        score,
-        summary: mapSingleProductSummary(product),
-      };
-    });
-
-  const rankedPacks = packs
-    .map((pack): { score: number; summary: PublicProductSummary } | null => {
-      const derived = derivePack(pack);
-
-      if (!derived.visibility || derived.lifecycle !== "ACTIVE") {
-        return null;
-      }
-
-      const score = scoreConcreteProductSearch(pack, {
-        normalizedQuery,
-        brandName: derived.brandNames.join(" "),
-        extraProducts: derived.searchProducts,
-        extraTags: derived.tags,
-      });
-
-      if (normalizedQuery && score === 0) {
-        return null;
-      }
-
-      return {
-        score,
-        summary: mapPackSummary(pack, derived),
-      };
-    });
-
-  const ranked = [...rankedFamilies, ...rankedSingles, ...rankedPacks]
-    .filter((item): item is { score: number; summary: PublicProductSummary } => item != null)
-    .sort(
-      (left, right) =>
-        right.score - left.score ||
-        left.summary.name.localeCompare(right.summary.name, "fr-FR"),
-    );
-
-  const pageSize = input.pageSize ?? PUBLIC_PRODUCTS_PAGE_SIZE;
-  const start = (input.page - 1) * pageSize;
-  const items = ranked.slice(start, start + pageSize).map((item) => item.summary);
+  const result = await listPublicProductsIndex({
+    categorySlug: input.categorySlug,
+    subcategorySlug: input.subcategorySlug,
+    page: input.page,
+    pageSize: input.pageSize ?? PUBLIC_PRODUCTS_PAGE_SIZE,
+    q: input.q,
+  });
 
   return {
-    items,
-    total: ranked.length,
+    items: result.items.map((item) => item.product),
+    total: result.total,
+    page: result.page,
+    pageSize: result.pageSize,
+  };
+}
+
+function sortIndexItems(items: PublicProductIndexItem[]) {
+  return items.sort((left, right) => {
+    if (left.category.sortOrder !== right.category.sortOrder) {
+      return left.category.sortOrder - right.category.sortOrder;
+    }
+    if (left.category.name !== right.category.name) {
+      return left.category.name.localeCompare(right.category.name, "fr-FR");
+    }
+    if (left.subcategory.sortOrder !== right.subcategory.sortOrder) {
+      return left.subcategory.sortOrder - right.subcategory.sortOrder;
+    }
+    if (left.subcategory.name !== right.subcategory.name) {
+      return left.subcategory.name.localeCompare(right.subcategory.name, "fr-FR");
+    }
+    return left.product.slug.localeCompare(right.product.slug, "fr-FR");
+  });
+}
+
+
+
+export async function listPublicProductsIndex(input: {
+  categorySlug?: string | null;
+  subcategorySlug?: string | null;
+  page: number;
+  pageSize?: number;
+  q?: string | null;
+}): Promise<PublicProductIndexResult> {
+  const pageSize = input.pageSize ?? PUBLIC_PRODUCTS_INDEX_PAGE_SIZE;
+  const offset = (input.page - 1) * pageSize;
+
+  const normalizedQuery = normalizeComparableValue(input.q);
+  const pattern = normalizedQuery ? `%${normalizedQuery}%` : null;
+
+  const familyQuery = Prisma.sql`
+    SELECT DISTINCT ON (f.id)
+      'FAMILY'::text AS entity_type,
+      NULL::bigint AS product_id,
+      f.id AS family_id,
+      f.slug AS product_slug,
+      c.id AS category_id,
+      c.name AS category_name,
+      c.slug AS category_slug,
+      c.subtitle AS category_subtitle,
+      c.theme_color AS category_theme_color,
+      c.sort_order AS category_sort,
+      s.id AS subcategory_id,
+      s.name AS subcategory_name,
+      s.slug AS subcategory_slug,
+      s.subtitle AS subcategory_subtitle,
+      s.description AS subcategory_description,
+      s.sort_order AS subcategory_sort
+    FROM product_families f
+    JOIN product_family_members m ON m.family_id = f.id
+    JOIN products p ON p.id = m.product_id
+    JOIN product_subcategory_links l ON l.product_id = p.id
+    JOIN product_subcategories s ON s.id = l.subcategory_id AND s.is_active = true
+    JOIN product_types c ON c.id = s.category_id AND c.is_active = true
+    WHERE p.kind = 'VARIANT' AND p.lifecycle = 'ACTIVE' AND p.visibility IS TRUE
+    ${input.categorySlug ? Prisma.sql`AND "c".slug = ${input.categorySlug}` : Prisma.empty}
+    ${input.subcategorySlug ? Prisma.sql`AND "s".slug = ${input.subcategorySlug}` : Prisma.empty}
+    ${pattern ? Prisma.sql`AND (
+      "p".sku ILIKE ${pattern} OR "p".slug ILIKE ${pattern} OR "p".name ILIKE ${pattern} OR "p".description ILIKE ${pattern} OR "p".description_seo ILIKE ${pattern} OR "p".tags ILIKE ${pattern}
+      OR "s".name ILIKE ${pattern} OR "s".slug ILIKE ${pattern} OR "s".description ILIKE ${pattern} OR "s".description_seo ILIKE ${pattern}
+      OR "c".name ILIKE ${pattern} OR "c".slug ILIKE ${pattern} OR "c".description ILIKE ${pattern} OR "c".description_seo ILIKE ${pattern}
+      OR "f".name ILIKE ${pattern} OR "f".slug ILIKE ${pattern} OR "f".subtitle ILIKE ${pattern} OR "f".description ILIKE ${pattern} OR "f".description_seo ILIKE ${pattern}
+    )` : Prisma.empty}
+    ORDER BY f.id, c.sort_order ASC, s.sort_order ASC, f.slug ASC
+  `;
+
+  const productQuery = Prisma.sql`
+    SELECT DISTINCT ON (p.id)
+      CASE
+        WHEN p.kind = 'SINGLE' THEN 'SINGLE'::text
+        ELSE 'PACK'::text
+      END AS entity_type,
+      p.id AS product_id,
+      NULL::bigint AS family_id,
+      p.slug AS product_slug,
+      c.id AS category_id,
+      c.name AS category_name,
+      c.slug AS category_slug,
+      c.subtitle AS category_subtitle,
+      c.theme_color AS category_theme_color,
+      c.sort_order AS category_sort,
+      s.id AS subcategory_id,
+      s.name AS subcategory_name,
+      s.slug AS subcategory_slug,
+      s.subtitle AS subcategory_subtitle,
+      s.description AS subcategory_description,
+      s.sort_order AS subcategory_sort
+    FROM products p
+    JOIN product_subcategory_links l ON l.product_id = p.id
+    JOIN product_subcategories s ON s.id = l.subcategory_id AND s.is_active = true
+    JOIN product_types c ON c.id = s.category_id AND c.is_active = true
+    WHERE p.kind IN ('SINGLE', 'PACK') AND p.lifecycle = 'ACTIVE' AND p.visibility IS TRUE
+    ${input.categorySlug ? Prisma.sql`AND "c".slug = ${input.categorySlug}` : Prisma.empty}
+    ${input.subcategorySlug ? Prisma.sql`AND "s".slug = ${input.subcategorySlug}` : Prisma.empty}
+    ${pattern ? Prisma.sql`AND (
+      "p".sku ILIKE ${pattern} OR "p".slug ILIKE ${pattern} OR "p".name ILIKE ${pattern} OR "p".description ILIKE ${pattern} OR "p".description_seo ILIKE ${pattern} OR "p".tags ILIKE ${pattern}
+      OR "s".name ILIKE ${pattern} OR "s".slug ILIKE ${pattern} OR "s".description ILIKE ${pattern} OR "s".description_seo ILIKE ${pattern}
+      OR "c".name ILIKE ${pattern} OR "c".slug ILIKE ${pattern} OR "c".description ILIKE ${pattern} OR "c".description_seo ILIKE ${pattern}
+    )` : Prisma.empty}
+    ORDER BY p.id, c.sort_order ASC, s.sort_order ASC, p.slug ASC
+  `;
+
+  const rows = await prisma.$queryRaw<PublicIndexRow[]>(Prisma.sql`
+    WITH candidate_entries AS (
+      (${familyQuery})
+      UNION ALL
+      (${productQuery})
+    )
+    SELECT *
+    FROM candidate_entries
+    ORDER BY category_sort ASC NULLS LAST, subcategory_sort ASC NULLS LAST, product_slug ASC
+    LIMIT ${pageSize} OFFSET ${offset}
+  `);
+
+  const totalResult = await prisma.$queryRaw<Array<{ count: bigint }>>(Prisma.sql`
+    WITH candidate_entries AS (
+      (${familyQuery})
+      UNION ALL
+      (${productQuery})
+    )
+    SELECT COUNT(*)::bigint AS count FROM candidate_entries
+  `);
+
+  const total = Number(totalResult[0]?.count ?? 0);
+
+  if (rows.length === 0) {
+    return {
+      items: [],
+      total,
+      page: input.page,
+      pageSize,
+    };
+  }
+
+  const familyIds = rows
+    .map((row) => row.family_id)
+    .filter((id): id is bigint => id != null);
+  const productIds = rows
+    .map((row) => row.product_id)
+    .filter((id): id is bigint => id != null);
+
+  const [families, products] = await Promise.all([
+    familyIds.length
+      ? prisma.productFamily.findMany({
+          where: {
+            id: { in: familyIds },
+          },
+          select: PUBLIC_FAMILY_SELECT,
+        })
+      : Promise.resolve([]),
+    productIds.length
+      ? prisma.product.findMany({
+          where: {
+            id: { in: productIds },
+          },
+          select: PUBLIC_PACK_SELECT,
+        })
+      : Promise.resolve([]),
+  ]);
+
+  await Promise.all([
+    makeMediaPublicMany(families.flatMap(collectMediaIdsForPublishing)),
+    makeMediaPublicMany(collectProductMediaIdsForPublishing(products)),
+  ]);
+
+  const familySummaryMap = new Map<number, PublicProductSummary>();
+  for (const family of families) {
+    const { defaultVariant } = pickDefaultPublicVariant(family);
+    if (!defaultVariant) {
+      continue;
+    }
+    familySummaryMap.set(Number(family.id), mapFamilySummary(family, defaultVariant));
+  }
+
+  const productSummaryMap = new Map<number, PublicProductSummary>();
+  for (const product of products) {
+    if (product.kind === "PACK") {
+      const derived = derivePack(product);
+      if (!derived.visibility || derived.lifecycle !== "ACTIVE") {
+        continue;
+      }
+      productSummaryMap.set(Number(product.id), mapPackSummary(product, derived));
+    } else {
+      productSummaryMap.set(Number(product.id), mapSingleProductSummary(product));
+    }
+  }
+
+  const indexItems: PublicProductIndexItem[] = rows
+    .map((row) => {
+      const category = mapIndexCategory({
+        id: row.category_id,
+        name: row.category_name,
+        slug: row.category_slug,
+        subtitle: row.category_subtitle,
+        themeColor: row.category_theme_color,
+        sortOrder: row.category_sort,
+      });
+      const subcategory = mapIndexSubcategory({
+        id: row.subcategory_id,
+        name: row.subcategory_name,
+        slug: row.subcategory_slug,
+        subtitle: row.subcategory_subtitle,
+        description: row.subcategory_description,
+        sortOrder: row.subcategory_sort,
+        category: {
+          id: row.category_id,
+          slug: row.category_slug,
+        },
+      });
+
+      const summary =
+        row.entity_type === "FAMILY"
+          ? familySummaryMap.get(Number(row.family_id))
+          : productSummaryMap.get(Number(row.product_id));
+
+      if (!summary) {
+        return null;
+      }
+
+      return {
+        product: summary,
+        category,
+        subcategory,
+      } satisfies PublicProductIndexItem;
+    })
+    .filter((item): item is PublicProductIndexItem => item != null);
+
+  return {
+    items: sortIndexItems(indexItems),
+    total,
     page: input.page,
     pageSize,
   };

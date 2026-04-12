@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   Search,
@@ -8,7 +9,6 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  X,
 } from "lucide-react";
 
 import {
@@ -24,6 +24,8 @@ import Link from "next/link";
 import MegaMenu from "@/layout/MegaMenu";
 import type { PublicMegaMenuProductCategory } from "@/features/product-categories/public-types";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+import NavbarSearch from "@/layout/NavbarSearch";
 
 const societyLinks = [
   { label: "Notre Histoire", href: "/notre-histoire" },
@@ -62,29 +64,6 @@ export default function NavBar({
   const [mobileBrandsOpen, setMobileBrandsOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [produitsOpen, setProduitsOpen] = useState(false);
-
-  const searchRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (searchOpen) {
-      setTimeout(() => inputRef.current?.focus(), 150);
-    }
-  }, [searchOpen]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(event.target as Node)
-      ) {
-        setSearchOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const closeSheet = () => {
     setSheetOpen(false);
@@ -187,45 +166,19 @@ export default function NavBar({
           </nav>
 
           <div className="flex items-center gap-3 flex-shrink-0">
-            <div ref={searchRef} className="relative">
+            <div className="relative">
               <button
-                onClick={() => setSearchOpen(!searchOpen)}
-                className={`transition-colors ${
-                  searchOpen
-                    ? "text-cobam-water-blue"
-                    : "text-cobam-carbon-grey hover:text-cobam-water-blue"
-                }`}
+                onClick={() => setSearchOpen(true)}
+                className="text-cobam-carbon-grey hover:text-cobam-water-blue transition-colors p-2"
                 aria-label="Rechercher"
               >
                 <Search size={18} />
               </button>
 
-              <div
-                className={`absolute right-0 top-full mt-3 transition-all duration-200 ease-in-out origin-top-right z-50 ${
-                  searchOpen
-                    ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
-                    : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
-                }`}
-              >
-                <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-3 flex items-center gap-2 w-[300px] sm:w-[420px]">
-                  <Search
-                    size={16}
-                    className="text-cobam-carbon-grey flex-shrink-0 ml-1"
-                  />
-                  <input
-                    ref={inputRef}
-                    type="search"
-                    placeholder="Rechercher un produit, une marque..."
-                    className="flex-1 bg-transparent text-sm text-cobam-dark-blue placeholder:text-cobam-carbon-grey focus:outline-none"
-                  />
-                  <button
-                    onClick={() => setSearchOpen(false)}
-                    className="text-cobam-carbon-grey hover:text-cobam-dark-blue transition-colors p-1 rounded-lg hover:bg-gray-100 flex-shrink-0"
-                  >
-                    <X size={15} />
-                  </button>
-                </div>
-              </div>
+              <NavbarSearch 
+                isOpen={searchOpen} 
+                onClose={() => setSearchOpen(false)} 
+              />
             </div>
 
             <Sheet

@@ -114,7 +114,6 @@ export default function MegaMenu({ menuLabel, data }: MegaMenuProps) {
   const previewItem = hoveredSubCategory || activeCategory;
   const previewThemeColor = normalizeThemeColor(previewItem.themeColor);
   const isPreviewingCategory = !hoveredSubCategory;
-  const activeCategorySubcategories = getSubcategories(activeCategory.slug);
 
   return (
     <div
@@ -278,7 +277,7 @@ export default function MegaMenu({ menuLabel, data }: MegaMenuProps) {
               </div>
 
               <div className="flex-1">
-                <div className="grid max-h-[600px] grid-cols-1 overflow-x-hidden overflow-y-auto md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-2">
+                <div className="grid max-h-[90vh] grid-cols-1 overflow-x-hidden overflow-y-auto md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-2">
                   {rootCategories.map((category, index) => {
                     const isCategoryActive = index === activeIndex;
                     const categoryThemeColor = normalizeThemeColor(category.themeColor);
