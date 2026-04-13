@@ -140,8 +140,14 @@ const STAFF_FAMILY_LIST_SELECT = {
       sku: true,
       brand: true,
       basePriceAmount: true,
+      vatRate: true,
       stock: true,
       stockUnit: true,
+      lifecycle: true,
+      commercialMode: true,
+      visibility: true,
+      priceVisibility: true,
+      stockVisibility: true,
       subcategoryLinks: {
         select: {
           subcategory: {
@@ -268,8 +274,14 @@ function mapFamilyListItem(record: StaffFamilyListRecord): ProductFamilyListItem
     defaultVariantSku: record.defaultProduct?.sku ?? null,
     brand: formatProductBrandValue(record.defaultProduct?.brand ?? null),
     basePriceAmount: record.defaultProduct?.basePriceAmount?.toString() ?? null,
+    vatRate: record.defaultProduct?.vatRate ?? null,
     stock: record.defaultProduct?.stock?.toString() ?? null,
     stockUnit: record.defaultProduct?.stockUnit ?? null,
+    lifecycle: record.defaultProduct?.lifecycle ?? null,
+    commercialMode: record.defaultProduct?.commercialMode ?? null,
+    visibility: record.defaultProduct?.visibility ?? null,
+    priceVisibility: record.defaultProduct?.priceVisibility ?? null,
+    stockVisibility: record.defaultProduct?.stockVisibility ?? null,
     subcategories:
       record.defaultProduct?.subcategoryLinks.map(({ subcategory }) => ({
         id: Number(subcategory.id),

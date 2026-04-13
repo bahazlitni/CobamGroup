@@ -42,6 +42,7 @@ export async function listAllProductsClient(input: {
   page: number;
   pageSize: number;
   q?: string;
+  kind?: string | null;
 }): Promise<AllProductsListResult> {
   const search = new URLSearchParams({
     page: String(input.page),
@@ -50,6 +51,9 @@ export async function listAllProductsClient(input: {
 
   if (input.q?.trim()) {
     search.set("q", input.q.trim());
+  }
+  if (input.kind) {
+    search.set("kind", input.kind);
   }
 
   const res = await staffApiFetch(`/api/staff/all-products?${search.toString()}`, {
@@ -82,4 +86,33 @@ export async function updateAllProductLifecycleClient(
   );
 
   return payload.product;
+}
+
+export async function updateAllProductsBulkClient(input: {
+  ids: number[];
+  data: Record<string, unknown>;
+}) {
+  const res = await staffApiFetch(`/api/staff/all-products/bulk`, {
+    method: "POST",
+    auth: true,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  return unwrapResponse(res, "Impossible de mettre a jour les produits.");
+}
+
+export async function deleteAllProductsBulkClient(ids: number[]) {
+  const res = await staffApiFetch(`/api/staff/all-products/bulk`, {
+    method: "DELETE",
+    auth: true,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ ids }),
+  });
+
+  return unwrapResponse(res, "Impossible de supprimer les produits.");
 }

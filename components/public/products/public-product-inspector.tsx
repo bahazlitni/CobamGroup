@@ -20,6 +20,7 @@ import ColorsList from "./inspector/ColorsList";
 import FinishesList from "./inspector/FinishesList";
 import NormalAttributesList from "./inspector/NormalAttributesList";
 import DatasheetLink from "./inspector/DatasheetLink";
+import StockText from "./inspector/StockText";
 
 
 function SelectorPill({ label, unit, active, onClick }: SelectorPillProps) {
@@ -119,7 +120,7 @@ export default function PublicProductInspectorView({
   return (
     <TooltipProvider>
       <div className="space-y-8">
-      <div className="grid gap-6 lg:grid-cols-[720px_1fr]">
+      <div className="grid gap-12 lg:grid-cols-[600px_1fr]">
         <Carousel
           key={`${selectedVariant.id}-${selectedMedia.map((media) => media.id).join("-")}`}
           media={selectedMedia}
@@ -143,6 +144,11 @@ export default function PublicProductInspectorView({
                     <div className="flex flex-col gap-1">
                     <Property name="SKU" value={selectedVariant.sku} isCopiable={true} isFemale={false} isPlural={false}/>
                     <Property name="Marque" value={normalizedProduct.brandName} isCopiable={false} isFemale={true} isPlural={true}/>
+                    <StockText 
+                      stock={selectedVariant.stock} 
+                      stockUnit={selectedVariant.stockUnit} 
+                      stockVisibility={selectedVariant.stockVisibility} 
+                    />
                     </div>
                     {selectedVariant.datasheet && <DatasheetLink url={selectedVariant.datasheet.url} />}
                   </div>

@@ -34,6 +34,22 @@ export const COLORS: readonly Color[] = [
   { key: "SIKACERAM_GRAPHITE", label: "Grafite", value: "#4F5357" },
   { key: "SIKACERAM_ANTHRACITE", label: "Antracite", value: "#3E4347" },
   { key: "SIKACERAM_TOTAL_BLACK", label: "Nero assoluto", value: "#1E1E1C" },
+
+  // DEUTSCH COLOR - INTENSE
+  { key: "DEUTSCH_ANTHRACITE_37", label: "Anthracite 37", value: "#2B2B2B" },
+  { key: "DEUTSCH_BEIGE_18", label: "Beige 18", value: "#D8C3A5" },
+  { key: "DEUTSCH_WHITE_INTENSE", label: "Blanc Intense", value: "#F5F5F5" },
+  { key: "DEUTSCH_WHITE_01", label: "Blanc 01", value: "#FFFFFF" },
+  { key: "DEUTSCH_DARK_BLUE_24", label: "Dark Blue 24", value: "#1F3A5F" },
+  { key: "DEUTSCH_LIGHT_GREY_05", label: "Gris Clair 05", value: "#C9C9C9" },
+  { key: "DEUTSCH_GREY_17", label: "Gris Moyen 17", value: "#8A8A8A" },
+  { key: "DEUTSCH_LIGHT_BLUE_33", label: "Light Blue 33", value: "#6FA3D2" },
+  { key: "DEUTSCH_LIGHT_GREY_INTENSE_05", label: "Light Grey 05 Intense", value: "#BEBEBE" },
+  { key: "DEUTSCH_MAGNOLIA_13", label: "Magnolia / Ivoir 13", value: "#F2E6C9" },
+  { key: "DEUTSCH_MYKONOS_BLUE_30", label: "Mykonos Blue 30", value: "#2E5C8A" },
+  { key: "DEUTSCH_SILVER_GREY_16", label: "Silver Grey 16", value: "#A6A6A6" },
+  { key: "DEUTSCH_TORTILLA_34", label: "Tortilla 34", value: "#C8A97E" },
+  { key: "DEUTSCH_CYPRESS_GREEN_32", label: "Vert Cypress 32", value: "#3F5F4A" },
 ] as const;
 
 const COLOR_NAME_TO_HEX: Record<string, string> = COLORS.reduce((acc, color) => {
@@ -75,11 +91,10 @@ function normalizeColorKey(value: string | null | undefined) {
 }
 
 export function resolveColorHex(value: string | null | undefined): string | null {
-    const trimmedValue = (value ?? "").trim();
-
-    if (!trimmedValue) {
-        return null;
-    }
+    if (!value) return null;
+    
+    const trimmedValue = value.trim();
+    if (!trimmedValue) return null;
 
     const exactHex = trimmedValue.match(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
     if (exactHex) {

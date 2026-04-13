@@ -80,8 +80,14 @@ export type ProductFamilyListItemDto = {
   defaultVariantSku: string | null;
   brand: string | null;
   basePriceAmount: string | null;
+  vatRate: number | null;
   stock: string | null;
   stockUnit: ProductStockUnit | null;
+  lifecycle: ProductLifecycle | null;
+  commercialMode: ProductCommercialMode | null;
+  visibility: boolean | null;
+  priceVisibility: boolean | null;
+  stockVisibility: boolean | null;
   subcategories: ProductSubcategoryOptionDto[];
   updatedAt: string;
 };
@@ -217,6 +223,9 @@ export type PublicProductInspectorVariant = {
   basePriceAmount: string | null;
   priceVisibility: boolean;
   commercialMode: ProductCommercialMode | null;
+  stock: string | null;
+  stockUnit: ProductStockUnit | null;
+  stockVisibility: boolean;
   datasheet: PublicProductInspectorMedia | null;
   media: PublicProductInspectorMedia[];
   attributes: PublicProductInspectorAttribute[];
@@ -251,6 +260,9 @@ export type PublicSimpleProductInspector = {
   datasheet: PublicProductInspectorMedia | null;
   basePriceAmount: string | null;
   priceVisibility: boolean;
+  stock: string | null;
+  stockUnit: ProductStockUnit | null;
+  stockVisibility: boolean;
   commercialMode: ProductCommercialMode | null;
   subcategories: PublicProductSubcategoryLink[];
   attributes: PublicProductInspectorAttribute[];

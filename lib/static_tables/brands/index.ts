@@ -271,6 +271,14 @@ const BRAND_RECORDS: BrandRecord[] = [
     description: "Centre hospitalier privé de référence à Djerba, équipé de technologies médicales de dernière génération.",
     kind: ProductBrandKind.REFERENCE,
   },
+  {
+    value: "VITRAFIX",
+    label: "VitraFix",
+    logoUrl: "/images/brands/vitrafix.png",
+    isProductBrand: true,
+    description: "Vitrafix est une marque spécialisée dans les produits de pose pour carrelage (colles, joints, étanchéité). Elle propose des solutions fiables et performantes adaptées aux travaux en intérieur comme en extérieur.",
+    kind: ProductBrandKind.NONE,
+  },
 ];
 
 export const BRANDS: Brand[] = BRAND_RECORDS.map((brand) => ({

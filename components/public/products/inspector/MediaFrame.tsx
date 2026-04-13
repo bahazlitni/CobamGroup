@@ -4,10 +4,12 @@ import Image from "next/image";
 
 export default function MediaFrame({
   media,
-  isThumbnail = false
+  isThumbnail = false,
+  highQuality = false
 }: {
   media: null | PublicProductInspectorMedia;
   priority?: boolean;
+  highQuality?: boolean;
   isThumbnail?: boolean;
 }) {
     if(media){
@@ -15,6 +17,9 @@ export default function MediaFrame({
         const quality = isThumbnail ? 0 : 100
 
         if (media.kind === "IMAGE") {
+            if(highQuality){
+                return <img src={media.url} alt={media.altText ?? media.title ?? "frame"} className="object-cover" />
+            }
             return (
             <Image
                 src={src}

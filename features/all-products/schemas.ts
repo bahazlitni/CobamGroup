@@ -20,10 +20,14 @@ function parseOptionalString(value: string | null | undefined) {
 }
 
 export function parseAllProductsListQuery(searchParams: URLSearchParams) {
+  const kindRaw = parseOptionalString(searchParams.get("kind"));
+  const kind = kindRaw === "ALL" ? null : kindRaw;
+
   return {
     page: parsePositiveInteger(searchParams.get("page"), 1),
     pageSize: parsePositiveInteger(searchParams.get("pageSize"), 20),
     q: parseOptionalString(searchParams.get("q")),
+    kind: kind ?? null,
   };
 }
 

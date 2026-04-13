@@ -58,6 +58,12 @@ const PACK_DETAIL_SELECT = {
   name: true,
   description: true,
   descriptionSeo: true,
+  visibility: true,
+  priceVisibility: true,
+  stockVisibility: true,
+  commercialMode: true,
+  vatRate: true,
+  stockUnit: true,
   lifecycle: true,
   createdAt: true,
   updatedAt: true,
@@ -220,9 +226,14 @@ function mapPackListItem(record: PackDetailRecord): ProductPackListItemDto {
     lineCount: record.packLinesAsPack.length,
     brands: derived.brands,
     basePriceAmount: derived.basePriceAmount,
+    vatRate: record.vatRate ?? null,
     stock: derived.stock,
+    stockUnit: record.stockUnit ?? null,
     visibility: derived.visibility,
+    priceVisibility: record.priceVisibility ?? null,
+    stockVisibility: record.stockVisibility ?? null,
     lifecycle: derived.lifecycle,
+    commercialMode: record.commercialMode ?? null,
     subcategories: record.subcategoryLinks.map(({ subcategory }) => ({
       id: Number(subcategory.id),
       categoryId: Number(subcategory.category.id),
@@ -466,13 +477,13 @@ export async function getProductPackFormOptionsService(
           kind: "SINGLE" | "VARIANT";
         } => product.kind === "SINGLE" || product.kind === "VARIANT",
       )
-    .map((product) => ({
-      id: Number(product.id),
-      sku: product.sku,
-      slug: product.slug,
-      name: product.name,
-      kind: product.kind,
-    })),
+      .map((product) => ({
+        id: Number(product.id),
+        sku: product.sku,
+        slug: product.slug,
+        name: product.name,
+        kind: product.kind,
+      })),
   };
 }
 
@@ -499,7 +510,7 @@ export async function getProductPackByIdService(session: StaffSession, packId: n
 export async function createProductPackService(
   session: StaffSession,
   input: ProductPackUpsertInput,
-) {
+): Promise<ProductPackDetailDto> {
   if (!canCreateProducts(session)) {
     throw new ProductPackServiceError("Accès refusé.", 403);
   }
@@ -512,7 +523,7 @@ export async function updateProductPackService(
   session: StaffSession,
   packId: number,
   input: ProductPackUpsertInput,
-) {
+): Promise<ProductPackDetailDto> {
   if (!canManageProducts(session)) {
     throw new ProductPackServiceError("Accès refusé.", 403);
   }
@@ -529,6 +540,114 @@ export async function deleteProductPackService(session: StaffSession, packId: nu
   await prisma.product.delete({
     where: {
       id: BigInt(packId),
+    },
+  });
+}
+
+export type PackBulkUpdateInput = {
+  sku?: string | null;
+  name?: string | null;
+  brand?: string | null;
+  basePriceAmount?: string | null;
+  vatRate?: number | null;
+  stock?: string | null;
+  stockUnit?: Prisma.ProductStockUnit | null;
+  lifecycle?: Prisma.ProductLifecycle | null;
+  commercialMode?: Prisma.ProductCommercialMode | null;
+  visibility?: boolean | null;
+  priceVisibility?: boolean | null;
+  stockVisibility?: boolean | null;
+};
+
+export async function updateProductPacksBulkService(
+  session: StaffSession,
+  packIds: number[],
+  input: PackBulkUpdateInput,
+) {
+  if (!canManageProducts(session)) {
+    throw new ProductPackServiceError("Accès refusé.", 403);
+  }
+
+  if (packIds.length === 0) {
+    throw new ProductPackServiceError("Aucun pack selectionné.", 400);
+  }
+
+  if ((input.sku || input.name) && packIds.length > 1) {
+    throw new ProductPackServiceError(
+      "SKU et nom ne peuvent être modifiés que pour un seul pack.",
+      400,
+    );
+  }
+
+  const data: Prisma.ProductUpdateManyMutationInput = {};
+
+  if (input.sku != null) {
+    data.sku = input.sku;
+  }
+  if (input.name != null) {
+    data.name = input.name;
+  }
+  if (input.brand !== undefined) {
+    data.brand = input.brand;
+  }
+  if (input.basePriceAmount !== undefined) {
+    data.basePriceAmount =
+      input.basePriceAmount == null ? null : new Prisma.Decimal(input.basePriceAmount);
+  }
+  if (input.vatRate !== undefined) {
+    data.vatRate = input.vatRate;
+  }
+  if (input.stock !== undefined) {
+    data.stock = input.stock == null ? null : new Prisma.Decimal(input.stock);
+  }
+  if (input.stockUnit !== undefined) {
+    data.stockUnit = input.stockUnit;
+  }
+  if (input.lifecycle !== undefined) {
+    data.lifecycle = input.lifecycle;
+  }
+  if (input.commercialMode !== undefined) {
+    data.commercialMode = input.commercialMode;
+  }
+  if (input.visibility !== undefined) {
+    data.visibility = input.visibility;
+  }
+  if (input.priceVisibility !== undefined) {
+    data.priceVisibility = input.priceVisibility;
+  }
+  if (input.stockVisibility !== undefined) {
+    data.stockVisibility = input.stockVisibility;
+  }
+
+  if (Object.keys(data).length === 0) {
+    throw new ProductPackServiceError("Aucune modification fournie.", 400);
+  }
+
+  await prisma.product.updateMany({
+    where: {
+      id: { in: packIds.map((id) => BigInt(id)) },
+      kind: "PACK",
+    },
+    data,
+  });
+}
+
+export async function deleteProductPacksBulkService(
+  session: StaffSession,
+  packIds: number[],
+) {
+  if (!canManageProducts(session)) {
+    throw new ProductPackServiceError("Accès refusé.", 403);
+  }
+
+  if (packIds.length === 0) {
+    throw new ProductPackServiceError("Aucun pack selectionné.", 400);
+  }
+
+  await prisma.product.deleteMany({
+    where: {
+      id: { in: packIds.map((id) => BigInt(id)) },
+      kind: "PACK",
     },
   });
 }

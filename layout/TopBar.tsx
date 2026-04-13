@@ -29,14 +29,6 @@ export default function TopBar() {
             <UserCircle size={12} />
             Espace Team
           </a>
-          <a href="#devis" className="flex items-center gap-1 text-cobam-quill-grey hover:text-cobam-water-blue transition-colors">
-            <FileText size={12} />
-            Devis
-          </a>
-          <a href="#panier" className="flex items-center gap-1 text-cobam-quill-grey hover:text-cobam-water-blue transition-colors">
-            <ShoppingCart size={12} />
-            Panier
-          </a>
         </div>
       </div>
     </div>

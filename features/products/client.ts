@@ -144,3 +144,32 @@ export async function deleteProductClient(id: number) {
     "Impossible de supprimer la famille produit.",
   );
 }
+
+export async function updateProductFamiliesBulkClient(input: {
+  ids: number[];
+  data: Record<string, unknown>;
+}) {
+  const res = await staffApiFetch("/api/staff/products/bulk", {
+    method: "POST",
+    auth: true,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  return unwrapResponse(res, "Impossible de mettre a jour les familles.");
+}
+
+export async function deleteProductFamiliesBulkClient(ids: number[]) {
+  const res = await staffApiFetch("/api/staff/products/bulk", {
+    method: "DELETE",
+    auth: true,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ ids }),
+  });
+
+  return unwrapResponse(res, "Impossible de supprimer les familles.");
+}

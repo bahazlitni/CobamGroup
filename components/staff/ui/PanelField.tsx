@@ -10,7 +10,7 @@ export default function PanelField({
   className
 }: {
   id: string;
-  label: string;
+  label: ReactNode;
   hint?: string;
   children: ReactNode;
   className?: string

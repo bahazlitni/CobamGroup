@@ -46,6 +46,8 @@ import { slugify } from "@/lib/slugify";
 import { ProductAttributeInputDto } from "@/features/products/types";
 import PanelAttributesInput from "@/components/staff/ui/PanelAttributesInput";
 import { getProductBrandSuggestions } from "@/lib/static_tables/brands";
+import formatEnumLabel from "@/lib/formatEnumLabel";
+import ProductEssentialEntries from "@/components/staff/products/ProductEssentialEntries";
 
 function createEmptyFormState(): SingleProductUpsertInput {
   return {
@@ -95,13 +97,6 @@ function mapProductToForm(product: SingleProductDetailDto): SingleProductUpsertI
     media: product.media,
     attributes: product.attributes,
   };
-}
-
-function formatEnumLabel(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 export default function SingleProductEditPage() {
@@ -273,178 +268,32 @@ function SingleProductEditPageContent() {
       />
 
       <Panel pretitle="Produit" title="Informations principales">
-        <div className="grid gap-6 md:grid-cols-4">
-          <PanelField id={`product-sku`} label="SKU">
-            <PanelInput
-              id={`product-sku`}
-              fullWidth
-              value={form.sku}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  sku: event.target.value,
-                }))
-              }
-            />
-          </PanelField>
-
-          <PanelField className="col-span-2" id={`product-name`} label="Nom">
-            <PanelInput
-              id={`product-name`}
-              fullWidth
-              value={form.name}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  slug: slugify(event.target.value),
-                  name: event.target.value,
-                }))
-              }
-            />
-          </PanelField>
-
-          <PanelField id="product-brand" label="Marque">
-            <PanelAutoCompleteInput
-              id="product-brand"
-              fullWidth
-              value={form.brand ?? ""}
-              suggestions={getProductBrandSuggestions(form.brand ?? "")}
-              onValueChange={(value) =>
-                setForm((current) => ({
-                  ...current,
-                  brand: value ?? null,
-                }))
-              }
-            />
-          </PanelField>
-          <PanelField id="product-price" label="Prix de base">
-            <PanelInput
-            fullWidth
-              id="product-price"
-              value={form.basePriceAmount ?? ""}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  basePriceAmount: event.target.value || null,
-                }))
-              }
-            />
-          </PanelField>
-          <PanelField id="product-vat" label="TVA">
-            <PanelInput
-            fullWidth
-              id="product-vat"
-              value={form.vatRate == null ? "" : String(form.vatRate)}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  vatRate: event.target.value ? Number(event.target.value) : null,
-                }))
-              }
-            />
-          </PanelField>
-
-          <PanelField id="product-stock" label="Stock">
-            <PanelInput
-            fullWidth
-              id="product-stock"
-              value={form.stock ?? ""}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  stock: event.target.value || null,
-                }))
-              }
-            />
-          </PanelField>
-          <PanelField id="product-stock-unit" label="Unité de stock">
-            <StaffSelect
-              id="product-stock-unit"
-              fullWidth
-              value={form.stockUnit ?? ""}
-              onValueChange={(value) =>
-                setForm((current) => ({
-                  ...current,
-                  stockUnit: value ? (value as ProductStockUnit) : null,
-                }))
-              }
-              options={Object.values(ProductStockUnit).map((value) => ({
-                value,
-                label: formatEnumLabel(value),
-              }))}
-            />
-          </PanelField>
-          <PanelField id="product-lifecycle" label="Cycle de vie">
-            <StaffSelect
-              id="product-lifecycle"
-              fullWidth
-              value={form.lifecycle}
-              onValueChange={(value) =>
-                setForm((current) => ({
-                  ...current,
-                  lifecycle: value as ProductLifecycle,
-                }))
-              }
-              options={Object.values(ProductLifecycle).map((value) => ({
-                value,
-                label: formatEnumLabel(value),
-              }))}
-            />
-          </PanelField>
-
-          <PanelField id="product-commercial" label="Mode commercial">
-            <StaffSelect
-              id="product-commercial"
-              fullWidth
-              value={form.commercialMode}
-              onValueChange={(value) =>
-                setForm((current) => ({
-                  ...current,
-                  commercialMode: value as ProductCommercialMode,
-                }))
-              }
-              options={Object.values(ProductCommercialMode).map((value) => ({
-                value,
-                label: formatEnumLabel(value),
-              }))}
-            />
-          </PanelField>
-          <PanelField id="product-visibility" label="Visible">
-            <StaffSelect
-              id="product-visibility"
-              fullWidth
-              value={String(form.visibility)}
-              onValueChange={(value) =>
-                setForm((current) => ({
-                  ...current,
-                  visibility: value === "true",
-                }))
-              }
-              options={[
-                { value: "true", label: "Oui" },
-                { value: "false", label: "Non" },
-              ]}
-            />
-          </PanelField>
-          <PanelField id="product-price-visibility" label="Prix visible">
-            <StaffSelect
-              id="product-price-visibility"
-              fullWidth
-              value={String(form.priceVisibility)}
-              onValueChange={(value) =>
-                setForm((current) => ({
-                  ...current,
-                  priceVisibility: value === "true",
-                }))
-              }
-              options={[
-                { value: "true", label: "Oui" },
-                { value: "false", label: "Non" },
-              ]}
-            />
-          </PanelField>
-        </div>
-
+        <ProductEssentialEntries 
+            sku={form.sku}
+            name={form.name}
+            brand={form.brand}
+            basePriceAmount={form.basePriceAmount}
+            vatRate={form.vatRate}
+            stock={form.stock}
+            stockUnit={form.stockUnit}
+            lifecycle={form.lifecycle}
+            commercialMode={form.commercialMode}
+            visibility={form.visibility}
+            priceVisibility={form.priceVisibility}
+            stockVisibility={form.stockVisibility}
+            onSkuChanged={(sku: string) => setForm((current) => ({...current, sku}))}
+            onNameChanged={(name: string) => setForm((current) => ({...current, slug: slugify(name), name}))}
+            onBrandChanged={(brand: null | string) => setForm((current) => ({...current, brand}))}
+            onBasePriceAmountChanged={(basePriceAmount: null | string) => setForm((current) => ({...current, basePriceAmount}))}
+            onVatRateChanged={(vatRate: null | number) => setForm((current) => ({...current, vatRate}))}
+            onStockChanged={(stock: null | string) => setForm((current) => ({...current, stock}))}
+            onStockUnitChanged={(stockUnit: null | ProductStockUnit) => setForm((current) => ({...current, stockUnit}))}
+            onLifecycleChanged={(lifecycle: null | ProductLifecycle) => setForm((current) => ({...current, lifecycle: lifecycle || "DRAFT"}))}
+            onCommercialModeChanged={(commercialMode: null | ProductCommercialMode) => setForm((current) => ({...current, commercialMode: commercialMode || "ON_REQUEST_ONLY"}))}
+            onVisibilityChanged={(visibility: null | boolean) => setForm((current) => ({...current, visibility: Boolean(visibility)}))}
+            onPriceVisibilityChanged={(priceVisibility: null | boolean) => setForm((current) => ({...current, priceVisibility: Boolean(priceVisibility)}))}
+            onStockVisibilityChanged={(stockVisibility: null | boolean) => setForm((current) => ({...current, stockVisibility: Boolean(stockVisibility)}))}
+          />
         <ProductSubcategoriesField
           value={form.subcategoryIds.map(String)}
           options={options.productSubcategories}

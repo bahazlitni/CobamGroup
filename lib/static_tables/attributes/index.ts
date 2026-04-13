@@ -76,7 +76,27 @@ export const PRODUCT_ATTRIBUTES: ProductAttribute[] = [
 	{
 		key: "NUMBER",
 		label: "Nombre",
-	}
+	},
+	{
+		key: "DIAMETER_MM",
+		label: "Diamètre",
+		unit: "mm"
+	},
+	{
+		key: "DIAMETER_CM",
+		label: "Diamètre",
+		unit: "cm"
+	},
+	{
+		key: "DIMENSION_CM",
+		label: "Dimension",
+		unit: "cm"
+	},
+	{
+		key: "VOLUME_ML",
+		label: "Volume",
+		unit: "mL"
+	},
 
 ] as const;
 
@@ -128,7 +148,7 @@ export function getProductAttributeUnit(key: string | null | undefined) {
 }
 
 export function getAttributeNameSuggestions(query: string): ProductAttributeSuggestion[] {
-	if(!query) return [];
+	if (!query) return [];
 	const lowerQuery = normalizeAttributeKey(query);
 	return PRODUCT_ATTRIBUTES
 		.filter((attr) => normalizeAttributeKey(attr.key).startsWith(lowerQuery))

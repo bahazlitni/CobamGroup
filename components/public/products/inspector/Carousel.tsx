@@ -13,8 +13,8 @@ type CarouselProps = {
 export default function Carousel({ media, title }: CarouselProps) {
     const [activeIndex, setActiveIndex] = useState(0);
     const activeMedia = media[activeIndex] ?? media[0] ?? null;
-    const containerCls = "relative aspect-[4/3] sm:aspect-square overflow-hidden rounded-[2rem] border border-cobam-quill-grey/30 bg-[#fafaf9] w-full"
-    const containerCls2 = "relative grid place-items-center text-center text-[#5e5e5e] w-full h-full"
+    const containerCls = "relative aspect-[4/3] sm:aspect-square overflow-hidden rounded-[2rem] border border-cobam-quill-grey/30 bg-[#fafaf9] w-full max-w-[600px]"
+    const containerCls2 = "relative grid place-items-center text-center text-[#5e5e5e] w-full h-full max-w-[600px]"
 
     if (!activeMedia) {
         return (
@@ -30,17 +30,17 @@ export default function Carousel({ media, title }: CarouselProps) {
         return (
             <div className={containerCls}>
                 <div className={containerCls2}>
-                    <MediaFrame media={activeMedia} />
+                    <MediaFrame highQuality media={activeMedia} />
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="space-y-3 max-w-[720px]">
+        <div className="space-y-3 max-w-[600px]">
             <div className={containerCls}>
                 <div className={containerCls2}>
-                    <MediaFrame media={activeMedia} />
+                    <MediaFrame highQuality media={activeMedia} />
                 </div>
 
                 <AnimatedUIButton
@@ -81,7 +81,7 @@ export default function Carousel({ media, title }: CarouselProps) {
                     className={cn(
                         "overflow-hidden rounded-2xl border bg-[#fafaf9] transition-all duration-300",
                         isActive
-                        ? "border-[#14202e] shadow-md ring-2 ring-[#14202e]/10 -translate-y-1"
+                        ? "border-2 border-cobam-water-blue shadow-md -translate-y-1"
                         : "border-cobam-quill-grey/30 hover:border-cobam-water-blue/50",
                     )}
                     >

@@ -23,11 +23,15 @@ const ALL_PRODUCTS_LIST_SELECT = {
   description: true,
   brand: true,
   basePriceAmount: true,
+  vatRate: true,
   stock: true,
   stockUnit: true,
   datasheetMediaId: true,
   visibility: true,
+  priceVisibility: true,
+  stockVisibility: true,
   lifecycle: true,
+  commercialMode: true,
   updatedAt: true,
   mediaLinks: {
     select: {
@@ -109,6 +113,16 @@ function mapAllProductsListItem(record: AllProductsListRecord): AllProductsListI
       ? record.packLinesAsPack.length > 0 &&
         record.packLinesAsPack.every((line) => line.product.visibility === true)
       : record.visibility;
+  const derivedPriceVisibility =
+    record.kind === "PACK"
+      ? record.packLinesAsPack.length > 0 &&
+        record.packLinesAsPack.every((line) => line.product.priceVisibility === true)
+      : record.priceVisibility;
+  const derivedStockVisibility =
+    record.kind === "PACK"
+      ? record.packLinesAsPack.length > 0 &&
+        record.packLinesAsPack.every((line) => line.product.stockVisibility === true)
+      : record.stockVisibility;
   const derivedPrice =
     record.kind === "PACK"
       ? (() => {
@@ -155,6 +169,7 @@ function mapAllProductsListItem(record: AllProductsListRecord): AllProductsListI
     description: record.description,
     brand: formatAllProductBrand(record),
     basePriceAmount: derivedPrice,
+    vatRate: record.vatRate ?? null,
     stock: derivedStock,
     stockUnit: record.kind === "PACK" ? "ITEM" : record.stockUnit,
     hasImage: record.mediaLinks.some((link) => link.media.kind === "IMAGE"),
@@ -165,8 +180,11 @@ function mapAllProductsListItem(record: AllProductsListRecord): AllProductsListI
       slug: subcategory.slug,
       categorySlug: subcategory.category.slug,
     })),
-    visibility: derivedVisibility,
+    visibility: derivedVisibility ?? null,
+    priceVisibility: derivedPriceVisibility ?? null,
+    stockVisibility: derivedStockVisibility ?? null,
     lifecycle: derivedLifecycle,
+    commercialMode: record.commercialMode ?? null,
     updatedAt: record.updatedAt.toISOString(),
     family: record.familyMembership?.family
       ? {
@@ -180,7 +198,7 @@ function mapAllProductsListItem(record: AllProductsListRecord): AllProductsListI
 
 export async function listAllProductsService(
   session: StaffSession,
-  query: { page: number; pageSize: number; q: string | null },
+  query: { page: number; pageSize: number; q: string | null; kind?: string | null },
 ): Promise<AllProductsListResult> {
   if (!canAccessProducts(session)) {
     throw new AllProductsServiceError("Accès refusé.", 403);
@@ -210,6 +228,10 @@ export async function listAllProductsService(
         ],
       }
     : {};
+
+  if (query.kind) {
+    where.kind = query.kind as Prisma.ProductWhereInput["kind"];
+  }
 
   const [items, total] = await Promise.all([
     prisma.product.findMany({
@@ -255,4 +277,130 @@ export async function updateAllProductLifecycleService(
   });
 
   return mapAllProductsListItem(updated);
+}
+
+export type BulkProductUpdateInput = {
+  sku?: string | null;
+  name?: string | null;
+  brand?: string | null;
+  basePriceAmount?: string | null;
+  vatRate?: number | null;
+  stock?: string | null;
+  stockUnit?: string | null;
+  lifecycle?: ProductLifecycle | null;
+  commercialMode?: Prisma.ProductCommercialMode | null;
+  visibility?: boolean | null;
+  priceVisibility?: boolean | null;
+  stockVisibility?: boolean | null;
+};
+
+export async function updateAllProductsBulkService(
+  session: StaffSession,
+  productIds: number[],
+  input: BulkProductUpdateInput,
+) {
+  if (!canAccessProducts(session)) {
+    throw new AllProductsServiceError("Acces refuse.", 403);
+  }
+
+  if (productIds.length === 0) {
+    throw new AllProductsServiceError("Aucun produit selectionne.", 400);
+  }
+
+  if ((input.sku || input.name) && productIds.length > 1) {
+    throw new AllProductsServiceError(
+      "SKU et nom ne peuvent etre modifies que pour un seul produit.",
+      400,
+    );
+  }
+
+  const data: Prisma.ProductUpdateManyMutationInput = {};
+
+  if (input.sku != null) {
+    data.sku = input.sku;
+  }
+  if (input.name != null) {
+    data.name = input.name;
+  }
+  if (input.brand !== undefined) {
+    data.brand = input.brand;
+  }
+  if (input.basePriceAmount !== undefined) {
+    data.basePriceAmount =
+      input.basePriceAmount == null ? null : new Prisma.Decimal(input.basePriceAmount);
+  }
+  if (input.vatRate !== undefined) {
+    data.vatRate = input.vatRate;
+  }
+  if (input.stock !== undefined) {
+    data.stock = input.stock == null ? null : new Prisma.Decimal(input.stock);
+  }
+  if (input.stockUnit !== undefined) {
+    data.stockUnit = input.stockUnit as Prisma.ProductStockUnit | null;
+  }
+  if (input.lifecycle !== undefined) {
+    data.lifecycle = input.lifecycle;
+  }
+  if (input.commercialMode !== undefined) {
+    data.commercialMode = input.commercialMode;
+  }
+  if (input.visibility !== undefined) {
+    data.visibility = input.visibility;
+  }
+  if (input.priceVisibility !== undefined) {
+    data.priceVisibility = input.priceVisibility;
+  }
+  if (input.stockVisibility !== undefined) {
+    data.stockVisibility = input.stockVisibility;
+  }
+
+  if (Object.keys(data).length === 0) {
+    throw new AllProductsServiceError("Aucune modification fournie.", 400);
+  }
+
+  await prisma.product.updateMany({
+    where: {
+      id: { in: productIds.map((id) => BigInt(id)) },
+    },
+    data,
+  });
+}
+
+export async function deleteAllProductsBulkService(
+  session: StaffSession,
+  productIds: number[],
+) {
+  if (!canAccessProducts(session)) {
+    throw new AllProductsServiceError("Acces refuse.", 403);
+  }
+
+  if (productIds.length === 0) {
+    throw new AllProductsServiceError("Aucun produit selectionne.", 400);
+  }
+
+  const products = await prisma.product.findMany({
+    where: {
+      id: { in: productIds.map((id) => BigInt(id)) },
+    },
+    select: {
+      id: true,
+      packLinesAsComponent: {
+        select: { packProductId: true },
+        take: 1,
+      },
+    },
+  });
+
+  if (products.some((product) => product.packLinesAsComponent.length > 0)) {
+    throw new AllProductsServiceError(
+      "Certains produits sont utilises dans des packs.",
+      400,
+    );
+  }
+
+  await prisma.product.deleteMany({
+    where: {
+      id: { in: productIds.map((id) => BigInt(id)) },
+    },
+  });
 }

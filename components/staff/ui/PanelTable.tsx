@@ -19,7 +19,7 @@ type TablePagination = {
 };
 
 export interface Props {
-  columns: string[];
+  columns: ReactNode[];
   children: ReactNode | ReactNode[];
   isLoading: boolean;
   isEmpty: boolean;
@@ -47,9 +47,9 @@ export default function PanelTable({
       <table className="min-w-full divide-y divide-slate-100 text-sm panel-table">
         <thead className="bg-slate-50/80">
           <tr>
-            {columns.map((column) => (
+            {columns.map((column, index) => (
               <th
-                key={column}
+                key={`column-${index}`}
                 className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400"
               >
                 {column}

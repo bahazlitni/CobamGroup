@@ -136,3 +136,32 @@ export async function deleteProductPackClient(id: number) {
 
   await unwrapResponse<Record<string, never>>(res, "Impossible de supprimer le pack.");
 }
+
+export async function updateProductPacksBulkClient(input: {
+  ids: number[];
+  data: Record<string, unknown>;
+}) {
+  const res = await staffApiFetch("/api/staff/product-packs/bulk", {
+    method: "POST",
+    auth: true,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  return unwrapResponse(res, "Impossible de mettre a jour les packs.");
+}
+
+export async function deleteProductPacksBulkClient(ids: number[]) {
+  const res = await staffApiFetch("/api/staff/product-packs/bulk", {
+    method: "DELETE",
+    auth: true,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ ids }),
+  });
+
+  return unwrapResponse(res, "Impossible de supprimer les packs.");
+}

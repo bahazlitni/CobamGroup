@@ -17,6 +17,7 @@ import { listPublicMegaMenuProductCategories } from "@/features/product-categori
 import { listPublicCollections } from "@/features/product-packs/public";
 import { Instagram, Facebook, Linkedin, ArrowRight, Twitter, Youtube } from "lucide-react";
 import { FaPinterest, FaTiktok } from "react-icons/fa";
+import ShowroomCard from "@/components/ui/custom/ShowroomCard";
 
 
 const stats = [
@@ -379,6 +380,35 @@ export default async function Home() {
                 <p className="text-xs uppercase tracking-widest mt-2 text-cobam-carbon-grey/60">Le catalogue s'articule, nos récits arrivent.</p>
               </div>
             )}
+          </div>
+        </div>
+      </section>
+
+      {/* SHOWROOMS SECTION */}
+      <section id="section-showrooms" className="relative bg-white py-24 sm:py-32 overflow-hidden">
+        <div className="container mx-auto px-6 lg:px-8 relative z-10">
+          <PremiumReveal blur>
+            <SectionHeader 
+              preTitle="Proximité"
+              title="Visitez Nos Showrooms"
+              description="Venez découvrir l'excellence de nos matières et le savoir-faire de nos experts dans l'un de nos quatre points de vente en Tunisie."
+              centered
+            />
+          </PremiumReveal>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 mt-20">
+            <PremiumReveal delay={0.1} blur direction="up">
+              <ShowroomCard location="houmt-souk" index={0} />
+            </PremiumReveal>
+            <PremiumReveal delay={0.2} blur direction="up">
+              <ShowroomCard location="centrale" index={1} />
+            </PremiumReveal>
+            <PremiumReveal delay={0.3} blur direction="up">
+              <ShowroomCard location="ceram" index={2} />
+            </PremiumReveal>
+            <PremiumReveal delay={0.4} blur direction="up">
+              <ShowroomCard location="midoun" index={3} />
+            </PremiumReveal>
           </div>
         </div>
       </section>

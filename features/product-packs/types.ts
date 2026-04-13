@@ -1,4 +1,4 @@
-import type { ProductCommercialMode, ProductLifecycle } from "@prisma/client";
+import type { ProductCommercialMode, ProductLifecycle, ProductStockUnit } from "@prisma/client";
 import type { ProductMediaDto, ProductSubcategoryOptionDto } from "@/features/products/types";
 
 export type ProductPackLineInputDto = {
@@ -39,9 +39,14 @@ export type ProductPackListItemDto = {
   lineCount: number;
   brands: string[];
   basePriceAmount: string | null;
+  vatRate: number | null;
   stock: string | null;
+  stockUnit: ProductStockUnit | null;
   visibility: boolean;
+  priceVisibility: boolean | null;
+  stockVisibility: boolean | null;
   lifecycle: ProductLifecycle;
+  commercialMode: ProductCommercialMode | null;
   subcategories: ProductSubcategoryOptionDto[];
   updatedAt: string;
 };

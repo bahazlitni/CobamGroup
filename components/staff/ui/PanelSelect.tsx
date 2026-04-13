@@ -37,7 +37,7 @@ export default function PanelSelect({
   id
 }: {
   id?: string
-  value: string;
+  value: null | string;
   onValueChange: (value: string) => void;
   options?: StaffSelectOption[];
   groupedOptions?: StaffSelectGroupedOption[];
@@ -53,7 +53,7 @@ export default function PanelSelect({
 
   return (
     <Select
-      value={selectValue}
+      value={selectValue ?? ""}
       onValueChange={(nextValue) =>
         onValueChange(nextValue === EMPTY_SELECT_VALUE ? "" : nextValue)
       }

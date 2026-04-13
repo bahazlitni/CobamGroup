@@ -49,6 +49,7 @@ import type {
 } from "@/features/products/types";
 import { getProductBrandSuggestions } from "@/lib/static_tables/brands";
 import { slugify } from "@/lib/slugify";
+import formatEnumLabel from "@/lib/formatEnumLabel";
 
 type VariantEditorState = ProductVariantInputDto & { formKey: string };
 type FamilyEditorState = Omit<ProductFamilyUpsertInput, "variants"> & {
@@ -121,12 +122,7 @@ function createEmptyCommonValuesState(): FamilyCommonValuesState {
   };
 }
 
-function formatEnumLabel(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
+
 
 function getDefaultVariant(form: FamilyEditorState) {
   return form.variants[form.defaultVariantIndex] ?? form.variants[0] ?? createEmptyVariant(0);

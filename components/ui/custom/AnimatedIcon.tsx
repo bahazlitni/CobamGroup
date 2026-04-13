@@ -90,6 +90,7 @@ export type AnimatedIconName =
   | "play"
   | "save"
   | "delete"
+  | "trash"
   | "modify"
   | "check"
   | "check-circle"
@@ -177,6 +178,7 @@ function renderIconNode(
     case "save":
       return <Save aria-hidden="true" className={className} />;
     case "delete":
+    case "trash":
       return <Trash2 aria-hidden="true" className={className} />;
     case "modify":
       return <PencilLine aria-hidden="true" className={className} />;
@@ -353,6 +355,7 @@ function getHoverVariants(icon: AnimatedIconName): Variants {
         },
       };
     case "delete":
+    case "trash":
     case "warning":
       return {
         rest: { x: 0, y: 0, rotate: 0, scale: 1 },
