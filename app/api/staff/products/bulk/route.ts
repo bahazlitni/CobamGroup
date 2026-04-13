@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { AuthError } from "@/lib/server/auth/errors";
-import { getStaffSession } from "@/lib/server/auth/staff-session";
+import { AuthError, requireStaffSession } from "@/features/auth/server/session";
 import { ProductServiceError } from "@/features/products/service";
 import {
   deleteProductFamiliesBulkService,
@@ -30,7 +29,7 @@ function parseIds(input: unknown): number[] {
 
 export async function POST(req: Request) {
   try {
-    const session = await getStaffSession();
+    const session = await requireStaffSession(req);
     const payload = (await req.json()) as Record<string, unknown>;
     const ids = parseIds(payload);
     const data = (payload as { data?: unknown }).data;
@@ -58,7 +57,7 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    const session = await getStaffSession();
+    const session = await requireStaffSession(req);
     const payload = (await req.json()) as Record<string, unknown>;
     const ids = parseIds(payload);
 

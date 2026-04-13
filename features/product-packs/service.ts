@@ -1,4 +1,9 @@
-import { Prisma } from "@prisma/client";
+import {
+  Prisma,
+  ProductCommercialMode,
+  ProductLifecycle,
+  ProductStockUnit,
+} from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
 import { prisma } from "@/lib/server/db/prisma";
 import { canAccessProducts, canCreateProducts, canManageProducts } from "@/features/products/access";
@@ -551,9 +556,9 @@ export type PackBulkUpdateInput = {
   basePriceAmount?: string | null;
   vatRate?: number | null;
   stock?: string | null;
-  stockUnit?: Prisma.ProductStockUnit | null;
-  lifecycle?: Prisma.ProductLifecycle | null;
-  commercialMode?: Prisma.ProductCommercialMode | null;
+  stockUnit?: ProductStockUnit | null;
+  lifecycle?: ProductLifecycle | null;
+  commercialMode?: ProductCommercialMode | null;
   visibility?: boolean | null;
   priceVisibility?: boolean | null;
   stockVisibility?: boolean | null;

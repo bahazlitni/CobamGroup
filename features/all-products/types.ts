@@ -1,4 +1,9 @@
-import type { ProductCommercialMode, ProductKind, ProductLifecycle } from "@prisma/client";
+import type {
+  ProductCommercialMode,
+  ProductKind,
+  ProductLifecycle,
+  ProductStockUnit,
+} from "@prisma/client";
 
 export type AllProductsListItemDto = {
   id: number;
@@ -11,7 +16,7 @@ export type AllProductsListItemDto = {
   basePriceAmount: string | null;
   vatRate: number | null;
   stock: string | null;
-  stockUnit: string | null;
+  stockUnit: ProductStockUnit | null;
   hasImage: boolean;
   hasDatasheet: boolean;
   subcategories: {

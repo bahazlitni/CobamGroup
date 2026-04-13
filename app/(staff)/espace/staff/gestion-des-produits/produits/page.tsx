@@ -159,7 +159,7 @@ export default function AllProductsPage() {
     basePriceAmount: null as string | null,
     vatRate: null as number | null,
     stock: null as string | null,
-    stockUnit: null as string | null,
+    stockUnit: null as AllProductsListItemDto["stockUnit"] | null,
     lifecycle: null as AllProductsListItemDto["lifecycle"] | null,
     commercialMode: null as AllProductsListItemDto["commercialMode"] | null,
     visibility: null as AllProductsListItemDto["visibility"] | null,

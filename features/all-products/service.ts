@@ -1,4 +1,9 @@
-import { Prisma, ProductLifecycle } from "@prisma/client";
+import {
+  Prisma,
+  ProductCommercialMode,
+  ProductLifecycle,
+  ProductStockUnit,
+} from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
 import { canAccessProducts, canToggleProductLifecycle } from "@/features/products/access";
 import { prisma } from "@/lib/server/db/prisma";
@@ -77,6 +82,8 @@ const ALL_PRODUCTS_LIST_SELECT = {
           brand: true,
           basePriceAmount: true,
           stock: true,
+          priceVisibility: true,
+          stockVisibility: true,
           lifecycle: true,
           visibility: true,
         },
@@ -288,7 +295,7 @@ export type BulkProductUpdateInput = {
   stock?: string | null;
   stockUnit?: string | null;
   lifecycle?: ProductLifecycle | null;
-  commercialMode?: Prisma.ProductCommercialMode | null;
+  commercialMode?: ProductCommercialMode | null;
   visibility?: boolean | null;
   priceVisibility?: boolean | null;
   stockVisibility?: boolean | null;
@@ -336,7 +343,7 @@ export async function updateAllProductsBulkService(
     data.stock = input.stock == null ? null : new Prisma.Decimal(input.stock);
   }
   if (input.stockUnit !== undefined) {
-    data.stockUnit = input.stockUnit as Prisma.ProductStockUnit | null;
+    data.stockUnit = input.stockUnit as ProductStockUnit | null;
   }
   if (input.lifecycle !== undefined) {
     data.lifecycle = input.lifecycle;
