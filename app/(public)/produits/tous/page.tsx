@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
+import StructuredData from "@/components/seo/StructuredData";
 import PageHeader from "@/components/ui/custom/PageHeader";
 import PublicProductsIndex from "@/components/public/products/public-products-index";
 import {
   listPublicProductsIndex,
   PUBLIC_PRODUCTS_INDEX_PAGE_SIZE,
 } from "@/features/products/public";
+import {
+  buildAllProductsMetadata,
+  buildCollectionPageStructuredData,
+} from "@/features/products/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +22,16 @@ function resolveSearchParam(value: string | string[] | undefined) {
     return value[0] ?? null;
   }
   return value ?? null;
+}
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<RouteSearchParams>;
+}): Promise<Metadata> {
+  const resolvedSearchParams = await searchParams;
+  const search = resolveSearchParam(resolvedSearchParams.search)?.trim() ?? null;
+  return buildAllProductsMetadata(search);
 }
 
 export default async function ProductsIndexPage({
@@ -34,10 +50,19 @@ export default async function ProductsIndexPage({
 
   return (
     <main className="min-h-screen bg-cobam-light-bg text-cobam-dark-blue">
+      <StructuredData
+        data={buildCollectionPageStructuredData({
+          name: search ? `Recherche produits : ${search}` : "Tous les produits",
+          path: "/produits/tous",
+          description: search
+            ? `Resultats de recherche pour ${search} dans le catalogue COBAM GROUP.`
+            : "Catalogue complet des produits COBAM GROUP.",
+        })}
+      />
       <PageHeader
         subtitle="Catalogue"
         title="Tous les produits"
-        description="Explorez toutes nos familles, packs et produits simples."
+        description="Explorez tous nos produits."
       />
 
       <section className="py-12 sm:py-16 lg:py-20">

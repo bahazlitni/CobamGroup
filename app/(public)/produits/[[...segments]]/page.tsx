@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import StructuredData from "@/components/seo/StructuredData";
 import PublicProductGrid from "@/components/public/products/public-product-grid";
 import PublicProductInspectorView from "@/components/public/products/public-product-inspector";
 import PublicSubcategoriesGrid from "@/components/public/products/public-subcategories-grid";
@@ -14,6 +16,13 @@ import {
   listPublicProductsBySubcategory,
   PUBLIC_PRODUCTS_PAGE_SIZE,
 } from "@/features/products/public";
+import {
+  buildBreadcrumbStructuredData,
+  buildCategoryMetadata,
+  buildCollectionPageStructuredData,
+  buildSimpleProductMetadata,
+  buildSimpleProductStructuredData,
+} from "@/features/products/seo";
 import StaticHighway from "@/components/ui/custom/StaticHighway";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +34,54 @@ type RouteParams = {
 type RouteSearchParams = {
   originPath?: string | string[];
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<RouteParams>;
+}): Promise<Metadata> {
+  const { segments = [] } = await params;
+
+  if (segments.length === 0) {
+    return {
+      title: "Produits | COBAM GROUP",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  if (segments.length === 2) {
+    const [categorySlug, subcategorySlug] = segments;
+    const subcategory = await findPublicProductSubcategoryBySlugs({
+      categorySlug,
+      subcategorySlug,
+    });
+
+    if (!subcategory) {
+      return {
+        title: "Sous-categorie introuvable | COBAM GROUP",
+        robots: { index: false, follow: false },
+      };
+    }
+
+    return buildCategoryMetadata(subcategory);
+  }
+
+  const [singleSegment] = segments;
+  const category = await findPublicRootProductCategoryBySlug(singleSegment);
+  if (category) {
+    return buildCategoryMetadata(category);
+  }
+
+  const product = await findPublicSingleProductBySlug(singleSegment);
+  if (product) {
+    return buildSimpleProductMetadata(product);
+  }
+
+  return {
+    title: "Produit introuvable | COBAM GROUP",
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function ProductsCatchAllPage({
   params,
@@ -72,8 +129,31 @@ export default async function ProductsCatchAllPage({
       notFound();
     }
 
+    const path = `/produits/${categorySlug}/${subcategorySlug}`;
+
     return (
       <main className="min-h-screen bg-cobam-light-bg text-cobam-dark-blue">
+        <StructuredData
+          data={[
+            buildBreadcrumbStructuredData({
+              breadcrumb: {
+                categoryName: subcategoryData.parentName ?? "Produits",
+                categorySlug,
+                subcategoryName: subcategoryData.name,
+                subcategorySlug,
+              },
+              currentLabel: subcategoryData.name,
+              currentPath: path,
+            }),
+            buildCollectionPageStructuredData({
+              name: subcategoryData.name,
+              path,
+              description:
+                subcategoryData.descriptionSEO ||
+                "Decouvrez cette sous-categorie de produits COBAM GROUP.",
+            }),
+          ]}
+        />
         <PageHeader
           subtitle={subcategoryData.parentName ?? "Produits"}
           title={subcategoryData.name}
@@ -104,9 +184,19 @@ export default async function ProductsCatchAllPage({
   if (categoryData) {
     const subcategories =
       await listPublicProductSubcategoryCardsByCategorySlug(singleSegment);
+    const path = `/produits/${singleSegment}`;
 
     return (
       <main className="min-h-screen bg-cobam-light-bg text-cobam-dark-blue">
+        <StructuredData
+          data={buildCollectionPageStructuredData({
+            name: categoryData.name,
+            path,
+            description:
+              categoryData.descriptionSEO ||
+              "Decouvrez cette categorie de produits COBAM GROUP.",
+          })}
+        />
         <PageHeader
           subtitle="Categorie"
           title={categoryData.name}
@@ -158,9 +248,20 @@ export default async function ProductsCatchAllPage({
     originPath,
     fallbackSubcategories: productData.subcategories,
   });
+  const path = `/produits/${productData.slug}`;
 
   return (
     <main className="relative min-h-screen bg-white text-cobam-dark-blue">
+      <StructuredData
+        data={[
+          buildBreadcrumbStructuredData({
+            breadcrumb,
+            currentLabel: productData.name,
+            currentPath: path,
+          }),
+          buildSimpleProductStructuredData(productData),
+        ]}
+      />
       <StaticHighway direction="left" />
       <section className="py-10 sm:py-12 lg:py-20 border-t border-cobam-quill-grey/30">
         <div className="mx-auto max-w-[92rem] px-4 sm:px-6 lg:px-8">

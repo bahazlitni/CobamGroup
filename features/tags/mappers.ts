@@ -1,7 +1,5 @@
-import type { Tag } from "@prisma/client";
 import type { TagDetailDto, TagListItemDto } from "./types";
-
-type TagRecord = Tag;
+import type { TagRecord } from "./repository";
 
 export function mapTagToListItemDto(tag: TagRecord): TagListItemDto {
   return {

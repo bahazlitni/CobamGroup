@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/server/db/prisma";
 import { slugify } from "@/lib/slugify";
 import { normalizeOwnedTagNames } from "./owned";
@@ -9,199 +8,133 @@ import type {
   TagUpdateInput,
 } from "./types";
 
-function buildTagWhere(query: TagListQuery): Prisma.TagWhereInput {
-  const where: Prisma.TagWhereInput = {};
+export type TagRecord = {
+  id: number;
+  name: string;
+  slug: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
-  if (query.q) {
-    where.OR = [
-      { name: { contains: query.q, mode: "insensitive" } },
-      { slug: { contains: query.q, mode: "insensitive" } },
-    ];
+async function collectDerivedTags(): Promise<TagRecord[]> {
+  const [articleTags, productTags] = await Promise.all([
+    prisma.article.findMany({
+      where: {
+        deletedAt: null,
+      },
+      select: {
+        tags: true,
+        updatedAt: true,
+      },
+    }),
+    prisma.product.findMany({
+      select: {
+        tags: true,
+        updatedAt: true,
+      },
+    }),
+  ]);
+
+  const tagMap = new Map<
+    string,
+    {
+      name: string;
+      slug: string;
+      updatedAt: Date;
+    }
+  >();
+
+  for (const source of [...articleTags, ...productTags]) {
+    for (const tagName of normalizeOwnedTagNames(source.tags.split(/\s+/))) {
+      const slug = slugify(tagName);
+      const existing = tagMap.get(slug);
+
+      if (!existing || source.updatedAt > existing.updatedAt) {
+        tagMap.set(slug, {
+          name: tagName,
+          slug,
+          updatedAt: source.updatedAt,
+        });
+      }
+    }
   }
 
-  return where;
+  return [...tagMap.values()]
+    .sort((left, right) => left.name.localeCompare(right.name, "fr-FR"))
+    .map((tag, index) => ({
+      id: index + 1,
+      name: tag.name,
+      slug: tag.slug,
+      createdAt: tag.updatedAt,
+      updatedAt: tag.updatedAt,
+    }));
 }
 
-const tagSelect = {
-  id: true,
-  name: true,
-  slug: true,
-  createdAt: true,
-  updatedAt: true,
-} satisfies Prisma.TagSelect;
+function filterTags(records: TagRecord[], query: TagListQuery | TagSuggestionQuery) {
+  const search = query.q?.trim().toLocaleLowerCase("fr-FR");
+
+  if (!search) {
+    return records;
+  }
+
+  return records.filter(
+    (tag) =>
+      tag.name.toLocaleLowerCase("fr-FR").includes(search) ||
+      tag.slug.toLocaleLowerCase("fr-FR").includes(search),
+  );
+}
 
 export async function listTags(query: TagListQuery) {
-  return prisma.tag.findMany({
-    where: buildTagWhere(query),
-    orderBy: [{ name: "asc" }, { createdAt: "desc" }],
-    skip: (query.page - 1) * query.pageSize,
-    take: query.pageSize,
-    select: tagSelect,
-  });
+  const tags = filterTags(await collectDerivedTags(), query);
+  return tags.slice((query.page - 1) * query.pageSize, query.page * query.pageSize);
 }
 
 export async function countTags(query: TagListQuery) {
-  return prisma.tag.count({
-    where: buildTagWhere(query),
-  });
+  return filterTags(await collectDerivedTags(), query).length;
 }
 
 export async function findTagById(tagId: number) {
-  return prisma.tag.findUnique({
-    where: { id: BigInt(tagId) },
-    select: tagSelect,
-  });
+  return (await collectDerivedTags()).find((tag) => tag.id === tagId) ?? null;
 }
 
 export async function findTagBySlug(slug: string) {
-  return prisma.tag.findUnique({
-    where: { slug },
-    select: { id: true },
-  });
+  return (await collectDerivedTags()).find((tag) => tag.slug === slug) ?? null;
 }
 
 export async function findTagByName(name: string) {
-  return prisma.tag.findUnique({
-    where: { name },
-    select: { id: true },
-  });
+  return (
+    (await collectDerivedTags()).find(
+      (tag) => tag.name.toLocaleLowerCase("fr-FR") === name.toLocaleLowerCase("fr-FR"),
+    ) ?? null
+  );
 }
 
-export async function createTag(input: TagCreateInput) {
-  return prisma.tag.create({
-    data: {
-      name: input.name,
-      slug: input.slug,
-    },
-    select: tagSelect,
-  });
+export async function createTag(_input: TagCreateInput) {
+  throw new Error("DIRECT_TAG_MANAGEMENT_DISABLED");
 }
 
-export async function updateTag(tagId: number, input: TagUpdateInput) {
-  return prisma.tag.update({
-    where: { id: BigInt(tagId) },
-    data: {
-      name: input.name,
-      slug: input.slug,
-    },
-    select: tagSelect,
-  });
+export async function updateTag(_tagId: number, _input: TagUpdateInput) {
+  throw new Error("DIRECT_TAG_MANAGEMENT_DISABLED");
 }
 
-export async function deleteTag(tagId: number) {
-  return prisma.tag.delete({
-    where: { id: BigInt(tagId) },
-  });
+export async function deleteTag(_tagId: number) {
+  throw new Error("DIRECT_TAG_MANAGEMENT_DISABLED");
 }
 
 export async function listTagSuggestions(query: TagSuggestionQuery) {
-  const normalizedQuery = query.q?.trim();
-
-  if (!normalizedQuery) {
-    return [];
-  }
-
-  return prisma.tag.findMany({
-    where: {
-      OR: [
-        { name: { contains: normalizedQuery, mode: "insensitive" } },
-        { slug: { contains: slugify(normalizedQuery), mode: "insensitive" } },
-      ],
-    },
-    orderBy: [{ name: "asc" }],
-    take: query.limit,
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-    },
-  });
+  const tags = filterTags(await collectDerivedTags(), query);
+  return tags.slice(0, query.limit);
 }
 
 export async function resolveOrCreateTagsByNames(tagNames: readonly string[]) {
-  const normalizedEntries = normalizeOwnedTagNames(tagNames).map((name) => ({
+  return normalizeOwnedTagNames(tagNames).map((name, index) => ({
+    id: index + 1,
     name,
     slug: slugify(name),
   }));
-
-  if (normalizedEntries.length === 0) {
-    return [];
-  }
-
-  const slugs = normalizedEntries.map((entry) => entry.slug);
-  const existingTags = await prisma.tag.findMany({
-    where: {
-      slug: {
-        in: slugs,
-      },
-    },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-    },
-  });
-
-  const existingBySlug = new Map(
-    existingTags.map((tag) => [tag.slug, tag]),
-  );
-
-  for (const entry of normalizedEntries) {
-    if (existingBySlug.has(entry.slug)) {
-      continue;
-    }
-
-    try {
-      const created = await prisma.tag.create({
-        data: {
-          name: entry.name,
-          slug: entry.slug,
-        },
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-        },
-      });
-
-      existingBySlug.set(created.slug, created);
-    } catch (error: unknown) {
-      const isKnownRequestError =
-        error instanceof Prisma.PrismaClientKnownRequestError;
-
-      if (!isKnownRequestError || error.code !== "P2002") {
-        throw error;
-      }
-
-      const concurrentTag = await prisma.tag.findUnique({
-        where: { slug: entry.slug },
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-        },
-      });
-
-      if (concurrentTag) {
-        existingBySlug.set(concurrentTag.slug, concurrentTag);
-      }
-    }
-  }
-
-  return normalizedEntries
-    .map((entry) => existingBySlug.get(entry.slug))
-    .filter((tag): tag is NonNullable<typeof tag> => Boolean(tag));
 }
 
-function toAuditJson(
-  value: unknown,
-): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
-  if (value === undefined) return undefined;
-  if (value === null) return Prisma.JsonNull;
-  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
-}
-
-export async function createTagAuditLog(data: {
+export async function createTagAuditLog(_data: {
   actorUserId: string;
   actionType: "CREATE" | "UPDATE" | "DELETE";
   entityId: string;
@@ -210,16 +143,5 @@ export async function createTagAuditLog(data: {
   beforeSnapshotJson?: unknown;
   afterSnapshotJson?: unknown;
 }) {
-  return prisma.auditLog.create({
-    data: {
-      actorUserId: data.actorUserId,
-      actionType: data.actionType,
-      entityType: "Tag",
-      entityId: data.entityId,
-      targetLabel: data.targetLabel,
-      summary: data.summary,
-      beforeSnapshotJson: toAuditJson(data.beforeSnapshotJson),
-      afterSnapshotJson: toAuditJson(data.afterSnapshotJson),
-    },
-  });
+  return null;
 }

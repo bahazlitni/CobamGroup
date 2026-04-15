@@ -42,10 +42,63 @@ function resolvePoolMax() {
   return process.env.NODE_ENV === "production" ? 1 : 10;
 }
 
+function resolveSslConfig() {
+  const allowSelfSigned = process.env.DATABASE_ALLOW_SELF_SIGNED_SSL === "true";
+  const caCertificate = process.env.DATABASE_SSL_CA_CERT?.replace(/\\n/g, "\n");
+
+  try {
+    const url = new URL(connectionString);
+    const sslmode = url.searchParams.get("sslmode")?.toLowerCase() ?? null;
+
+    if (caCertificate) {
+      return {
+        rejectUnauthorized: true,
+        ca: caCertificate,
+      };
+    }
+
+    if (sslmode === "no-verify" || allowSelfSigned) {
+      return {
+        rejectUnauthorized: false,
+      };
+    }
+
+    if (sslmode && sslmode !== "disable") {
+      return {
+        rejectUnauthorized: true,
+      };
+    }
+  } catch {
+    if (allowSelfSigned) {
+      return {
+        rejectUnauthorized: false,
+      };
+    }
+  }
+
+  return undefined;
+}
+
+function resolvePoolConnectionString() {
+  try {
+    const url = new URL(connectionString);
+    const sslmode = url.searchParams.get("sslmode")?.toLowerCase() ?? null;
+
+    if (sslmode === "no-verify" || process.env.DATABASE_ALLOW_SELF_SIGNED_SSL === "true") {
+      url.searchParams.delete("sslmode");
+      return url.toString();
+    }
+  } catch {
+    // Keep the original connection string if parsing fails.
+  }
+
+  return connectionString;
+}
+
 const pool =
   globalForPrisma.prismaPool ??
   new Pool({
-    connectionString,
+    connectionString: resolvePoolConnectionString(),
     max: resolvePoolMax(),
     idleTimeoutMillis:
       parsePositiveInteger(process.env.DATABASE_POOL_IDLE_TIMEOUT_MS) ?? 10_000,
@@ -53,6 +106,7 @@ const pool =
       parsePositiveInteger(process.env.DATABASE_POOL_CONNECTION_TIMEOUT_MS) ??
       10_000,
     keepAlive: true,
+    ssl: resolveSslConfig(),
   });
 
 globalForPrisma.prismaPool = pool;

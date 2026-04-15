@@ -18,6 +18,14 @@ import { listPublicCollections } from "@/features/product-packs/public";
 import { Instagram, Facebook, Linkedin, ArrowRight, Twitter, Youtube } from "lucide-react";
 import { FaPinterest, FaTiktok } from "react-icons/fa";
 import ShowroomCard from "@/components/ui/custom/ShowroomCard";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "COBAM GROUP | Materiaux, sanitaires et finitions premium en Tunisie",
+  description:
+    "Cobam Group propose des revetements, sanitaires, materiaux de construction et finitions premium pour les projets residentiels et professionnels en Tunisie.",
+};
+
 
 
 const stats = [

@@ -8,15 +8,15 @@ import "@fontsource/source-serif-4/400.css";
 import "@fontsource/source-serif-4/600.css";
 import "@fontsource/source-serif-4/700.css";
 import "./globals.css";
-import Footer from "@/layout/Footer";
-import NavBar from "@/layout/NavBar";
-import TopBar from "@/layout/TopBar";
 import { Toaster } from "sonner";
+import { getSiteUrl } from "@/lib/seo/site";
 
 export const metadata: Metadata = {
+  metadataBase: getSiteUrl(),
   title: "COBAM GROUP | Carrelage, Sanitaire, Robinetterie",
   description:
-    "Depuis 1994, COBAM GROUP est votre partenaire de confiance pour les matériaux de construction, carrelage, sanitaires et robinetterie en Tunisie.",
+    "Depuis 1994, COBAM GROUP est votre partenaire de confiance pour les materiaux de construction, carrelage, sanitaires et robinetterie en Tunisie.",
+  applicationName: "COBAM GROUP",
 };
 
 export default function RootLayout({
