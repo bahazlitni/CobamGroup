@@ -268,6 +268,22 @@ function buildMediaStorageKey(input: {
   return `media/${input.kind.toLowerCase()}/${year}/${month}/${randomUUID()}-${baseName || "file"}.${extension}`;
 }
 
+async function convertImageToWebp(buffer: Buffer) {
+  try {
+    const image = sharp(buffer, { failOn: "none" }).rotate();
+    const webpBuffer = await image.webp({ quality: 90 }).toBuffer();
+
+    return {
+      buffer: Buffer.from(webpBuffer),
+      mimeType: "image/webp",
+      extension: "webp",
+    };
+  } catch (error) {
+    console.error("MEDIA_IMAGE_WEBP_ERROR:", error);
+    throw new MediaServiceError("Impossible de convertir l'image en WebP.", 400);
+  }
+}
+
 async function analyzeImageBuffer(buffer: Buffer, mimeType: string | null) {
   try {
     const image = sharp(buffer, { failOn: "none" }).rotate();
@@ -511,17 +527,30 @@ export async function uploadMediaService(session: StaffSession, input: MediaUplo
     mimeType: input.file.type || null,
     extension,
   });
+  let buffer = Buffer.from(await input.file.arrayBuffer());
+  let mimeType = input.file.type || null;
+  let finalExtension = extension;
+  let finalFilename = originalFilename;
+
+  if (kind === MEDIA_KIND.IMAGE) {
+    const converted = await convertImageToWebp(buffer);
+    buffer = converted.buffer;
+    mimeType = converted.mimeType;
+    finalExtension = converted.extension;
+    const baseName = path.basename(originalFilename, path.extname(originalFilename));
+    finalFilename = `${baseName || "image"}.webp`;
+  }
+
   const storagePath = buildMediaStorageKey({
     kind,
-    originalFilename,
-    extension,
+    originalFilename: finalFilename,
+    extension: finalExtension,
   });
-  const buffer = Buffer.from(await input.file.arrayBuffer());
   const sha256Hash = createHash("sha256").update(buffer).digest("hex");
   const storage = getMediaStorageDriver();
   const imageArtifacts =
     kind === MEDIA_KIND.IMAGE
-      ? await analyzeImageBuffer(buffer, input.file.type || null)
+      ? await analyzeImageBuffer(buffer, mimeType)
       : null;
   const thumbnailStoragePath =
     kind === MEDIA_KIND.IMAGE
@@ -534,7 +563,7 @@ export async function uploadMediaService(session: StaffSession, input: MediaUplo
     await storage.putObject({
       key: storagePath,
       body: new Uint8Array(buffer),
-      contentType: input.file.type || null,
+      contentType: mimeType,
     });
     originalStored = true;
 
@@ -564,9 +593,9 @@ export async function uploadMediaService(session: StaffSession, input: MediaUplo
       kind,
       visibility: input.visibility,
       storagePath,
-      originalFilename,
-      mimeType: input.file.type || null,
-      extension,
+      originalFilename: finalFilename,
+      mimeType,
+      extension: finalExtension,
       title: input.title,
       altText: input.altText,
       description: input.description,

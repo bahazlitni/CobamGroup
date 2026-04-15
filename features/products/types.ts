@@ -201,8 +201,7 @@ export type PublicProductFinishReference = {
   key: string;
   name: string;
   colorHex: string | null;
-  mediaUrl: string | null;
-  mediaThumbnailUrl: string | null;
+  imageUrl: string | null;
 };
 
 export type PublicProductInspectorAttribute = {

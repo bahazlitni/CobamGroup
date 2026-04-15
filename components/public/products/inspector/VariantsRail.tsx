@@ -19,7 +19,7 @@ type VariantRailCardProps = {
   variant: PublicProductInspectorVariant;
   coverMedia: PublicProductInspectorMedia | null;
   isActive: boolean;
-  onClick: () => void;
+  onClick: (e: React.MouseEvent) => void;
 };
 
 function getRailScrollState(element: HTMLDivElement): RailScrollState {
@@ -53,7 +53,7 @@ function VariantRailCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "w-72 snap-start overflow-hidden rounded-[1.4rem] border bg-white text-left transition",
+        "w-[85vw] max-w-[18rem] sm:w-72 shrink-0 min-w-[15rem] snap-start overflow-hidden rounded-[1.4rem] border bg-white text-left transition",
         isActive
           ? "border-cobam-water-blue ring-2 ring-cobam-water-blue/25"
           : "border-slate-200 hover:border-slate-300",
@@ -90,6 +90,48 @@ export default function VariantRail({
         canScrollRight: false,
     });
     const variantRailRef = useRef<HTMLDivElement>(null);
+    const isDragging = useRef(false);
+    const hasDragged = useRef(false);
+    const startX = useRef(0);
+    const scrollLeft = useRef(0);
+
+    const onMouseDown = (e: React.MouseEvent) => {
+        isDragging.current = true;
+        hasDragged.current = false;
+        startX.current = e.pageX - variantRailRef.current!.offsetLeft;
+        scrollLeft.current = variantRailRef.current!.scrollLeft;
+        variantRailRef.current!.style.scrollBehavior = 'auto';
+        variantRailRef.current!.style.cursor = 'grabbing';
+    };
+
+    const onMouseLeave = () => {
+        isDragging.current = false;
+        if (variantRailRef.current) {
+            variantRailRef.current!.style.scrollBehavior = 'smooth';
+            variantRailRef.current!.style.cursor = '';
+        }
+    };
+
+    const onMouseUp = () => {
+        isDragging.current = false;
+        if (variantRailRef.current) {
+            variantRailRef.current!.style.scrollBehavior = 'smooth';
+            variantRailRef.current!.style.cursor = '';
+        }
+    };
+
+    const onMouseMove = (e: React.MouseEvent) => {
+        if (!isDragging.current) return;
+        e.preventDefault();
+        const x = e.pageX - variantRailRef.current!.offsetLeft;
+        const walk = (x - startX.current) * 2; 
+        if (Math.abs(walk) > 5) {
+           hasDragged.current = true;
+        }
+        if (variantRailRef.current) {
+            variantRailRef.current!.scrollLeft = scrollLeft.current - walk;
+        }
+    };
 
     useEffect(() => {
         const railElement = variantRailRef.current;
@@ -193,53 +235,63 @@ export default function VariantRail({
             </h2>
         </div>
 
-        {variantRailState.showButtons ? (
-            <div className="flex items-center gap-2">
-            <AnimatedUIButton
-                variant="light"
-                size="sm"
-                onClick={() => scrollVariantRail("left")}
-                disabled={!variantRailState.canScrollLeft}
-                className="h-10 w-10 min-h-0 rounded-full px-0 py-0"
-                textClassName="inline-flex items-center justify-center"
-                aria-label="Variantes precedentes"
-                icon="chevron-left"
-            />
-            <AnimatedUIButton
-                variant="light"
-                size="sm"
-                onClick={() => scrollVariantRail("right")}
-                disabled={!variantRailState.canScrollRight}
-                className="h-10 w-10 min-h-0 rounded-full px-0 py-0"
-                textClassName="inline-flex items-center justify-center"
-                aria-label="Variantes suivantes"
-                icon="chevron-right"
-            />
-            </div>
-        ) : null}
+        
         </div>
 
-        <div className="relative">
-          <div
-            ref={variantRailRef}
-            className={cn(
-              "flex gap-4 p-2 pr-1 scroll-smooth snap-x snap-mandatory",
-              "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
-              variantRailState.showButtons ? "overflow-x-hidden lg:px-1" : "overflow-x-auto",
-            )}
-          >
-            {variants.map((variant) => (
-              <VariantRailCard
-                key={variant.id}
-                variant={variant}
-                coverMedia={coverMedia}
-                isActive={selectedVariantId !== null && variant.id === selectedVariantId}
-                onClick={() => {
-                    selectVariant(variant.id);
-                }}
-              />
-            ))}
-          </div>
+                <div className="relative group/carousel -mx-2 px-2">
+            {variantRailState.showButtons && variantRailState.canScrollLeft ? (
+                <AnimatedUIButton
+                    variant="light"
+                    size="sm"
+                    onClick={() => { const el = variantRailRef.current; el && el.scrollBy({ left: -300, behavior: 'smooth' }); }}
+                    className="absolute left-0 top-1/2 z-10 h-10 w-10 min-h-0 -translate-y-1/2 rounded-full shadow-md opacity-0 transition-opacity duration-300 group-hover/carousel:opacity-100 hidden sm:inline-flex border-slate-200 bg-white/95 backdrop-blur px-0 py-0"
+                    textClassName="inline-flex items-center justify-center p-0"
+                    aria-label="Variantes precedentes"
+                    icon="chevron-left"
+                />
+            ) : null}
+
+            <div
+                ref={variantRailRef}
+                className={cn(
+                    "flex gap-4 p-2 pr-1 scroll-smooth snap-x snap-mandatory overflow-x-auto select-none",
+                    "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pb-4 [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar]:h-0"
+                )}
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                onMouseDown={onMouseDown}
+                onMouseLeave={onMouseLeave}
+                onMouseUp={onMouseUp}
+                onMouseMove={onMouseMove}
+            >
+                {variants.map((v) => (
+                    <VariantRailCard
+                        key={v.id}
+                        variant={v}
+                        coverMedia={coverMedia}
+                        isActive={selectedVariantId !== null && v.id === selectedVariantId}
+                        onClick={(e) => {
+                            if (hasDragged.current) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                return;
+                            }
+                            selectVariant(v.id);
+                        }}
+                    />
+                ))}
+            </div>
+
+            {variantRailState.showButtons && variantRailState.canScrollRight ? (
+                <AnimatedUIButton
+                    variant="light"
+                    size="sm"
+                    onClick={() => { const el = variantRailRef.current; el && el.scrollBy({ left: 300, behavior: 'smooth' }); }}
+                    className="absolute right-0 top-1/2 z-10 h-10 w-10 min-h-0 -translate-y-1/2 rounded-full shadow-md opacity-0 transition-opacity duration-300 group-hover/carousel:opacity-100 hidden sm:inline-flex border-slate-200 bg-white/95 backdrop-blur px-0 py-0"
+                    textClassName="inline-flex items-center justify-center p-0"
+                    aria-label="Variantes suivantes"
+                    icon="chevron-right"
+                />
+            ) : null}
         </div>
     </section>
 }

@@ -64,6 +64,11 @@ export const PRODUCT_ATTRIBUTES: ProductAttribute[] = [
 		unit: "mm"
 	},
 	{
+		key: "LENGTH_M",
+		label: "Longueur",
+		unit: "m"
+	},
+	{
 		key: "WEIGHT_KG",
 		label: "Poids",
 		unit: "Kg"

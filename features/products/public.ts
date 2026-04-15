@@ -12,6 +12,7 @@ import { formatProductBrandValue } from "@/lib/static_tables/brands";
 import { COLORS } from "@/lib/static_tables/colors";
 import {
   resolveFinish,
+  resolveFinishURL,
 } from "@/lib/static_tables/finishes";
 import type {
   PublicProductColorReference,
@@ -610,17 +611,17 @@ function buildFinishReferencesFromAttributes(
         continue;
       }
 
-      const key = normalizeComparableValue(attribute.value);
+      const resolvedFinish = resolveFinish(attribute.value);
+      const key = normalizeComparableValue(resolvedFinish?.key ?? attribute.value);
       if (seen.has(key)) {
         continue;
       }
 
       seen.set(key, {
-        key,
-        name: attribute.value,
-        colorHex: null,
-        mediaUrl: null,
-        mediaThumbnailUrl: null,
+        key: resolvedFinish?.key ?? key,
+        name: resolvedFinish?.label ?? attribute.value,
+        colorHex: resolvedFinish?.color ?? null,
+        imageUrl: resolvedFinish ? resolveFinishURL(resolvedFinish) : null,
       });
     }
   }

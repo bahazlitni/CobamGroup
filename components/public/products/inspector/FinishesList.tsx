@@ -1,13 +1,9 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PublicProductFinishReference } from "@/features/products/types";
+import { Finish } from "@/lib/static_tables/finishes";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-
-type DerivedFinishOption = {
-  key: string;
-  label: string;
-  reference: PublicProductFinishReference | null;
-};
+import { DerivedFinishOption } from "./utils";
 
 function FinishBlob({
   option,
@@ -18,7 +14,8 @@ function FinishBlob({
   active: boolean;
   onClick: () => void;
 }) {
-  const hasFailure = option.reference == null;
+  const hasFailure = option.hasFailure;
+  const finishImageUrl = option.imageUrl ?? null;
 
   return (
     <Tooltip>
@@ -29,17 +26,17 @@ function FinishBlob({
           className="rounded-full"
           aria-label={option.label}
         >
-          {option.reference?.mediaThumbnailUrl || option.reference?.mediaUrl ? (
+          {finishImageUrl ? (
             <span
               className={cn(
                 "relative block h-12 w-12 overflow-hidden rounded-full border bg-white",
-                active ? "ring-2 ring-cobam-water-blue/25" : "",
+                active ? "ring-2 ring-cobam-water-blue/50" : "",
                 hasFailure ? "border-2 border-red-500" : "border-slate-200",
               )}
             >
               <Image
-                src={option.reference.mediaThumbnailUrl ?? option.reference.mediaUrl ?? ""}
-                alt={option.reference.name}
+                src={finishImageUrl}
+                alt={option.label}
                 fill
                 sizes="48px"
                 className="object-cover"
@@ -50,15 +47,11 @@ function FinishBlob({
               className={cn(
                 "block h-12 w-12 rounded-full border",
                 active ? "ring-2 ring-cobam-water-blue/25" : "",
-                hasFailure ? "border-2 border-red-500 bg-black" : "border-slate-200",
+                hasFailure ? "border-2 border-red-500" : "border-slate-200",
               )}
-              style={
-                hasFailure
-                  ? undefined
-                  : {
-                      backgroundColor: option.reference?.colorHex ?? "#0f172a",
-                    }
-              }
+              style={{
+                backgroundColor: option.colorHex ?? "#0f172a",
+              }}
             />
           )}
         </button>
@@ -76,15 +69,15 @@ interface FinishesListProps {
 
 export default function FinishesList({onSelect, activeKey, finishes}: FinishesListProps){
     if(!finishes.length) return null;
-    const label = `Couleur${finishes.length === 1 ? "" : "s"}`
+    const label = `Finition${finishes.length === 1 ? "" : "s"}`
     return <div className="space-y-3">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">{label}</p>
         <div className="flex flex-wrap gap-4">
         {finishes.map((finish: DerivedFinishOption) => (
             <FinishBlob
-                option={finish}
-                active={activeKey !== undefined && activeKey === finish.key}
-                onClick={() => onSelect?.(finish.key)}
+              option={finish}
+              active={activeKey !== undefined && activeKey === finish.key}
+              onClick={() => onSelect?.(finish.key)}
             />
         ))}
         </div>

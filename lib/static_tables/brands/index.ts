@@ -279,6 +279,14 @@ const BRAND_RECORDS: BrandRecord[] = [
     description: "Vitrafix est une marque spécialisée dans les produits de pose pour carrelage (colles, joints, étanchéité). Elle propose des solutions fiables et performantes adaptées aux travaux en intérieur comme en extérieur.",
     kind: ProductBrandKind.NONE,
   },
+  {
+    value: "TURKQUA",
+    label: "Turkqua",
+    logoUrl: "/images/brands/turkqua.png",
+    isProductBrand: true,
+    description: "Turkqua propose des produits écologiques de haute technologie leader dans le domaine de la construction moderne pour les produits de mortier sec, d'additif, d'primaire, d'étanchéité, d'enduit, de peinture et d'isolation thermique tout en respectant la nature.",
+    kind: ProductBrandKind.NONE,
+  },
 ];
 
 export const BRANDS: Brand[] = BRAND_RECORDS.map((brand) => ({

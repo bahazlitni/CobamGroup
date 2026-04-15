@@ -11,7 +11,22 @@ import BreadCrumb from "./inspector/BreadCrumb";
 import Title from "./inspector/Title";
 import Property from "./inspector/Property";
 import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
-import { buildColorOptions, buildFinishOptions, buildNormalAttributeGroups, findVariantByNormalAttribute, findVariantBySpecialValues, getVariantAttributeValue, getVariantMedia, getVariantSpecialValue, normalizeComparableValue, normalizeInspectorProduct, PublicProductInspectorViewProps, resolveInitialVariantId, SelectorPillProps } from "./inspector/utils";
+import {
+  buildColorOptions,
+  buildFinishOptions,
+  buildNormalAttributeGroups,
+  findVariantByNormalAttribute,
+  findVariantBySpecialValues,
+  getVariantAttributeValue,
+  getVariantFinishKey,
+  getVariantMedia,
+  getVariantSpecialValue,
+  normalizeComparableValue,
+  normalizeInspectorProduct,
+  PublicProductInspectorViewProps,
+  resolveInitialVariantId,
+  SelectorPillProps,
+} from "./inspector/utils";
 import RichDescription from "./inspector/RichDescription";
 import SubcategoriesList from "./inspector/SubcategoriesList";
 import PriceBanner from "./inspector/PriceBanner";
@@ -59,11 +74,15 @@ export default function PublicProductInspectorView({
   const selectedMedia = getVariantMedia(selectedVariant, normalizedProduct.coverMedia);
   const colorOptions = buildColorOptions(normalizedProduct);
   const finishOptions = buildFinishOptions(normalizedProduct);
+
   const normalAttributeGroups = buildNormalAttributeGroups(normalizedProduct);
   const normalAttributes =
     selectedVariant?.attributes.filter((attribute) => attribute.specialType == null) ?? [];
   const selectedColor = getVariantSpecialValue(selectedVariant, "COLOR");
-  const selectedFinish = getVariantSpecialValue(selectedVariant, "FINISH");
+  const selectedFinishKey = getVariantFinishKey(
+    selectedVariant,
+    normalizedProduct.finishReferences,
+  );
   const hasSpecialAttributes = colorOptions.length > 0 || finishOptions.length > 0;
   const shouldShowVariantRail = normalizedProduct.variants.length > 1;
 
@@ -77,11 +96,11 @@ export default function PublicProductInspectorView({
 
   const handleColorSelect = (colorKey: string) => {
     const targetVariant =
-      findVariantBySpecialValues(normalizedProduct.variants, {
+      findVariantBySpecialValues(normalizedProduct.variants, normalizedProduct.finishReferences, {
         colorKey,
-        finishKey: selectedFinish?.key ?? null,
+        finishKey: selectedFinishKey,
       }) ??
-      findVariantBySpecialValues(normalizedProduct.variants, {
+      findVariantBySpecialValues(normalizedProduct.variants, normalizedProduct.finishReferences, {
         colorKey,
       });
 
@@ -92,11 +111,11 @@ export default function PublicProductInspectorView({
 
   const handleFinishSelect = (finishKey: string) => {
     const targetVariant =
-      findVariantBySpecialValues(normalizedProduct.variants, {
+      findVariantBySpecialValues(normalizedProduct.variants, normalizedProduct.finishReferences, {
         colorKey: selectedColor?.key ?? null,
         finishKey,
       }) ??
-      findVariantBySpecialValues(normalizedProduct.variants, {
+      findVariantBySpecialValues(normalizedProduct.variants, normalizedProduct.finishReferences, {
         finishKey,
       });
 
@@ -158,7 +177,7 @@ export default function PublicProductInspectorView({
               {hasSpecialAttributes ? (
                 <div className="space-y-5">
                   <ColorsList activeKey={selectedColor?.key} colors={colorOptions} onSelect={handleColorSelect} />
-                  <FinishesList activeKey={selectedFinish?.key} finishes={finishOptions} onSelect={handleFinishSelect} />
+                  <FinishesList activeKey={selectedFinishKey ?? undefined} finishes={finishOptions} onSelect={handleFinishSelect} />
                 </div>
               ) : null}
 

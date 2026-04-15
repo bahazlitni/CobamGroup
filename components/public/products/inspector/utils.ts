@@ -1,5 +1,15 @@
 import { PublicProductBreadcrumb } from "@/features/products/public-breadcrumb";
-import { PublicProductColorReference, PublicProductFinishReference, PublicProductInspector, PublicProductInspectorAttribute, PublicProductInspectorMedia, PublicProductInspectorVariant, PublicProductSubcategoryLink, PublicSimpleProductInspector } from "@/features/products/types";
+import {
+  PublicProductColorReference,
+  PublicProductFinishReference,
+  PublicProductInspector,
+  PublicProductInspectorAttribute,
+  PublicProductInspectorMedia,
+  PublicProductInspectorVariant,
+  PublicProductSubcategoryLink,
+  PublicSimpleProductInspector,
+} from "@/features/products/types";
+import { resolveFinish } from "@/lib/static_tables/finishes";
 
 export type DerivedColorOption = {
   key: string;
@@ -10,6 +20,9 @@ export type DerivedColorOption = {
 export type DerivedFinishOption = {
   key: string;
   label: string;
+  colorHex: string | null;
+  imageUrl: string | null;
+  hasFailure: boolean;
   reference: PublicProductFinishReference | null;
 };
 
@@ -63,8 +76,17 @@ export type RailScrollState = {
   canScrollRight: boolean;
 };
 
+function normalizeLooseValue(value: string | null | undefined) {
+  return (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
 export function normalizeComparableValue(value: string | null | undefined) {
-  return value ?? "";
+  return normalizeLooseValue(value);
 }
 
 export function normalizeInspectorProduct(
@@ -164,23 +186,64 @@ export function buildColorOptions(product: UnifiedInspectorProduct) {
   return [...options.values()];
 }
 
-export function buildFinishOptions(product: UnifiedInspectorProduct) {
-  const references = new Map(
-    product.finishReferences.map((reference) => [reference.key, reference]),
+function getVariantFinishReference(
+  variant: PublicProductInspectorVariant | null,
+  finishReferences: PublicProductFinishReference[],
+) {
+  if (!variant) {
+    return null;
+  }
+
+  const attribute = variant.attributes.find((entry) => entry.specialType === "FINISH");
+  if (!attribute) {
+    return null;
+  }
+
+  const resolved = resolveFinish(attribute.value);
+  const resolvedKey = resolved?.key ?? attribute.value;
+  const normalizedKey = normalizeLooseValue(resolvedKey);
+
+  return (
+    finishReferences.find(
+      (reference) => normalizeLooseValue(reference.key) === normalizedKey,
+    ) ?? {
+      key: resolvedKey,
+      name: resolved?.label ?? attribute.value,
+      colorHex: resolved?.color ?? null,
+      imageUrl: null,
+    }
   );
+}
+
+export function getVariantFinishKey(
+  variant: PublicProductInspectorVariant | null,
+  finishReferences: PublicProductFinishReference[],
+) {
+  const reference = getVariantFinishReference(variant, finishReferences);
+  return reference ? normalizeLooseValue(reference.key) : null;
+}
+
+export function buildFinishOptions(product: UnifiedInspectorProduct) {
   const options = new Map<string, DerivedFinishOption>();
 
   for (const variant of product.variants) {
-    const value = getVariantSpecialValue(variant, "FINISH");
-
-    if (!value || options.has(value.key)) {
+    const reference = getVariantFinishReference(variant, product.finishReferences);
+    if (!reference) {
       continue;
     }
 
-    options.set(value.key, {
-      key: value.key,
-      label: value.label,
-      reference: references.get(value.key) ?? null,
+    const normalizedKey = normalizeLooseValue(reference.key);
+    if (options.has(normalizedKey)) {
+      continue;
+    }
+
+    options.set(normalizedKey, {
+      key: normalizedKey,
+      label: reference.name,
+      colorHex: reference.colorHex,
+      imageUrl: reference.imageUrl,
+      hasFailure: !reference.imageUrl,
+      reference,
     });
   }
 
@@ -189,9 +252,8 @@ export function buildFinishOptions(product: UnifiedInspectorProduct) {
 
 export function getVariantSpecialValue(
   variant: PublicProductInspectorVariant | null,
-  kind: SpecialAttributeKind,
-): VariantSpecialValue
- | null {
+  kind: Exclude<SpecialAttributeKind, "FINISH">,
+): VariantSpecialValue | null {
   if (!variant) {
     return null;
   }
@@ -252,6 +314,7 @@ export function buildNormalAttributeGroups(product: UnifiedInspectorProduct) {
 
 export function findVariantBySpecialValues(
   variants: PublicProductInspectorVariant[],
+  finishReferences: PublicProductFinishReference[],
   filters: {
     colorKey?: string | null;
     finishKey?: string | null;
@@ -260,13 +323,19 @@ export function findVariantBySpecialValues(
   return (
     variants.find((variant) => {
       const colorValue = getVariantSpecialValue(variant, "COLOR");
-      const finishValue = getVariantSpecialValue(variant, "FINISH");
+      const finishKey = getVariantFinishKey(variant, finishReferences);
 
-      if (filters.colorKey && colorValue?.key !== filters.colorKey) {
+      if (
+        filters.colorKey &&
+        colorValue?.key !== normalizeLooseValue(filters.colorKey)
+      ) {
         return false;
       }
 
-      if (filters.finishKey && finishValue?.key !== filters.finishKey) {
+      if (
+        filters.finishKey &&
+        finishKey !== normalizeLooseValue(filters.finishKey)
+      ) {
         return false;
       }
 
@@ -294,30 +363,34 @@ export function buildSpecialOptions(input: {
   colorReferences: PublicProductColorReference[];
   finishReferences: PublicProductFinishReference[];
 }) {
-    const colors = input.attributes
-        .filter((attribute) => attribute.specialType === "COLOR")
-        .map((attribute) => {
-        const key = normalizeComparableValue(attribute.value);
-        return {
-            key,
-            label: attribute.value,
-            reference: input.colorReferences.find((reference) => reference.key === key) ?? null,
-        };
-        });
+  const colors = input.attributes
+    .filter((attribute) => attribute.specialType === "COLOR")
+    .map((attribute) => {
+      const key = normalizeComparableValue(attribute.value);
+      return {
+        key,
+        label: attribute.value,
+        reference: input.colorReferences.find((reference) => reference.key === key) ?? null,
+      };
+    });
 
-    const finishes = input.attributes
-        .filter((attribute) => attribute.specialType === "FINISH")
-        .map((attribute) => {
-        const key = normalizeComparableValue(attribute.value);
-        return {
-            key,
-            label: attribute.value,
-            reference: input.finishReferences.find((reference) => reference.key === key) ?? null,
-        };
-        });
+  const finishes = input.attributes
+    .filter((attribute) => attribute.specialType === "FINISH")
+    .map((attribute) => {
+      const resolved = resolveFinish(attribute.value);
+      const key = normalizeLooseValue(resolved?.key ?? attribute.value);
+      return {
+        key,
+        label: resolved?.label ?? attribute.value,
+        reference:
+          input.finishReferences.find(
+            (reference) => normalizeLooseValue(reference.key) === key,
+          ) ?? null,
+      };
+    });
 
-    return {
-        colors,
-        finishes,
-    };
+  return {
+    colors,
+    finishes,
+  };
 }
