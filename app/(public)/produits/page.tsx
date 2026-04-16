@@ -53,7 +53,7 @@ export default async function ProductsIndexPage({
       <StructuredData
         data={buildCollectionPageStructuredData({
           name: search ? `Recherche produits : ${search}` : "Tous les produits",
-          path: "/produits/tous",
+          path: "/produits",
           description: search
             ? `Resultats de recherche pour ${search} dans le catalogue COBAM GROUP.`
             : "Catalogue complet des produits COBAM GROUP.",

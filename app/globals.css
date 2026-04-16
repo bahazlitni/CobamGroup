@@ -468,3 +468,20 @@ html {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+.public-contact-phone-input {
+  --PhoneInputCountryFlag-height: 1rem;
+  --PhoneInputCountrySelectArrow-color: #64748b;
+  --PhoneInput-color--focus: #0a8dc1;
+}
+
+.public-contact-phone-input .PhoneInputInput {
+  width: 100%;
+  background: transparent;
+  color: #14202e;
+  outline: none;
+}
+
+.public-contact-phone-input .PhoneInputCountry {
+  margin-right: 0.75rem;
+}

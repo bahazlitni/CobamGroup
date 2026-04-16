@@ -47,7 +47,7 @@ export default function ContactPage() {
           <PremiumReveal direction="up" blur>
             <div className="max-w-3xl">
               <p className="text-[11px] font-semibold uppercase tracking-[0.4em] text-cobam-carbon-grey">
-                Contact & Showrooms
+                Contact
               </p>
               <h1
                 className="mt-6 text-5xl font-light sm:text-6xl lg:text-7xl"
@@ -72,7 +72,7 @@ export default function ContactPage() {
                 <AnimatedUIButton
                   href={getWhatsAppHref(COBAM_CONTACT_DETAILS.whatsapp)}
                   size="xl"
-                  variant="outline-dark"
+                  variant="outline"
                   icon="arrow-right"
                 >
                   Contacter via WhatsApp
@@ -86,6 +86,32 @@ export default function ContactPage() {
       <section className="relative py-24 sm:py-32">
         <div className="mx-auto grid max-w-7xl gap-16 px-6 md:px-12 lg:grid-cols-[1fr_1.2fr]">
           <div className="space-y-12">
+            
+            <PremiumReveal direction="right" blur delay={0.3}>
+              <h2 className="text-2xl font-normal flex items-center gap-3" style={{ fontFamily: "var(--font-playfair), serif" }}>
+                Horaires d'ouverture
+              </h2>
+              <div className="mt-6 space-y-3 rounded-2xl border border-cobam-quill-grey/40 bg-cobam-light-bg p-6">
+                {COBAM_OPENING_HOURS.map((slot) => (
+                  <div
+                    key={slot.label}
+                    className="flex items-center justify-between border-b border-cobam-quill-grey/40 pb-3 last:border-0 last:pb-0"
+                  >
+                    <span className="text-sm font-medium text-cobam-dark-blue/80">
+                      {slot.label}
+                    </span>
+                    <span
+                      className={`text-sm ${
+                        slot.closed ? "text-cobam-carbon-grey" : "text-cobam-dark-blue font-semibold"
+                      }`}
+                    >
+                      {slot.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </PremiumReveal>
+            
             <PremiumReveal direction="right" blur delay={0.1}>
               <h2 className="text-2xl font-normal" style={{ fontFamily: "var(--font-playfair), serif" }}>
                 Coordonnées
@@ -132,38 +158,10 @@ export default function ContactPage() {
                 ))}
               </div>
             </PremiumReveal>
-
-            <PremiumReveal direction="right" blur delay={0.3}>
-              <h2 className="text-2xl font-normal flex items-center gap-3" style={{ fontFamily: "var(--font-playfair), serif" }}>
-                Horaires d'ouverture
-              </h2>
-              <div className="mt-6 space-y-3 rounded-2xl border border-cobam-quill-grey/40 bg-cobam-light-bg p-6">
-                {COBAM_OPENING_HOURS.map((slot) => (
-                  <div
-                    key={slot.label}
-                    className="flex items-center justify-between border-b border-cobam-quill-grey/40 pb-3 last:border-0 last:pb-0"
-                  >
-                    <span className="text-sm font-medium text-cobam-dark-blue/80">
-                      {slot.label}
-                    </span>
-                    <span
-                      className={`text-sm ${
-                        slot.closed ? "text-cobam-carbon-grey" : "text-cobam-dark-blue font-semibold"
-                      }`}
-                    >
-                      {slot.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </PremiumReveal>
           </div>
 
           <PremiumReveal direction="up" blur delay={0.4}>
             <div className="rounded-3xl bg-cobam-light-bg p-8 shadow-sm sm:p-12">
-              <h2 className="text-3xl font-light mb-8" style={{ fontFamily: "var(--font-playfair), serif" }}>
-                Envoyez-nous un message
-              </h2>
               <PublicContactForm />
             </div>
           </PremiumReveal>

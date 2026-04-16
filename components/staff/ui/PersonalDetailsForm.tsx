@@ -65,7 +65,7 @@ export default function PersonalDetailsForm({
   return (
     <Panel pretitle={pretitle} title={title} description={description}>
       <div className="grid gap-6 sm:grid-cols-2">
-        <PanelField id="firstName" label="Prenom">
+        <PanelField id="firstName" label="Prénom">
           <PanelInput
           fullWidth
             id="firstName"

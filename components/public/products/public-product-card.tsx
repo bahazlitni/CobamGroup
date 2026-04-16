@@ -21,7 +21,7 @@ export default function ProductCard({
   className,
 }: PublicProductCardProps) {
   const imageSrc = product.imageThumbnailUrl || product.imageUrl || null;
-  const resolvedThemeColor = normalizeThemeColor(themeColor);
+  const resolvedThemeColor = normalizeThemeColor(themeColor)  || "#14202E";
 
   return (
     <Link
@@ -48,47 +48,32 @@ export default function ProductCard({
 
           {/* Floating Brand - Minimalist */}
           {product.brandName && (
-            <div className="absolute top-4 left-4 z-10 transition-opacity duration-300 group-hover:opacity-0">
+            <div className="absolute top-4 left-4 z-10 transition-opacity duration-300">
                <span className="inline-flex px-3 py-1.5 rounded-full bg-white/80 backdrop-blur-sm border border-black/[0.03] text-[9px] font-bold uppercase tracking-[0.15em] text-cobam-dark-blue shadow-sm">
                  {product.brandName}
                </span>
             </div>
           )}
 
-          {/* Hover Overlay - Simple & Subtle */}
-          <div className="absolute inset-0 bg-cobam-dark-blue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
-             <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center shadow-xl translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                <ArrowRight size={20} className="text-cobam-dark-blue" />
-             </div>
-          </div>
         </div>
 
         {/* Content Area - Simple & Typography focused */}
         <div className="flex flex-col gap-2 px-1">
-          {/* Metadata */}
           <div className="flex items-center gap-2">
-             <span 
-               className="text-[9px] font-bold uppercase tracking-[0.3em] text-cobam-carbon-grey"
-             >
-               {product.brandName || "Cobam Collection"}
-             </span>
              {product.subtitle && (
-                <>
-                  <div className="h-1 w-1 rounded-full bg-cobam-quill-grey/40" />
-                  <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-cobam-carbon-grey truncate">
-                     {product.subtitle}
-                  </span>
-                </>
+                <h5 className="text-[9px] font-bold uppercase tracking-[0.3em] text-cobam-carbon-grey truncate">
+                  {product.subtitle}
+                </h5>
              )}
           </div>
 
           {/* Title */}
-          <h3 
-            className="text-xl md:text-2xl font-normal text-cobam-dark-blue leading-tight group-hover:text-cobam-water-blue transition-colors duration-300"
+          <h4 
+            className={`text-xl md:text-2xl font-normal text-cobam-dark-blue leading-tight group-hover:text-[${resolvedThemeColor}] transition-colors duration-300`}
             style={{ fontFamily: "var(--font-playfair), serif" }}
           >
             {product.name}
-          </h3>
+          </h4>
 
           {/* Bottom Row - Price & Link highlight */}
           <div className="mt-2 flex items-center justify-between">
@@ -102,7 +87,7 @@ export default function ProductCard({
              {/* The refined theme-colored accent */}
              <div 
                className="h-[2px] w-0 group-hover:w-8 transition-all duration-300 origin-right"
-               style={{ backgroundColor: resolvedThemeColor || "#14202E" }}
+               style={{ backgroundColor: resolvedThemeColor }}
              />
           </div>
         </div>

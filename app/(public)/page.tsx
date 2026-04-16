@@ -21,9 +21,8 @@ import ShowroomCard from "@/components/ui/custom/ShowroomCard";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "COBAM GROUP | Materiaux, sanitaires et finitions premium en Tunisie",
-  description:
-    "Cobam Group propose des revetements, sanitaires, materiaux de construction et finitions premium pour les projets residentiels et professionnels en Tunisie.",
+  title: "COBAM GROUP | Revêtements et Carrelage, Matériaux de construction, sanitaires et finitions premium en Tunisie",
+  description: "Cobam Group propose des revêtements, sanitaires, matériaux de construction et finitions premium pour les projets résidentiels et professionnels en Tunisie.",
 };
 
 
@@ -101,7 +100,7 @@ export default async function Home() {
             <div className="mt-12 flex flex-col gap-4 sm:flex-row">
               <Magnetic strength={30}>
                 <Link
-                  href="/produits/tous"
+                  href="/produits"
                   className="group relative overflow-hidden rounded-full bg-white px-8 py-4 text-sm uppercase tracking-widest text-[#14202e] transition-transform duration-300 hover:scale-105 inline-block"
                 >
                   <div className="relative z-10 font-semibold">Nos produits</div>

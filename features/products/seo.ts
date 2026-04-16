@@ -108,7 +108,7 @@ function buildBreadcrumbItems(input: {
 }) {
   const items: BreadcrumbJsonLdItem[] = [
     { name: "Accueil", path: "/" },
-    { name: "Produits", path: "/produits/tous" },
+    { name: "Produits", path: "/produits" },
   ];
 
   if (input.breadcrumb?.categorySlug) {
@@ -285,7 +285,7 @@ export function buildAllProductsMetadata(search: string | null): Metadata {
   return buildMetadataBase({
     title,
     description,
-    path: "/produits/tous",
+    path: "/produits",
     noIndex: Boolean(search),
   });
 }

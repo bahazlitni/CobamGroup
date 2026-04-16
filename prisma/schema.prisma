@@ -542,6 +542,8 @@ model MediaFolder {
   @@map("media_folders")
 }
 
+
+
 model Media {
   id               BigInt          @id @default(autoincrement())
   folderId         BigInt?         @map("folder_id")

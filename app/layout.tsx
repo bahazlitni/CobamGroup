@@ -7,6 +7,7 @@ import "@fontsource/sora/800.css";
 import "@fontsource/source-serif-4/400.css";
 import "@fontsource/source-serif-4/600.css";
 import "@fontsource/source-serif-4/700.css";
+import "react-phone-number-input/style.css";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { getSiteUrl } from "@/lib/seo/site";

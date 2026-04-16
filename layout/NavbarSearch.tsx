@@ -149,7 +149,7 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
   const goToSearchPage = () => {
     const normalized = searchInput.trim();
     if (!normalized) return;
-    router.push(`/produits/tous?search=${encodeURIComponent(normalized)}`);
+    router.push(`/produits?search=${encodeURIComponent(normalized)}`);
     onClose();
   };
 
