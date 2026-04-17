@@ -28,17 +28,11 @@ function buildPublicProductHref(input: {
   subcategorySlug: string;
   product: PublicProductListResult["items"][number];
 }) {
-  const originPath = encodeURIComponent(`${input.categorySlug}/${input.subcategorySlug}`);
-
-  if (input.product.entityType === "SINGLE") {
-    return `/produits/${input.product.slug}?originPath=${originPath}`;
+  if (input.product.entityType === "FAMILY") {
+    return `/produits/${input.categorySlug}/${input.subcategorySlug}/famille/${input.product.slug}`;
   }
 
-  if (input.product.entityType === "PACK") {
-    return `/produits/packs/${input.product.slug}?originPath=${originPath}`;
-  }
-
-  return `/produits/familles/${input.product.slug}?originPath=${originPath}`;
+  return `/produits/${input.categorySlug}/${input.subcategorySlug}/${input.product.slug}`;
 }
 
 function PublicProductCardSkeleton() {

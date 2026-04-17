@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [
     categories,
     subcategories,
-    singleProducts,
+    products,
     families,
     packs,
     articles,
@@ -46,13 +46,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
     prisma.product.findMany({
       where: {
-        kind: ProductKind.SINGLE,
+        kind: {
+          in: [ProductKind.SINGLE, ProductKind.VARIANT],
+        },
         lifecycle: "ACTIVE",
         visibility: true,
       },
       select: {
         slug: true,
         updatedAt: true,
+        subcategoryLinks: {
+          orderBy: {
+            subcategoryId: "asc",
+          },
+          take: 1,
+          select: {
+            subcategory: {
+              select: {
+                slug: true,
+                category: {
+                  select: {
+                    slug: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     }),
     prisma.productFamily.findMany({
@@ -70,6 +90,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       select: {
         slug: true,
         updatedAt: true,
+        members: {
+          orderBy: [{ sortOrder: "asc" }, { productId: "asc" }],
+          take: 1,
+          select: {
+            product: {
+              select: {
+                subcategoryLinks: {
+                  orderBy: {
+                    subcategoryId: "asc",
+                  },
+                  take: 1,
+                  select: {
+                    subcategory: {
+                      select: {
+                        slug: true,
+                        category: {
+                          select: {
+                            slug: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     }),
     prisma.product.findMany({
@@ -79,6 +127,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       select: {
         slug: true,
         updatedAt: true,
+        subcategoryLinks: {
+          orderBy: {
+            subcategoryId: "asc",
+          },
+          take: 1,
+          select: {
+            subcategory: {
+              select: {
+                slug: true,
+                category: {
+                  select: {
+                    slug: true,
+                  },
+                },
+              },
+            },
+          },
+        },
         packLinesAsPack: {
           select: {
             product: {
@@ -112,15 +178,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         subcategory.updatedAt,
       ),
     ),
-    ...singleProducts.map((product) =>
-      mapUrl(`/produits/${product.slug}`, product.updatedAt),
-    ),
-    ...families.map((family) =>
-      mapUrl(`/produits/familles/${family.slug}`, family.updatedAt),
-    ),
+    ...products
+      .filter((product) => product.subcategoryLinks[0])
+      .map((product) => {
+        const subcategory = product.subcategoryLinks[0]!.subcategory;
+        return mapUrl(
+          `/produits/${subcategory.category.slug}/${subcategory.slug}/${product.slug}`,
+          product.updatedAt,
+        );
+      }),
+    ...families
+      .filter((family) => family.members[0]?.product.subcategoryLinks[0])
+      .map((family) => {
+        const subcategory = family.members[0]!.product.subcategoryLinks[0]!.subcategory;
+        return mapUrl(
+          `/produits/${subcategory.category.slug}/${subcategory.slug}/famille/${family.slug}`,
+          family.updatedAt,
+        );
+      }),
     ...packs
       .filter(
         (pack) =>
+          pack.subcategoryLinks[0] &&
           pack.packLinesAsPack.length > 0 &&
           pack.packLinesAsPack.every(
             (line) =>
@@ -128,7 +207,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
               line.product.lifecycle === "ACTIVE",
           ),
       )
-      .map((pack) => mapUrl(`/produits/packs/${pack.slug}`, pack.updatedAt)),
+      .map((pack) => {
+        const subcategory = pack.subcategoryLinks[0]!.subcategory;
+        return mapUrl(
+          `/produits/${subcategory.category.slug}/${subcategory.slug}/${pack.slug}`,
+          pack.updatedAt,
+        );
+      }),
     ...articles.map((article) =>
       mapUrl(`/actualites/${article.slug}`, article.updatedAt),
     ),

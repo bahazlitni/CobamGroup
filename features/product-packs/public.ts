@@ -33,6 +33,24 @@ const PACK_SELECT = {
       },
     },
   },
+  subcategoryLinks: {
+    orderBy: {
+      subcategoryId: "asc",
+    },
+    take: 1,
+    select: {
+      subcategory: {
+        select: {
+          slug: true,
+          category: {
+            select: {
+              slug: true,
+            },
+          },
+        },
+      },
+    },
+  },
 } satisfies Prisma.ProductSelect;
 
 function buildPublicMediaUrl(
@@ -72,7 +90,9 @@ export async function listPublicCollections(): Promise<PublicProductPackSummary[
       description: p.description,
       imageUrl: hasImage ? buildPublicMediaUrl(firstMedia.id, "original") : null,
       imageThumbnailUrl: hasImage ? buildPublicMediaUrl(firstMedia.id, "thumbnail") : null,
-      href: `/produits/packs/${p.slug}`,
+      href: p.subcategoryLinks[0]
+        ? `/produits/${p.subcategoryLinks[0].subcategory.category.slug}/${p.subcategoryLinks[0].subcategory.slug}/${p.slug}`
+        : `/produits`,
     };
   });
 }

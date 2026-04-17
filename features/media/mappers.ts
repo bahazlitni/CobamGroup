@@ -29,7 +29,6 @@ type MediaWithRelations = {
   extension: string | null;
   altText: string | null;
   title: string | null;
-  description: string | null;
   widthPx: number | null;
   heightPx: number | null;
   durationSeconds: Prisma.Decimal | null;
@@ -113,11 +112,16 @@ function buildUsage(media: MediaWithRelations): MediaUsageDto {
   };
 }
 
+function resolveMediaTitle(media: Pick<MediaWithRelations, "id" | "originalFilename" | "title">) {
+  return media.title?.trim() || media.originalFilename?.trim() || `Media #${media.id}`;
+}
+
 export function mapMediaToListItemDto(
   media: MediaWithRelations,
   session: StaffSession,
 ): MediaListItemDto {
   const usage = buildUsage(media);
+  const resolvedTitle = resolveMediaTitle(media);
 
   return {
     id: Number(media.id),
@@ -129,8 +133,9 @@ export function mapMediaToListItemDto(
     publicFileEndpoint: `/api/media/${media.id}/file`,
     originalFilename: media.originalFilename,
     title: media.title,
-    description: media.description,
     altText: media.altText,
+    resolvedTitle,
+    resolvedAltText: media.altText?.trim() || resolvedTitle,
     mimeType: media.mimeType,
     extension: media.extension,
     widthPx: media.widthPx,

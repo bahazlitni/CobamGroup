@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import StructuredData from "@/components/seo/StructuredData";
 import PublicProductInspectorView from "@/components/public/products/public-product-inspector";
-import { resolvePublicProductBreadcrumb } from "@/features/products/public-breadcrumb";
+import { findPublicProductSubcategoryBySlugs } from "@/features/product-categories/public";
 import { findPublicFamilyBySlug } from "@/features/products/public";
 import {
   buildBreadcrumbStructuredData,
@@ -12,50 +12,49 @@ import {
 
 export const dynamic = "force-dynamic";
 
+type FamilyPageProps = {
+  params: Promise<{ category: string; subcategory: string; slug: string }>;
+};
+
 export async function generateMetadata({
   params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
-  const { slug } = await params;
+}: FamilyPageProps): Promise<Metadata> {
+  const { category, subcategory, slug } = await params;
   const family = await findPublicFamilyBySlug(slug);
 
   if (!family) {
     return {
-      title: "Produit introuvable | COBAM GROUP",
-      robots: {
-        index: false,
-        follow: false,
-      },
+      title: "Famille introuvable | COBAM GROUP",
+      robots: { index: false, follow: false },
     };
   }
 
-  return buildFamilyMetadata(family);
+  return buildFamilyMetadata(family, {
+    path: `/produits/${category}/${subcategory}/famille/${slug}`,
+  });
 }
 
-export default async function PublicFamilyPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ slug: string }>;
-  searchParams: Promise<{ originPath?: string | string[] }>;
-}) {
-  const { slug } = await params;
-  const resolvedSearchParams = await searchParams;
-  const originPath = Array.isArray(resolvedSearchParams.originPath)
-    ? resolvedSearchParams.originPath[0]
-    : resolvedSearchParams.originPath;
-  const family = await findPublicFamilyBySlug(slug);
+export default async function PublicFamilyPage({ params }: FamilyPageProps) {
+  const { category, subcategory, slug } = await params;
+  const [family, subcategoryData] = await Promise.all([
+    findPublicFamilyBySlug(slug),
+    findPublicProductSubcategoryBySlugs({
+      categorySlug: category,
+      subcategorySlug: subcategory,
+    }),
+  ]);
 
-  if (!family) {
+  if (!family || !subcategoryData) {
     notFound();
   }
 
-  const breadcrumb = await resolvePublicProductBreadcrumb({
-    originPath,
-    fallbackSubcategories: family.subcategories,
-  });
-  const path = `/produits/familles/${family.slug}`;
+  const breadcrumb = {
+    categoryName: subcategoryData.parentName ?? "Produits",
+    categorySlug: category,
+    subcategoryName: subcategoryData.name,
+    subcategorySlug: subcategory,
+  };
+  const path = `/produits/${category}/${subcategory}/famille/${family.slug}`;
 
   return (
     <main className="min-h-screen bg-white text-cobam-dark-blue">
@@ -66,7 +65,7 @@ export default async function PublicFamilyPage({
             currentLabel: family.name,
             currentPath: path,
           }),
-          buildFamilyStructuredData(family),
+          buildFamilyStructuredData(family, { path }),
         ]}
       />
       <section className="py-10 sm:py-12 lg:py-20 border-t border-cobam-quill-grey/30">

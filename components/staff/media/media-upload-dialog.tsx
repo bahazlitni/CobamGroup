@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/card";
 import { StaffBadge, StaffSearchSelect, StaffSelect } from "@/components/staff/ui";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
 import type {
   MediaListResult,
@@ -70,7 +69,6 @@ export default function MediaUploadDialog({
   const [items, setItems] = useState<MediaUploadQueueItem[]>([]);
   const [title, setTitle] = useState("");
   const [altText, setAltText] = useState("");
-  const [description, setDescription] = useState("");
   const [visibility, setVisibility] = useState<MediaVisibility>("PRIVATE");
   const [folderId, setFolderId] = useState(
     initialFolderId != null ? String(initialFolderId) : "",
@@ -80,7 +78,6 @@ export default function MediaUploadDialog({
     setItems([]);
     setTitle("");
     setAltText("");
-    setDescription("");
     setVisibility("PRIVATE");
     setFolderId(initialFolderId != null ? String(initialFolderId) : "");
 
@@ -199,7 +196,6 @@ export default function MediaUploadDialog({
       file: item.file,
       title: hasSingleFile ? title : undefined,
       altText: hasSingleFile ? altText : undefined,
-      description: hasSingleFile ? description : undefined,
       visibility,
       folderId: folderId ? Number(folderId) : null,
     }));
@@ -476,17 +472,6 @@ export default function MediaUploadDialog({
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-cobam-dark-blue">
-                      Description
-                    </label>
-                    <Textarea
-                      value={description}
-                      onChange={(event) => setDescription(event.target.value)}
-                      placeholder="Contexte, usage ou notes internes"
-                      className="min-h-28 rounded-2xl border-slate-300"
-                    />
-                  </div>
                 </CardContent>
               </Card>
             ) : (

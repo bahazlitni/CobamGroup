@@ -5,7 +5,7 @@ import { File, FileText, Headphones, ImageIcon, Video } from "lucide-react";
 import { useMediaObjectUrl } from "@/features/media/hooks/use-media-object-url";
 import type { MediaListItemDto } from "@/features/media/types";
 import { cn } from "@/lib/utils";
-import { getMediaDisplayTitle, getMediaViewForItem } from "./utils";
+import { getMediaDisplayAltText, getMediaViewForItem } from "./utils";
 
 function renderFallbackIcon(media: MediaListItemDto) {
   const view = getMediaViewForItem(media);
@@ -41,7 +41,7 @@ export default function MediaThumbnail({
       <div className={cn("relative overflow-hidden rounded-2xl bg-slate-100", className)}>
         <Image
           src={objectUrl}
-          alt={media.altText || getMediaDisplayTitle(media)}
+          alt={getMediaDisplayAltText(media)}
           fill
           className="object-cover"
           sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"

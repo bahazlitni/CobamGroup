@@ -555,7 +555,6 @@ model Media {
   extension        String?         @db.VarChar(32)
   altText          String?         @map("alt_text") @db.VarChar(500)
   title            String?         @db.VarChar(255)
-  description      String?         @db.Text
   widthPx          Int?            @map("width_px")
   heightPx         Int?            @map("height_px")
   durationSeconds  Decimal?        @map("duration_seconds") @db.Decimal(10, 2)

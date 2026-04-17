@@ -185,7 +185,7 @@ type PublicPackRecord = Prisma.ProductGetPayload<{
 }>;
 
 type PublicIndexRow = {
-  entity_type: "FAMILY" | "SINGLE" | "PACK";
+  entity_type: "FAMILY" | "SINGLE" | "PACK" | "VARIANT";
   product_id: bigint | null;
   family_id: bigint | null;
   product_slug: string;
@@ -528,12 +528,15 @@ function mapFamilySummary(record: PublicFamilyRecord, defaultVariant: PublicProd
   };
 }
 
-function mapSingleProductSummary(record: PublicProductRecord): PublicProductSummary {
+function mapProductSummary(
+  record: PublicProductRecord,
+  entityType: "SINGLE" | "VARIANT",
+): PublicProductSummary {
   const coverMedia = buildProductCoverMedia(record);
 
   return {
     id: Number(record.id),
-    entityType: "SINGLE",
+    entityType,
     name: record.name,
     slug: record.slug,
     subtitle: null,
@@ -660,7 +663,7 @@ function mapInspectorVariant(product: PublicProductRecord): PublicProductInspect
 }
 
 function mapSimpleInspector(record: PublicProductRecord, input: {
-  kind: "PACK" | "SINGLE";
+  kind: "PACK" | "SINGLE" | "VARIANT";
   brandNames: string[];
   basePriceAmount: string | null;
   priceVisibility: boolean;
@@ -679,7 +682,7 @@ function mapSimpleInspector(record: PublicProductRecord, input: {
     descriptionSeo: record.descriptionSeo,
     brandNames: input.brandNames,
     media,
-    datasheet: input.kind === "SINGLE" ? mapMediaRecord(record.datasheetMedia) : null,
+    datasheet: input.kind === "PACK" ? null : mapMediaRecord(record.datasheetMedia),
     basePriceAmount: input.priceVisibility ? input.basePriceAmount : null,
     priceVisibility: input.priceVisibility,
     stock: formatDecimal(record.stock),
@@ -722,6 +725,7 @@ export async function listPublicProductsBySubcategory(input: {
   const result = await listPublicProductsIndex({
     categorySlug: input.categorySlug,
     subcategorySlug: input.subcategorySlug,
+    includeFamilies: true,
     page: input.page,
     pageSize: input.pageSize ?? PUBLIC_PRODUCTS_PAGE_SIZE,
     q: input.q,
@@ -758,6 +762,7 @@ function sortIndexItems(items: PublicProductIndexItem[]) {
 export async function listPublicProductsIndex(input: {
   categorySlug?: string | null;
   subcategorySlug?: string | null;
+  includeFamilies?: boolean;
   page: number;
   pageSize?: number;
   q?: string | null;
@@ -768,7 +773,10 @@ export async function listPublicProductsIndex(input: {
   const normalizedQuery = normalizeComparableValue(input.q);
   const pattern = normalizedQuery ? `%${normalizedQuery}%` : null;
 
-  const familyQuery = Prisma.sql`
+  const includeFamilies = input.includeFamilies ?? false;
+
+  const familyQuery = includeFamilies
+    ? Prisma.sql`
     SELECT DISTINCT ON (f.id)
       'FAMILY'::text AS entity_type,
       NULL::bigint AS product_id,
@@ -802,12 +810,33 @@ export async function listPublicProductsIndex(input: {
       OR "f".name ILIKE ${pattern} OR "f".slug ILIKE ${pattern} OR "f".subtitle ILIKE ${pattern} OR "f".description ILIKE ${pattern} OR "f".description_seo ILIKE ${pattern}
     )` : Prisma.empty}
     ORDER BY f.id, c.sort_order ASC, s.sort_order ASC, f.slug ASC
-  `;
+  `
+    : Prisma.sql`
+      SELECT
+        NULL::text AS entity_type,
+        NULL::bigint AS product_id,
+        NULL::bigint AS family_id,
+        NULL::text AS product_slug,
+        NULL::bigint AS category_id,
+        NULL::text AS category_name,
+        NULL::text AS category_slug,
+        NULL::text AS category_subtitle,
+        NULL::text AS category_theme_color,
+        NULL::integer AS category_sort,
+        NULL::bigint AS subcategory_id,
+        NULL::text AS subcategory_name,
+        NULL::text AS subcategory_slug,
+        NULL::text AS subcategory_subtitle,
+        NULL::text AS subcategory_description,
+        NULL::integer AS subcategory_sort
+      WHERE FALSE
+    `;
 
   const productQuery = Prisma.sql`
     SELECT DISTINCT ON (p.id)
       CASE
         WHEN p.kind = 'SINGLE' THEN 'SINGLE'::text
+        WHEN p.kind = 'VARIANT' THEN 'VARIANT'::text
         ELSE 'PACK'::text
       END AS entity_type,
       p.id AS product_id,
@@ -826,10 +855,15 @@ export async function listPublicProductsIndex(input: {
       s.description AS subcategory_description,
       s.sort_order AS subcategory_sort
     FROM products p
+    ${includeFamilies ? Prisma.sql`LEFT JOIN product_family_members fm ON fm.product_id = p.id` : Prisma.empty}
     JOIN product_subcategory_links l ON l.product_id = p.id
     JOIN product_subcategories s ON s.id = l.subcategory_id AND s.is_active = true
     JOIN product_types c ON c.id = s.category_id AND c.is_active = true
-    WHERE p.kind IN ('SINGLE', 'PACK') AND p.lifecycle = 'ACTIVE' AND p.visibility IS TRUE
+    WHERE ${
+      includeFamilies
+        ? Prisma.sql`(p.kind IN ('SINGLE', 'PACK') OR (p.kind = 'VARIANT' AND fm.product_id IS NULL))`
+        : Prisma.sql`p.kind IN ('SINGLE', 'PACK', 'VARIANT')`
+    } AND p.lifecycle = 'ACTIVE' AND p.visibility IS TRUE
     ${input.categorySlug ? Prisma.sql`AND "c".slug = ${input.categorySlug}` : Prisma.empty}
     ${input.subcategorySlug ? Prisma.sql`AND "s".slug = ${input.subcategorySlug}` : Prisma.empty}
     ${pattern ? Prisma.sql`AND (
@@ -921,7 +955,10 @@ export async function listPublicProductsIndex(input: {
       }
       productSummaryMap.set(Number(product.id), mapPackSummary(product, derived));
     } else {
-      productSummaryMap.set(Number(product.id), mapSingleProductSummary(product));
+      productSummaryMap.set(
+        Number(product.id),
+        mapProductSummary(product, product.kind === "VARIANT" ? "VARIANT" : "SINGLE"),
+      );
     }
   }
 
@@ -1044,6 +1081,38 @@ export async function findPublicSingleProductBySlug(
   });
 }
 
+export async function findPublicProductBySlug(
+  productSlug: string,
+): Promise<PublicSimpleProductInspector | null> {
+  const record = await prisma.product.findFirst({
+    where: {
+      slug: productSlug,
+      kind: {
+        in: ["SINGLE", "VARIANT"],
+      },
+      lifecycle: "ACTIVE",
+      visibility: true,
+    },
+    select: PUBLIC_PRODUCT_SELECT,
+  });
+
+  if (!record || (record.kind !== "SINGLE" && record.kind !== "VARIANT")) {
+    return null;
+  }
+
+  await makeMediaPublicMany(collectProductMediaIdsForPublishing([record]));
+
+  const brandName = getBrandName(record.brand);
+
+  return mapSimpleInspector(record, {
+    kind: record.kind,
+    brandNames: brandName ? [brandName] : [],
+    basePriceAmount: formatDecimal(record.basePriceAmount),
+    priceVisibility: record.priceVisibility ?? false,
+    commercialMode: record.commercialMode,
+  });
+}
+
 export async function findPublicPackBySlug(
   packSlug: string,
 ): Promise<PublicSimpleProductInspector | null> {
@@ -1074,4 +1143,15 @@ export async function findPublicPackBySlug(
     priceVisibility: derived.priceVisibility,
     commercialMode: derived.commercialMode,
   });
+}
+
+export async function findPublicProductOrPackBySlug(
+  productSlug: string,
+): Promise<PublicSimpleProductInspector | null> {
+  const product = await findPublicProductBySlug(productSlug);
+  if (product) {
+    return product;
+  }
+
+  return findPublicPackBySlug(productSlug);
 }

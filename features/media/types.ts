@@ -49,7 +49,6 @@ export type MediaUploadInput = {
   file: File;
   title: string | null;
   altText: string | null;
-  description: string | null;
   visibility: MediaVisibility;
   folderId: number | null;
 };
@@ -58,12 +57,13 @@ export type MediaUploadRequest = {
   file: File;
   title?: string;
   altText?: string;
-  description?: string;
   visibility?: MediaVisibility;
   folderId?: number | null;
 };
 
 export type MediaUpdateInput = {
+  title?: string | null;
+  altText?: string | null;
   visibility?: MediaVisibility;
   folderId?: number | null;
 };
@@ -101,8 +101,9 @@ export type MediaListItemDto = {
   publicFileEndpoint: string;
   originalFilename: string | null;
   title: string | null;
-  description: string | null;
   altText: string | null;
+  resolvedTitle: string;
+  resolvedAltText: string;
   mimeType: string | null;
   extension: string | null;
   widthPx: number | null;

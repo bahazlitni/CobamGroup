@@ -107,11 +107,6 @@ export default function MediaCard({
             </p>
           </button>
 
-          {item.description ? (
-            <p className="line-clamp-2 text-sm leading-6 text-slate-500">
-              {item.description}
-            </p>
-          ) : null}
         </div>
 
         <div className="flex flex-wrap items-center gap-2 text-xs">

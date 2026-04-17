@@ -222,7 +222,10 @@ function buildVariantSchema(input: {
   };
 }
 
-export function buildFamilyMetadata(family: PublicProductInspector): Metadata {
+export function buildFamilyMetadata(
+  family: PublicProductInspector,
+  options?: { path?: string },
+): Metadata {
   return buildMetadataBase({
     title: `${family.name} | ${getSiteName()}`,
     description: resolveSeoDescription(
@@ -231,13 +234,14 @@ export function buildFamilyMetadata(family: PublicProductInspector): Metadata {
       family.variants[0]?.description,
       family.name,
     ),
-    path: `/produits/familles/${family.slug}`,
+    path: options?.path ?? `/produits/familles/${family.slug}`,
     imageUrl: resolveInspectorImage(family.coverMedia),
   });
 }
 
 export function buildSimpleProductMetadata(
   product: PublicSimpleProductInspector,
+  options?: { path?: string },
 ) {
   return buildMetadataBase({
     title: `${product.name} | ${getSiteName()}`,
@@ -247,9 +251,10 @@ export function buildSimpleProductMetadata(
       product.name,
     ),
     path:
-      product.kind === "PACK"
+      options?.path ??
+      (product.kind === "PACK"
         ? `/produits/packs/${product.slug}`
-        : `/produits/${product.slug}`,
+        : `/produits/${product.slug}`),
     imageUrl: product.media.find((media) => media.kind === "IMAGE")?.url ?? null,
   });
 }
@@ -290,8 +295,11 @@ export function buildAllProductsMetadata(search: string | null): Metadata {
   });
 }
 
-export function buildFamilyStructuredData(family: PublicProductInspector) {
-  const path = `/produits/familles/${family.slug}`;
+export function buildFamilyStructuredData(
+  family: PublicProductInspector,
+  options?: { path?: string },
+) {
+  const path = options?.path ?? `/produits/familles/${family.slug}`;
   const description = resolveSeoDescription(
     family.descriptionSeo,
     family.description,
@@ -336,11 +344,13 @@ export function buildFamilyStructuredData(family: PublicProductInspector) {
 
 export function buildSimpleProductStructuredData(
   product: PublicSimpleProductInspector,
+  options?: { path?: string },
 ) {
   const path =
-    product.kind === "PACK"
+    options?.path ??
+    (product.kind === "PACK"
       ? `/produits/packs/${product.slug}`
-      : `/produits/${product.slug}`;
+      : `/produits/${product.slug}`);
   const imageUrls = product.media
     .filter((media) => media.kind === "IMAGE")
     .map((media) => buildAbsoluteUrl(media.url));

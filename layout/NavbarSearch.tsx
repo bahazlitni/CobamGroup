@@ -134,13 +134,11 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
     };
   }, [searchInput, isOpen]);
 
-  const goToProduct = (product: PublicProductIndexItem["product"]) => {
+  const goToProduct = (item: PublicProductIndexItem) => {
     const href =
-      product.entityType === "SINGLE"
-        ? `/produits/${product.slug}`
-        : product.entityType === "PACK"
-          ? `/produits/packs/${product.slug}`
-          : `/produits/familles/${product.slug}`;
+      item.product.entityType === "FAMILY"
+        ? `/produits/${item.category.slug}/${item.subcategory.slug}/famille/${item.product.slug}`
+        : `/produits/${item.category.slug}/${item.subcategory.slug}/${item.product.slug}`;
 
     router.push(href);
     onClose();
@@ -153,7 +151,7 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
     onClose();
   };
 
-  const results = searchResults.map(r => r.product);
+  const results = searchResults;
 
   return (
     <AnimatePresence>
@@ -262,7 +260,7 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
                     >
                       {results.map((product, idx) => (
                         <motion.button
-                          key={`${product.entityType}-${product.id}`}
+                          key={`${product.product.entityType}-${product.product.id}`}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: idx * 0.05 }}
@@ -276,10 +274,10 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
                           )}
                         >
                           <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-cobam-light-bg border border-cobam-quill-grey/10">
-                            {product.imageThumbnailUrl ? (
+                            {product.product.imageThumbnailUrl ? (
                               <Image
-                                src={product.imageThumbnailUrl}
-                                alt={product.name}
+                                src={product.product.imageThumbnailUrl}
+                                alt={product.product.name}
                                 fill
                                 className="object-cover"
                               />
@@ -292,13 +290,13 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
 
                           <div className="flex-1 min-w-0">
                             <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-cobam-water-blue mb-1 block">
-                              {product.entityType === "FAMILY" ? "Famille" : product.entityType === "PACK" ? "Pack" : "Produit"}
+                              {product.product.entityType === "FAMILY" ? "Famille" : product.product.entityType === "PACK" ? "Pack" : product.product.entityType === "VARIANT" ? "Variante" : "Produit"}
                             </span>
                             <h4 className="text-lg font-medium text-cobam-dark-blue truncate leading-tight mb-1">
-                              {product.name}
+                              {product.product.name}
                             </h4>
                             <p className="text-sm text-cobam-carbon-grey truncate mb-2">
-                              {product.brandName || "Cobam Collection"}
+                              {product.product.brandName || product.subcategory.name}
                             </p>
                             <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-cobam-water-blue opacity-0 group-hover:opacity-100 transition-opacity">
                               Voir Détails <ArrowRight size={12} />

@@ -54,7 +54,16 @@ export function getMediaKindLabel(kind: MediaKind) {
 }
 
 export function getMediaDisplayTitle(media: MediaListItemDto) {
-  return media.title?.trim() || media.originalFilename || `Media #${media.id}`;
+  return (
+    media.resolvedTitle ||
+    media.title?.trim() ||
+    media.originalFilename ||
+    `Media #${media.id}`
+  );
+}
+
+export function getMediaDisplayAltText(media: MediaListItemDto) {
+  return media.resolvedAltText || media.altText?.trim() || getMediaDisplayTitle(media);
 }
 
 export function getMediaViewForItem(media: MediaListItemDto): Exclude<MediaView, "all"> {

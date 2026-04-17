@@ -117,7 +117,7 @@ export type ProductFormOptionsDto = {
   productSubcategories: ProductSubcategoryOptionDto[];
 };
 
-export type PublicProductEntityType = "FAMILY" | "PACK" | "SINGLE";
+export type PublicProductEntityType = "FAMILY" | "PACK" | "SINGLE" | "VARIANT";
 
 export type PublicProductSubcategoryLink = {
   id: number;
@@ -248,7 +248,7 @@ export type PublicProductInspector = {
 
 export type PublicSimpleProductInspector = {
   id: number;
-  kind: "PACK" | "SINGLE";
+  kind: "PACK" | "SINGLE" | "VARIANT";
   sku: string;
   slug: string;
   name: string;

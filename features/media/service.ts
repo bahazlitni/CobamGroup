@@ -598,7 +598,6 @@ export async function uploadMediaService(session: StaffSession, input: MediaUplo
       extension: finalExtension,
       title: input.title,
       altText: input.altText,
-      description: input.description,
       widthPx: imageArtifacts?.widthPx ?? null,
       heightPx: imageArtifacts?.heightPx ?? null,
       sizeBytes: BigInt(buffer.byteLength),
@@ -678,8 +677,17 @@ export async function updateMediaService(
     input.visibility != null && existingMedia.visibility !== input.visibility;
   const shouldChangeFolder =
     input.folderId !== undefined && existingMedia.folderId !== input.folderId;
+  const shouldChangeTitle =
+    input.title !== undefined && existingMedia.title !== input.title;
+  const shouldChangeAltText =
+    input.altText !== undefined && existingMedia.altText !== input.altText;
 
-  if (!shouldChangeVisibility && !shouldChangeFolder) {
+  if (
+    !shouldChangeVisibility &&
+    !shouldChangeFolder &&
+    !shouldChangeTitle &&
+    !shouldChangeAltText
+  ) {
     return mapMediaToListItemDto(existingMedia, session);
   }
 

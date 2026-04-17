@@ -155,7 +155,6 @@ export function parseMediaUploadFormData(formData: FormData): MediaUploadInput {
     file: fileEntry,
     title: parseOptionalString(formData.get("title")),
     altText: parseOptionalString(formData.get("altText")),
-    description: parseOptionalString(formData.get("description")),
     visibility:
       parseMediaVisibility(
         typeof formData.get("visibility") === "string"
@@ -183,6 +182,8 @@ export function parseMediaUpdateInput(raw: unknown): MediaUpdateInput {
       : null;
 
   const hasFolderId = "folderId" in rawRecord;
+  const hasTitle = "title" in rawRecord;
+  const hasAltText = "altText" in rawRecord;
   const folderId = hasFolderId
     ? parseOptionalMediaFolderId(
         typeof rawRecord.folderId === "number" || typeof rawRecord.folderId === "string"
@@ -194,12 +195,31 @@ export function parseMediaUpdateInput(raw: unknown): MediaUpdateInput {
       )
     : undefined;
 
-  if (!visibility && !hasFolderId) {
+  const title = hasTitle
+    ? typeof rawRecord.title === "string"
+      ? parseOptionalString(rawRecord.title)
+      : rawRecord.title === null
+        ? null
+        : undefined
+    : undefined;
+  const altText = hasAltText
+    ? typeof rawRecord.altText === "string"
+      ? parseOptionalString(rawRecord.altText)
+      : rawRecord.altText === null
+        ? null
+        : undefined
+    : undefined;
+
+  if (!visibility && !hasFolderId && !hasTitle && !hasAltText) {
     throw new MediaValidationError("Aucune modification demandee.");
   }
 
   if ("visibility" in rawRecord && !visibility) {
     throw new MediaValidationError("Visibilite invalide.");
+  }
+
+  if ((hasTitle && title === undefined) || (hasAltText && altText === undefined)) {
+    throw new MediaValidationError("Metadonnees media invalides.");
   }
 
   const result: MediaUpdateInput = {};
@@ -210,6 +230,14 @@ export function parseMediaUpdateInput(raw: unknown): MediaUpdateInput {
 
   if (hasFolderId) {
     result.folderId = folderId ?? null;
+  }
+
+  if (hasTitle) {
+    result.title = title ?? null;
+  }
+
+  if (hasAltText) {
+    result.altText = altText ?? null;
   }
 
   return result;

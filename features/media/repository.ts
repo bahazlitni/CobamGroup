@@ -30,7 +30,6 @@ function buildMediaWhere(input: {
     where.OR = [
       { originalFilename: { contains: input.query.q, mode: "insensitive" } },
       { title: { contains: input.query.q, mode: "insensitive" } },
-      { description: { contains: input.query.q, mode: "insensitive" } },
       { altText: { contains: input.query.q, mode: "insensitive" } },
       { mimeType: { contains: input.query.q, mode: "insensitive" } },
       { storagePath: { contains: input.query.q, mode: "insensitive" } },
@@ -118,7 +117,6 @@ const mediaSelect = {
   extension: true,
   altText: true,
   title: true,
-  description: true,
   widthPx: true,
   heightPx: true,
   durationSeconds: true,
@@ -675,7 +673,6 @@ export async function createMediaRecord(input: {
   extension: string | null;
   title: string | null;
   altText: string | null;
-  description: string | null;
   widthPx?: number | null;
   heightPx?: number | null;
   sizeBytes: bigint;
@@ -693,7 +690,6 @@ export async function createMediaRecord(input: {
       extension: input.extension,
       title: input.title,
       altText: input.altText,
-      description: input.description,
       widthPx: input.widthPx ?? null,
       heightPx: input.heightPx ?? null,
       sizeBytes: input.sizeBytes,
@@ -724,6 +720,16 @@ export async function updateMediaRecord(
       ...(input.folderId !== undefined
         ? {
             folderId: input.folderId != null ? BigInt(input.folderId) : null,
+          }
+        : {}),
+      ...(input.title !== undefined
+        ? {
+            title: input.title,
+          }
+        : {}),
+      ...(input.altText !== undefined
+        ? {
+            altText: input.altText,
           }
         : {}),
       updatedByUserId: input.updatedByUserId,

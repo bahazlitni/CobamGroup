@@ -29,7 +29,7 @@ export type DerivedFinishOption = {
 export type SpecialAttributeKind = "COLOR" | "FINISH";
 
 export type UnifiedInspectorProduct = {
-  entityType: "FAMILY" | "SINGLE" | "PACK";
+  entityType: "FAMILY" | "SINGLE" | "PACK" | "VARIANT";
   id: number;
   slug: string;
   brandName: string | null;
