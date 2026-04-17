@@ -460,7 +460,7 @@ export default function MediaInspectorDialog({
                             ]}
                             disabled={isUpdatingVisibility || !media.canUpdate}
                             fullWidth
-                            className="bg-white rounded-xl h-11 border-slate-200/60"
+                            triggerClassName="bg-white rounded-xl h-11 border-slate-200/60"
                           />
                         </div>
                         <div className="space-y-2.5">
@@ -478,7 +478,7 @@ export default function MediaInspectorDialog({
                             noResultsLabel="Aucun dossier"
                             disabled={isUpdatingVisibility || !media.canUpdate}
                             fullWidth
-                            className="bg-white rounded-xl h-11 border-slate-200/60"
+                            triggerClassName="bg-white rounded-xl h-11 border-slate-200/60"
                           />
                         </div>
                       </div>
