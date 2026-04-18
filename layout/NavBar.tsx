@@ -26,12 +26,8 @@ import type { PublicMegaMenuProductCategory } from "@/features/product-categorie
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import NavbarSearch from "@/layout/NavbarSearch";
+import { useNavbarVisibility } from "@/layout/navbar-visibility";
 
-const societyLinks = [
-  { label: "Notre Histoire", href: "/notre-histoire" },
-  { label: "Vision & Mission", href: "#" },
-  { label: "Notre Équipe", href: "#" },
-];
 
 const brandsLinks = [
   { label: "Nos Partenaires", href: "/partenaires" },
@@ -39,10 +35,16 @@ const brandsLinks = [
 ];
 
 const mainLinks = [
-  { label: "SOCIÉTÉ", href: "#", hasMega: false, children: societyLinks },
+    {
+    label: "À PROPOS",
+    href: "/a-propos",
+    hasMega: false,
+    children: undefined,
+  },
   { label: "PRODUITS", href: "#", hasMega: true, children: undefined },
   { label: "MARQUES", href: "#", hasMega: false, children: brandsLinks },
   { label: "PROMOTIONS", href: "#", hasMega: false, children: undefined },
+
   {
     label: "ACTUALITÉS",
     href: "/actualites",
@@ -64,6 +66,7 @@ export default function NavBar({
   const [mobileBrandsOpen, setMobileBrandsOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [produitsOpen, setProduitsOpen] = useState(false);
+  const { isNavbarHidden } = useNavbarVisibility();
 
   const closeSheet = () => {
     setSheetOpen(false);
@@ -73,7 +76,12 @@ export default function NavBar({
   };
 
   return (
-    <header className="sticky top-0 left-0 z-50 border-b border-cobam-quill-grey/60 bg-white">
+    <header
+      className={cn(
+        "sticky top-0 left-0 z-50 border-b border-cobam-quill-grey/60 bg-white transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+        isNavbarHidden ? "-translate-y-full" : "translate-y-0",
+      )}
+    >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20 gap-6">
           <Link href="/" className="flex-shrink-0 z-100">
             <Image

@@ -2,13 +2,16 @@
 
 import { motion } from "framer-motion";
 import { useState, useRef, ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 export default function Magnetic({
   children,
   strength = 15,
+  className,
 }: {
   children: ReactNode;
   strength?: number;
+  className?: string;
 }) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const ref = useRef<HTMLDivElement>(null);
@@ -36,7 +39,7 @@ export default function Magnetic({
       onMouseLeave={reset}
       animate={{ x, y }}
       transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
-      className="inline-block"
+      className={cn("inline-block", className)}
     >
       {children}
     </motion.div>

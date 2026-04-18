@@ -163,7 +163,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [
     mapUrl("/"),
     mapUrl("/contact"),
-    mapUrl("/notre-histoire"),
+    mapUrl("/a-propos"),
     mapUrl("/partenaires"),
     mapUrl("/promotions"),
     mapUrl("/references"),

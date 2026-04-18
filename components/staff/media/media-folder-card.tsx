@@ -98,10 +98,6 @@ export default function MediaFolderCard({
                 }}
                 aria-label={`Selectionner le dossier ${folder.name}`}
               />
-              <div className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-slate-400">
-                <CheckSquare2 className="h-3.5 w-3.5" />
-                Selection
-              </div>
             </div>
           </div>
 

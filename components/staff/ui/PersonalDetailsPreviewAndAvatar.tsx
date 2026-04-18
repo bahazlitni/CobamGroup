@@ -65,7 +65,7 @@ export default function PersonalDetailsPreviewAndAvatar({
 
       <div className="space-y-3 rounded-2xl border border-slate-300 p-4">
         <p className="text-xs text-slate-500">
-          Telephone:{" "}
+          Téléphone:{" "}
           <span className="font-semibold text-slate-700">
             {state.phone || "Non renseigne"}
           </span>

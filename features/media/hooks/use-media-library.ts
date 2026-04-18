@@ -27,7 +27,6 @@ import type {
   MediaUploadBatchResult,
   MediaUploadRequest,
   MediaFilterKind,
-  MediaFolderLayout,
   MediaFolderCreateInput,
   MediaFolderListItemDto,
   MediaListItemDto,
@@ -46,8 +45,6 @@ import {
 type UseMediaLibraryOptions = {
   browseMode?: MediaBrowseMode;
   onBrowseModeChange?: (value: MediaBrowseMode) => void;
-  folderLayout?: MediaFolderLayout;
-  onFolderLayoutChange?: (value: MediaFolderLayout) => void;
   currentFolderId?: number | null;
   onCurrentFolderIdChange?: (value: number | null) => void;
 };
@@ -115,8 +112,6 @@ export function useMediaLibrary(
   const deferredSearch = useDeferredValue(search.trim());
   const [internalBrowseMode, setInternalBrowseMode] =
     useState<MediaBrowseMode>("folders");
-  const [internalFolderLayout, setInternalFolderLayout] =
-    useState<MediaFolderLayout>("grid");
   const [internalCurrentFolderId, setInternalCurrentFolderId] =
     useState<number | null>(null);
   const [activeView, setActiveViewState] = useState<MediaView>("all");
@@ -144,7 +139,6 @@ export function useMediaLibrary(
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const requestIdRef = useRef(0);
   const browseMode = options.browseMode ?? internalBrowseMode;
-  const folderLayout = options.folderLayout ?? internalFolderLayout;
   const currentFolderId =
     options.currentFolderId !== undefined
       ? options.currentFolderId
@@ -383,16 +377,6 @@ export function useMediaLibrary(
 
       if (options.browseMode === undefined) {
         setInternalBrowseMode(value);
-      }
-    });
-  }, [options]);
-
-  const setFolderLayout = useCallback((value: MediaFolderLayout) => {
-    startTransition(() => {
-      options.onFolderLayoutChange?.(value);
-
-      if (options.folderLayout === undefined) {
-        setInternalFolderLayout(value);
       }
     });
   }, [options]);
@@ -998,8 +982,6 @@ export function useMediaLibrary(
     setSearch,
     browseMode,
     setBrowseMode,
-    folderLayout,
-    setFolderLayout,
     currentFolderId,
     openFolder,
     openRootFolder,

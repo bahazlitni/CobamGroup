@@ -22,22 +22,22 @@ export const COBAM_OPENING_HOURS = [
 
 export const COBAM_SOCIAL_LINKS = [
   {
-    label: "Instagram",
-    href: "https://www.instagram.com/cobamgroup/",
-    handle: "@cobamgroup",
-    Icon: FaInstagram,
-  },
-  {
     label: "Facebook",
     href: "https://www.facebook.com/cobamgrp",
     handle: "cobamgrp",
     Icon: FaFacebook,
   },
   {
-    label: "Pinterest",
-    href: "https://www.pinterest.com/cobamgroup/",
-    handle: "cobamgroup",
-    Icon: FaPinterest,
+    label: "Instagram",
+    href: "https://www.instagram.com/cobamgroup/",
+    handle: "@cobamgroup",
+    Icon: FaInstagram,
+  },
+  {
+    label: "Youtube",
+    href: "https://www.youtube.com/@cobamgroup",
+    handle: "@cobamgroup",
+    Icon: FaYoutube,
   },
   {
     label: "LinkedIn",
@@ -50,6 +50,12 @@ export const COBAM_SOCIAL_LINKS = [
     href: "https://www.tiktok.com/@cobam.group",
     handle: "@cobam.group",
     Icon: FaTiktok,
+  },
+  {
+    label: "Pinterest",
+    href: "https://www.pinterest.com/cobamgroup/",
+    handle: "cobamgroup",
+    Icon: FaPinterest,
   },
 ] as const;
 

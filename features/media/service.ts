@@ -425,6 +425,14 @@ export async function listMediaService(
     folderId: query.folderId,
     includeDescendantFolders: query.includeDescendantFolders,
   });
+  const statsFolderIds =
+    query.browseMode === "folders"
+      ? buildScopedFolderIds({
+          allFolders,
+          folderId: query.folderId,
+          includeDescendantFolders: true,
+        })
+      : scopedFolderIds;
 
   const [items, total, stats, folders] = await Promise.all([
     listMedia({ query, ownerUserId, folderIds: scopedFolderIds }),
@@ -435,8 +443,8 @@ export async function listMediaService(
       ownerUserId,
       browseMode: query.browseMode,
       folderId: query.folderId ?? null,
-      includeDescendantFolders: query.includeDescendantFolders,
-      folderIds: scopedFolderIds,
+      includeDescendantFolders: true,
+      folderIds: statsFolderIds,
     }),
     query.browseMode === "folders"
       ? listMediaFoldersAtLevel({

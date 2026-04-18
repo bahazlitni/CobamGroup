@@ -57,12 +57,6 @@ function MediaLibraryPageContent() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
-  const browseModeFromUrl = searchParams.get("browse") === "library"
-    ? "library"
-    : "folders";
-  const folderLayoutFromUrl = searchParams.get("layout") === "list"
-    ? "list"
-    : "grid";
   const currentFolderIdFromUrl = useMemo(() => {
     const rawFolderId = searchParams.get("folder");
 
@@ -103,41 +97,11 @@ function MediaLibraryPageContent() {
     [pathname, router, searchParams],
   );
 
-  const handleBrowseModeChange = useCallback(
-    (value: "folders" | "library") => {
-      updateHistoryState((params) => {
-        if (value === "folders") {
-          params.delete("browse");
-          return;
-        }
-
-        params.set("browse", "library");
-      });
-    },
-    [updateHistoryState],
-  );
-
-  const handleFolderLayoutChange = useCallback(
-    (value: "grid" | "list") => {
-      updateHistoryState(
-        (params) => {
-          if (value === "grid") {
-            params.delete("layout");
-            return;
-          }
-
-          params.set("layout", "list");
-        },
-        "replace",
-      );
-    },
-    [updateHistoryState],
-  );
-
   const handleCurrentFolderChange = useCallback(
     (folderId: number | null) => {
       updateHistoryState((params) => {
         params.delete("browse");
+        params.delete("layout");
 
         if (folderId == null) {
           params.delete("folder");
@@ -150,6 +114,20 @@ function MediaLibraryPageContent() {
     [updateHistoryState],
   );
 
+  useEffect(() => {
+    if (!searchParams.has("browse") && !searchParams.has("layout")) {
+      return;
+    }
+
+    updateHistoryState(
+      (params) => {
+        params.delete("browse");
+        params.delete("layout");
+      },
+      "replace",
+    );
+  }, [searchParams, updateHistoryState]);
+
   const {
     groups,
     folders,
@@ -160,10 +138,6 @@ function MediaLibraryPageContent() {
     storage,
     search,
     setSearch,
-    browseMode,
-    setBrowseMode,
-    folderLayout,
-    setFolderLayout,
     openFolder,
     openRootFolder,
     activeView,
@@ -207,10 +181,7 @@ function MediaLibraryPageContent() {
     updateMedia,
     sentinelRef,
   } = useMediaLibrary(undefined, {
-    browseMode: browseModeFromUrl,
-    onBrowseModeChange: handleBrowseModeChange,
-    folderLayout: folderLayoutFromUrl,
-    onFolderLayoutChange: handleFolderLayoutChange,
+    browseMode: "folders",
     currentFolderId: currentFolderIdFromUrl,
     onCurrentFolderIdChange: handleCurrentFolderChange,
   });
@@ -377,7 +348,7 @@ function MediaLibraryPageContent() {
     try {
       const folder = await createFolder({
         name,
-        parentId: browseMode === "folders" ? currentFolder?.id ?? null : null,
+        parentId: currentFolder?.id ?? null,
       });
 
       setIsFolderDialogOpen(false);
@@ -527,10 +498,6 @@ function MediaLibraryPageContent() {
       <MediaToolbar
         search={search}
         onSearchChange={setSearch}
-        browseMode={browseMode}
-        onBrowseModeChange={setBrowseMode}
-        folderLayout={folderLayout}
-        onFolderLayoutChange={setFolderLayout}
         activeView={activeView}
         onActiveViewChange={setActiveView}
         sortBy={sortBy}
@@ -541,14 +508,12 @@ function MediaLibraryPageContent() {
         onCreateFolder={() => setIsFolderDialogOpen(true)}
       />
 
-      {browseMode === "folders" ? (
-        <MediaFolderBreadcrumbs
-          breadcrumbs={breadcrumbs}
-          onOpenRoot={openRootFolder}
-          onOpenFolder={openFolder}
-          onDropSelectionToFolder={handleDropSelectionToFolder}
-        />
-      ) : null}
+      <MediaFolderBreadcrumbs
+        breadcrumbs={breadcrumbs}
+        onOpenRoot={openRootFolder}
+        onOpenFolder={openFolder}
+        onDropSelectionToFolder={handleDropSelectionToFolder}
+      />
 
       {error ? (
         <StaffNotice variant="error" title="Chargement impossible">
@@ -574,9 +539,8 @@ function MediaLibraryPageContent() {
       ) : null}
 
       <MediaGrid
-        folderLayout={folderLayout}
         folders={folders}
-        showFolders={browseMode === "folders"}
+        showFolders
         groups={groups}
         selectedMediaIds={selectedMediaIds}
         selectedFolderIds={selectedFolderIds}
@@ -600,13 +564,13 @@ function MediaLibraryPageContent() {
       />
 
       <MediaUploadDialog
-        key={`upload-${isUploadOpen ? "open" : "closed"}-${browseMode}-${currentFolder?.id ?? "root"}`}
+        key={`upload-${isUploadOpen ? "open" : "closed"}-${currentFolder?.id ?? "root"}`}
         open={isUploadOpen}
         onOpenChange={setIsUploadOpen}
         isUploading={isUploading}
         storage={storage}
         folderOptions={folderOptions}
-        initialFolderId={browseMode === "folders" ? currentFolder?.id ?? null : null}
+        initialFolderId={currentFolder?.id ?? null}
         onUploadMany={handleUploadMany}
       />
 

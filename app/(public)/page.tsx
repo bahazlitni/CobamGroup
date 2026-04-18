@@ -16,9 +16,10 @@ import { listPublicArticles } from "@/features/articles/public";
 import { listPublicMegaMenuProductCategories } from "@/features/product-categories/public";
 import { listPublicCollections } from "@/features/product-packs/public";
 import { Instagram, Facebook, Linkedin, ArrowRight, Twitter, Youtube } from "lucide-react";
-import { FaPinterest, FaTiktok } from "react-icons/fa";
+import { FaFacebook, FaInstagram, FaLinkedin, FaPinterest, FaTiktok, FaYoutube } from "react-icons/fa";
 import ShowroomCard from "@/components/ui/custom/ShowroomCard";
 import { Metadata } from "next";
+import { COBAM_SOCIAL_LINKS } from "@/data/contact-details";
 
 export const metadata: Metadata = {
   title: "COBAM GROUP | Revêtements et Carrelage, Matériaux de construction, sanitaires et finitions premium en Tunisie",
@@ -60,7 +61,7 @@ export default async function Home() {
     <main className="bg-cobam-light-bg text-cobam-dark-blue selection:bg-cobam-dark-blue selection:text-white">
       <HomeCanvasOverlay />
       {/* HERO SECTION - Cinematic Ful-Bleed */}
-      <section id="section-hero" className="relative h-[95vh] min-h-[700px] w-full overflow-hidden bg-black">
+      <section id="section-hero" className="relative h-[96vh] min-h-[700px] w-full overflow-hidden bg-black">
         <PremiumImageWrapper className="absolute inset-0 z-0">
           <Image
             src="/images/hero-section/1.jpg"
@@ -106,29 +107,31 @@ export default async function Home() {
                   <div className="relative z-10 font-semibold">Nos produits</div>
                 </Link>
               </Magnetic>
-              <Magnetic strength={15}>
-                <Link
-                  href="/contact"
-                  className="group relative overflow-hidden rounded-full border border-white/30 bg-transparent px-8 py-4 text-sm uppercase tracking-widest text-white backdrop-blur-sm transition-all duration-300 hover:border-white hover:bg-white hover:text-[#14202e] inline-block"
-                >
-                  <div className="relative z-10 font-semibold">Nous Contacter</div>
-                </Link>
-              </Magnetic>
+
+            </div>
+          </PremiumReveal>
+
+          
+          <PremiumReveal delay={0.2} direction="up" blur>
+            <div className="mt-16 opacity-70 grayscale transition-all duration-500 hover:opacity-100 hover:grayscale-0">
+              <BrandSlider href="/partenaires" brands={PARTNER_BRANDS} />
             </div>
           </PremiumReveal>
         </div>
       </section>
 
+
+
       {/* MANIFESTO / STATS */}
-      <section id="section-manifesto" className="relative border-b border-cobam-quill-grey/30 bg-cobam-light-bg pt-24 sm:pt-32 sm:pb-16">
+      <section id="section-manifesto" className="relative border-b border-cobam-quill-grey/30 bg-cobam-light-bg py-20 sm:py-24">
         <div className="absolute top-1/4 w-full opacity-[0.03] pointer-events-none z-0">
           <VelocityMarquee baseVelocity={1.5} className="text-[12rem] uppercase font-playfair text-[#14202e]">
             L'architecture des matières — Cobam Group —
           </VelocityMarquee>
         </div>
-        <div className="mx-auto max-w-7xl px-6 md:px-12 relative z-10 min-h-[140vh]">
+        <div className="mx-auto max-w-7xl px-6 md:px-12 relative z-10">
           <div className="flex flex-col lg:flex-row lg:items-start lg:gap-16 relative">
-            <div className="lg:w-1/2 lg:sticky lg:top-40 mb-16 lg:mb-0">
+            <div className="lg:w-1/2 lg:sticky lg:top-32 mb-14 lg:mb-0">
               <PremiumReveal direction="up" blur>
                 <h2
                   className="text-4xl leading-tight sm:text-5xl lg:text-6xl"
@@ -136,8 +139,8 @@ export default async function Home() {
                 >
                   Le luxe réside dans <br /> l'exigence du détail.
                 </h2>
-                <div className="mt-8 h-[1px] w-16 bg-cobam-water-blue" />
-                <p className="mt-8 max-w-lg text-lg leading-relaxed text-cobam-carbon-grey">
+                <div className="mt-7 h-[1px] w-16 bg-cobam-water-blue" />
+                <p className="mt-7 max-w-lg text-lg leading-relaxed text-cobam-carbon-grey">
                   Cobam Group est le partenaire de référence pour l'aménagement et
                   la décoration d'espaces de prestige en Tunisie. Depuis des
                   décennies, nous sélectionnons des matériaux exceptionnels.
@@ -145,9 +148,9 @@ export default async function Home() {
               </PremiumReveal>
             </div>
 
-            <div className="lg:w-1/2 lg:pt-[50vh]">
+            <div className="lg:w-1/2 lg:pt-16">
               <PremiumReveal direction="left" delay={0.2} blur>
-                <div className="grid grid-cols-2 gap-x-8 gap-y-24">
+                <div className="grid grid-cols-2 gap-x-8 gap-y-16">
                   {stats.map((stat, i) => (
                     <div key={stat.label} className="border-l border-cobam-quill-grey pl-6 transition-colors hover:border-cobam-water-blue bg-cobam-light-bg/80 backdrop-blur-sm py-4">
                       <p className="text-4xl font-light text-cobam-dark-blue">{stat.value}</p>
@@ -164,17 +167,17 @@ export default async function Home() {
       </section>
 
       {/* UNIVERSES - Asymmetric Masonry / Staggered */}
-      <section id="section-universes" className="bg-white py-24 sm:py-32">
+      <section id="section-universes" className="bg-white py-20 sm:py-24">
         <div className="mx-auto max-w-7xl px-6 md:px-12">
           <PremiumReveal direction="up">
-            <div className="mb-16 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-              <div className="w-1/2">
+            <div className="mb-12 flex flex-col justify-between gap-7 md:flex-row md:items-end">
+              <div className="w-full md:w-1/2">
                 <p className="text-[10px] uppercase tracking-[0.4em] text-cobam-carbon-grey">
                   Les Univers
                 </p>
-                <div className="-mt-8">
+                <div className="-mt-3">
                   <ScrollRevealText
-                    className="mt-4 text-4xl sm:text-5xl"
+                    className="mt-3 text-4xl sm:text-5xl"
                     text="Une collection complète."
                   />
                 </div>
@@ -255,7 +258,7 @@ export default async function Home() {
           <div className="flex flex-col lg:grid lg:grid-cols-2 lg:gap-0">
             
             {/* Left Side: Sticky Title */}
-            <div className="py-24 lg:py-0 lg:h-screen lg:flex lg:items-center lg:sticky lg:top-0">
+            <div className="py-20 lg:py-24 lg:flex lg:items-center lg:sticky lg:top-20">
                <div className="w-full">
                   <PremiumReveal blur direction="right">
                     <p className="text-cobam-water-blue text-xs uppercase tracking-[0.4em] font-semibold mb-6">Notre Histoire</p>
@@ -265,15 +268,15 @@ export default async function Home() {
                       >
                         Notre Héritage,<br /> Votre Futur.
                       </h2>
-                    <div className="mt-12 h-[1px] w-24 bg-cobam-water-blue/40" />
+                    <div className="mt-10 h-[1px] w-24 bg-cobam-water-blue/40" />
                   </PremiumReveal>
                </div>
             </div>
 
             {/* Right Side: Scrolling Content */}
-            <div className="pb-24 lg:py-[30vh] space-y-32 text-cobam-carbon-grey font-light">
+            <div className="pb-20 lg:py-24 space-y-20 text-cobam-carbon-grey font-light">
               <PremiumReveal blur delay={0.2} direction="up">
-                <div className="space-y-12">
+                <div className="space-y-10">
                   <p className="text-2xl sm:text-3xl leading-relaxed text-[#14202e] font-normal">
                     Depuis 1994, Cobam Group orchestre l'excellence architecturale en Tunisie. 
                   </p>
@@ -284,7 +287,7 @@ export default async function Home() {
                   </p>
                 </div>
                 <div className="pt-8">
-                  <AnimatedUIButton href="/notre-histoire" variant="primary" icon="arrow-right" size="xl">
+                  <AnimatedUIButton href="/a-propos" variant="primary" icon="arrow-right" size="xl">
                     Explorer notre univers
                   </AnimatedUIButton>
                 </div>
@@ -391,8 +394,41 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* SUIVEZ-NOUS BANNER */}
+      <section id="section-suivez-nous" className="relative bg-[#14202e] py-32 text-center text-white overflow-hidden">
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <VelocityMarquee baseVelocity={1} className="text-[15rem] uppercase font-bold text-white">
+            Stay Inspired — Follow @CobamGroup — Stay Inspired —
+          </VelocityMarquee>
+        </div>
+        <div className="relative z-10 container mx-auto px-6">
+          <PremiumReveal blur>
+            <h2 className="font-playfair text-4xl sm:text-6xl mb-12">Suivez notre inspiration</h2>
+            <div className="flex justify-center gap-8 sm:gap-16 flex-wrap">
+              {COBAM_SOCIAL_LINKS.map((social, idx) => (
+                <Magnetic key={social.label} strength={20}>
+                  <a
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-4 group"
+                  >
+                    <div className="p-4 sm:p-6 rounded-full border border-white/10 bg-white/5 transition-all group-hover:bg-cobam-water-blue group-hover:border-cobam-water-blue">
+                      <social.Icon size={28} />
+                    </div>
+                    <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 group-hover:text-white">
+                      {social.label}
+                    </span>
+                  </a>
+                </Magnetic>
+              ))}
+            </div>
+          </PremiumReveal>
+        </div>
+      </section>
+
       {/* SHOWROOMS SECTION */}
-      <section id="section-showrooms" className="relative bg-white py-24 sm:py-32 overflow-hidden">
+      <section id="nos-agences" className="relative bg-white py-24 sm:py-32 overflow-hidden">
         <div className="container mx-auto px-6 lg:px-8 relative z-10">
           <PremiumReveal blur>
             <SectionHeader 
@@ -420,80 +456,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* SUIVEZ-NOUS BANNER */}
-      <section id="section-suivez-nous" className="relative bg-[#14202e] py-32 text-center text-white overflow-hidden">
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <VelocityMarquee baseVelocity={1} className="text-[15rem] uppercase font-bold text-white">
-            Stay Inspired — Follow @CobamGroup — Stay Inspired —
-          </VelocityMarquee>
-        </div>
-        <div className="relative z-10 container mx-auto px-6">
-          <PremiumReveal blur>
-            <h2 className="font-playfair text-4xl sm:text-6xl mb-12">Suivez notre inspiration</h2>
-            <div className="flex justify-center gap-8 sm:gap-16 flex-wrap">
-              {[
-                { icon: Instagram, label: "Instagram", href: "https://instagram.com" },
-                { icon: Facebook, label: "Facebook", href: "https://facebook.com" },
-                { icon: FaPinterest, label: "Pinterest", href: "https://pinterest.com" },
-                { icon: FaTiktok, label: "TikTok", href: "https://tiktok.com" },
-                { icon: Linkedin, label: "LinkedIn", href: "https://linkedin.com" },
-              ].map((social, idx) => (
-                <Magnetic key={social.label} strength={20}>
-                  <a
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex flex-col items-center gap-4 group"
-                  >
-                    <div className="p-4 sm:p-6 rounded-full border border-white/10 bg-white/5 transition-all group-hover:bg-cobam-water-blue group-hover:border-cobam-water-blue">
-                      <social.icon size={28} />
-                    </div>
-                    <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 group-hover:text-white">
-                      {social.label}
-                    </span>
-                  </a>
-                </Magnetic>
-              ))}
-            </div>
-          </PremiumReveal>
-        </div>
-      </section>
-
-      {/* PARTNERS & REFERENCES */}
-      <section id="section-partners" className="bg-cobam-light-bg py-24 shadow-inner sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 md:px-12">
-          <PremiumReveal direction="up" blur>
-            <div className="mb-16 text-center">
-              <h2
-                className="text-3xl sm:text-4xl"
-                style={{ fontFamily: "var(--font-playfair), serif" }}
-              >
-                Partenaires de prestige
-              </h2>
-            </div>
-          </PremiumReveal>
-
-          <PremiumReveal delay={0.2} direction="up" blur>
-            <div className="opacity-70 grayscale transition-all duration-500 hover:opacity-100 hover:grayscale-0">
-              <BrandSlider href="/partenaires" brands={PARTNER_BRANDS} />
-            </div>
-          </PremiumReveal>
-
-          <PremiumReveal delay={0.3} direction="up" blur className="mt-24">
-            <div className="mb-16 text-center">
-              <h2
-                className="text-3xl sm:text-4xl"
-                style={{ fontFamily: "var(--font-playfair), serif" }}
-              >
-                Ils nous font confiance
-              </h2>
-            </div>
-            <div className="opacity-70 grayscale transition-all duration-500 hover:opacity-100 hover:grayscale-0">
-              <BrandSlider href="/references" brands={REFERENCE_BRANDS} />
-            </div>
-          </PremiumReveal>
-        </div>
-      </section>
     </main>
   );
 }

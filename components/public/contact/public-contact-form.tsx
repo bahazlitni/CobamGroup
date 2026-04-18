@@ -41,6 +41,8 @@ const initialState: FormState = {
   message: "",
 };
 
+
+
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function validateForm(form: FormState): FormErrors {
@@ -222,7 +224,7 @@ export default function PublicContactForm() {
             error={errors.email}
           />
           <PhoneField
-            label="Telephone"
+            label="Téléphone"
             value={form.phone}
             onChange={(value) => setField("phone", value ?? "")}
             required={PHONE_REQUIRED}

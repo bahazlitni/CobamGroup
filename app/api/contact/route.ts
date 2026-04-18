@@ -228,7 +228,7 @@ export async function POST(req: Request) {
         `Nom: ${lastName}`,
         `Prénom: ${firstName}`,
         `E-mail: ${email}`,
-        `Telephone: ${phone || "Non renseigné"}`,
+        `Téléphone: ${phone || "Non renseigné"}`,
         `Sujet: ${subject}`,
         "",
         "Message:",

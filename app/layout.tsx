@@ -11,6 +11,8 @@ import "react-phone-number-input/style.css";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { getSiteUrl } from "@/lib/seo/site";
+import { GoogleAnalytics } from "@next/third-parties/google"
+
 
 export const metadata: Metadata = {
   metadataBase: getSiteUrl(),
@@ -33,6 +35,7 @@ export default function RootLayout({
       >
         {children}
         <Toaster richColors closeButton />
+        <GoogleAnalytics gaId="G-XXXXXX" />
       </body>
     </html>
   );

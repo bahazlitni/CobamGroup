@@ -1,16 +1,11 @@
 "use client";
 
-import { AArrowDown, AArrowUp, LayoutGrid, List, Rows3 } from "lucide-react";
+import { AArrowDown, AArrowUp } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
 import PanelSelect from "@/components/staff/ui/PanelSelect";
-import type {
-  MediaBrowseMode,
-  MediaFolderLayout,
-  MediaSortBy,
-  MediaView,
-} from "@/features/media/types";
+import type { MediaSortBy, MediaView } from "@/features/media/types";
 import SearchInput from "@/components/staff/ui/SearchInput";
 
 const viewOptions: Array<{ value: MediaView; label: string }> = [
@@ -25,10 +20,6 @@ const viewOptions: Array<{ value: MediaView; label: string }> = [
 export default function MediaToolbar({
   search,
   onSearchChange,
-  browseMode,
-  onBrowseModeChange,
-  folderLayout,
-  onFolderLayoutChange,
   activeView,
   onActiveViewChange,
   sortBy,
@@ -40,10 +31,6 @@ export default function MediaToolbar({
 }: {
   search: string;
   onSearchChange: (value: string) => void;
-  browseMode: MediaBrowseMode;
-  onBrowseModeChange: (value: MediaBrowseMode) => void;
-  folderLayout: MediaFolderLayout;
-  onFolderLayoutChange: (value: MediaFolderLayout) => void;
   activeView: MediaView;
   onActiveViewChange: (value: MediaView) => void;
   sortBy: MediaSortBy;
@@ -56,65 +43,7 @@ export default function MediaToolbar({
   return (
     <Card className="overflow-hidden rounded-[2rem] border border-slate-300 shadow-sm">
       <CardContent className="space-y-5 px-5 py-5 md:px-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-50 p-1">
-              <button
-                type="button"
-                onClick={() => onBrowseModeChange("folders")}
-                className={
-                  browseMode === "folders"
-                    ? "inline-flex items-center gap-2 rounded-full bg-cobam-dark-blue px-4 py-2 text-sm font-medium text-white"
-                    : "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white"
-                }
-              >
-                <Rows3 className="h-4 w-4" />
-                Dossiers
-              </button>
-              <button
-                type="button"
-                onClick={() => onBrowseModeChange("library")}
-                className={
-                  browseMode === "library"
-                    ? "inline-flex items-center gap-2 rounded-full bg-cobam-dark-blue px-4 py-2 text-sm font-medium text-white"
-                    : "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white"
-                }
-              >
-                <LayoutGrid className="h-4 w-4" />
-                Bibliotheque
-              </button>
-            </div>
-
-            {browseMode === "folders" ? (
-              <div className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-50 p-1">
-                <button
-                  type="button"
-                  onClick={() => onFolderLayoutChange("grid")}
-                  className={
-                    folderLayout === "grid"
-                      ? "inline-flex items-center gap-2 rounded-full bg-cobam-dark-blue px-4 py-2 text-sm font-medium text-white"
-                      : "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white"
-                  }
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                  Grille
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onFolderLayoutChange("list")}
-                  className={
-                    folderLayout === "list"
-                      ? "inline-flex items-center gap-2 rounded-full bg-cobam-dark-blue px-4 py-2 text-sm font-medium text-white"
-                      : "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white"
-                  }
-                >
-                  <List className="h-4 w-4" />
-                  Liste
-                </button>
-              </div>
-            ) : null}
-          </div>
-
+        <div className="flex flex-wrap items-center justify-end gap-3">
           {canCreateFolder && onCreateFolder ? (
             <AnimatedUIButton
               type="button"
@@ -134,7 +63,7 @@ export default function MediaToolbar({
               <TabsTrigger
                 key={option.value}
                 value={option.value}
-                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm data-[state=active]:border-cobam-dark-blue data-[state=active]:bg-cobam-dark-blue data-[state=active]:text-white data-[state=active]:after:hidden"
+                className="max-w-fit rounded-full border border-slate-300 bg-white px-4 py-2 text-sm data-[state=active]:border-cobam-dark-blue data-[state=active]:bg-cobam-dark-blue data-[state=active]:text-white data-[state=active]:after:hidden"
               >
                 {option.label}
               </TabsTrigger>
@@ -143,10 +72,10 @@ export default function MediaToolbar({
         </Tabs>
 
         <div className="flex gap-3">
-          <SearchInput 
-            onChange={onSearchChange} 
-            value={search} 
-            placeholder="Rechercher un nom, un chemin, un mime ou une description..." 
+          <SearchInput
+            onChange={onSearchChange}
+            value={search}
+            placeholder="Rechercher un nom, un chemin ou un mime..."
           />
 
           <PanelSelect

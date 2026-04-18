@@ -26,7 +26,6 @@ export type MediaSortBy = "date" | "name" | "size";
 export type MediaSortDirection = "asc" | "desc";
 export type MediaView = "all" | "images" | "videos" | "pdf" | "audio" | "other";
 export type MediaBrowseMode = "folders" | "library";
-export type MediaFolderLayout = "grid" | "list";
 export type MediaFileVariant = "original" | "thumbnail";
 export type MediaDeleteOptions = {
   force?: boolean;

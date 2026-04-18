@@ -36,7 +36,7 @@ export function PremiumReveal({
         x: 0,
         filter: "blur(0px)",
       }}
-      viewport={{ once: true, margin: "-100px" }}
+      viewport={{ once: true, margin: "-20px" }}
       transition={{
         duration: 1.2,
         delay,

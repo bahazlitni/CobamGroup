@@ -4,16 +4,13 @@ import { Fragment, type DragEvent, type RefObject } from "react";
 import { ImageOff, Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import type {
-  MediaFolderLayout,
   MediaFolderListItemDto,
   MediaListItemDto,
 } from "@/features/media/types";
 import type { DraggedMediaSelection } from "./media-dnd";
 import MediaCard from "./media-card";
 import MediaFolderCard from "./media-folder-card";
-import MediaFolderListRow from "./media-folder-list-row";
 import MediaGridSkeleton from "./media-grid-skeleton";
-import MediaListRow from "./media-list-row";
 
 type MediaGroup = {
   key: string;
@@ -101,7 +98,6 @@ function MediaFolderSectionHeader({
 }
 
 export default function MediaGrid({
-  folderLayout,
   folders,
   showFolders,
   groups,
@@ -121,7 +117,6 @@ export default function MediaGrid({
   hasMore,
   sentinelRef,
 }: {
-  folderLayout: MediaFolderLayout;
   folders: MediaFolderListItemDto[];
   showFolders: boolean;
   groups: MediaGroup[];
@@ -182,74 +177,6 @@ export default function MediaGrid({
               ? "Aucun dossier ni media correspondant."
               : "Aucun media correspondant."}
           </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (folderLayout === "list" && showFolders) {
-    return (
-      <div className="overflow-hidden px-4 py-5 md:px-6 md:py-6">
-        <div className="space-y-3">
-          {folders.length > 0 ? (
-            <>
-              <MediaFolderSectionHeader
-                folders={folders}
-                selectedFolderIds={selectedFolderSet}
-                onToggleFoldersSelected={onToggleFoldersSelected}
-              />
-
-              {folders.map((folder) => (
-                <MediaFolderListRow
-                  key={folder.id}
-                  folder={folder}
-                  isSelected={selectedFolderSet.has(folder.id)}
-                  onToggleSelected={onToggleSelectedFolder}
-                  onOpen={onOpenFolder}
-                  onDropSelection={onDropSelectionToFolder}
-                  onDragStart={onDragStartFolder}
-                />
-              ))}
-            </>
-          ) : null}
-
-          {groups.map((group) => (
-            <Fragment key={group.key}>
-              <MediaGroupHeader
-                label={group.label}
-                itemCount={group.items.length}
-                itemIds={group.items.map((item) => item.id)}
-                selectedIds={selectedMediaSet}
-                onToggleGroupSelected={onToggleGroupSelected}
-              />
-
-              {group.items.map((item) => (
-                <MediaListRow
-                  key={item.id}
-                  item={item}
-                  isSelected={selectedMediaSet.has(item.id)}
-                  onToggleSelected={onToggleSelected}
-                  onOpen={onOpen}
-                  onDragStart={onDragStartMedia}
-                />
-              ))}
-            </Fragment>
-          ))}
-
-          <div className="flex min-h-14 items-center justify-center">
-            {isLoadingMore ? (
-              <div className="inline-flex items-center gap-2 text-sm text-slate-500">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Chargement de nouveaux fichiers...
-              </div>
-            ) : hasMore ? (
-              <div ref={sentinelRef} className="h-2 w-full" />
-            ) : groups.length > 0 ? (
-              <p className="text-xs text-slate-400">
-                Tous les fichiers charges pour cette vue.
-              </p>
-            ) : null}
-          </div>
         </div>
       </div>
     );

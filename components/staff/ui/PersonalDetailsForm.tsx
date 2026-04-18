@@ -131,7 +131,7 @@ export default function PersonalDetailsForm({
           </div>
         </PanelField>
 
-        <PanelField id="phone" label="Telephone">
+        <PanelField id="phone" label="Téléphone">
           <PhoneInput
             fullWidth
             id="phone"
