@@ -23,7 +23,7 @@ export default async function PublicLayout({
         <TopBar />
         <NavBar productCategories={productCategories} />
         {children}
-        <Footer />
+        <Footer productCategories={productCategories} />
       </NavbarVisibilityProvider>
     </LenisProvider>
   );

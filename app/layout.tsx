@@ -10,16 +10,41 @@ import "@fontsource/source-serif-4/700.css";
 import "react-phone-number-input/style.css";
 import "./globals.css";
 import { Toaster } from "sonner";
-import { getSiteUrl } from "@/lib/seo/site";
+import { buildAbsoluteUrl, getSiteName, getSiteUrl } from "@/lib/seo/site";
 import { GoogleAnalytics } from "@next/third-parties/google"
 
+const siteName = getSiteName();
+const siteDescription =
+  "Depuis 1994, COBAM GROUP accompagne les projets de construction, renovation et finition avec des materiaux, surfaces, sanitaires et solutions premium en Tunisie.";
 
 export const metadata: Metadata = {
   metadataBase: getSiteUrl(),
-  title: "COBAM GROUP | Carrelage, Sanitaire, Robinetterie",
-  description:
-    "Depuis 1994, COBAM GROUP est votre partenaire de confiance pour les materiaux de construction, carrelage, sanitaires et robinetterie en Tunisie.",
-  applicationName: "COBAM GROUP",
+  title: {
+    default: "COBAM GROUP | Materiaux, carrelage, sanitaires et finitions en Tunisie",
+    template: `%s | ${siteName}`,
+  },
+  description: siteDescription,
+  applicationName: siteName,
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: "website",
+    locale: "fr_TN",
+    siteName,
+    url: buildAbsoluteUrl("/"),
+    title: "COBAM GROUP | Materiaux, carrelage, sanitaires et finitions en Tunisie",
+    description: siteDescription,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "COBAM GROUP | Materiaux, carrelage, sanitaires et finitions en Tunisie",
+    description: siteDescription,
+  },
 };
 
 export default function RootLayout({

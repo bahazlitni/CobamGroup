@@ -32,7 +32,7 @@ export default function TopBar() {
 
         {/* Right: Quick access */}
         <div className="flex items-center gap-5">
-          <a href="#nos-agences" className="flex items-center gap-1 text-cobam-quill-grey hover:text-cobam-water-blue transition-colors">
+          <a href="/#nos-agences" className="flex items-center gap-1 text-cobam-quill-grey hover:text-cobam-water-blue transition-colors">
             <MapPin size={12} />
             Nos Agences
           </a>

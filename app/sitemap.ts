@@ -169,6 +169,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     mapUrl("/references"),
     mapUrl("/actualites"),
     mapUrl("/produits"),
+    
     ...categories.map((category) =>
       mapUrl(`/produits/${category.slug}`, category.updatedAt),
     ),

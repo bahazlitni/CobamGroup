@@ -1,3 +1,5 @@
+import FooterLink from "./FooterLink";
+
 interface FooterLink {
   label: string;
   href: string;
@@ -8,6 +10,7 @@ interface FooterColumnProps {
   links: FooterLink[];
 }
 
+
 export default function FooterColumn({ title, links }: FooterColumnProps) {
   return (
     <div className="flex flex-col gap-4">
@@ -17,12 +20,10 @@ export default function FooterColumn({ title, links }: FooterColumnProps) {
       <ul className="flex flex-col gap-3">
         {links.map((link, i) => (
           <li key={i}>
-            <a
+            <FooterLink
               href={link.href}
-              className="text-gray-400 hover:text-cobam-water-blue text-sm transition-colors"
-            >
-              {link.label}
-            </a>
+              label={link.label}
+            />
           </li>
         ))}
       </ul>
