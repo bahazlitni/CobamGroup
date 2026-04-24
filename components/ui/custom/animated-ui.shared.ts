@@ -679,30 +679,30 @@ export function getAnimatedButtonSizeStyles(
   switch (size) {
     case "xs":
       return {
-        px: "px-2.5",
-        py: "py-1.5",
-        textSize: "text-[11px]",
-        rounded: "rounded-md",
-        gap: "gap-1.5",
-        minHeight: "min-h-7",
+        px: "px-2",
+        py: "py-1",
+        textSize: "text-[10px]",
+        rounded: "rounded-sm",
+        gap: "gap-1",
+        minHeight: "min-h-6",
       };
     case "sm":
       return {
-        px: "px-3",
-        py: "py-1.5",
+        px: "px-2.5",
+        py: "py-1.25",
         textSize: "text-xs",
         rounded: "rounded-md",
-        gap: "gap-1.5",
-        minHeight: "min-h-8",
+        gap: "gap-1.25",
+        minHeight: "min-h-7",
       };
     case "lg":
       return {
-        px: "px-5",
-        py: "py-2.5",
+        px: "px-4",
+        py: "py-2",
         textSize: "text-base",
-        rounded: "rounded-xl",
-        gap: "gap-2.5",
-        minHeight: "min-h-11",
+        rounded: "rounded-lg",
+        gap: "gap-2",
+        minHeight: "min-h-10",
       };
     case "xl":
       return {

@@ -28,12 +28,6 @@ type InputProps = Omit<ComponentProps<typeof Input>, "value" | "onChange"> & {
   onValueChange?: (value: string) => void;
 };
 
-interface Props extends InputProps {
-  fullWidth?: boolean;
-  suggestions?: Array<string | PanelAutoCompleteOption>;
-  displayValue?: string;
-  emitSuggestionValue?: boolean;
-}
 
 function createSyntheticChangeEvent(
   nextValue: string,
@@ -89,6 +83,14 @@ function getSuggestionOutput(
   return emitSuggestionValue ? outputValue : (suggestion.label ?? outputValue);
 }
 
+
+interface PanelAutoCompleteInputProps extends InputProps {
+  fullWidth?: boolean;
+  suggestions?: Array<string | PanelAutoCompleteOption>;
+  displayValue?: string;
+  emitSuggestionValue?: boolean;
+}
+
 export default function PanelAutoCompleteInput({
   fullWidth = false,
   suggestions,
@@ -103,7 +105,7 @@ export default function PanelAutoCompleteInput({
   disabled = false,
   autoComplete,
   ...props
-}: Props) {
+}: PanelAutoCompleteInputProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);

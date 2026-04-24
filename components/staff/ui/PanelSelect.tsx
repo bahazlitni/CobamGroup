@@ -23,6 +23,20 @@ export type StaffSelectGroupedOption = {
   items: StaffSelectOption[]
 }
 
+export interface PanelSelectProps {
+  id?: string
+  value: null | string;
+  onValueChange: (value: string) => void;
+  options?: StaffSelectOption[];
+  groupedOptions?: StaffSelectGroupedOption[];
+  placeholder?: string;
+  emptyLabel?: string;
+  disabled?: boolean;
+  fullWidth?: boolean;
+  triggerClassName?: string;
+  contentClassName?: string;
+}
+
 export default function PanelSelect({
   value,
   onValueChange,
@@ -35,20 +49,7 @@ export default function PanelSelect({
   triggerClassName,
   contentClassName,
   id
-}: {
-  id?: string
-  value: null | string;
-  onValueChange: (value: string) => void;
-  options?: StaffSelectOption[];
-  groupedOptions?: StaffSelectGroupedOption[];
-  placeholder?: string;
-  emptyLabel?: string;
-  disabled?: boolean;
-  fullWidth?: boolean;
-  triggerClassName?: string;
-  contentClassName?: string;
-  
-}) {
+}: PanelSelectProps) {
   const selectValue = value === "" ? EMPTY_SELECT_VALUE : value;
 
   return (

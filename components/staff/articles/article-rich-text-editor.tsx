@@ -28,6 +28,7 @@ export default function ArticleRichTextEditor({
   className,
 }: ArticleRichTextEditorProps) {
   const onChangeRef = useRef(onChange);
+  const isSyncingExternalContentRef = useRef(false);
   const document = useMemo(() => parseArticleContent(value), [value]);
   const normalizedValue = useMemo(
     () => serializeArticleContent(document),
@@ -54,6 +55,10 @@ export default function ArticleRichTextEditor({
       },
     },
     onUpdate: ({ editor: nextEditor }) => {
+      if (isSyncingExternalContentRef.current) {
+        return;
+      }
+
       onChangeRef.current(serializeArticleContent(nextEditor.getJSON()));
     },
   });
@@ -68,7 +73,11 @@ export default function ArticleRichTextEditor({
     const currentContent = serializeArticleContent(editor.getJSON());
 
     if (currentContent !== normalizedValue) {
+      isSyncingExternalContentRef.current = true;
       editor.commands.setContent(document, { emitUpdate: false });
+      queueMicrotask(() => {
+        isSyncingExternalContentRef.current = false;
+      });
     }
   }, [document, editable, editor, normalizedValue]);
 

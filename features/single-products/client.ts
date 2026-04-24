@@ -3,6 +3,8 @@
 import { staffApiFetch } from "@/lib/api/auth/staff/api-fetch";
 import type {
   SingleProductDetailDto,
+  SingleProductAiSuggestionRequest,
+  SingleProductAiSuggestionResponse,
   SingleProductFormOptionsDto,
   SingleProductUpsertInput,
 } from "./types";
@@ -117,4 +119,22 @@ export async function deleteSingleProductClient(id: number) {
     res,
     "Impossible de supprimer le produit simple.",
   );
+}
+
+export async function suggestSingleProductAiClient(
+  input: SingleProductAiSuggestionRequest,
+): Promise<SingleProductAiSuggestionResponse> {
+  const res = await staffApiFetch("/api/staff/single-products/ai-suggestions", {
+    method: "POST",
+    auth: true,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+  const payload = await unwrapResponse<{
+    suggestions: SingleProductAiSuggestionResponse;
+  }>(res, "Impossible de generer les suggestions IA.");
+
+  return payload.suggestions;
 }

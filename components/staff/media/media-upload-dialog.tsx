@@ -69,7 +69,7 @@ export default function MediaUploadDialog({
   const [items, setItems] = useState<MediaUploadQueueItem[]>([]);
   const [title, setTitle] = useState("");
   const [altText, setAltText] = useState("");
-  const [visibility, setVisibility] = useState<MediaVisibility>("PRIVATE");
+  const [visibility, setVisibility] = useState<MediaVisibility>("PUBLIC");
   const [folderId, setFolderId] = useState(
     initialFolderId != null ? String(initialFolderId) : "",
   );
@@ -78,7 +78,7 @@ export default function MediaUploadDialog({
     setItems([]);
     setTitle("");
     setAltText("");
-    setVisibility("PRIVATE");
+    setVisibility("PUBLIC");
     setFolderId(initialFolderId != null ? String(initialFolderId) : "");
 
     if (inputRef.current) {

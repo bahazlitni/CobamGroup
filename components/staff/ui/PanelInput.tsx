@@ -8,9 +8,9 @@ interface Props extends PanelInputProps {
     fullWidth?: boolean
 }
 
-export default function PanelInput({fullWidth=false, ...props}: Props) {
+export default function PanelInput({fullWidth=false, className, ...props}: Props) {
     return <Input
-        className={cn("h-10 rounded-md border-cobam-grey bg-white px-4 text-base border border-slate-300", fullWidth ? "w-full" : "w-auto")}
+        className={cn("h-10 rounded-md border-cobam-grey bg-white px-4 text-base border border-slate-300", fullWidth ? "w-full" : "w-auto", className)}
         
         {...props}
     />

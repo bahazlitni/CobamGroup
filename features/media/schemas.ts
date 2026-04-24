@@ -160,7 +160,7 @@ export function parseMediaUploadFormData(formData: FormData): MediaUploadInput {
         typeof formData.get("visibility") === "string"
           ? (formData.get("visibility") as string)
           : null,
-      ) ?? MEDIA_VISIBILITY.PRIVATE,
+      ) ?? MEDIA_VISIBILITY.PUBLIC,
     folderId:
       parseOptionalMediaFolderId(
         typeof formData.get("folderId") === "string" ? (formData.get("folderId") as string) : null,
