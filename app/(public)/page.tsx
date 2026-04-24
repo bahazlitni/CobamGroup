@@ -3,7 +3,7 @@ import Link from "next/link";
 import SectionHeader from "@/components/ui/custom/SectionHeader";
 import BrandSlider from "@/components/ui/custom/BrandSlider";
 import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
-import { PARTNER_BRANDS, REFERENCE_BRANDS } from "@/lib/static_tables/brands";
+import { PRODUCT_BRANDS } from "@/lib/static_tables/brands";
 import { cn } from "@/lib/utils";
 import { PremiumReveal } from "@/components/ui/custom/PremiumReveal";
 import { PremiumImageWrapper } from "@/components/ui/custom/PremiumImageWrapper";
@@ -15,8 +15,7 @@ import VelocityMarquee from "@/components/ui/custom/VelocityMarquee";
 import { listPublicArticles } from "@/features/articles/public";
 import { listPublicMegaMenuProductCategories } from "@/features/product-categories/public";
 import { listPublicCollections } from "@/features/product-packs/public";
-import { Instagram, Facebook, Linkedin, ArrowRight, Twitter, Youtube } from "lucide-react";
-import { FaFacebook, FaInstagram, FaLinkedin, FaPinterest, FaTiktok, FaYoutube } from "react-icons/fa";
+import { ArrowRight } from "lucide-react";
 import ShowroomCard from "@/components/ui/custom/ShowroomCard";
 import { Metadata } from "next";
 import { COBAM_SOCIAL_LINKS } from "@/data/contact-details";
@@ -111,11 +110,9 @@ export default async function Home() {
             </div>
           </PremiumReveal>
 
-          
-          <PremiumReveal delay={0.2} direction="up" blur>
-            <div className="mt-16 opacity-70 grayscale transition-all duration-500 hover:opacity-100 hover:grayscale-0">
-              <BrandSlider href="/partenaires" brands={PARTNER_BRANDS} />
-            </div>
+
+          <PremiumReveal delay={0.9} direction="up" blur className="mt-20 w-full">
+            <BrandSlider brands={PRODUCT_BRANDS} />
           </PremiumReveal>
         </div>
       </section>
@@ -256,21 +253,21 @@ export default async function Home() {
       <section id="section-about" className="relative border-y border-cobam-quill-grey/30 bg-white overflow-hidden">
         <div className="container mx-auto px-6 lg:px-8 relative z-10">
           <div className="flex flex-col lg:grid lg:grid-cols-2 lg:gap-0">
-            
+
             {/* Left Side: Sticky Title */}
             <div className="py-20 lg:py-24 lg:flex lg:items-center lg:sticky lg:top-20">
-               <div className="w-full">
-                  <PremiumReveal blur direction="right">
-                    <p className="text-cobam-water-blue text-xs uppercase tracking-[0.4em] font-semibold mb-6">Notre Histoire</p>
-                      <h2
-                        className="text-4xl leading-tight sm:text-5xl lg:text-6xl"
-                        style={{ fontFamily: "var(--font-playfair), serif" }}
-                      >
-                        Notre Héritage,<br /> Votre Futur.
-                      </h2>
-                    <div className="mt-10 h-[1px] w-24 bg-cobam-water-blue/40" />
-                  </PremiumReveal>
-               </div>
+              <div className="w-full">
+                <PremiumReveal blur direction="right">
+                  <p className="text-cobam-water-blue text-xs uppercase tracking-[0.4em] font-semibold mb-6">Notre Histoire</p>
+                  <h2
+                    className="text-4xl leading-tight sm:text-5xl lg:text-6xl"
+                    style={{ fontFamily: "var(--font-playfair), serif" }}
+                  >
+                    Notre Héritage,<br /> Votre Futur.
+                  </h2>
+                  <div className="mt-10 h-[1px] w-24 bg-cobam-water-blue/40" />
+                </PremiumReveal>
+              </div>
             </div>
 
             {/* Right Side: Scrolling Content */}
@@ -278,11 +275,11 @@ export default async function Home() {
               <PremiumReveal blur delay={0.2} direction="up">
                 <div className="space-y-10">
                   <p className="text-2xl sm:text-3xl leading-relaxed text-[#14202e] font-normal">
-                    Depuis 1994, Cobam Group orchestre l'excellence architecturale en Tunisie. 
+                    Depuis 1994, Cobam Group orchestre l'excellence architecturale en Tunisie.
                   </p>
                   <p className="text-lg leading-relaxed max-w-xl">
-                    Notre mission est de transformer chaque espace en un sanctuaire de raffinement. 
-                    De la céramique d'avant-garde aux systèmes de confort thermique les plus sophistiqués, 
+                    Notre mission est de transformer chaque espace en un sanctuaire de raffinement.
+                    De la céramique d'avant-garde aux systèmes de confort thermique les plus sophistiqués,
                     notre catalogue est une invitation à la perfection technique.
                   </p>
                 </div>
@@ -431,7 +428,7 @@ export default async function Home() {
       <section id="nos-agences" className="relative bg-white py-24 sm:py-32 overflow-hidden">
         <div className="container mx-auto px-6 lg:px-8 relative z-10">
           <PremiumReveal blur>
-            <SectionHeader 
+            <SectionHeader
               preTitle="Proximité"
               title="Visitez Nos Showrooms"
               description="Venez découvrir l'excellence de nos matières et le savoir-faire de nos experts dans l'un de nos quatre points de vente en Tunisie."

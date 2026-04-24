@@ -15,7 +15,7 @@ import {
 } from "@/lib/seo/site";
 
 const DEFAULT_DESCRIPTION =
-  "Explorez les produits COBAM GROUP pour les revetements, sanitaires, materiaux de construction et finitions en Tunisie.";
+  "Explorez les produits COBAM GROUP pour les revetements, sanitaires, Matériaux de construction et finitions en Tunisie.";
 
 type BreadcrumbJsonLdItem = {
   name: string;

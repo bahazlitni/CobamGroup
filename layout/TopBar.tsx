@@ -40,10 +40,6 @@ export default function TopBar() {
             <UserCircle size={12} />
             Espace Team
           </a>
-          <a href="/login/staff" className="flex items-center gap-1 text-cobam-quill-grey hover:text-cobam-water-blue transition-colors">
-            <BookUser size={12} />
-            Annuaire Cobam
-          </a>
         </div>
       </div>
     </div>

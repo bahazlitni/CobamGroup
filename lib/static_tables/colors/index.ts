@@ -51,11 +51,10 @@ export const COLORS: readonly Color[] = [
   { key: "DEUTSCH_TORTILLA_34", label: "Tortilla 34", value: "#C8A97E" },
   { key: "DEUTSCH_CYPRESS_GREEN_32", label: "Vert Cypress 32", value: "#3F5F4A" },
 
-
   { key: "DEUTSCH_SPATORELLA_BLUE", label: "Bleu", value: "#282F98"},
   { key: "DEUTSCH_SPATORELLA_RED", label: "Rouge", value: "#FF1F35"},
 
-    {key: "SILVER", label: "Argent", value: "#CCCCCC"}
+  {key: "SILVER", label: "Argent", value: "#CCCCCC"}
 
 ] as const;
 

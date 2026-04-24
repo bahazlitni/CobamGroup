@@ -155,8 +155,8 @@ export default function Footer({
         <div className="flex flex-col items-center justify-between gap-3 text-xs text-white/40 sm:flex-row">
           <p>© {new Date().getFullYear()} Cobam Group. Tous droits réservés.</p>
           <div className="inline-flex flex-wrap gap-4">
-            {legalLinks.map((legalLink) => 
-            <FooterLink label={legalLink.label} href={legalLink.href}/>
+            {legalLinks.map((legalLink, i: number) => 
+            <FooterLink key={i} label={legalLink.label} href={legalLink.href}/>
           )}
           </div>
         </div>

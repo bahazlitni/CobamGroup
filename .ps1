@@ -1,6 +1,6 @@
 param(
-    [string]$InputDir = "./.storage/media/media/image/2026/04",
-    [string]$OutputDir = "./.storage/webp",
+    [string]$InputDir = "./public/images/brands",
+    [string]$OutputDir = "./public/images/brands-webp",
     [int]$Quality = 80,
     [int]$CompressionLevel = 6
 )

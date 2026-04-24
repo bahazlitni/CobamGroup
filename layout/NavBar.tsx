@@ -76,6 +76,7 @@ export default function NavBar({
   };
 
   return (
+    <>
     <header
       className={cn(
         "sticky top-0 left-0 z-50 border-b border-cobam-quill-grey/60 bg-white transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
@@ -182,11 +183,6 @@ export default function NavBar({
               >
                 <Search size={18} />
               </button>
-
-              <NavbarSearch 
-                isOpen={searchOpen} 
-                onClose={() => setSearchOpen(false)} 
-              />
             </div>
 
             <Sheet
@@ -386,5 +382,10 @@ export default function NavBar({
           </div>
       </div>
     </header>
+    <NavbarSearch 
+      isOpen={searchOpen} 
+      onClose={() => setSearchOpen(false)} 
+    />
+    </>
   );
 }

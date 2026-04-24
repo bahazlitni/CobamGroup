@@ -759,6 +759,103 @@ function sortIndexItems(items: PublicProductIndexItem[]) {
 
 
 
+function buildAdvancedSearchAst(q: string) {
+  const isAdvancedSearch = /^(?:brand|sku|name|date)(?::[123])?=/i.test(q);
+  if (!isAdvancedSearch) return null;
+
+  const tokens: string[] = [];
+  let remainder = q;
+  while (remainder.length > 0) {
+    if (remainder.startsWith('||')) {
+      tokens.push('||');
+      remainder = remainder.slice(2);
+    } else if (remainder.startsWith('|')) {
+      tokens.push('|');
+      remainder = remainder.slice(1);
+    } else if (remainder.startsWith('&')) {
+      tokens.push('&');
+      remainder = remainder.slice(1);
+    } else {
+      const match = remainder.match(/^((?:brand|sku|name|date)(?::[123])?=[^&|]*)/i);
+      if (match) {
+        tokens.push(match[1]);
+        remainder = remainder.slice(match[1].length);
+      } else {
+        return null; // invalid syntax
+      }
+    }
+  }
+
+  // Ast building
+  const step1: any[] = [];
+  for (let i = 0; i < tokens.length; i++) {
+    if (tokens[i] === '||') {
+      const left = step1.pop();
+      const right = tokens[++i];
+      if (!left || !right) return null;
+      step1.push({ type: 'OR_GROUP', left, right });
+    } else {
+      step1.push(tokens[i]);
+    }
+  }
+
+  const step2: any[] = [];
+  for (let i = 0; i < step1.length; i++) {
+    if (step1[i] === '&') {
+      const left = step2.pop();
+      const right = step1[++i];
+      if (!left || !right) return null;
+      step2.push({ type: 'AND', left, right });
+    } else {
+      step2.push(step1[i]);
+    }
+  }
+
+  const step3: any[] = [];
+  for (let i = 0; i < step2.length; i++) {
+    if (step2[i] === '|') {
+      const left = step3.pop();
+      const right = step2[++i];
+      if (!left || !right) return null;
+      step3.push({ type: 'OR', left, right });
+    } else {
+      step3.push(step2[i]);
+    }
+  }
+
+  if (step3.length !== 1) return null;
+  return step3[0];
+}
+
+function buildSqlFromAst(node: any): import("@prisma/client").Prisma.Sql {
+  if (typeof node === 'string') {
+    const match = node.match(/^((?:brand|sku|name|date))(?::([123]))?=([^&|]*)$/i);
+    if (!match) return Prisma.empty;
+    const key = match[1].toLowerCase();
+    const op = match[2] || '1';
+    const val = match[3];
+
+    let sqlPattern;
+    if (op === '1') sqlPattern = `${val}%`;
+    else if (op === '2') sqlPattern = val;
+    else if (op === '3') sqlPattern = `%${val}%`;
+    else return Prisma.empty;
+
+    if (key === 'brand') return Prisma.sql`"p"."brand" ILIKE ${sqlPattern}`;
+    if (key === 'sku') return Prisma.sql`"p"."sku" ILIKE ${sqlPattern}`;
+    if (key === 'name') return Prisma.sql`"p"."name" ILIKE ${sqlPattern}`;
+    return Prisma.empty;
+  }
+
+  const left = buildSqlFromAst(node.left);
+  const right = buildSqlFromAst(node.right);
+
+  if (node.type === 'AND') return Prisma.sql`(${left} AND ${right})`;
+  if (node.type === 'OR' || node.type === 'OR_GROUP') return Prisma.sql`(${left} OR ${right})`;
+
+  return Prisma.empty;
+}
+
 export async function listPublicProductsIndex(input: {
   categorySlug?: string | null;
   subcategorySlug?: string | null;
@@ -771,7 +868,13 @@ export async function listPublicProductsIndex(input: {
   const offset = (input.page - 1) * pageSize;
 
   const normalizedQuery = normalizeComparableValue(input.q);
-  const pattern = normalizedQuery ? `%${normalizedQuery}%` : null;
+
+  const advancedSearchAst = input.q ? buildAdvancedSearchAst(input.q) : null;
+  const pattern = normalizedQuery && !advancedSearchAst ? `%${normalizedQuery}%` : null;
+
+  const advancedSearchCondition = advancedSearchAst
+    ? Prisma.sql`AND (${buildSqlFromAst(advancedSearchAst)})`
+    : Prisma.empty;
 
   const includeFamilies = input.includeFamilies ?? false;
 
@@ -801,6 +904,7 @@ export async function listPublicProductsIndex(input: {
     JOIN product_subcategories s ON s.id = l.subcategory_id AND s.is_active = true
     JOIN product_types c ON c.id = s.category_id AND c.is_active = true
     WHERE p.kind = 'VARIANT' AND p.lifecycle = 'ACTIVE' AND p.visibility IS TRUE
+    ${advancedSearchCondition}
     ${input.categorySlug ? Prisma.sql`AND "c".slug = ${input.categorySlug}` : Prisma.empty}
     ${input.subcategorySlug ? Prisma.sql`AND "s".slug = ${input.subcategorySlug}` : Prisma.empty}
     ${pattern ? Prisma.sql`AND (
@@ -864,6 +968,7 @@ export async function listPublicProductsIndex(input: {
         ? Prisma.sql`(p.kind IN ('SINGLE', 'PACK') OR (p.kind = 'VARIANT' AND fm.product_id IS NULL))`
         : Prisma.sql`p.kind IN ('SINGLE', 'PACK', 'VARIANT')`
     } AND p.lifecycle = 'ACTIVE' AND p.visibility IS TRUE
+    ${advancedSearchCondition}
     ${input.categorySlug ? Prisma.sql`AND "c".slug = ${input.categorySlug}` : Prisma.empty}
     ${input.subcategorySlug ? Prisma.sql`AND "s".slug = ${input.subcategorySlug}` : Prisma.empty}
     ${pattern ? Prisma.sql`AND (

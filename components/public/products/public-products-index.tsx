@@ -8,12 +8,15 @@ import {
   useRef,
   useState,
 } from "react";
-import { Loader2, Search, X } from "lucide-react";
+import { Loader2, Search, Settings2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { normalizeThemeColor, withThemeAlpha } from "@/lib/theme-color";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { PublicProductIndexItem, PublicProductIndexResult } from "@/features/products/public";
 import PublicProductCard from "./public-product-card";
+import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
 
 type PublicProductsIndexProps = {
   initialResult: PublicProductIndexResult;
@@ -133,6 +136,54 @@ function groupIndexItems(items: PublicProductIndexItem[]) {
     }));
 }
 
+function parseSearchQueryToAdvancedState(q: string) {
+  const isAdvancedSearch = /^(?:brand|sku|name)(?::[123])?=/i.test(q);
+  if (!isAdvancedSearch) return null;
+
+  const result = {
+    brandValue: "", brandOp: "1",
+    nameValue: "", nameOp: "1",
+    skuValue: "", skuOp: "1",
+    bindBrandName: "&",
+    bindNameSku: "&"
+  };
+
+  const tokens = [];
+  let remainder = q;
+  while (remainder.length > 0) {
+    if (remainder.startsWith('||')) { tokens.push('||'); remainder = remainder.slice(2); }
+    else if (remainder.startsWith('|')) { tokens.push('|'); remainder = remainder.slice(1); }
+    else if (remainder.startsWith('&')) { tokens.push('&'); remainder = remainder.slice(1); }
+    else {
+      const match = remainder.match(/^((?:brand|sku|name)(?::[123])?=[^&|]*)/i);
+      if (match) {
+        tokens.push(match[1]);
+        remainder = remainder.slice(match[1].length);
+      } else return null;
+    }
+  }
+
+  let lastKey: "brand" | "name" | "sku" | null = null;
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (token === '&' || token === '|' || token === '||') {
+      if (lastKey === 'brand') result.bindBrandName = token;
+      if (lastKey === 'name') result.bindNameSku = token;
+    } else {
+      const [prefix, val] = token.split('=');
+      const prefixParts = prefix.split(':');
+      const key = prefixParts[0];
+      const op = prefixParts[1] || '1';
+      const k = key.toLowerCase();
+      if (k === 'brand') { result.brandValue = val; result.brandOp = op; lastKey = 'brand'; }
+      if (k === 'name') { result.nameValue = val; result.nameOp = op; lastKey = 'name'; }
+      if (k === 'sku') { result.skuValue = val; result.skuOp = op; lastKey = 'sku'; }
+    }
+  }
+
+  return result;
+}
+
 export default function PublicProductsIndex({
   initialResult,
   initialSearch,
@@ -153,6 +204,45 @@ export default function PublicProductsIndex({
   const searchControllerRef = useRef<AbortController | null>(null);
   const hasMountedSearchEffectRef = useRef(false);
   const activeSearchQuery = normalizeSearchQuery(deferredSearchInput);
+
+  const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
+  const parsedAdvancedState = useMemo(() => parseSearchQueryToAdvancedState(initialSearch ?? ""), [initialSearch]);
+
+  const [advBrandValue, setAdvBrandValue] = useState(parsedAdvancedState?.brandValue ?? "");
+  const [advBrandOp, setAdvBrandOp] = useState(parsedAdvancedState?.brandOp ?? "1");
+  const [advBindBrandName, setAdvBindBrandName] = useState(parsedAdvancedState?.bindBrandName ?? "&");
+  const [advNameValue, setAdvNameValue] = useState(parsedAdvancedState?.nameValue ?? "");
+  const [advNameOp, setAdvNameOp] = useState(parsedAdvancedState?.nameOp ?? "1");
+  const [advBindNameSku, setAdvBindNameSku] = useState(parsedAdvancedState?.bindNameSku ?? "&");
+  const [advSkuValue, setAdvSkuValue] = useState(parsedAdvancedState?.skuValue ?? "");
+  const [advSkuOp, setAdvSkuOp] = useState(parsedAdvancedState?.skuOp ?? "1");
+
+  useEffect(() => {
+    if (parsedAdvancedState) {
+      setIsAdvancedSearchOpen(true);
+    }
+  }, [parsedAdvancedState]);
+
+  const compileAdvancedSearch = useCallback(() => {
+    const parts = [];
+    if (advBrandValue.trim()) parts.push(`brand:${advBrandOp}=${advBrandValue.trim()}`);
+    if (advNameValue.trim()) {
+      if (parts.length > 0) parts.push(advBindBrandName);
+      parts.push(`name:${advNameOp}=${advNameValue.trim()}`);
+    }
+    if (advSkuValue.trim()) {
+      if (parts.length > 0) parts.push(advBindNameSku);
+      parts.push(`sku:${advSkuOp}=${advSkuValue.trim()}`);
+    }
+    return parts.join('');
+  }, [advBrandValue, advBrandOp, advBindBrandName, advNameValue, advNameOp, advBindNameSku, advSkuValue, advSkuOp]);
+
+  useEffect(() => {
+    if (isAdvancedSearchOpen) {
+      const q = compileAdvancedSearch();
+      setSearchInput(q);
+    }
+  }, [compileAdvancedSearch, isAdvancedSearchOpen]);
 
   const hasMore = !isRefreshing && items.length < total;
 
@@ -356,7 +446,7 @@ export default function PublicProductsIndex({
         placeholder="Rechercher par nom, SKU, marque..."
         className="h-12 w-full border-b border-cobam-quill-grey/40 bg-transparent pl-12 pr-12 text-sm text-[#14202e] outline-none transition-colors focus:border-cobam-water-blue placeholder:text-cobam-carbon-grey/40"
       />
-      {searchInput ? (
+      {searchInput && !isAdvancedSearchOpen ? (
         <button
           type="button"
           onClick={() => setSearchInput("")}
@@ -369,9 +459,122 @@ export default function PublicProductsIndex({
     </div>
   );
 
+  const advancedSearchForm = (
+    <div className={cn("transition-all duration-300", isAdvancedSearchOpen ? "mt-5 border-t border-cobam-quill-grey/20 pt-5 opacity-100" : "max-h-0 opacity-0")}>
+      <div className="flex flex-col lg:flex-row lg:flex-wrap items-center gap-3">
+
+        {/* Brand */}
+        <div className="flex items-center bg-white p-1.5 rounded-lg border border-cobam-quill-grey/40 gap-2 shrink-0 focus-within:border-cobam-water-blue focus-within:ring-1 focus-within:ring-cobam-water-blue transition-all shadow-sm">
+          <span className="pl-3 text-[10px] font-bold uppercase tracking-[0.1em] text-cobam-water-blue">Marque</span>
+          <Select value={advBrandOp} onValueChange={setAdvBrandOp}>
+            <SelectTrigger className="h-8 bg-transparent border-0 shadow-none text-xs text-cobam-carbon-grey focus:ring-0">
+              <SelectValue placeholder="Opérateur" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">Commence par</SelectItem>
+              <SelectItem value="2">Est égal à</SelectItem>
+              <SelectItem value="3">Contient</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="w-px h-4 bg-cobam-quill-grey/30 mx-1" />
+          <Input
+            value={advBrandValue}
+            onChange={(e) => setAdvBrandValue(e.target.value)}
+            placeholder="Ex : Sika"
+            className="h-8 bg-transparent border-0 shadow-none focus-visible:ring-0 text-sm px-2 text-cobam-dark-blue placeholder:text-cobam-carbon-grey/40"
+          />
+        </div>
+
+        {/* Bind 1 */}
+        <Select value={advBindBrandName} onValueChange={setAdvBindBrandName}>
+          <SelectTrigger className="h-9 border-cobam-quill-grey/30 bg-[#f9fafb] font-bold text-[10px] uppercase shadow-none text-cobam-carbon-grey focus:ring-0 rounded-lg">
+            <SelectValue placeholder="Liaison" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="&">ET (&amp;)</SelectItem>
+            <SelectItem value="|">OU (|)</SelectItem>
+            <SelectItem value="||">OU AVEC (||)</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Name */}
+        <div className="flex items-center bg-white p-1.5 rounded-lg border border-cobam-quill-grey/40 gap-2 shrink-0 focus-within:border-cobam-water-blue focus-within:ring-1 focus-within:ring-cobam-water-blue transition-all shadow-sm">
+          <span className="pl-3 text-[10px] font-bold uppercase tracking-[0.1em] text-cobam-water-blue">Nom</span>
+          <Select value={advNameOp} onValueChange={setAdvNameOp}>
+            <SelectTrigger className="h-8 bg-transparent border-0 shadow-none text-xs text-cobam-carbon-grey focus:ring-0">
+              <SelectValue placeholder="Opérateur" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">Commence par</SelectItem>
+              <SelectItem value="2">Est égal à</SelectItem>
+              <SelectItem value="3">Contient</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="w-px h-4 bg-cobam-quill-grey/30 mx-1" />
+          <Input
+            value={advNameValue}
+            onChange={(e) => setAdvNameValue(e.target.value)}
+            placeholder="Ex : Ciment Colle"
+            className="h-8 bg-transparent border-0 shadow-none focus-visible:ring-0 text-sm px-2 text-cobam-dark-blue placeholder:text-cobam-carbon-grey/40"
+          />
+        </div>
+
+        {/* Bind 2 */}
+        <Select value={advBindNameSku} onValueChange={setAdvBindNameSku}>
+          <SelectTrigger className="h-9 border-cobam-quill-grey/30 bg-[#f9fafb] font-bold text-[10px] uppercase shadow-none text-cobam-carbon-grey focus:ring-0 rounded-lg">
+            <SelectValue placeholder="Liaison" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="&">ET (&amp;)</SelectItem>
+            <SelectItem value="|">OU (|)</SelectItem>
+            <SelectItem value="||">OU AVEC (||)</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* SKU */}
+        <div className="flex items-center bg-white p-1.5 rounded-lg border border-cobam-quill-grey/40 gap-2 shrink-0 focus-within:border-cobam-water-blue focus-within:ring-1 focus-within:ring-cobam-water-blue transition-all shadow-sm">
+          <span className="pl-3 text-[10px] font-bold uppercase tracking-[0.1em] text-cobam-water-blue">SKU</span>
+          <Select value={advSkuOp} onValueChange={setAdvSkuOp}>
+            <SelectTrigger className="h-8 bg-transparent border-0 shadow-none text-xs text-cobam-carbon-grey focus:ring-0">
+              <SelectValue placeholder="Opérateur" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">Commence par</SelectItem>
+              <SelectItem value="2">Est égal à</SelectItem>
+              <SelectItem value="3">Contient</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="w-px h-4 bg-cobam-quill-grey/30 mx-1" />
+          <Input
+            value={advSkuValue}
+            onChange={(e) => setAdvSkuValue(e.target.value)}
+            placeholder="..."
+            className="w-[130px] h-8 bg-transparent border-0 shadow-none focus-visible:ring-0 text-sm px-2 text-cobam-dark-blue placeholder:text-cobam-carbon-grey/40"
+          />
+        </div>
+
+        <div className="flex-1 flex justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => {
+              setAdvBrandValue(""); setAdvBrandOp("1"); setAdvBindBrandName("&");
+              setAdvNameValue(""); setAdvNameOp("1"); setAdvBindNameSku("&");
+              setAdvSkuValue(""); setAdvSkuOp("1");
+            }}
+            className="text-[10px] font-bold uppercase tracking-widest text-cobam-carbon-grey hover:text-rose-500 hover:bg-rose-50 transition-colors h-10 px-4"
+          >
+            Réinitialiser
+          </Button>
+        </div>
+
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-12">
-      <div className="sticky top-0 z-20 -mx-6 bg-cobam-light-bg/90 px-6 py-5 backdrop-blur-md md:-mx-12 md:px-12">
+      <div className="mx-6 bg-cobam-light-bg/90 px-6 py-5 backdrop-blur-md md:-mx-12 md:px-12">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="space-y-1">
             <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-cobam-carbon-grey">
@@ -382,8 +585,49 @@ export default function PublicProductsIndex({
                   : `${total} produit${total > 1 ? "s" : ""}`}
             </p>
           </div>
-          {searchBar}
+          <div className="w-fit flex items-center gap-3">
+            {searchBar}
+            <AnimatedUIButton
+              variant="secondary"
+              icon={isAdvancedSearchOpen ? "chevron-up" : "chevron-down"}
+              className="px-6 hidden md:flex"
+              onClick={() => {
+                if (isAdvancedSearchOpen) {
+                  setSearchInput("");
+                  setAdvBrandValue(""); setAdvBrandOp("1"); setAdvBindBrandName("&");
+                  setAdvNameValue(""); setAdvNameOp("1"); setAdvBindNameSku("&");
+                  setAdvSkuValue(""); setAdvSkuOp("1");
+                }
+                setIsAdvancedSearchOpen((curr) => !curr);
+              }}
+            >
+              Avancée
+            </AnimatedUIButton>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                if (isAdvancedSearchOpen) {
+                  setSearchInput("");
+                  setAdvBrandValue(""); setAdvBrandOp("1"); setAdvBindBrandName("&");
+                  setAdvNameValue(""); setAdvNameOp("1"); setAdvBindNameSku("&");
+                  setAdvSkuValue(""); setAdvSkuOp("1");
+                }
+                setIsAdvancedSearchOpen((curr) => !curr);
+              }}
+              className={cn(
+                "h-12 w-12 shrink-0 border-cobam-quill-grey/40 md:hidden transition-colors",
+                isAdvancedSearchOpen ? "bg-cobam-water-blue text-white border-transparent" : "bg-transparent text-cobam-carbon-grey"
+              )}
+              aria-label="Recherche Avancée"
+            >
+              <Settings2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
+        {advancedSearchForm}
       </div>
 
       {errorMessage && items.length === 0 && !isRefreshing ? (
@@ -402,7 +646,7 @@ export default function PublicProductsIndex({
               void loadMore();
             }}
           >
-            Reessayer
+            Réessayer
           </Button>
         </div>
       ) : null}
@@ -477,14 +721,14 @@ export default function PublicProductsIndex({
 
         {isRefreshing
           ? Array.from({ length: 6 }).map((_, index) => (
-              <PublicProductCardSkeleton key={`refresh-skeleton-${index}`} />
-            ))
+            <PublicProductCardSkeleton key={`refresh-skeleton-${index}`} />
+          ))
           : null}
 
         {!isRefreshing && isLoadingMore
           ? Array.from({ length: 3 }).map((_, index) => (
-              <PublicProductCardSkeleton key={`append-skeleton-${index}`} />
-            ))
+            <PublicProductCardSkeleton key={`append-skeleton-${index}`} />
+          ))
           : null}
       </div>
 

@@ -18,7 +18,7 @@ export default function MediaFrame({
 
         if (media.kind === "IMAGE") {
             if(highQuality){
-                return <img src={media.url} alt={media.altText ?? media.title ?? "frame"} className="object-cover" />
+                return <img draggable={false} src={media.url} alt={media.altText ?? media.title ?? "frame"} className="object-cover" />
             }
             return (
             <Image
@@ -28,6 +28,7 @@ export default function MediaFrame({
                 priority={!isThumbnail}
                 className="object-cover"
                 quality={quality}
+                draggable={false}
             />
             );
         }
@@ -39,6 +40,7 @@ export default function MediaFrame({
                 controls
                 playsInline
                 preload="metadata"
+                draggable={false}
             >
                 <source src={media.url} type={media.mimeType ?? undefined} />
             </video>

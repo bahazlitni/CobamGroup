@@ -15,12 +15,12 @@ import { GoogleAnalytics } from "@next/third-parties/google"
 
 const siteName = getSiteName();
 const siteDescription =
-  "Depuis 1994, COBAM GROUP accompagne les projets de construction, renovation et finition avec des materiaux, surfaces, sanitaires et solutions premium en Tunisie.";
+  "Depuis 1994, COBAM GROUP accompagne les projets de construction, renovation et finition avec des Matériaux, surfaces, sanitaires et solutions premium en Tunisie.";
 
 export const metadata: Metadata = {
   metadataBase: getSiteUrl(),
   title: {
-    default: "COBAM GROUP | Materiaux, carrelage, sanitaires et finitions en Tunisie",
+    default: "COBAM GROUP | Matériaux, carrelage, sanitaires et finitions en Tunisie",
     template: `%s | ${siteName}`,
   },
   description: siteDescription,
@@ -37,12 +37,12 @@ export const metadata: Metadata = {
     locale: "fr_TN",
     siteName,
     url: buildAbsoluteUrl("/"),
-    title: "COBAM GROUP | Materiaux, carrelage, sanitaires et finitions en Tunisie",
+    title: "COBAM GROUP | Matériaux, carrelage, sanitaires et finitions en Tunisie",
     description: siteDescription,
   },
   twitter: {
     card: "summary_large_image",
-    title: "COBAM GROUP | Materiaux, carrelage, sanitaires et finitions en Tunisie",
+    title: "COBAM GROUP | Matériaux, carrelage, sanitaires et finitions en Tunisie",
     description: siteDescription,
   },
 };
