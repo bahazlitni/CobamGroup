@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Politique de confidentialite",
   description: "Politique de confidentialite de Cobam Group.",
+  alternates: {
+    canonical: "/politique-de-confidentialite",
+  },
   robots: {
     index: false,
     follow: true,

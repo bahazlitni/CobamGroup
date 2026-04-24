@@ -4,8 +4,12 @@ import PublicArticlesGrid from "@/components/public/articles/public-articles-gri
 import { listPublicArticles } from "@/features/articles/public";
 
 export const metadata: Metadata = {
-  title: "Actualités | COBAM GROUP",
-  description: "Retrouvez les dernières actualités COBAM GROUP, nos inspirations produits et nos conseils pour vos projets.",
+  title: "Actualites",
+  description:
+    "Retrouvez les dernieres actualites COBAM GROUP, nos inspirations produits et nos conseils pour vos projets.",
+  alternates: {
+    canonical: "/actualites",
+  },
 };
 
 export const dynamic = "force-dynamic";
@@ -16,9 +20,9 @@ export default async function PublicArticlesPage() {
   return (
     <main className="min-h-screen bg-cobam-light-bg text-cobam-dark-blue">
       <PageHeader
-        subtitle="Actualités"
-        title="Nos articles, conseils et nouveautés"
-        description="Retrouvez les dernières actualités COBAM GROUP, nos inspirations produits et nos conseils pour vos projets."
+        subtitle="Actualites"
+        title="Nos articles, conseils et nouveautes"
+        description="Retrouvez les dernieres actualites COBAM GROUP, nos inspirations produits et nos conseils pour vos projets."
       />
 
       <section className="py-12 sm:py-16 lg:py-20">
