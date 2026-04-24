@@ -14,6 +14,37 @@ function mapUrl(
   };
 }
 
+function dedupeEntries(
+  entries: MetadataRoute.Sitemap,
+): MetadataRoute.Sitemap {
+  const seen = new Map<string, MetadataRoute.Sitemap[number]>();
+
+  for (const entry of entries) {
+    const current = seen.get(entry.url);
+
+    if (!current) {
+      seen.set(entry.url, entry);
+      continue;
+    }
+
+    const currentLastModified = current.lastModified
+      ? new Date(current.lastModified)
+      : null;
+    const nextLastModified = entry.lastModified
+      ? new Date(entry.lastModified)
+      : null;
+
+    if (
+      nextLastModified &&
+      (!currentLastModified || nextLastModified > currentLastModified)
+    ) {
+      seen.set(entry.url, entry);
+    }
+  }
+
+  return Array.from(seen.values());
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [
     categories,
@@ -59,7 +90,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           orderBy: {
             subcategoryId: "asc",
           },
-          take: 1,
           select: {
             subcategory: {
               select: {
@@ -92,7 +122,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         updatedAt: true,
         members: {
           orderBy: [{ sortOrder: "asc" }, { productId: "asc" }],
-          take: 1,
           select: {
             product: {
               select: {
@@ -100,7 +129,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                   orderBy: {
                     subcategoryId: "asc",
                   },
-                  take: 1,
                   select: {
                     subcategory: {
                       select: {
@@ -123,6 +151,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     prisma.product.findMany({
       where: {
         kind: ProductKind.PACK,
+        lifecycle: "ACTIVE",
+        visibility: true,
       },
       select: {
         slug: true,
@@ -131,7 +161,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           orderBy: {
             subcategoryId: "asc",
           },
-          take: 1,
           select: {
             subcategory: {
               select: {
@@ -179,28 +208,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         subcategory.updatedAt,
       ),
     ),
-    ...products
-      .filter((product) => product.subcategoryLinks[0])
-      .map((product) => {
-        const subcategory = product.subcategoryLinks[0]!.subcategory;
-        return mapUrl(
-          `/produits/${subcategory.category.slug}/${subcategory.slug}/${product.slug}`,
+    ...products.flatMap((product) =>
+      product.subcategoryLinks.map((link) =>
+        mapUrl(
+          `/produits/${link.subcategory.category.slug}/${link.subcategory.slug}/${product.slug}`,
           product.updatedAt,
-        );
-      }),
-    ...families
-      .filter((family) => family.members[0]?.product.subcategoryLinks[0])
-      .map((family) => {
-        const subcategory = family.members[0]!.product.subcategoryLinks[0]!.subcategory;
-        return mapUrl(
-          `/produits/${subcategory.category.slug}/${subcategory.slug}/famille/${family.slug}`,
-          family.updatedAt,
-        );
-      }),
+        ),
+      ),
+    ),
+    ...families.flatMap((family) =>
+      family.members.flatMap((member) =>
+        member.product.subcategoryLinks.map((link) =>
+          mapUrl(
+            `/produits/${link.subcategory.category.slug}/${link.subcategory.slug}/famille/${family.slug}`,
+            family.updatedAt,
+          ),
+        ),
+      ),
+    ),
     ...packs
       .filter(
         (pack) =>
-          pack.subcategoryLinks[0] &&
           pack.packLinesAsPack.length > 0 &&
           pack.packLinesAsPack.every(
             (line) =>
@@ -208,17 +236,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
               line.product.lifecycle === "ACTIVE",
           ),
       )
-      .map((pack) => {
-        const subcategory = pack.subcategoryLinks[0]!.subcategory;
-        return mapUrl(
-          `/produits/${subcategory.category.slug}/${subcategory.slug}/${pack.slug}`,
-          pack.updatedAt,
-        );
-      }),
+      .flatMap((pack) =>
+        pack.subcategoryLinks.map((link) =>
+          mapUrl(
+            `/produits/${link.subcategory.category.slug}/${link.subcategory.slug}/${pack.slug}`,
+            pack.updatedAt,
+          ),
+        ),
+      ),
     ...articles.map((article) =>
       mapUrl(`/actualites/${article.slug}`, article.updatedAt),
     ),
   ];
 
-  return entries;
+  return dedupeEntries(entries);
 }

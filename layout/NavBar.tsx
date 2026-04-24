@@ -45,7 +45,6 @@ const mainLinks = [
   },
   { label: "PRODUITS", href: "#", hasMega: true, children: undefined },
   { label: "MARQUES", href: "#", hasMega: false, children: brandsLinks },
-  { label: "PROMOTIONS", href: "#", hasMega: false, children: undefined },
 
   {
     label: "ACTUALITÉS",
