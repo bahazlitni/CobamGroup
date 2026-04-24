@@ -54,6 +54,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
+      <head />
       <body
         className="antialiased bg-white text-cobam-dark-blue"
         style={{ fontFamily: "var(--font-montserrat), sans-serif" }}

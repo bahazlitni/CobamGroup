@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import ArticleDocumentReader from "@/components/staff/articles/article-document-reader";
 import PublicArticleMeta from "@/components/public/articles/public-article-meta";
@@ -29,6 +27,9 @@ export async function generateMetadata({
   return {
     title: article.title,
     description: article.descriptionSeo ?? article.excerpt,
+    alternates: {
+      canonical: `/actualites/${slug}`,
+    },
   };
 }
 

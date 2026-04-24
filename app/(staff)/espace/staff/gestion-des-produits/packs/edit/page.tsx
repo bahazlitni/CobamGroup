@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Boxes, GripVertical, Trash2 } from "lucide-react";
+import { Boxes, ExternalLink, GripVertical, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Loading from "@/components/staff/Loading";
 import ArticleRichTextEditor from "@/components/staff/articles/article-rich-text-editor";
@@ -306,7 +306,30 @@ function ProductPackEditPageContent() {
         eyebrow="Produits"
         title={isEdit ? form.name || "Pack produit" : "Nouveau pack produit"}
         icon={Boxes}
-      />
+      >
+        {(() => {
+          const subcategory = options.productSubcategories.find(s => form.subcategoryIds.includes(s.id));
+          const publicUrl = subcategory && isEdit
+            ? `/produits/${subcategory.categorySlug}/${subcategory.slug}/${form.slug}`
+            : null;
+
+          if (!publicUrl) return null;
+
+          return (
+            <AnimatedUIButton
+              href={publicUrl}
+              target="_blank"
+              variant="ghost"
+              size="sm"
+            >
+              <span className="flex items-center gap-2">
+                <ExternalLink className="h-4 w-4" />
+                Voir sur le site
+              </span>
+            </AnimatedUIButton>
+          );
+        })()}
+      </StaffPageHeader>
 
       <Panel pretitle="Pack" title="Informations principales">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

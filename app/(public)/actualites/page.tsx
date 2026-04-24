@@ -1,6 +1,12 @@
+import { Metadata } from "next";
 import PageHeader from "@/components/ui/custom/PageHeader";
 import PublicArticlesGrid from "@/components/public/articles/public-articles-grid";
 import { listPublicArticles } from "@/features/articles/public";
+
+export const metadata: Metadata = {
+  title: "Actualités | COBAM GROUP",
+  description: "Retrouvez les dernières actualités COBAM GROUP, nos inspirations produits et nos conseils pour vos projets.",
+};
 
 export const dynamic = "force-dynamic";
 

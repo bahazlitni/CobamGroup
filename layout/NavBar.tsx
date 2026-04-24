@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ArrowRight,
 } from "lucide-react";
 
 import {
@@ -27,6 +28,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import NavbarSearch from "@/layout/NavbarSearch";
 import { useNavbarVisibility } from "@/layout/navbar-visibility";
+import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
 
 
 const brandsLinks = [
@@ -35,7 +37,7 @@ const brandsLinks = [
 ];
 
 const mainLinks = [
-    {
+  {
     label: "À PROPOS",
     href: "/a-propos",
     hasMega: false,
@@ -77,12 +79,12 @@ export default function NavBar({
 
   return (
     <>
-    <header
-      className={cn(
-        "sticky top-0 left-0 z-50 border-b border-cobam-quill-grey/60 bg-white transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
-        isNavbarHidden ? "-translate-y-full" : "translate-y-0",
-      )}
-    >
+      <header
+        className={cn(
+          "sticky top-0 left-0 z-50 border-b border-cobam-quill-grey/60 bg-white transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+          isNavbarHidden ? "-translate-y-full" : "translate-y-0",
+        )}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20 gap-6">
           <Link href="/" className="flex-shrink-0 z-100">
             <Image
@@ -131,32 +133,31 @@ export default function NavBar({
                       {link.label}
                       <ChevronDown
                         size={13}
-                        className={`transition-transform duration-200 ${
-                          isOpen ? "rotate-180" : ""
-                        }`}
+                        className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""
+                          }`}
                       />
                     </button>
 
                     <AnimatePresence>
-                    {isOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.98 }}
-                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                        className="absolute top-full left-0 bg-white shadow-[0_20px_40px_rgba(20,32,46,0.08)] border border-cobam-quill-grey/30 rounded-2xl py-3 w-64 z-50 mt-1"
-                      >
-                        {link.children.map((child) => (
-                          <a
-                            key={child.label}
-                            href={child.href}
-                            className="block px-5 py-3 text-sm text-[#5e5e5e] hover:bg-cobam-light-bg hover:text-[#14202e] hover:font-medium transition-all"
-                          >
-                            {child.label}
-                          </a>
-                        ))}
-                      </motion.div>
-                    )}
+                      {isOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.98 }}
+                          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                          className="absolute top-full left-0 bg-white shadow-[0_20px_40px_rgba(20,32,46,0.08)] border border-cobam-quill-grey/30 rounded-2xl py-3 w-64 z-50 mt-1"
+                        >
+                          {link.children.map((child) => (
+                            <a
+                              key={child.label}
+                              href={child.href}
+                              className="block px-5 py-3 text-sm text-[#5e5e5e] hover:bg-cobam-light-bg hover:text-[#14202e] hover:font-medium transition-all"
+                            >
+                              {child.label}
+                            </a>
+                          ))}
+                        </motion.div>
+                      )}
                     </AnimatePresence>
                   </div>
                 );
@@ -245,19 +246,17 @@ export default function NavBar({
                                 <span>{link.label}</span>
                                 <ChevronDown
                                   size={15}
-                                  className={`transition-transform duration-300 text-cobam-carbon-grey ${
-                                    isOpen
-                                      ? "rotate-180 text-cobam-water-blue"
-                                      : ""
-                                  }`}
+                                  className={`transition-transform duration-300 text-cobam-carbon-grey ${isOpen
+                                    ? "rotate-180 text-cobam-water-blue"
+                                    : ""
+                                    }`}
                                 />
                               </button>
                               <div
-                                className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                                  isOpen
-                                    ? "max-h-60 opacity-100"
-                                    : "max-h-0 opacity-0"
-                                }`}
+                                className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen
+                                  ? "max-h-60 opacity-100"
+                                  : "max-h-0 opacity-0"
+                                  }`}
                               >
                                 <div className="ml-4 border-l-2 border-cobam-water-blue/20 pl-4 py-1 flex flex-col gap-1">
                                   {link.children.map((child) => (
@@ -304,26 +303,6 @@ export default function NavBar({
                         );
                       })}
                     </nav>
-
-                    <div className="px-4 py-5 border-t border-gray-100 bg-cobam-light-bg flex flex-col gap-3">
-                      <Button
-                        className="w-full bg-cobam-water-blue hover:bg-cobam-water-blue/80 text-white font-bold py-5"
-                        asChild
-                      >
-                        <a href="#devis" onClick={closeSheet}>
-                          Demande de devis
-                        </a>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full border-cobam-dark-blue/20 text-cobam-dark-blue hover:bg-cobam-dark-blue hover:text-white font-semibold py-5"
-                        asChild
-                      >
-                        <a href="/contact" onClick={closeSheet}>
-                          Nous contacter
-                        </a>
-                      </Button>
-                    </div>
                   </div>
 
                   <div
@@ -347,6 +326,10 @@ export default function NavBar({
                     </div>
 
                     <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
+                      <AnimatedUIButton variant="ghost" icon="arrow-right" className="p-3 text-sm flex font-bold" href="/produits" onClick={closeSheet}>
+                        Tous nos produits
+                      </AnimatedUIButton>
+
                       {productCategories
                         .filter((section) => section.parent === null)
                         .map((section) => {
@@ -380,12 +363,12 @@ export default function NavBar({
               </SheetContent>
             </Sheet>
           </div>
-      </div>
-    </header>
-    <NavbarSearch 
-      isOpen={searchOpen} 
-      onClose={() => setSearchOpen(false)} 
-    />
+        </div>
+      </header>
+      <NavbarSearch
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
+      />
     </>
   );
 }

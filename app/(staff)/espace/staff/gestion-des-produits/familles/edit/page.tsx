@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -7,7 +7,7 @@ import {
   ProductLifecycle,
   ProductStockUnit,
 } from "@prisma/client";
-import { Package, Trash2 } from "lucide-react";
+import { ExternalLink, Package, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Loading from "@/components/staff/Loading";
 import ArticleRichTextEditor from "@/components/staff/articles/article-rich-text-editor";
@@ -485,7 +485,30 @@ function ProductEditPageContent() {
         eyebrow="Produits"
         title={isEdit ? form.name || "Famille produit" : "Nouvelle famille produit"}
         icon={Package}
-      />
+      >
+        {(() => {
+          const subcategory = options.productSubcategories.find(s => commonValues.subcategoryIds.includes(s.id));
+          const publicUrl = subcategory && isEdit
+            ? `/produits/${subcategory.categorySlug}/${subcategory.slug}/famille/${form.slug}`
+            : null;
+
+          if (!publicUrl) return null;
+
+          return (
+            <AnimatedUIButton
+              href={publicUrl}
+              target="_blank"
+              variant="ghost"
+              size="sm"
+            >
+              <span className="flex items-center gap-2">
+                <ExternalLink className="h-4 w-4" />
+                Voir sur le site
+              </span>
+            </AnimatedUIButton>
+          );
+        })()}
+      </StaffPageHeader>
 
       <div className="space-y-6">
         <Panel pretitle="Famille" title="Informations principales">

@@ -7,7 +7,7 @@ import {
   ProductLifecycle,
   ProductStockUnit,
 } from "@prisma/client";
-import { Package } from "lucide-react";
+import { ExternalLink, Package } from "lucide-react";
 import { toast } from "sonner";
 import Loading from "@/components/staff/Loading";
 import ProductMediaGrid from "@/components/staff/products/ProductMediaGrid";
@@ -527,7 +527,30 @@ function SingleProductEditPageContent() {
         eyebrow="Produits"
         title={isEdit ? form.name || "Produit simple" : "Nouveau produit simple"}
         icon={Package}
-      />
+      >
+        {(() => {
+          const subcategory = options.productSubcategories.find(s => form.subcategoryIds.includes(s.id));
+          const publicUrl = subcategory && isEdit
+            ? `/produits/${subcategory.categorySlug}/${subcategory.slug}/${form.slug}`
+            : null;
+
+          if (!publicUrl) return null;
+
+          return (
+            <AnimatedUIButton
+              href={publicUrl}
+              target="_blank"
+              variant="ghost"
+              size="sm"
+            >
+              <span className="flex items-center gap-2">
+                <ExternalLink className="h-4 w-4" />
+                Voir sur le site
+              </span>
+            </AnimatedUIButton>
+          );
+        })()}
+      </StaffPageHeader>
 
       <Panel pretitle="Produit" title="Informations principales">
         <ProductEssentialEntries
