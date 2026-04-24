@@ -11,7 +11,6 @@ import type {
 } from "./types";
 import {
   buildAbsoluteUrl,
-  getSiteName,
   toAbsoluteUrl,
 } from "@/lib/seo/site";
 
@@ -77,7 +76,7 @@ function buildMetadataBase(input: {
     openGraph: {
       type: "website",
       locale: "fr_TN",
-      siteName: getSiteName(),
+      siteName: "COBAM GROUP",
       url: buildAbsoluteUrl(input.path),
       title: input.title,
       description: input.description,
@@ -227,7 +226,7 @@ export function buildFamilyMetadata(
   options?: { path?: string },
 ): Metadata {
   return buildMetadataBase({
-    title: `${family.name} | ${getSiteName()}`,
+    title: family.name,
     description: resolveSeoDescription(
       family.descriptionSeo,
       family.description,
@@ -244,7 +243,7 @@ export function buildSimpleProductMetadata(
   options?: { path?: string },
 ) {
   return buildMetadataBase({
-    title: `${product.name} | ${getSiteName()}`,
+    title: product.name,
     description: resolveSeoDescription(
       product.descriptionSeo,
       product.description,
@@ -263,7 +262,7 @@ export function buildCategoryMetadata(
   category: PublicProductCategoryPageData,
 ): Metadata {
   return buildMetadataBase({
-    title: `${category.name} | Produits | ${getSiteName()}`,
+    title: `${category.name} | Produits`,
     description: resolveSeoDescription(
       category.descriptionSEO,
       category.description,
@@ -276,8 +275,8 @@ export function buildCategoryMetadata(
 
 export function buildAllProductsMetadata(search: string | null): Metadata {
   const title = search
-    ? `Recherche produits : ${search} | ${getSiteName()}`
-    : `Tous les produits | ${getSiteName()}`;
+    ? `Recherche produits : ${search}`
+    : "Tous les produits";
 
   const description = search
     ? resolveSeoDescription(

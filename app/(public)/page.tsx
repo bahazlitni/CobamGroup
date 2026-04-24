@@ -22,7 +22,7 @@ import { Metadata } from "next";
 import { COBAM_SOCIAL_LINKS } from "@/data/contact-details";
 
 export const metadata: Metadata = {
-  title: "COBAM GROUP | Revêtements et Carrelage, Matériaux de construction, sanitaires et finitions premium en Tunisie",
+  title: "Revêtements et Carrelage, Matériaux de construction, sanitaires et finitions premium en Tunisie",
   description: "Cobam Group propose des revêtements, sanitaires, matériaux de construction et finitions premium pour les projets résidentiels et professionnels en Tunisie.",
 };
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Mentions legales | Cobam Group",
+  title: "Mentions legales",
   description: "Mentions legales de Cobam Group.",
   robots: {
     index: false,

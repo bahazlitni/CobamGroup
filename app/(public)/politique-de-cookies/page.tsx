@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Politique de cookies | Cobam Group",
+  title: "Politique de cookies",
   description: "Politique de cookies de Cobam Group.",
   robots: {
     index: false,

@@ -22,12 +22,12 @@ export async function generateMetadata({
 
   if (!article) {
     return {
-      title: "Article introuvable | COBAM GROUP",
+      title: "Article introuvable",
     };
   }
 
   return {
-    title: `${article.title} | COBAM GROUP`,
+    title: article.title,
     description: article.descriptionSeo ?? article.excerpt,
   };
 }
