@@ -14,6 +14,7 @@ import {
   resolveFinish,
   resolveFinishURL,
 } from "@/lib/static_tables/finishes";
+import { rankPublicProductSearchRows } from "./search";
 import type {
   PublicProductColorReference,
   PublicProductFinishReference,
@@ -189,10 +190,26 @@ type PublicIndexRow = {
   product_id: bigint | null;
   family_id: bigint | null;
   product_slug: string;
+  product_sku: string | null;
+  product_name: string | null;
+  product_brand: string | null;
+  product_tags: string | null;
+  product_description: string | null;
+  product_description_seo: string | null;
+  attributes_text: string | null;
+  pack_components_text: string | null;
+  family_name: string | null;
+  family_slug: string | null;
+  family_subtitle: string | null;
+  family_description: string | null;
+  family_description_seo: string | null;
+  family_members_text: string | null;
   category_id: bigint;
   category_name: string;
   category_slug: string;
   category_subtitle: string | null;
+  category_description: string | null;
+  category_description_seo: string | null;
   category_theme_color: string | null;
   category_sort: number | null;
   subcategory_id: bigint;
@@ -200,6 +217,7 @@ type PublicIndexRow = {
   subcategory_slug: string;
   subcategory_subtitle: string | null;
   subcategory_description: string | null;
+  subcategory_description_seo: string | null;
   subcategory_sort: number | null;
 };
 
@@ -866,11 +884,8 @@ export async function listPublicProductsIndex(input: {
 }): Promise<PublicProductIndexResult> {
   const pageSize = input.pageSize ?? PUBLIC_PRODUCTS_INDEX_PAGE_SIZE;
   const offset = (input.page - 1) * pageSize;
-
-  const normalizedQuery = normalizeComparableValue(input.q);
-
   const advancedSearchAst = input.q ? buildAdvancedSearchAst(input.q) : null;
-  const pattern = normalizedQuery && !advancedSearchAst ? `%${normalizedQuery}%` : null;
+  const normalSearchQuery = input.q?.trim() && !advancedSearchAst ? input.q.trim() : null;
 
   const advancedSearchCondition = advancedSearchAst
     ? Prisma.sql`AND (${buildSqlFromAst(advancedSearchAst)})`
@@ -885,10 +900,48 @@ export async function listPublicProductsIndex(input: {
       NULL::bigint AS product_id,
       f.id AS family_id,
       f.slug AS product_slug,
+      p.sku AS product_sku,
+      p.name AS product_name,
+      p.brand AS product_brand,
+      p.tags AS product_tags,
+      p.description AS product_description,
+      p.description_seo AS product_description_seo,
+      (
+        SELECT COALESCE(string_agg(pa.kind || ' ' || pa.value, ' '), '')
+        FROM product_attributes pa
+        WHERE pa.product_id = p.id
+      ) AS attributes_text,
+      NULL::text AS pack_components_text,
+      f.name AS family_name,
+      f.slug AS family_slug,
+      f.subtitle AS family_subtitle,
+      f.description AS family_description,
+      f.description_seo AS family_description_seo,
+      (
+        SELECT COALESCE(string_agg(concat_ws(' ',
+          fp.sku,
+          fp.slug,
+          fp.name,
+          fp.brand,
+          fp.tags,
+          fp.description,
+          fp.description_seo,
+          (
+            SELECT COALESCE(string_agg(fpa.kind || ' ' || fpa.value, ' '), '')
+            FROM product_attributes fpa
+            WHERE fpa.product_id = fp.id
+          )
+        ), ' '), '')
+        FROM product_family_members fm2
+        JOIN products fp ON fp.id = fm2.product_id
+        WHERE fm2.family_id = f.id
+      ) AS family_members_text,
       c.id AS category_id,
       c.name AS category_name,
       c.slug AS category_slug,
       c.subtitle AS category_subtitle,
+      c.description AS category_description,
+      c.description_seo AS category_description_seo,
       c.theme_color AS category_theme_color,
       c.sort_order AS category_sort,
       s.id AS subcategory_id,
@@ -896,6 +949,7 @@ export async function listPublicProductsIndex(input: {
       s.slug AS subcategory_slug,
       s.subtitle AS subcategory_subtitle,
       s.description AS subcategory_description,
+      s.description_seo AS subcategory_description_seo,
       s.sort_order AS subcategory_sort
     FROM product_families f
     JOIN product_family_members m ON m.family_id = f.id
@@ -907,12 +961,6 @@ export async function listPublicProductsIndex(input: {
     ${advancedSearchCondition}
     ${input.categorySlug ? Prisma.sql`AND "c".slug = ${input.categorySlug}` : Prisma.empty}
     ${input.subcategorySlug ? Prisma.sql`AND "s".slug = ${input.subcategorySlug}` : Prisma.empty}
-    ${pattern ? Prisma.sql`AND (
-      "p".sku ILIKE ${pattern} OR "p".slug ILIKE ${pattern} OR "p".name ILIKE ${pattern} OR "p".description ILIKE ${pattern} OR "p".description_seo ILIKE ${pattern} OR "p".tags ILIKE ${pattern}
-      OR "s".name ILIKE ${pattern} OR "s".slug ILIKE ${pattern} OR "s".description ILIKE ${pattern} OR "s".description_seo ILIKE ${pattern}
-      OR "c".name ILIKE ${pattern} OR "c".slug ILIKE ${pattern} OR "c".description ILIKE ${pattern} OR "c".description_seo ILIKE ${pattern}
-      OR "f".name ILIKE ${pattern} OR "f".slug ILIKE ${pattern} OR "f".subtitle ILIKE ${pattern} OR "f".description ILIKE ${pattern} OR "f".description_seo ILIKE ${pattern}
-    )` : Prisma.empty}
     ORDER BY f.id, c.sort_order ASC, s.sort_order ASC, f.slug ASC
   `
     : Prisma.sql`
@@ -921,10 +969,26 @@ export async function listPublicProductsIndex(input: {
         NULL::bigint AS product_id,
         NULL::bigint AS family_id,
         NULL::text AS product_slug,
+        NULL::text AS product_sku,
+        NULL::text AS product_name,
+        NULL::text AS product_brand,
+        NULL::text AS product_tags,
+        NULL::text AS product_description,
+        NULL::text AS product_description_seo,
+        NULL::text AS attributes_text,
+        NULL::text AS pack_components_text,
+        NULL::text AS family_name,
+        NULL::text AS family_slug,
+        NULL::text AS family_subtitle,
+        NULL::text AS family_description,
+        NULL::text AS family_description_seo,
+        NULL::text AS family_members_text,
         NULL::bigint AS category_id,
         NULL::text AS category_name,
         NULL::text AS category_slug,
         NULL::text AS category_subtitle,
+        NULL::text AS category_description,
+        NULL::text AS category_description_seo,
         NULL::text AS category_theme_color,
         NULL::integer AS category_sort,
         NULL::bigint AS subcategory_id,
@@ -932,6 +996,7 @@ export async function listPublicProductsIndex(input: {
         NULL::text AS subcategory_slug,
         NULL::text AS subcategory_subtitle,
         NULL::text AS subcategory_description,
+        NULL::text AS subcategory_description_seo,
         NULL::integer AS subcategory_sort
       WHERE FALSE
     `;
@@ -946,10 +1011,48 @@ export async function listPublicProductsIndex(input: {
       p.id AS product_id,
       NULL::bigint AS family_id,
       p.slug AS product_slug,
+      p.sku AS product_sku,
+      p.name AS product_name,
+      p.brand AS product_brand,
+      p.tags AS product_tags,
+      p.description AS product_description,
+      p.description_seo AS product_description_seo,
+      (
+        SELECT COALESCE(string_agg(pa.kind || ' ' || pa.value, ' '), '')
+        FROM product_attributes pa
+        WHERE pa.product_id = p.id
+      ) AS attributes_text,
+      (
+        SELECT COALESCE(string_agg(concat_ws(' ',
+          cp.sku,
+          cp.slug,
+          cp.name,
+          cp.brand,
+          cp.tags,
+          cp.description,
+          cp.description_seo,
+          (
+            SELECT COALESCE(string_agg(cpa.kind || ' ' || cpa.value, ' '), '')
+            FROM product_attributes cpa
+            WHERE cpa.product_id = cp.id
+          )
+        ), ' '), '')
+        FROM product_pack_lines ppl
+        JOIN products cp ON cp.id = ppl.product_id
+        WHERE ppl.pack_product_id = p.id
+      ) AS pack_components_text,
+      NULL::text AS family_name,
+      NULL::text AS family_slug,
+      NULL::text AS family_subtitle,
+      NULL::text AS family_description,
+      NULL::text AS family_description_seo,
+      NULL::text AS family_members_text,
       c.id AS category_id,
       c.name AS category_name,
       c.slug AS category_slug,
       c.subtitle AS category_subtitle,
+      c.description AS category_description,
+      c.description_seo AS category_description_seo,
       c.theme_color AS category_theme_color,
       c.sort_order AS category_sort,
       s.id AS subcategory_id,
@@ -957,6 +1060,7 @@ export async function listPublicProductsIndex(input: {
       s.slug AS subcategory_slug,
       s.subtitle AS subcategory_subtitle,
       s.description AS subcategory_description,
+      s.description_seo AS subcategory_description_seo,
       s.sort_order AS subcategory_sort
     FROM products p
     ${includeFamilies ? Prisma.sql`LEFT JOIN product_family_members fm ON fm.product_id = p.id` : Prisma.empty}
@@ -968,18 +1072,33 @@ export async function listPublicProductsIndex(input: {
         ? Prisma.sql`(p.kind IN ('SINGLE', 'PACK') OR (p.kind = 'VARIANT' AND fm.product_id IS NULL))`
         : Prisma.sql`p.kind IN ('SINGLE', 'PACK', 'VARIANT')`
     } AND p.lifecycle = 'ACTIVE' AND p.visibility IS TRUE
+    AND (
+      p.kind <> 'PACK'
+      OR (
+        EXISTS (
+          SELECT 1
+          FROM product_pack_lines public_ppl
+          WHERE public_ppl.pack_product_id = p.id
+        )
+        AND NOT EXISTS (
+          SELECT 1
+          FROM product_pack_lines public_ppl
+          JOIN products public_component ON public_component.id = public_ppl.product_id
+          WHERE public_ppl.pack_product_id = p.id
+            AND (
+              public_component.visibility IS DISTINCT FROM TRUE
+              OR public_component.lifecycle IS DISTINCT FROM 'ACTIVE'
+            )
+        )
+      )
+    )
     ${advancedSearchCondition}
     ${input.categorySlug ? Prisma.sql`AND "c".slug = ${input.categorySlug}` : Prisma.empty}
     ${input.subcategorySlug ? Prisma.sql`AND "s".slug = ${input.subcategorySlug}` : Prisma.empty}
-    ${pattern ? Prisma.sql`AND (
-      "p".sku ILIKE ${pattern} OR "p".slug ILIKE ${pattern} OR "p".name ILIKE ${pattern} OR "p".description ILIKE ${pattern} OR "p".description_seo ILIKE ${pattern} OR "p".tags ILIKE ${pattern}
-      OR "s".name ILIKE ${pattern} OR "s".slug ILIKE ${pattern} OR "s".description ILIKE ${pattern} OR "s".description_seo ILIKE ${pattern}
-      OR "c".name ILIKE ${pattern} OR "c".slug ILIKE ${pattern} OR "c".description ILIKE ${pattern} OR "c".description_seo ILIKE ${pattern}
-    )` : Prisma.empty}
     ORDER BY p.id, c.sort_order ASC, s.sort_order ASC, p.slug ASC
   `;
 
-  const rows = await prisma.$queryRaw<PublicIndexRow[]>(Prisma.sql`
+  const candidateEntriesQuery = Prisma.sql`
     WITH candidate_entries AS (
       (${familyQuery})
       UNION ALL
@@ -988,19 +1107,34 @@ export async function listPublicProductsIndex(input: {
     SELECT *
     FROM candidate_entries
     ORDER BY category_sort ASC NULLS LAST, subcategory_sort ASC NULLS LAST, product_slug ASC
-    LIMIT ${pageSize} OFFSET ${offset}
-  `);
+  `;
 
-  const totalResult = await prisma.$queryRaw<Array<{ count: bigint }>>(Prisma.sql`
-    WITH candidate_entries AS (
-      (${familyQuery})
-      UNION ALL
-      (${productQuery})
-    )
-    SELECT COUNT(*)::bigint AS count FROM candidate_entries
-  `);
+  let rows: PublicIndexRow[];
+  let total: number;
 
-  const total = Number(totalResult[0]?.count ?? 0);
+  if (normalSearchQuery) {
+    const candidates = await prisma.$queryRaw<PublicIndexRow[]>(candidateEntriesQuery);
+    const rankedRows = rankPublicProductSearchRows(candidates, normalSearchQuery);
+
+    total = rankedRows.length;
+    rows = rankedRows.slice(offset, offset + pageSize);
+  } else {
+    rows = await prisma.$queryRaw<PublicIndexRow[]>(Prisma.sql`
+      ${candidateEntriesQuery}
+      LIMIT ${pageSize} OFFSET ${offset}
+    `);
+
+    const totalResult = await prisma.$queryRaw<Array<{ count: bigint }>>(Prisma.sql`
+      WITH candidate_entries AS (
+        (${familyQuery})
+        UNION ALL
+        (${productQuery})
+      )
+      SELECT COUNT(*)::bigint AS count FROM candidate_entries
+    `);
+
+    total = Number(totalResult[0]?.count ?? 0);
+  }
 
   if (rows.length === 0) {
     return {
@@ -1108,7 +1242,7 @@ export async function listPublicProductsIndex(input: {
     .filter((item): item is PublicProductIndexItem => item != null);
 
   return {
-    items: sortIndexItems(indexItems),
+    items: normalSearchQuery ? indexItems : sortIndexItems(indexItems),
     total,
     page: input.page,
     pageSize,

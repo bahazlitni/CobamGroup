@@ -23,6 +23,12 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        source: "/2025/08/26/guide-expert-2025-marbre-et-faience/",
+        destination: "/actualites/gres-cerame-faience-ou-marbre-le-guide-d-expert-2025-qui-va-revolutionner-votre-choix",
+        permanent: true,
+      },
+
+      {
         source: "/2025/09/05/erreurs-choix-materiaux-de-construction",
         destination: "/actualites/les-7-erreurs-a-eviter-dans-le-choix-de-vos-fournisseurs-de-materiaux-de-construction",
         permanent: true,
