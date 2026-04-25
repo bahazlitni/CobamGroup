@@ -277,7 +277,8 @@ function detectKeywords(normalizedQuery: string, tokens: string[]) {
         return fuzzySimilarity(normalizedQuery, alias) >= 0.78;
       }
 
-      return tokens.some((token) => fuzzySimilarity(token, alias) >= 0.84);
+      const threshold = keyword.type === "brand" ? 0.78 : 0.82;
+      return tokens.some((token) => fuzzySimilarity(token, alias) >= threshold);
     });
 
     if (matched) {
