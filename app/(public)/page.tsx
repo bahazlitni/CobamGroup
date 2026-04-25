@@ -441,7 +441,7 @@ export default async function Home() {
               <ShowroomCard location="houmt-souk" index={0} />
             </PremiumReveal>
             <PremiumReveal delay={0.2} blur direction="up">
-              <ShowroomCard location="centrale" index={1} />
+              <ShowroomCard location="siege" index={1} />
             </PremiumReveal>
             <PremiumReveal delay={0.3} blur direction="up">
               <ShowroomCard location="ceram" index={2} />

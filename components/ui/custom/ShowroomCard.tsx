@@ -3,62 +3,57 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { MapPin, Phone, Clock, ArrowRight, ExternalLink } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Phone, ArrowRight, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+export type CobamLocation = "houmt-souk" | "midoun" | "siege" | "ceram"
 const SHOWROOMS: Record<
-  string,
+  CobamLocation,
   {
     name: string;
     address: string;
     phone: string;
-    hours: string;
     mapQuery: string;
     image: string;
     city: string;
   }
 > = {
   "houmt-souk": {
-    name: "Cobam Houmt Souk",
+    name: "Cobam Group - Houmt Souk",
     city: "Djerba",
-    address: "Houmt Souk, Djerba, Tunisie",
+    address: "À côté du rond-point Chiraa, BP 396, Av. Salah Ben youssef, Houmt Souk 4116 - Djerba",
     phone: "+216 26 833 101",
-    hours: "8h00 – 18h00",
-    mapQuery: "COBAM+Group+(Maison+&+Decors)+Djerba+Tunisia",
+    mapQuery: "COBAM+(Maison+&+Décor)+Djerba+Tunisia",
     image: "/images/showrooms/houmt-souk.png",
   },
-  midoun: {
-    name: "Cobam Midoun",
+  siege: {
+    name: "Cobam Group - Siège",
     city: "Djerba",
-    address: "Midoun, Djerba, Tunisie",
-    phone: "+216 26 833 104",
-    hours: "8h00 – 18h00",
-    mapQuery: "Cobam+Midoun+Djerba+Tunisia",
-    image: "/images/showrooms/midoun.png",
-  },
-  centrale: {
-    name: "Cobam Central",
-    city: "Tunis",
-    address: "Tunis Centre, Tunisie",
+    address: "Km 3, Route Houmt Souk-Midoun, 4180 - Djerba",
     phone: "+216 26 833 102",
-    hours: "8h00 – 18h00",
-    mapQuery: "Cobam+Group-Siege+Djerba+Tunisia",
-    image: "/images/showrooms/centrale.png",
+    mapQuery: "33.8548547+10.894053",
+    image: "/images/showrooms/siege.png",
   },
   ceram: {
-    name: "Cobam Céram",
+    name: "Cobam Group - Céram",
     city: "Djerba",
-    address: "Zone Industrielle, Djerba, Tunisie",
+    address: "Km 1.5, Marché de gros, Route Houmt Souk-Midoun BP 396, 4116 - Djerba",
     phone: "+216 26 833 103",
-    hours: "8h00 – 18h00",
     mapQuery: "Cobam+Ceram+Djerba+Tunisia",
     image: "/images/showrooms/ceram.png",
+  },
+  midoun: {
+    name: "Cobam Group - Midoun",
+    city: "Djerba",
+    address: "Av. Ali Belhouane Rte Mahboubine, 4116 - Djerba",
+    phone: "+216 26 833 104",
+    mapQuery: "Cobam+Midoun+Djerba+Tunisia",
+    image: "/images/showrooms/midoun.png",
   },
 };
 
 interface ShowroomCardProps {
-  location: string;
+  location: CobamLocation;
   index: number;
 }
 
@@ -68,7 +63,7 @@ export default function ShowroomCard({ location, index }: ShowroomCardProps) {
 
   if (!showroom) return null;
 
-  const { name, address, phone, hours, mapQuery, image, city } = showroom;
+  const { name, address, phone, mapQuery, image, city } = showroom;
   const embedUrl = `https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
 
@@ -96,7 +91,7 @@ export default function ShowroomCard({ location, index }: ShowroomCardProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.3 }}
               className="absolute inset-0"
             >
               <Image
@@ -114,7 +109,7 @@ export default function ShowroomCard({ location, index }: ShowroomCardProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.2 }}
               className="absolute inset-0 z-10"
             >
               <iframe
@@ -125,7 +120,7 @@ export default function ShowroomCard({ location, index }: ShowroomCardProps) {
                 allowFullScreen={false}
                 loading="lazy"
                 title={`Carte - ${name}`}
-                className="absolute inset-0 h-full w-full grayscale brightness-90 contrast-125 transition-all"
+                className="absolute inset-0 h-full w-full brightness-90 contrast-125 transition-all"
               />
               <div className="absolute inset-0 bg-cobam-dark-blue/10 pointer-events-none" />
             </motion.div>
@@ -134,6 +129,7 @@ export default function ShowroomCard({ location, index }: ShowroomCardProps) {
 
         {/* Labels on Image */}
         <div className="absolute inset-0 flex flex-col justify-end p-6 z-20 pointer-events-none">
+          {!showMap &&
           <motion.div 
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -145,7 +141,8 @@ export default function ShowroomCard({ location, index }: ShowroomCardProps) {
             <h3 className="text-2xl font-light text-white font-playfair tracking-wide">
               {name}
             </h3>
-          </motion.div>
+          </motion.div>}
+
           <div className="mt-4 h-[1px] w-0 bg-cobam-water-blue transition-all duration-700 group-hover:w-full opacity-60" />
         </div>
 
@@ -165,14 +162,6 @@ export default function ShowroomCard({ location, index }: ShowroomCardProps) {
             <div className="space-y-1">
                <p className="text-[9px] uppercase tracking-widest text-cobam-carbon-grey/60 font-bold">Localisation</p>
                <p className="text-[13px] leading-relaxed text-cobam-dark-blue font-light">{address}</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-4 group/item">
-            <div className="mt-1 flex h-2 w-2 shrink-0 rounded-full bg-cobam-water-blue/40 transition-all group-hover/item:scale-150 group-hover/item:bg-cobam-water-blue" />
-            <div className="space-y-1">
-               <p className="text-[9px] uppercase tracking-widest text-cobam-carbon-grey/60 font-bold">Horaires</p>
-               <p className="text-[13px] leading-relaxed text-cobam-dark-blue font-light">Lundi – Samedi : {hours}</p>
             </div>
           </div>
         </div>
@@ -202,4 +191,4 @@ export default function ShowroomCard({ location, index }: ShowroomCardProps) {
     </div>
   );
 }
-
+
