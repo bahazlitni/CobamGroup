@@ -21,6 +21,7 @@ import { normalizeProductAttributeKind } from "@/lib/static_tables/attributes";
 import {
   PanelAutoCompleteInput,
   PanelAttributeKindsInput,
+  DescriptionSEOTextArea,
   StaffImageImporter,
   StaffPageHeader,
   StaffPdfImporter,
@@ -82,8 +83,8 @@ function createEmptyVariant(index: number): VariantEditorState {
     stock: null,
     stockUnit: "ITEM",
     visibility: true,
-    priceVisibility: true,
-    stockVisibility: true,
+    priceVisibility: false,
+    stockVisibility: false,
     lifecycle: "DRAFT",
     commercialMode: "ON_REQUEST_ONLY",
     tags: "",
@@ -112,8 +113,8 @@ function createEmptyCommonValuesState(): FamilyCommonValuesState {
     brand: "",
     subcategoryIds: [],
     lifecycle: "DRAFT",
-    priceVisibility: true,
-    stockVisibility: true,
+    priceVisibility: false,
+    stockVisibility: false,
     visibility: true,
     stockUnit: "ITEM",
     vatRate: "19",
@@ -551,7 +552,7 @@ function ProductEditPageContent() {
           </PanelField>
 
           <PanelField id="family-description-seo" label="Description SEO">
-            <Textarea id="family-description-seo" value={form.descriptionSeo ?? ""} onChange={(event) => setForm((current) => ({ ...current, descriptionSeo: event.target.value || null }))} />
+            <DescriptionSEOTextArea id="family-description-seo" value={form.descriptionSeo ?? ""} onValueChange={(value) => setForm((current) => ({ ...current, descriptionSeo: value || null }))} />
           </PanelField>
 
           <StaffImageImporter
@@ -895,14 +896,14 @@ function ProductEditPageContent() {
               </PanelField>
 
               <PanelField id={`${variant.formKey}-description-seo`} label="Description SEO">
-                <Textarea
+                <DescriptionSEOTextArea
                   id={`${variant.formKey}-description-seo`}
                   value={variant.descriptionSeo ?? ""}
-                  onChange={(event) =>
+                  onValueChange={(value) =>
                     setForm((current) =>
                       updateVariantState(current, variant.formKey, (entry) => ({
                         ...entry,
-                        descriptionSeo: event.target.value || null,
+                        descriptionSeo: value || null,
                       })),
                     )
                   }

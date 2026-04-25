@@ -18,7 +18,7 @@ import {
   AiPanelAttributesInput,
   AiPanelRichText,
   AiPanelTagsInput,
-  AiPanelTextarea,
+  DescriptionSEOTextArea,
   StaffPageHeader,
   StaffPdfImporter,
   StaffStateCard,
@@ -162,8 +162,8 @@ function createEmptyFormState(): SingleProductUpsertInput {
     stock: null,
     stockUnit: "ITEM",
     visibility: true,
-    priceVisibility: true,
-    stockVisibility: true,
+    priceVisibility: false,
+    stockVisibility: false,
     lifecycle: "DRAFT",
     commercialMode: "ON_REQUEST_ONLY",
     tags: "",
@@ -684,7 +684,7 @@ function SingleProductEditPageContent() {
         </PanelField>
 
         <PanelField id="product-description-seo" label="Description SEO">
-          <AiPanelTextarea
+          <DescriptionSEOTextArea
             id="product-description-seo"
             value={form.descriptionSeo ?? ""}
             onValueChange={(value) =>

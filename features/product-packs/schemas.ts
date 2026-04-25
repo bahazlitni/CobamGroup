@@ -1,4 +1,5 @@
 import type { ProductPackUpsertInput } from "./types";
+import { DESCRIPTION_SEO_MAX_LENGTH } from "@/lib/seo-description";
 
 export class ProductPackValidationError extends Error {
   status: number;
@@ -27,6 +28,16 @@ function parseRequiredString(value: unknown, fieldName: string) {
   const normalized = parseOptionalString(value);
   if (!normalized) {
     throw new ProductPackValidationError(`Champ requis: ${fieldName}.`);
+  }
+  return normalized;
+}
+
+function parseOptionalDescriptionSeo(value: unknown, fieldName: string) {
+  const normalized = parseOptionalString(value);
+  if (normalized && normalized.length > DESCRIPTION_SEO_MAX_LENGTH) {
+    throw new ProductPackValidationError(
+      `${fieldName} ne doit pas depasser ${DESCRIPTION_SEO_MAX_LENGTH} caracteres.`,
+    );
   }
   return normalized;
 }
@@ -60,7 +71,7 @@ export function parseProductPackCreateInput(input: unknown): ProductPackUpsertIn
     slug: parseRequiredString(record.slug, "slug"),
     name: parseRequiredString(record.name, "name"),
     description: parseOptionalString(record.description),
-    descriptionSeo: parseOptionalString(record.descriptionSeo),
+    descriptionSeo: parseOptionalDescriptionSeo(record.descriptionSeo, "descriptionSeo"),
     subcategoryIds: (Array.isArray(record.subcategoryIds) ? record.subcategoryIds : []).map((entry) => {
       const parsed = Number(entry);
       if (!Number.isInteger(parsed) || parsed <= 0) {

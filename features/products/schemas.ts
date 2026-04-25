@@ -11,6 +11,7 @@ import {
   normalizeProductAttributeKind,
 } from "@/lib/static_tables/attributes";
 import { normalizeProductBrandValue as normalizeProductBrandString } from "@/lib/static_tables/brands";
+import { DESCRIPTION_SEO_MAX_LENGTH } from "@/lib/seo-description";
 import type { ProductFamilyUpsertInput, ProductVariantInputDto } from "./types";
 
 export class ProductValidationError extends Error {
@@ -40,6 +41,16 @@ function parseRequiredString(value: unknown, fieldName: string) {
   const normalized = parseOptionalString(value);
   if (!normalized) {
     throw new ProductValidationError(`Champ requis: ${fieldName}.`);
+  }
+  return normalized;
+}
+
+function parseOptionalDescriptionSeo(value: unknown, fieldName: string) {
+  const normalized = parseOptionalString(value);
+  if (normalized && normalized.length > DESCRIPTION_SEO_MAX_LENGTH) {
+    throw new ProductValidationError(
+      `${fieldName} ne doit pas depasser ${DESCRIPTION_SEO_MAX_LENGTH} caracteres.`,
+    );
   }
   return normalized;
 }
@@ -141,7 +152,10 @@ function parseVariant(input: unknown): ProductVariantInputDto {
     slug: parseRequiredString(record.slug, "variant.slug"),
     name: parseRequiredString(record.name, "variant.name"),
     description: parseOptionalString(record.description),
-    descriptionSeo: parseOptionalString(record.descriptionSeo),
+    descriptionSeo: parseOptionalDescriptionSeo(
+      record.descriptionSeo,
+      "variant.descriptionSeo",
+    ),
     brand:
       record.brand == null || record.brand === ""
         ? null
@@ -286,7 +300,7 @@ export function parseProductCreateInput(input: unknown): ProductFamilyUpsertInpu
     slug: parseRequiredString(record.slug, "slug"),
     subtitle: parseOptionalString(record.subtitle),
     description: parseOptionalString(record.description),
-    descriptionSeo: parseOptionalString(record.descriptionSeo),
+    descriptionSeo: parseOptionalDescriptionSeo(record.descriptionSeo, "descriptionSeo"),
     mainImageMediaId:
       record.mainImageMediaId == null || record.mainImageMediaId === ""
         ? null

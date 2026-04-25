@@ -155,9 +155,9 @@ export default function MegaMenu({ menuLabel, data }: MegaMenuProps) {
       <AnimatePresence>
         {isOpen ? (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.99 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.99 }}
+            initial={{ opacity: 0, y: 10, scale: 0.99, pointerEvents: "none" }}
+            animate={{ opacity: 1, y: 0, scale: 1, pointerEvents: "auto" }}
+            exit={{ opacity: 0, y: 10, scale: 0.99, pointerEvents: "none" }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             id={contentId}
             role="menu"
@@ -168,7 +168,7 @@ export default function MegaMenu({ menuLabel, data }: MegaMenuProps) {
                 closeMenu();
               }
             }}
-            className="absolute left-1/2 top-12 z-50 flex w-full -translate-x-1/2 justify-center"
+            className="bg-red-500 absolute left-1/2 top-12 z-50 flex w-full -translate-x-1/2 justify-center"
           >
             <div className="relative w-full overflow-hidden rounded-b-3xl border border-t-0 border-cobam-quill-grey/40 bg-white shadow-[0_40px_80px_rgba(20,32,46,0.08)] xl:w-fit">
               <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden lg:hidden">
@@ -343,8 +343,8 @@ export default function MegaMenu({ menuLabel, data }: MegaMenuProps) {
                                   onMouseEnter={() => setHoveredSubCategory(subCategory)}
                                   onMouseLeave={() => setHoveredSubCategory(null)}
                                   className={`group/item relative rounded-lg px-3 py-2.5 outline-none transition-all duration-300 ${isCategoryActive && !isSubActive
-                                      ? "hover:bg-white/80"
-                                      : "hover:bg-transparent"
+                                    ? "hover:bg-white/80"
+                                    : "hover:bg-transparent"
                                     }`}
                                   style={
                                     isSubActive

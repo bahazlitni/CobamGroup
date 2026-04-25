@@ -235,8 +235,8 @@ function mapPackListItem(record: PackDetailRecord): ProductPackListItemDto {
     stock: derived.stock,
     stockUnit: record.stockUnit ?? null,
     visibility: derived.visibility,
-    priceVisibility: record.priceVisibility ?? null,
-    stockVisibility: record.stockVisibility ?? null,
+    priceVisibility: record.priceVisibility ?? false,
+    stockVisibility: record.stockVisibility ?? false,
     lifecycle: derived.lifecycle,
     commercialMode: record.commercialMode ?? null,
     subcategories: record.subcategoryLinks.map(({ subcategory }) => ({
@@ -318,6 +318,8 @@ async function writePack(packId: number | null, input: ProductPackUpsertInput) {
               name: input.name,
               description: input.description,
               descriptionSeo: input.descriptionSeo,
+              priceVisibility: false,
+              stockVisibility: false,
             },
             select: { id: true },
           })

@@ -244,7 +244,7 @@ model ProductCategory {
   slug           String   @unique @db.VarChar(255)
   themeColor     String?  @map("theme_color") @db.VarChar(255)
   description    String?  @db.Text
-  descriptionSeo String?  @map("description_seo") @db.Text
+  descriptionSeo String?  @map("description_seo") @db.VarChar(160)
   imageMediaId   BigInt?  @map("image_media_id")
   sortOrder      Int      @default(0) @map("sort_order")
   isActive       Boolean  @default(true) @map("is_active")
@@ -267,7 +267,7 @@ model ProductSubcategory {
   subtitle       String?  @db.VarChar(255)
   slug           String   @db.VarChar(255)
   description    String?  @db.Text
-  descriptionSeo String?  @map("description_seo") @db.Text
+  descriptionSeo String?  @map("description_seo") @db.VarChar(160)
   imageMediaId   BigInt?  @map("image_media_id")
   sortOrder      Int      @default(0) @map("sort_order")
   isActive       Boolean  @default(true) @map("is_active")
@@ -293,7 +293,7 @@ model Product {
   kind            ProductKind
   name            String                 @db.VarChar(255)
   description     String?                @db.Text
-  descriptionSeo  String?                @map("description_seo") @db.Text
+  descriptionSeo  String?                @map("description_seo") @db.VarChar(160)
   brand           String?                @map("brand")
   basePriceAmount Decimal?               @map("base_price_amount") @db.Decimal(12, 3)
   vatRate         Float?                 @map("vat_rate")
@@ -363,7 +363,7 @@ model ProductFamily {
   name             String   @db.VarChar(255)
   subtitle         String?  @db.VarChar(255)
   description      String?  @db.Text
-  descriptionSeo   String?  @map("description_seo") @db.Text
+  descriptionSeo   String?  @map("description_seo") @db.VarChar(160)
   mainImageMediaId BigInt?  @map("main_image_media_id")
   defaultProductId BigInt?  @map("default_product_id")
   createdAt        DateTime @default(now()) @map("created_at")
@@ -455,7 +455,7 @@ model Article {
   slug           String        @unique @db.VarChar(255)
   excerpt        String?       @db.Text
   content        String        @db.Text
-  descriptionSeo String?       @map("description_seo") @db.Text
+  descriptionSeo String?       @map("description_seo") @db.VarChar(160)
   tags           String        @default("") @db.Text
   status         ArticleStatus
   publishedAt    DateTime?     @map("published_at")

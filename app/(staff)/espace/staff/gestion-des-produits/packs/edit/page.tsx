@@ -12,12 +12,12 @@ import Panel from "@/components/staff/ui/Panel";
 import PanelField from "@/components/staff/ui/PanelField";
 import PanelInput from "@/components/staff/ui/PanelInput";
 import {
+  DescriptionSEOTextArea,
   StaffPageHeader,
   StaffSearchSelect,
   StaffStateCard,
   UnsavedChangesGuard,
 } from "@/components/staff/ui";
-import { Textarea } from "@/components/ui/textarea";
 import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
 import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
 import { canCreateProducts, canManageProducts } from "@/features/products/access";
@@ -365,13 +365,13 @@ function ProductPackEditPageContent() {
         </PanelField>
 
         <PanelField id="pack-description-seo" label="Description SEO">
-          <Textarea
+          <DescriptionSEOTextArea
             id="pack-description-seo"
             value={form.descriptionSeo ?? ""}
-            onChange={(event) =>
+            onValueChange={(value) =>
               setForm((current) => ({
                 ...current,
-                descriptionSeo: event.target.value || null,
+                descriptionSeo: value || null,
               }))
             }
           />

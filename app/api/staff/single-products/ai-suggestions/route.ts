@@ -18,6 +18,7 @@ import type {
   SingleProductAiSuggestionRequest,
   SingleProductAiSuggestionResponse,
 } from "@/features/single-products/types";
+import { truncateDescriptionSeo } from "@/lib/seo-description";
 
 class SingleProductAiSuggestionError extends Error {
   status: number;
@@ -333,7 +334,9 @@ function parseAiSuggestions(
     descriptionText:
       descriptionText || getArticlePlainText(descriptionRichText).trim(),
     descriptionRichText,
-    descriptionSeo: parseOptionalString(record.descriptionSeo) ?? "",
+    descriptionSeo: truncateDescriptionSeo(
+      parseOptionalString(record.descriptionSeo) ?? "",
+    ),
     tags: parseTags(Array.isArray(record.tags) ? record.tags : []),
     attributes: parseAttributes(record.attributes),
     subcategoryIds: parseSubcategoryIds(

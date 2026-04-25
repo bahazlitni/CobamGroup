@@ -4,7 +4,7 @@ import { Trash2 } from "lucide-react";
 import MediaImageField from "@/components/staff/media/importers/media-image-field";
 import ImagePreview from "@/components/staff/media/importers/ImagePreview";
 import Panel from "@/components/staff/ui/Panel";
-import { PanelAutoCompleteInput } from "@/components/staff/ui";
+import { DescriptionSEOTextArea, PanelAutoCompleteInput } from "@/components/staff/ui";
 import PanelField from "@/components/staff/ui/PanelField";
 import PanelInput from "@/components/staff/ui/PanelInput";
 import {
@@ -311,10 +311,10 @@ export default function ProductCategoryEditorPanels({
             label="Description SEO"
             hint="Résumé court optimisé pour les moteurs de recherche."
           >
-            <Textarea
+            <DescriptionSEOTextArea
               id="category-description-seo"
               value={form.descriptionSeo}
-              onChange={(event) => onFieldChange("descriptionSeo", event.target.value)}
+              onValueChange={(value) => onFieldChange("descriptionSeo", value)}
               placeholder="Résumé SEO de la catégorie..."
               className="min-h-24 rounded-md border-slate-300 px-4 py-3 text-base"
             />
@@ -524,14 +524,14 @@ export default function ProductCategoryEditorPanels({
                         id={`subcategory-description-seo-${subcategory.formKey}`}
                         label="Description SEO"
                       >
-                        <Textarea
+                        <DescriptionSEOTextArea
                           id={`subcategory-description-seo-${subcategory.formKey}`}
                           value={subcategory.descriptionSeo}
-                          onChange={(event) =>
+                          onValueChange={(value) =>
                             onSubcategoryChange(
                               subcategory.formKey,
                               "descriptionSeo",
-                              event.target.value,
+                              value,
                             )
                           }
                           placeholder="Résumé SEO de la sous-catégorie..."

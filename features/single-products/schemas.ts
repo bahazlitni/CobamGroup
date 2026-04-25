@@ -11,6 +11,7 @@ import {
   normalizeProductAttributeKind,
 } from "@/lib/static_tables/attributes";
 import { normalizeProductBrandValue as normalizeProductBrandString } from "@/lib/static_tables/brands";
+import { DESCRIPTION_SEO_MAX_LENGTH } from "@/lib/seo-description";
 import type { SingleProductUpsertInput } from "./types";
 
 export class SingleProductsValidationError extends Error {
@@ -35,6 +36,16 @@ function parseRequiredString(value: unknown, fieldName: string) {
   const normalized = parseOptionalString(value);
   if (!normalized) {
     throw new SingleProductsValidationError(`Champ requis: ${fieldName}.`);
+  }
+  return normalized;
+}
+
+function parseOptionalDescriptionSeo(value: unknown, fieldName: string) {
+  const normalized = parseOptionalString(value);
+  if (normalized && normalized.length > DESCRIPTION_SEO_MAX_LENGTH) {
+    throw new SingleProductsValidationError(
+      `${fieldName} ne doit pas depasser ${DESCRIPTION_SEO_MAX_LENGTH} caracteres.`,
+    );
   }
   return normalized;
 }
@@ -134,7 +145,7 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
     slug: parseRequiredString(record.slug, "slug"),
     name: parseRequiredString(record.name, "name"),
     description: parseOptionalString(record.description),
-    descriptionSeo: parseOptionalString(record.descriptionSeo),
+    descriptionSeo: parseOptionalDescriptionSeo(record.descriptionSeo, "descriptionSeo"),
     brand:
       record.brand == null || record.brand === ""
         ? null

@@ -18,6 +18,7 @@ export { default as AiPanelRichText } from "./AiPanelRichText";
 export { default as AiPanelSelect } from "./AiPanelSelect";
 export { default as AiPanelTagsInput } from "./AiPanelTagsInput";
 export { default as AiPanelTextarea } from "./AiPanelTextarea";
+export { default as DescriptionSEOTextArea } from "./DescriptionSEOTextArea";
 export { default as PanelAttributeKindsInput } from "./PanelAttributeKindsInput";
 export { default as StaffImageImporter } from "./StaffImageImporter";
 export { default as StaffPdfImporter } from "./StaffPdfImporter";

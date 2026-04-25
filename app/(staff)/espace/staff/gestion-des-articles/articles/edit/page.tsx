@@ -13,6 +13,7 @@ import PanelField from "@/components/staff/ui/PanelField";
 import PanelInput from "@/components/staff/ui/PanelInput";
 import {
   StaffBadge,
+  DescriptionSEOTextArea,
   StaffEditorActionsPanel,
   StaffEditorInfoPanel,
   StaffEditorLayout,
@@ -522,12 +523,10 @@ function ArticleEditPageContent() {
             </PanelField>
 
             <PanelField id="article-description-seo" label="Description SEO">
-              <Textarea
+              <DescriptionSEOTextArea
                 id="article-description-seo"
                 value={editor.state.descriptionSeo}
-                onChange={(event) =>
-                  editor.setField("descriptionSeo", event.target.value)
-                }
+                onValueChange={(value) => editor.setField("descriptionSeo", value)}
                 rows={4}
                 placeholder="Description pour les moteurs de recherche..."
                 disabled={!canEditArticle}

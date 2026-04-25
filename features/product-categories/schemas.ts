@@ -6,6 +6,7 @@ import {
   type ProductCategoryUpdateInput,
   type ProductSubcategoryInput,
 } from "./types";
+import { DESCRIPTION_SEO_MAX_LENGTH } from "@/lib/seo-description";
 
 export class ProductCategoryValidationError extends Error {
   status: number;
@@ -39,6 +40,16 @@ function parseOptionalString(value: unknown): string | null {
 
   const trimmed = value.trim();
   return trimmed ? trimmed : null;
+}
+
+function parseOptionalDescriptionSeo(value: unknown, fieldName: string) {
+  const normalized = parseOptionalString(value);
+  if (normalized && normalized.length > DESCRIPTION_SEO_MAX_LENGTH) {
+    throw new ProductCategoryValidationError(
+      `${fieldName} must be ${DESCRIPTION_SEO_MAX_LENGTH} characters or fewer`,
+    );
+  }
+  return normalized;
 }
 
 function parseOptionalInteger(value: unknown, fieldName: string): number {
@@ -105,7 +116,10 @@ function parseProductSubcategoryInput(
     subtitle: parseOptionalString(raw.subtitle),
     slug: parseRequiredString(raw.slug, `subcategories[${index}].slug`),
     description: parseOptionalString(raw.description),
-    descriptionSeo: parseOptionalString(raw.descriptionSeo),
+    descriptionSeo: parseOptionalDescriptionSeo(
+      raw.descriptionSeo,
+      `subcategories[${index}].descriptionSeo`,
+    ),
     imageMediaId: parseOptionalPositiveInteger(
       raw.imageMediaId,
       `subcategories[${index}].imageMediaId`,
@@ -178,7 +192,7 @@ function parseProductCategoryInputBase(
     slug: parseRequiredString(raw.slug, "slug"),
     themeColor: parseOptionalString(raw.themeColor),
     description: parseOptionalString(raw.description),
-    descriptionSeo: parseOptionalString(raw.descriptionSeo),
+    descriptionSeo: parseOptionalDescriptionSeo(raw.descriptionSeo, "descriptionSeo"),
     imageMediaId: parseOptionalPositiveInteger(raw.imageMediaId, "imageMediaId"),
     sortOrder: parseOptionalInteger(raw.sortOrder, "sortOrder"),
     isActive:

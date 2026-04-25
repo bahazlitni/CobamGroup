@@ -6,6 +6,7 @@ import {
   type ArticlePageSize,
   type ArticleUpdateInput,
 } from "./types";
+import { DESCRIPTION_SEO_MAX_LENGTH } from "@/lib/seo-description";
 
 export class ArticleValidationError extends Error {
   status: number;
@@ -40,6 +41,16 @@ function parseOptionalNullableString(
   }
   const trimmed = value.trim();
   return trimmed === "" ? null : trimmed;
+}
+
+function parseOptionalDescriptionSeo(value: unknown) {
+  const normalized = parseOptionalNullableString(value);
+  if (normalized && normalized.length > DESCRIPTION_SEO_MAX_LENGTH) {
+    throw new ArticleValidationError(
+      `descriptionSeo must be ${DESCRIPTION_SEO_MAX_LENGTH} characters or fewer`,
+    );
+  }
+  return normalized;
 }
 
 function parseOptionalNullableBoolean(
@@ -221,7 +232,7 @@ function parseArticleInputBase(raw: unknown): ArticleCreateInput {
     slug: parseRequiredString(raw.slug, "slug"),
     excerpt: parseOptionalNullableString(raw.excerpt),
     content: parseRequiredString(raw.content, "content"),
-    descriptionSeo: parseOptionalNullableString(raw.descriptionSeo),
+    descriptionSeo: parseOptionalDescriptionSeo(raw.descriptionSeo),
     categoryAssignments: parseCategoryAssignments(
       raw.categoryAssignments,
       fallbackCategoryId,
