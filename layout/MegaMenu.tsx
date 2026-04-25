@@ -161,14 +161,7 @@ export default function MegaMenu({ menuLabel, data }: MegaMenuProps) {
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             id={contentId}
             role="menu"
-            onMouseEnter={openMenu}
-            onMouseLeave={scheduleCloseMenu}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") {
-                closeMenu();
-              }
-            }}
-            className="bg-red-500 absolute left-1/2 top-12 z-50 flex w-full -translate-x-1/2 justify-center"
+            className="absolute left-1/2 top-12 z-50 flex w-full -translate-x-1/2 justify-center"
           >
             <div className="relative w-full overflow-hidden rounded-b-3xl border border-t-0 border-cobam-quill-grey/40 bg-white shadow-[0_40px_80px_rgba(20,32,46,0.08)] xl:w-fit">
               <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden lg:hidden">
@@ -193,7 +186,16 @@ export default function MegaMenu({ menuLabel, data }: MegaMenuProps) {
                 <div className="absolute inset-0 bg-white/90 backdrop-blur-xl" />
               </div>
 
-              <div className="relative z-10 flex flex-col gap-6 p-4 lg:flex-row lg:gap-8 lg:p-8">
+              <div
+                onMouseEnter={openMenu}
+                onMouseLeave={scheduleCloseMenu}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    closeMenu();
+                  }
+                }}
+                className="relative z-10 flex flex-col gap-6 p-4 lg:flex-row lg:gap-8 lg:p-8"
+              >
                 <div className="hidden w-[320px] shrink-0 flex-col lg:flex xl:w-[360px]">
                   <Link
                     href={getCategoryPath(previewItem.slug)}
