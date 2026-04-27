@@ -3,18 +3,14 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import FooterColumn from "@/components/ui/custom/FooterColumn";
 import { Mail, MapPin, Phone } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import type { PublicMegaMenuProductCategory } from "@/features/product-categories/public-types";
 import {
   COBAM_CONTACT_DETAILS,
-  COBAM_OPENING_HOURS,
   COBAM_SOCIAL_LINKS,
   getPhoneHref,
-  getWhatsAppHref,
 } from "@/data/contact-details";
-import FooterLink from "@/components/ui/custom/FooterLink";
+import type { PublicMegaMenuProductCategory } from "@/features/product-categories/public-types";
+import Magnetic from "@/components/ui/custom/Magnetic";
 
 const discoverLinks = [
   { label: "À propos de nous", href: "/a-propos" },
@@ -60,22 +56,27 @@ export default function Footer({
     }));
 
   return (
-    <footer id="contact" className="bg-cobam-dark-blue pt-20 pb-10">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-[2fr_1.5fr_1fr_1fr]">
-          <div className="flex flex-col gap-5 items-center">
-            <Link href="/" aria-label="Cobam Group - Accueil">
+    <footer id="contact" className="relative overflow-hidden bg-cobam-dark-blue pt-20 sm:pt-28 text-white">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        
+        {/* Navigation Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-20">
+          
+          {/* Brand & Intro */}
+          <div className="lg:col-span-4 flex flex-col gap-6">
+            <Link href="/" aria-label="Cobam Group - Accueil" className="inline-block">
               <Image
                 src="/images/logos/cobam-group/logo-vector-sinceless-white.svg"
                 alt="COBAM GROUP"
                 width={843}
                 height={289}
-                className="h-14 w-auto object-contain"
+                className="h-10 sm:h-12 w-auto object-contain brightness-0 invert"
               />
             </Link>
-            <div className="h-7 overflow-hidden">
+            
+            <div className="h-7 overflow-hidden -mt-2">
               <p
-                className="text-center text-md font-semibold text-cobam-water-blue"
+                className="text-md font-semibold text-cobam-water-blue"
                 style={{
                   opacity: sloganVisible ? 1 : 0,
                   transform: sloganVisible ? "translateY(0)" : "translateY(8px)",
@@ -86,69 +87,131 @@ export default function Footer({
               </p>
             </div>
 
-            <p className="max-w-xs text-sm leading-6 text-white/60 text-center">
-              Matériaux de construction haut de gamme alliant innovation, qualité et durabilité.
+            <p className="text-white/60 font-light leading-relaxed max-w-sm">
+              Matériaux de construction haut de gamme alliant innovation, qualité et durabilité. Depuis 1994, Cobam Group est le partenaire privilégié des projets résidentiels et professionnels les plus ambitieux en Tunisie.
             </p>
-
-            <div className="max-w-fit grid grid-cols-6 gap-3">
+            
+            {/* Socials */}
+            <div className="flex gap-3 mt-2">
               {COBAM_SOCIAL_LINKS.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={social.label}
-                  className="grid size-9 place-items-center rounded-full border border-white/10 text-white/55 transition-colors hover:border-cobam-water-blue hover:text-cobam-water-blue"
-                >
-                  <social.Icon size={16} />
-                </a>
+                <Magnetic key={social.label} strength={10}>
+                  <a
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.label}
+                    className="flex size-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 transition-all duration-300 hover:scale-110 hover:border-cobam-water-blue hover:bg-cobam-water-blue hover:text-white"
+                  >
+                    <social.Icon size={18} strokeWidth={1.5} />
+                  </a>
+                </Magnetic>
               ))}
             </div>
           </div>
 
-          <FooterColumn title="Catalogue" links={categoryLinks} />
-          <FooterColumn title="Decouvrir" links={discoverLinks} />
-
-          <div className="flex flex-col gap-4">
-            <h4 className="text-sm font-bold uppercase tracking-widest text-white">
-              Contact
+          {/* Links Columns */}
+          <div className="lg:col-span-3 lg:col-start-5">
+            <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-white mb-8">
+              Catalogue
             </h4>
-            <ul className="flex flex-col gap-3 text-sm text-white/60">
-              <li className="flex items-start gap-2">
-                <MapPin size={14} className="mt-0.5 shrink-0 text-cobam-water-blue" />
-                <span>Siège social, Houmt Souk, Djerba, Tunisie</span>
-              </li>
-              <li>
-                <a
-                  href={getPhoneHref(COBAM_CONTACT_DETAILS.phoneFixed)}
-                  className="flex items-center gap-2 transition-colors hover:text-cobam-water-blue"
-                >
-                  <Phone size={14} className="shrink-0 text-cobam-water-blue" />
-                  Tel : {COBAM_CONTACT_DETAILS.phoneFixed}
-                </a>
-              </li>
-              <li>
-                <a
-                  href={`mailto:${COBAM_CONTACT_DETAILS.email}`}
-                  className="flex items-center gap-2 transition-colors hover:text-cobam-water-blue"
-                >
-                  <Mail size={14} className="shrink-0 text-cobam-water-blue" />
-                  {COBAM_CONTACT_DETAILS.email}
-                </a>
-              </li>
+            <ul className="flex flex-col gap-4">
+              {categoryLinks.map((link) => (
+                <li key={link.label}>
+                  <Link href={link.href} className="text-white/60 font-light transition-colors hover:text-cobam-water-blue inline-flex items-center group">
+                    <span className="relative overflow-hidden">
+                      <span className="inline-block transition-transform duration-300 group-hover:-translate-y-full">{link.label}</span>
+                      <span className="inline-block absolute left-0 top-full transition-transform duration-300 group-hover:-translate-y-full text-cobam-water-blue">{link.label}</span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
+          <div className="lg:col-span-2">
+            <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-white mb-8">
+              Découvrir
+            </h4>
+            <ul className="flex flex-col gap-4">
+              {discoverLinks.map((link) => (
+                <li key={link.label}>
+                  <Link href={link.href} className="text-white/60 font-light transition-colors hover:text-cobam-water-blue inline-flex items-center group">
+                    <span className="relative overflow-hidden">
+                      <span className="inline-block transition-transform duration-300 group-hover:-translate-y-full">{link.label}</span>
+                      <span className="inline-block absolute left-0 top-full transition-transform duration-300 group-hover:-translate-y-full text-cobam-water-blue">{link.label}</span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact Details */}
+          <div className="lg:col-span-3">
+            <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-white mb-8">
+              Contact
+            </h4>
+            <ul className="flex flex-col gap-6 text-white/60 font-light">
+              <li>
+                <a href={getPhoneHref(COBAM_CONTACT_DETAILS.phoneFixed)} className="group flex items-start gap-4 transition-colors hover:text-white">
+                  <div className="mt-1 rounded-full bg-white/5 p-2 transition-colors group-hover:bg-cobam-water-blue/20 group-hover:text-cobam-water-blue">
+                    <Phone size={16} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] uppercase tracking-widest text-white/40 mb-1">Téléphone</span>
+                    <span className="text-sm">{COBAM_CONTACT_DETAILS.phoneFixed}</span>
+                  </div>
+                </a>
+              </li>
+              <li>
+                <a href={`mailto:${COBAM_CONTACT_DETAILS.email}`} className="group flex items-start gap-4 transition-colors hover:text-white">
+                  <div className="mt-1 rounded-full bg-white/5 p-2 transition-colors group-hover:bg-cobam-water-blue/20 group-hover:text-cobam-water-blue">
+                    <Mail size={16} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] uppercase tracking-widest text-white/40 mb-1">E-mail</span>
+                    <span className="text-sm">{COBAM_CONTACT_DETAILS.email}</span>
+                  </div>
+                </a>
+              </li>
+              <li className="flex items-start gap-4">
+                <div className="mt-1 rounded-full bg-white/5 p-2 text-white/60">
+                  <MapPin size={16} />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] uppercase tracking-widest text-white/40 mb-1">Siège Social</span>
+                  <span className="text-sm leading-relaxed max-w-[200px]">Houmt Souk, Djerba<br />Tunisie</span>
+                </div>
+              </li>
+            </ul>
+          </div>
         </div>
 
-        <Separator className="my-8 bg-white/10" />
+      </div>
 
-        <div className="flex flex-col items-center justify-between gap-3 text-xs text-white/40 sm:flex-row">
-          <p>© {new Date().getFullYear()} Cobam Group. Tous droits réservés.</p>
-          <div className="inline-flex flex-wrap gap-4">
-            {legalLinks.map((legalLink, i: number) => 
-            <FooterLink key={i} label={legalLink.label} href={legalLink.href}/>
-          )}
+      {/* Massive Typography Bottom */}
+      <div className="w-full overflow-hidden flex justify-center items-end mt-12 mb-8 select-none pointer-events-none opacity-5">
+        <h2 className="text-[18vw] leading-none font-bold tracking-tighter" style={{ fontFamily: "var(--font-montserrat), sans-serif" }}>
+          COBAM
+        </h2>
+      </div>
+
+      {/* Bottom Bar */}
+      <div className="border-t border-white/10 bg-black/20">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 py-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between text-xs text-white/40 font-light">
+            <p>© {new Date().getFullYear()} Cobam Group. Tous droits réservés.</p>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              {legalLinks.map((legalLink) => (
+                <Link 
+                  key={legalLink.label} 
+                  href={legalLink.href} 
+                  className="transition-colors hover:text-white"
+                >
+                  {legalLink.label}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </div>
