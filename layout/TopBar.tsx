@@ -4,6 +4,7 @@ import { MapPin, UserCircle, Phone, BookUser } from "lucide-react";
 import { COBAM_CONTACT_DETAILS, getPhoneHref } from "@/data/contact-details";
 import { cn } from "@/lib/utils";
 import { useNavbarVisibility } from "@/layout/navbar-visibility";
+import Link from "next/link";
 
 export default function TopBar() {
   const { isNavbarHidden } = useNavbarVisibility();
@@ -32,14 +33,10 @@ export default function TopBar() {
 
         {/* Right: Quick access */}
         <div className="flex items-center gap-5">
-          <a href="/#nos-agences" className="hidden md:flex items-center gap-1 text-cobam-quill-grey hover:text-cobam-water-blue transition-colors">
-            <MapPin size={12} />
-            Nos Agences
-          </a>
-          <a href="/login/staff" className="flex items-center gap-1 text-cobam-quill-grey hover:text-cobam-water-blue transition-colors">
+          <Link href="/login/staff" className="flex items-center gap-1 text-cobam-quill-grey hover:text-cobam-water-blue transition-colors">
             <UserCircle size={12} />
             Espace Team
-          </a>
+          </Link>
         </div>
       </div>
     </div>
