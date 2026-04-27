@@ -120,15 +120,6 @@ export default function Footer({
               </li>
               <li>
                 <a
-                  href={getWhatsAppHref(COBAM_CONTACT_DETAILS.whatsapp)}
-                  className="flex items-center gap-2 transition-colors hover:text-cobam-water-blue"
-                >
-                  <Phone size={14} className="shrink-0 text-cobam-water-blue" />
-                  WhatsApp : {COBAM_CONTACT_DETAILS.whatsapp}
-                </a>
-              </li>
-              <li>
-                <a
                   href={getPhoneHref(COBAM_CONTACT_DETAILS.phoneFixed)}
                   className="flex items-center gap-2 transition-colors hover:text-cobam-water-blue"
                 >
