@@ -143,7 +143,7 @@ export default async function Home() {
               </PremiumReveal>
             </div>
 
-            <div className="lg:w-1/2 lg:pt-16">
+            <div className="lg:w-1/2 lg:pt-16 overflow-x-hidden">
               <PremiumReveal direction="left" delay={0.2} blur>
                 <div className="grid grid-cols-2 gap-x-8 gap-y-16">
                   {stats.map((stat, i) => (
@@ -248,7 +248,7 @@ export default async function Home() {
       </section>
 
       {/* ABOUT US QUICK BANNER - Sticky Heritage */}
-      <section id="section-about" className="relative border-y border-cobam-quill-grey/30 bg-white overflow-hidden">
+      <section id="section-about" className="relative border-y border-cobam-quill-grey/30 bg-white">
         <div className="container mx-auto px-6 lg:px-8 relative z-10">
           <div className="flex flex-col lg:grid lg:grid-cols-2 lg:gap-0">
 
@@ -335,7 +335,7 @@ export default async function Home() {
       </section>
 
       {/* ACTUALITES BANNER - Quick highlights */}
-      <section id="section-actualites" className="relative border-y border-cobam-quill-grey/30 bg-cobam-light-bg py-24 sm:py-32">
+      <section id="section-actualites" className="relative border-y border-cobam-quill-grey/30 bg-cobam-light-bg py-24 sm:py-32 overflow-hidden">
         <div className="container mx-auto px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row justify-between items-end mb-16 gap-8">
             <div className="max-w-xl">

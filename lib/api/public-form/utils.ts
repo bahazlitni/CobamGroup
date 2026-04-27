@@ -140,7 +140,7 @@ export const PUBLIC_FORM_CONFIGS = {
     type: "devis",
     rules: DEVIS_RULES,
     toEmailEnv: "DEVIS_TO_EMAIL",
-    fromEmailEnv: "DEVIS_FROM_EMAIL",
+    fromEmailEnv: "CONTACT_FROM_EMAIL", // Using contact@ as it is the verified Brevo sender
     fromNameEnv: "DEVIS_FROM_NAME",
     defaultFromName: "Devis | Cobam Group",
     staffSubjectPrefix: "Devis",
