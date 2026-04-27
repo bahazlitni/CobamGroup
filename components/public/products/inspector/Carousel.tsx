@@ -1,4 +1,4 @@
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { PublicProductInspectorMedia } from "@/features/products/types";
 import { useState } from "react";
 import MediaFrame from "./MediaFrame";

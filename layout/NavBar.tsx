@@ -28,7 +28,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import NavbarSearch from "@/layout/NavbarSearch";
 import { useNavbarVisibility } from "@/layout/navbar-visibility";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 
 
 const brandsLinks = [

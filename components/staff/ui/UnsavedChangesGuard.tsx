@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import {
   Dialog,
   DialogContent,

@@ -13,7 +13,7 @@ import {
   type Ref,
 } from "react";
 import { cn } from "@/lib/utils";
-import { AnimatedUIButton } from "./Buttons";
+import { AnimatedUIButton } from "./AnimatedUIButton";
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 

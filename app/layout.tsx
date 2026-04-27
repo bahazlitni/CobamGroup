@@ -61,7 +61,7 @@ export default function RootLayout({
       >
         {children}
         <Toaster richColors closeButton />
-        <GoogleAnalytics gaId="G-XXXXXX" />
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} />
       </body>
     </html>
   );

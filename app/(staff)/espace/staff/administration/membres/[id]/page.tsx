@@ -19,7 +19,7 @@ import {
   StaffPageHeader,
   StaffStateCard,
 } from "@/components/staff/ui";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { useUserDetail } from "@/features/users/hooks/use-user-detail";
 import { useRolesList } from "@/features/roles/hooks/use-roles-list";
 import {

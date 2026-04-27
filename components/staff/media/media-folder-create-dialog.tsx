@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { StaffField } from "../ui";
 import PanelField from "../ui/PanelField";
 import PanelInput from "../ui/PanelInput";

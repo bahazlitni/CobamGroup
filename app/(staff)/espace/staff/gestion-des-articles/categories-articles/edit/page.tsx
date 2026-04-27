@@ -19,7 +19,7 @@ import {
   StaffStateCard,
   UnsavedChangesGuard,
 } from "@/components/staff/ui";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
 import { canCreateArticleCategories } from "@/features/article-categories/access";
 import { useArticleCategoryEditor } from "@/features/article-categories/hooks/use-article-category-editor";

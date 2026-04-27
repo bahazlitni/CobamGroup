@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import { PanelAutoCompleteInput, StaffField } from "."
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons"
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton"
 import PanelInput from "./PanelInput"
 import {
   formatProductAttributeKind,

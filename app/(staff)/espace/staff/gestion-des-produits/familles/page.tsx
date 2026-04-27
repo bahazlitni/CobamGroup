@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Package } from "lucide-react";
 import PanelTable from "@/components/staff/ui/PanelTable";
 import { StaffBadge, StaffFilterBar, StaffPageHeader } from "@/components/staff/ui";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { Checkbox } from "@/components/ui/checkbox";
 import PanelField from "@/components/staff/ui/PanelField";
 import PanelInput from "@/components/staff/ui/PanelInput";

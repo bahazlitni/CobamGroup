@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 
 function buildDownloadUrl(url: string) {
   const downloadUrl = new URL(url, window.location.origin);

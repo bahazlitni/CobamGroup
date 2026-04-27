@@ -3,7 +3,7 @@
 import Panel from "@/components/staff/ui/Panel";
 import StaffField from "@/components/staff/ui/field";
 import StaffSelect from "@/components/staff/ui/PanelSelect";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import type { PowerType, RoleSummary } from "@/features/rbac/roles";
 
 export default function RoleSelectionPanel({

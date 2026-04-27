@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Layers3 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { StaffSearchSelect } from "@/components/staff/ui";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import type { MediaListResult } from "@/features/media/types";
 import DynamicSuppressionButton from "./dynamic-suppression-button";
 import { formatBytes } from "./utils";

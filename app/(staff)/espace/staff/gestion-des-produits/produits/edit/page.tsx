@@ -28,7 +28,7 @@ import {
   AiSuggestionActionsRow,
   AI_SUGGESTION_TOKEN_CLASS,
 } from "@/components/staff/ui/ai-suggestion";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
 import { canCreateProducts, canManageProducts } from "@/features/products/access";
 import {

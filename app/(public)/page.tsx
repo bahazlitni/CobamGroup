@@ -2,12 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import SectionHeader from "@/components/ui/custom/SectionHeader";
 import BrandSlider from "@/components/ui/custom/BrandSlider";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { PRODUCT_BRANDS } from "@/lib/static_tables/brands";
 import { cn } from "@/lib/utils";
 import { PremiumReveal } from "@/components/ui/custom/PremiumReveal";
 import { PremiumImageWrapper } from "@/components/ui/custom/PremiumImageWrapper";
-import HomeCanvasOverlay from "@/components/ui/custom/HomeCanvasOverlay";
 import Magnetic from "@/components/ui/custom/Magnetic";
 import ParallaxImage from "@/components/ui/custom/ParallaxImage";
 import ScrollRevealText from "@/components/ui/custom/ScrollRevealText";
@@ -58,7 +57,6 @@ export default async function Home() {
 
   return (
     <main className="bg-cobam-light-bg text-cobam-dark-blue selection:bg-cobam-dark-blue selection:text-white">
-      <HomeCanvasOverlay />
       {/* HERO SECTION - Cinematic Ful-Bleed */}
       <section id="section-hero" className="relative h-[96vh] min-h-[700px] w-full overflow-hidden bg-black">
         <PremiumImageWrapper className="absolute inset-0 z-0">

@@ -14,7 +14,7 @@ import {
   StaffEditorLayout,
 } from "@/components/staff/ui";
 import StaffSelect from "@/components/staff/ui/PanelSelect";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { Textarea } from "@/components/ui/textarea";
 import type {
   ProductCategoryEditorFormState,

@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { StaffBadge, StaffFilterBar, StaffPageHeader, StaffSelect } from "@/components/staff/ui";
 import PanelTable from "@/components/staff/ui/PanelTable";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { useArticlesList } from "@/features/articles/hooks/use-articles-list";
 import type { ArticleListItemDto, ArticleStatus } from "@/features/articles/types";
 import { usePathname } from "next/navigation";

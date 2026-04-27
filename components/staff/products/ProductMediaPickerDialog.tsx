@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SearchInput from "@/components/staff/ui/SearchInput";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import MediaThumbnail from "@/components/staff/media/media-thumbnail";
 import { formatBytes, getMediaDisplayTitle } from "@/components/staff/media/utils";
 import {

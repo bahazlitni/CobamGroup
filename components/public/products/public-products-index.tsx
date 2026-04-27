@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { PublicProductIndexItem, PublicProductIndexResult } from "@/features/products/public";
 import PublicProductCard from "./public-product-card";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 
 type PublicProductsIndexProps = {
   initialResult: PublicProductIndexResult;

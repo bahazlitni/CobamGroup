@@ -12,7 +12,7 @@ import RoleEditorForm, {
 } from "@/components/staff/roles/RoleEditorForm";
 import Panel from "@/components/staff/ui/Panel";
 import { StaffBadge, StaffNotice } from "@/components/staff/ui";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { reorderRolesClient } from "@/features/roles/client";
 import { useRoleDetail } from "@/features/roles/hooks/use-role-detail";
 import { useRolesList } from "@/features/roles/hooks/use-roles-list";

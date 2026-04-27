@@ -1,6 +1,6 @@
 import { Clock3, Mail, MessageCircle, Phone, MapPin } from "lucide-react";
 import StaticHighway from "@/components/ui/custom/StaticHighway";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import PublicContactForm from "@/components/public/contact/public-contact-form";
 import {
   COBAM_CONTACT_DETAILS,

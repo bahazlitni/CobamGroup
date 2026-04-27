@@ -16,7 +16,7 @@ import MediaStats from "@/components/staff/media/media-stats";
 import MediaToolbar from "@/components/staff/media/media-toolbar";
 import MediaUploadDialog from "@/components/staff/media/media-upload-dialog";
 import { StaffNotice, StaffPageHeader, StaffStateCard } from "@/components/staff/ui";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
 import {
   canAccessMediaLibrary,

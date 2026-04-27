@@ -1,6 +1,6 @@
 import { AnimatedUISize } from "@/components/ui/custom/animated-ui.shared";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
-import type { ButtonVariant } from "@/components/ui/custom/Buttons"
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
+import type { ButtonVariant } from "@/components/ui/custom/AnimatedUIButton"
 import { toast } from "sonner";
 
 interface AnimatedUICopyButtonProps {

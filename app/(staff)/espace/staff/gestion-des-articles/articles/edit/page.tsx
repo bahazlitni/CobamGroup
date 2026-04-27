@@ -24,7 +24,7 @@ import {
   StaffTagInput,
   UnsavedChangesGuard,
 } from "@/components/staff/ui";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { Textarea } from "@/components/ui/textarea";
 import { useArticleCategoryOptions } from "@/features/article-categories/hooks/use-article-category-options";
 import { useArticleEditor } from "@/features/articles/hooks/use-article-editor";

@@ -3,7 +3,7 @@
 import { ChevronRight, Folder, FolderOpen } from "lucide-react";
 import { StaffBadge } from "@/components/staff/ui";
 import type { ProductCategoryListItemDto } from "../types";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 
 export type ProductCategoryTreeNode = ProductCategoryListItemDto;
 

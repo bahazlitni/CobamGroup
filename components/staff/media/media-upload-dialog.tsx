@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/card";
 import { StaffBadge, StaffSearchSelect, StaffSelect } from "@/components/staff/ui";
 import { Input } from "@/components/ui/input";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import type {
   MediaListResult,
   MediaUploadBatchCallbacks,

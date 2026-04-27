@@ -1,4 +1,4 @@
-import { AnimatedUIButton } from "./Buttons";
+import { AnimatedUIButton } from "./AnimatedUIButton";
 
 interface SectionHeaderProps {
   preTitle?: string;

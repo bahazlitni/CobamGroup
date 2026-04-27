@@ -9,7 +9,7 @@ import PersonalDetailsForm, {
 } from "@/components/staff/ui/PersonalDetailsForm";
 import PersonalDetailsPreviewAndAvatar from "@/components/staff/ui/PersonalDetailsPreviewAndAvatar";
 import { StaffPageHeader } from "@/components/staff/ui";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import {
   findKnownJobTitle,
   OTHER_JOB_TITLE_VALUE,

@@ -3,7 +3,7 @@
 import { AArrowDown, AArrowUp } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import PanelSelect from "@/components/staff/ui/PanelSelect";
 import type { MediaSortBy, MediaView } from "@/features/media/types";
 import SearchInput from "@/components/staff/ui/SearchInput";

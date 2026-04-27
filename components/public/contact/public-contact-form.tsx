@@ -4,7 +4,7 @@ import { useState } from "react";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { Loader2 } from "lucide-react";
 import PhoneInput from "react-phone-number-input";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import {
   EMAIL_REQUIRED,
   FIRSTNAME_REQUIRED,

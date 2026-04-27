@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import Panel from "./Panel";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 
 export function StaffEditorLayout({
   children,

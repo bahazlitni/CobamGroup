@@ -7,7 +7,7 @@ import { ArrowUpRight, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { PublicMegaMenuProductCategory } from "@/features/product-categories/public-types";
 import { cn } from "@/lib/utils";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 
 interface MegaMenuProps {
   menuLabel: string;

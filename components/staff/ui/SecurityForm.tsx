@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Panel from "@/components/staff/ui/Panel";
 import PanelPasswordInput from "@/components/staff/ui/PanelPasswordInput";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { Label } from "@/components/ui/label";
 
 type PasswordState = {

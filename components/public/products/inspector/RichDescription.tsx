@@ -1,5 +1,5 @@
 "use client"
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons"
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton"
 import { useState } from "react"
 import PublicRichText from "../../articles/public-rich-text"
 import { cn } from "@/lib/utils"

@@ -41,7 +41,7 @@ import { canAccessProductCategories } from "@/features/product-categories/access
 import { canAccessProducts } from "@/features/products/access";
 import { canAccessRoles } from "@/features/roles/access";
 import { canAccessUsers } from "@/features/users/access";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 
 function SidebarLink({
   icon,

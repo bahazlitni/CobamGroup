@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FileText, RefreshCcw, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { formatBytes } from "@/components/staff/media/utils";
 import ProductMediaPickerDialog from "@/components/staff/products/ProductMediaPickerDialog";
 import type { ProductMediaDto } from "@/features/products/types";

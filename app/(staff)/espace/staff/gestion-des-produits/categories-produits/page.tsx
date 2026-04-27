@@ -9,7 +9,7 @@ import {
   StaffNotice,
   StaffPageHeader,
 } from "@/components/staff/ui";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
 import { canCreateProductCategories } from "@/features/product-categories/access";
 import {

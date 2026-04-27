@@ -1,4 +1,4 @@
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { ProductCommercialMode } from "@prisma/client";
 
 function PriceText({

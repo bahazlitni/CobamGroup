@@ -1,7 +1,7 @@
 "use client"
 import { Input } from "@/components/ui/input";
 import { ComponentProps, useState } from "react";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { Eye } from "lucide-react";
 
 type PanelInputProps = ComponentProps<typeof Input>;

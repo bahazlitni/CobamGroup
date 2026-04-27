@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { RefreshCcw, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { getMediaByIdClient, MediaClientError } from "@/features/media/client";
 import type { MediaListItemDto } from "@/features/media/types";
 import { formatBytes, getMediaDisplayTitle } from "../utils";

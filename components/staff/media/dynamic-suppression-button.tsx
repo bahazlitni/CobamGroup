@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 
 export default function DynamicSuppressionButton({
   buttonText,

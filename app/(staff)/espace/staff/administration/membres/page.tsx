@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import Avatar from "@/components/staff/ui/Avatar";
 import PanelTable from "@/components/staff/ui/PanelTable";
 import { StaffBadge, StaffFilterBar, StaffPageHeader, StaffSelect } from "@/components/staff/ui";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { isHexColor } from "@/components/ui/custom/animated-ui.shared";
 import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
 import { hasPermission } from "@/features/rbac/access";

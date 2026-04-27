@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { ShieldAlert, CircleAlert, type LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 
 type Variant = "error" | "forbidden";
 

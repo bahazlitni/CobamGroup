@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Loading from "@/components/staff/Loading";
 import StaffSelect from "@/components/staff/ui/PanelSelect";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 
 type TablePagination = {
   goPrev: () => void | Promise<void>;

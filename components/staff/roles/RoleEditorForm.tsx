@@ -17,7 +17,7 @@ import {
   type PermissionKey,
 } from "@/features/rbac/permissions";
 import type { RoleMutationInput } from "@/features/roles/types";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import PanelField from "../ui/PanelField";
 import PanelInput from "../ui/PanelInput";
 import BooleanButton from "../ui/BooleanButton";

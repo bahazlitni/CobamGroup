@@ -1,4 +1,4 @@
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import SectionHeader from "@/components/ui/custom/SectionHeader";
 import { COBAM_SOCIAL_LINKS } from "@/data/contact-details";
 

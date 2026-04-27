@@ -5,7 +5,7 @@ import { Shield } from "lucide-react";
 import { toast } from "sonner";
 import SecurityForm from "@/components/staff/ui/SecurityForm";
 import { staffApiFetch } from "@/lib/api/auth/staff/api-fetch";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { StaffPageHeader } from "@/components/staff/ui";
 
 export default function SecurityPage() {

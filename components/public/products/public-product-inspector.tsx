@@ -10,7 +10,7 @@ import Carousel from "./inspector/Carousel";
 import BreadCrumb from "./inspector/BreadCrumb";
 import Title from "./inspector/Title";
 import Property from "./inspector/Property";
-import { AnimatedUIButton } from "@/components/ui/custom/Buttons";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import {
   buildColorOptions,
   buildFinishOptions,
