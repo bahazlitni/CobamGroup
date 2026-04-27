@@ -8,7 +8,7 @@ function BrandBlockWrapper({brand, children}: {brand: Brand, children: ReactNode
     return <Link href={`/produits?search=brand:2=${brand.value}`} className="block group">{children}</Link>
 }
 
-export default function BrandImageBlock({brand}: { brand: Brand }){
+export default function TimelineBrandImageBlock({brand}: { brand: Brand }){
     return <BrandBlockWrapper brand={brand}>
         <div className="relative bg-white rounded-3xl border border-cobam-quill-grey/40 shadow-sm overflow-hidden transition-shadow duration-300 group-hover:shadow-md">
             <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full bg-cobam-water-blue/10" />

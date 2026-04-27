@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import type { Brand as PublicBrand } from "@/lib/static_tables/brands";
 import { scrollToIdCenter } from "@/lib/utils";
+import GridViewBrandImageBlock from "./GridViewBrandImageBlock";
 
 export default function GridView({ brands }: { brands: PublicBrand[] }) {
   // On mount, if there is a hash (#slug), center that card
@@ -37,31 +38,11 @@ export default function GridView({ brands }: { brands: PublicBrand[] }) {
         >
           <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-cobam-quill-grey/50 bg-white shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl">
             {/* Logo area */}
-            <div className="relative z-10 px-5 pt-5">
-              <div className="flex min-h-[150px] items-center justify-center rounded-xl border border-cobam-quill-grey/40 bg-gradient-to-b from-white to-cobam-light-bg/70 px-6 py-7 transition-colors duration-300 group-hover:bg-white">
-                {brand.imageUrl ? (
-                  <Image
-                    src={brand.imageUrl}
-                    alt={brand.name}
-                    width={240}
-                    height={110}
-                    className="max-h-[80px] w-auto object-contain grayscale-[0.6] contrast-110 transition-all duration-500 group-hover:grayscale-0"
-                  />
-                ) : (
-                  <span className="text-center text-sm font-semibold text-cobam-dark-blue">
-                    {brand.name}
-                  </span>
-                )}
-              </div>
-            </div>
+            <GridViewBrandImageBlock brand={brand} />
 
             {/* Content */}
             <div className="relative z-10 flex flex-1 flex-col px-5 pb-5 pt-4">
               <div className="mb-3">
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-cobam-carbon-grey">
-                  Partenaire officiel
-                </p>
-
                 <h3
                   className="text-[1.4rem] font-bold leading-tight text-cobam-dark-blue"
                   style={{ fontFamily: "var(--font-playfair), serif" }}

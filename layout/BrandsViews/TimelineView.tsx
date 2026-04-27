@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import type { Brand as PublicBrand } from "@/lib/static_tables/brands";
 import { scrollToIdCenter } from "@/lib/utils";
 import Link from "next/link";
-import BrandImageBlock from "./BrandImageBlock";
+import BrandImageBlock from "./TimelineBrandImageBlock";
 
 export default function TimelineView({ brands }: { brands: PublicBrand[] }) {
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
