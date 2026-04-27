@@ -192,6 +192,7 @@
     color: var(--foreground);
     font-synthesis-weight: none;
     text-rendering: optimizeLegibility;
+    overflow: hidden;
   }
 
   button,

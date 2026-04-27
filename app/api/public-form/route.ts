@@ -30,8 +30,71 @@ function createTransporter() {
   });
 }
 
+function emailShell(input: {
+  preview: string;
+  eyebrow: string;
+  title: string;
+  body: string;
+}) {
+  return `
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${escapeHtml(input.title)}</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f4f8fb;font-family:Arial,Helvetica,sans-serif;color:#14202e;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
+      ${escapeHtml(input.preview)}
+    </div>
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f8fb;">
+      <tr>
+        <td align="center" style="padding:32px 14px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;background:#ffffff;border-radius:22px;overflow:hidden;border:1px solid #dbe8ef;box-shadow:0 18px 45px rgba(7,31,52,0.10);">
+            <tr>
+              <td style="background:#071f34;padding:30px 32px 28px;">
+                <p style="margin:0 0 12px;font-size:11px;line-height:1.4;font-weight:700;letter-spacing:0.24em;text-transform:uppercase;color:#1d9bd1;">
+                  ${escapeHtml(input.eyebrow)}
+                </p>
+                <h1 style="margin:0;font-size:25px;line-height:1.25;font-weight:700;color:#ffffff;">
+                  ${escapeHtml(input.title)}
+                </h1>
+                <p style="margin:10px 0 0;font-size:14px;line-height:1.6;color:#c8e6f3;">
+                  COBAM GROUP
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:30px 32px 34px;">
+                ${input.body}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+`;
+}
+
 function fieldLine(label: string, value: string) {
-  return `<p><strong>${label}:</strong> ${value}</p>`;
+  return `
+    <tr>
+      <td style="padding:13px 0;border-bottom:1px solid #e4edf3;">
+        <p style="margin:0 0 5px;font-size:11px;line-height:1.4;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;">
+          ${label}
+        </p>
+        <p style="margin:0;font-size:15px;line-height:1.55;font-weight:600;color:#071f34;">
+          ${value}
+        </p>
+      </td>
+    </tr>
+  `;
 }
 
 function buildStaffHtml(input: {
@@ -44,21 +107,39 @@ function buildStaffHtml(input: {
   safeMessage: string;
   hasMessage: boolean;
 }) {
-  return `
-    <div style="font-family: Arial, Helvetica, sans-serif; line-height: 1.6; color: #111;">
-      <h2>${escapeHtml(input.title)}</h2>
-      ${fieldLine("Nom", input.safeLastName)}
-      ${fieldLine("Prénom", input.safeFirstName)}
-      ${fieldLine("E-mail", input.safeEmail)}
-      ${fieldLine("Téléphone", input.safePhone)}
-      ${fieldLine("Sujet", input.safeSubject)}
+  return emailShell({
+    preview: input.title,
+    eyebrow: "Nouvelle soumission",
+    title: input.title,
+    body: `
+      <p style="margin:0 0 22px;font-size:15px;line-height:1.7;color:#475569;">
+        Une nouvelle demande a été envoyée depuis le site web.
+      </p>
+
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+        ${fieldLine("Nom", input.safeLastName)}
+        ${fieldLine("Prénom", input.safeFirstName)}
+        ${fieldLine("E-mail", input.safeEmail)}
+        ${fieldLine("Téléphone", input.safePhone)}
+        ${fieldLine("Sujet", input.safeSubject)}
+      </table>
+
       ${
         input.hasMessage
-          ? `<hr /><p><strong>Message:</strong></p><p>${input.safeMessage}</p>`
+          ? `
+            <div style="margin-top:24px;">
+              <p style="margin:0 0 8px;font-size:11px;line-height:1.4;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;">
+                Message
+              </p>
+              <div style="padding:18px 20px;background:#f4f8fb;border:1px solid #dbe8ef;border-radius:16px;font-size:15px;line-height:1.75;color:#14202e;">
+                ${input.safeMessage}
+              </div>
+            </div>
+          `
           : ""
       }
-    </div>
-  `;
+    `,
+  });
 }
 
 function buildAcknowledgementHtml(input: {
@@ -70,28 +151,50 @@ function buildAcknowledgementHtml(input: {
   hasPhone: boolean;
   hasMessage: boolean;
 }) {
-  return `
-    <div style="font-family: Arial, Helvetica, sans-serif; line-height: 1.65; color: #14202e;">
-      <p>Bonjour ${input.safeFullName},</p>
-      <p>${input.safeIntro}</p>
-      <div style="margin: 24px 0; padding: 18px 20px; border: 1px solid #dbe3ea; background: #f8fbfd;">
-        <p style="margin: 0 0 10px;"><strong>Récapitulatif de votre demande</strong></p>
-        <p style="margin: 0;"><strong>Sujet:</strong> ${input.safeSubject}</p>
-        ${
-          input.hasPhone
-            ? `<p style="margin: 6px 0 0;"><strong>Téléphone:</strong> ${input.safePhone}</p>`
-            : ""
-        }
+  return emailShell({
+    preview: "Nous avons bien reçu votre message.",
+    eyebrow: "Confirmation",
+    title: "Votre demande a bien été reçue",
+    body: `
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#14202e;">
+        Bonjour ${input.safeFullName},
+      </p>
+
+      <p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:#475569;">
+        ${input.safeIntro}
+      </p>
+
+      <div style="margin:0;padding:20px;background:#f4f8fb;border:1px solid #dbe8ef;border-radius:18px;">
+        <p style="margin:0 0 16px;font-size:16px;line-height:1.5;font-weight:700;color:#071f34;">
+          Récapitulatif de votre demande
+        </p>
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+          ${fieldLine("Sujet", input.safeSubject)}
+          ${input.hasPhone ? fieldLine("Téléphone", input.safePhone) : ""}
+        </table>
+
         ${
           input.hasMessage
-            ? `<hr style="border: 0; border-top: 1px solid #dbe3ea; margin: 16px 0;" /><p style="margin: 0;"><strong>Message:</strong></p><p style="margin: 8px 0 0;">${input.safeMessage}</p>`
+            ? `
+              <div style="margin-top:18px;">
+                <p style="margin:0 0 8px;font-size:11px;line-height:1.4;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;">
+                  Message
+                </p>
+                <div style="padding:16px 18px;background:#ffffff;border:1px solid #e4edf3;border-radius:14px;font-size:15px;line-height:1.75;color:#14202e;">
+                  ${input.safeMessage}
+                </div>
+              </div>
+            `
             : ""
         }
       </div>
-      <p>Notre équipe vous répondra dans les meilleurs délais.</p>
-      <p style="margin-top: 24px;">COBAM GROUP</p>
-    </div>
-  `;
+
+      <p style="margin:24px 0 0;font-size:15px;line-height:1.7;color:#475569;">
+        Notre équipe vous répondra dans les meilleurs délais.
+      </p>
+    `,
+  });
 }
 
 function getOptionalField(
