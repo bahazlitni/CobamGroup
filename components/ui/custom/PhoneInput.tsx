@@ -1,13 +1,11 @@
-// components/ui/phone-input.tsx
 "use client";
 
 import PhoneInputRaw, {
   type Value as PhoneValue,
 } from "react-phone-number-input/input";
+import type { CountryCode } from "libphonenumber-js/core";
 import "react-phone-number-input/style.css";
-
 import { cn } from "@/lib/utils";
-import { CountryCode } from "libphonenumber-js/core";
 
 type PhoneInputProps = {
   id?: string;
@@ -17,7 +15,7 @@ type PhoneInputProps = {
   placeholder?: string;
   disabled?: boolean;
   defaultCountry?: string;
-  fullWidth?: boolean
+  fullWidth?: boolean;
 };
 
 export function PhoneInput({
@@ -28,7 +26,7 @@ export function PhoneInput({
   placeholder,
   disabled,
   defaultCountry = "TN",
-  fullWidth = false
+  fullWidth = false,
 }: PhoneInputProps) {
   return (
     <PhoneInputRaw
@@ -42,8 +40,8 @@ export function PhoneInput({
       placeholder={placeholder ?? "+216 ..."}
       disabled={disabled}
       className={cn(
-        "h-10 rounded-md border-cobam-grey px-4 text-base border border-slate-300 bg-white",
-        fullWidth ? "w-full" : "w-auto"
+        "h-10 rounded-md border border-slate-300 bg-white px-4 text-base",
+        fullWidth ? "w-full" : "w-auto",
       )}
     />
   );

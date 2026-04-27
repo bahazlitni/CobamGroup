@@ -10,7 +10,6 @@ import Carousel from "./inspector/Carousel";
 import BreadCrumb from "./inspector/BreadCrumb";
 import Title from "./inspector/Title";
 import Property from "./inspector/Property";
-import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import {
   buildColorOptions,
   buildFinishOptions,
@@ -122,7 +121,7 @@ export default function PublicProductInspectorView({
     if (targetVariant) {
       selectVariant(targetVariant.id);
     }
-  };
+  }
 
   const handleNormalAttributeSelect = (attributeId: string, valueKey: string) => {
     const targetVariant = findVariantByNormalAttribute(
@@ -185,6 +184,8 @@ export default function PublicProductInspectorView({
                 priceVisibility={selectedVariant.priceVisibility} 
                 basePriceAmount={selectedVariant.basePriceAmount}
                 commercialMode={selectedVariant.commercialMode}
+                productName={selectedVariant.name}
+                sku={selectedVariant.sku}
               />
               <RichDescription description={selectedVariant.description}/>
               <SubcategoriesList subcategories={normalizedProduct.subcategories} />

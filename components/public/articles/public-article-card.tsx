@@ -46,9 +46,7 @@ export default function PublicArticleCard({
 
         <div className="mt-auto border-t border-slate-100 pt-5">
           <PublicArticleMeta
-            authors={article.authors}
             createdAt={article.createdAt}
-            updatedAt={article.updatedAt}
           />
         </div>
       </div>

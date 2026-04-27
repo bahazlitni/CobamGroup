@@ -76,9 +76,7 @@ export default async function PublicArticleDetailPage({
             </h1>
 
             <PublicArticleMeta
-              authors={article.authors}
               createdAt={article.createdAt}
-              updatedAt={article.updatedAt}
             />
 
             {article.coverImageUrl ? (

@@ -1,5 +1,6 @@
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { ProductCommercialMode } from "@prisma/client";
+import ProductDevisDialog from "./ProductDevisDialog";
 
 function PriceText({
   price,
@@ -39,8 +40,12 @@ function PriceText({
 
 function CommercialModeAction({
   commercialMode,
+  productName,
+  sku,
 }: {
   commercialMode: ProductCommercialMode | null;
+  productName: string;
+  sku: string;
 }) {
   if (commercialMode === "ONLINE_ONLY" || commercialMode === "ON_REQUEST_OR_ONLINE") {
     return (
@@ -51,11 +56,7 @@ function CommercialModeAction({
   }
 
   if (commercialMode === "ON_REQUEST_ONLY") {
-    return (
-      <AnimatedUIButton size="md" variant="outline" onClick={() => undefined}>
-        Demander
-      </AnimatedUIButton>
-    );
+    return <ProductDevisDialog productName={productName} sku={sku} />;
   }
 
   return (
@@ -67,24 +68,43 @@ function CommercialModeAction({
 
 
 interface PriceBannerProps {
-    priceVisibility: boolean
-    basePriceAmount: string | null
-    commercialMode: ProductCommercialMode | null
+  priceVisibility: boolean;
+  basePriceAmount: string | null;
+  commercialMode: ProductCommercialMode | null;
+  productName: string;
+  sku: string;
 }
 
-export default function PriceBanner({priceVisibility, basePriceAmount, commercialMode}: PriceBannerProps){
-    if(!priceVisibility)
-        return <div className="flex flex-wrap items-center justify-end">
-            <CommercialModeAction commercialMode={commercialMode} />
-        </div>
+export default function PriceBanner({
+  priceVisibility,
+  basePriceAmount,
+  commercialMode,
+  productName,
+  sku,
+}: PriceBannerProps) {
+  if (!priceVisibility) {
+    return (
+      <div className="flex flex-wrap items-center justify-end">
+        <CommercialModeAction
+          commercialMode={commercialMode}
+          productName={productName}
+          sku={sku}
+        />
+      </div>
+    );
+  }
 
-    return <div className="flex flex-wrap items-end justify-between gap-4 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4">
-        <div className="space-y-1.5">
+  return <div className="flex flex-wrap items-end justify-between gap-4 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4">
+      <div className="space-y-1.5">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-            Prix
+          Prix
         </p>
         <PriceText price={basePriceAmount} />
-        </div>
-        <CommercialModeAction commercialMode={commercialMode} />
+      </div>
+      <CommercialModeAction
+        commercialMode={commercialMode}
+        productName={productName}
+        sku={sku}
+      />
     </div>
 }

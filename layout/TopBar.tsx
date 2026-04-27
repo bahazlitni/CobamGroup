@@ -23,10 +23,10 @@ export default function TopBar() {
           <Phone size={12} />
           <span>Service Client :</span>
           <a
-            href={getPhoneHref(COBAM_CONTACT_DETAILS.phoneMobile)}
+            href={getPhoneHref(COBAM_CONTACT_DETAILS.phoneFixed)}
             className="text-cobam-water-blue hover:underline font-semibold"
           >
-            {COBAM_CONTACT_DETAILS.phoneMobile}
+            {COBAM_CONTACT_DETAILS.phoneFixed}
           </a>
         </div>
 

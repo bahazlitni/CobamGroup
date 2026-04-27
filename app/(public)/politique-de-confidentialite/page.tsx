@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     canonical: "/politique-de-confidentialite",
   },
   robots: {
-    index: false,
+    index: true,
     follow: true,
   },
 };

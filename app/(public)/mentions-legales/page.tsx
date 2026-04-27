@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     canonical: "/mentions-legales",
   },
   robots: {
-    index: false,
+    index: true,
     follow: true,
   },
 };

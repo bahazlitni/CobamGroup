@@ -1,7 +1,7 @@
 import { Clock3, Mail, MessageCircle, Phone, MapPin } from "lucide-react";
 import StaticHighway from "@/components/ui/custom/StaticHighway";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
-import PublicContactForm from "@/components/public/contact/public-contact-form";
+import PublicContactForm from "@/components/public/forms/public-form";
 import {
   COBAM_CONTACT_DETAILS,
   COBAM_OPENING_HOURS,
@@ -28,12 +28,6 @@ const contactChannels = [
     label: "Tél fixe",
     value: COBAM_CONTACT_DETAILS.phoneFixed,
     href: getPhoneHref(COBAM_CONTACT_DETAILS.phoneFixed),
-    Icon: Phone,
-  },
-  {
-    label: "Tél mobile",
-    value: COBAM_CONTACT_DETAILS.phoneMobile,
-    href: getPhoneHref(COBAM_CONTACT_DETAILS.phoneMobile),
     Icon: Phone,
   },
 ];

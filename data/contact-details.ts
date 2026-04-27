@@ -5,6 +5,9 @@ export const COBAM_CONTACT_DETAILS = {
   whatsapp: "+216 26833110",
   phoneFixed: "+216 75731731",
   phoneMobile: "+216 26833110",
+  canonicalPhoneMobile: "21626833110",
+  canonicalPhoneFixed: "21675731731",
+  canonicalPhoneWhatsapp: "21626833110",
 } as const;
 
 export const COBAM_OPENING_HOURS = [
