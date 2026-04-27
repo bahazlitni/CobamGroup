@@ -282,8 +282,8 @@ export default async function Home() {
                   </p>
                 </div>
                 <div className="pt-8">
-                  <AnimatedUIButton href="/a-propos" variant="primary" icon="arrow-right" size="xl">
-                    Explorer notre univers
+                  <AnimatedUIButton href="/a-propos" variant="primary" icon="arrow-right" size="lg">
+                    À propos de nous
                   </AnimatedUIButton>
                 </div>
               </PremiumReveal>

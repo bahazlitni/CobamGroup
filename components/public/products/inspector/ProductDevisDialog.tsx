@@ -39,7 +39,7 @@ export default function ProductDevisDialog({
         <DialogHeader className="border-b border-slate-200 px-6 py-6 pr-16">
           <DialogTitle>Demande de devis</DialogTitle>
           <DialogDescription>
-            Le produit est deja renseigné. Ajoutez vos coordonnées pour recevoir
+            Le produit est déjà renseigné. Ajoutez vos coordonnées pour recevoir
             un retour de notre équipe.
           </DialogDescription>
         </DialogHeader>
