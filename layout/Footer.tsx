@@ -116,7 +116,7 @@ export default function Footer({
             <ul className="flex flex-col gap-3 text-sm text-white/60">
               <li className="flex items-start gap-2">
                 <MapPin size={14} className="mt-0.5 shrink-0 text-cobam-water-blue" />
-                <span>Siege social, Houmt Souk, Djerba, Tunisie</span>
+                <span>Siège social, Houmt Souk, Djerba, Tunisie</span>
               </li>
               <li>
                 <a
