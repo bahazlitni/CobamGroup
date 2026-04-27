@@ -119,8 +119,9 @@ class VelocitySampler {
   /** Returns velocity in px/s */
   compute(): number {
     if (this.samples.length < 2) return 0;
-    const a = this.samples[0];
     const b = this.samples[this.samples.length - 1];
+    if (performance.now() - b.t > VELOCITY_WINDOW_MS) return 0;
+    const a = this.samples[0];
     const dt = b.t - a.t;
     if (dt < 4) return 0;
     return ((b.x - a.x) / dt) * 1000;
@@ -550,7 +551,7 @@ export default function RailCarousel({
         className={cn(
           "overflow-x-hidden overflow-y-hidden",
           "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
-          allowDrag && hasOverflow && "cursor-grab select-none",
+          allowDrag && hasOverflow && "cursor-grab select-none touch-pan-y",
           viewportClassName,
         )}
         onPointerDown={handlePointerDown}
