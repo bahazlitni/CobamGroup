@@ -1,8 +1,8 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, Pencil, SquareStack, X } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Pencil, SquareStack } from "lucide-react";
 import PanelTable from "@/components/staff/ui/PanelTable";
 import { StaffFilterBar, StaffPageHeader, StaffSelect } from "@/components/staff/ui";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
@@ -17,7 +17,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
-import { canCreateProducts } from "@/features/products/access";
+import {
+  canCreateProducts,
+  canManageProducts,
+  canPublishProducts,
+  canUnpublishProducts,
+} from "@/features/products/access";
 import {
   AllProductsClientError,
   deleteAllProductsBulkClient,
@@ -26,8 +31,39 @@ import {
 } from "@/features/all-products/client";
 import type { AllProductsListItemDto } from "@/features/all-products/types";
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+
+
 const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
-const COLUMN_LABELS = ["SKU", "Nom", "Marque", "Prix de base", "TVA", "Stock", "Cycle de vie", ""];
+const COLUMN_LABELS = ["SKU", "Nom", "Marque", "Prix", "TVA", "Stock", "Cycle", ""];
+
+// Explicit column widths so columns never react to content changes.
+// Order matches the columns array passed to PanelTable below:
+// [checkbox, SKU, Nom, Marque, Prix, TVA, Stock, Cycle, Action]
+const COLUMN_WIDTHS = [
+  "40px",
+  "140px",
+  "auto",
+  "140px",
+  "120px",
+  "80px",
+  "100px",
+  "140px",
+  "100px",
+];
+
+// Shared box class: identical dimensions in idle and editing states.
+// h-8 = 32px. border is always present (transparent when idle) so the
+// 1px border on the input doesn't change the box size when swapping.
+const CELL_BOX_CLASS =
+  "box-border flex h-8 w-full min-w-0 items-center rounded border border-transparent bg-transparent px-2 text-sm leading-none text-slate-700";
 
 type EditingState = {
   rowId: number;
@@ -35,7 +71,7 @@ type EditingState = {
   value: string;
 } | null;
 
-function EditableCell({
+function EditableCellInner({
   value,
   rowId,
   field,
@@ -45,6 +81,7 @@ function EditableCell({
   onCommitEdit,
   onCancelEdit,
   saving,
+  readOnly = false,
   type = "text",
 }: {
   value: string;
@@ -56,6 +93,7 @@ function EditableCell({
   onCommitEdit: () => void;
   onCancelEdit: () => void;
   saving: boolean;
+  readOnly?: boolean;
   type?: "text" | "number";
 }) {
   const isEditing = editing?.rowId === rowId && editing?.field === field;
@@ -68,12 +106,13 @@ function EditableCell({
     }
   }, [isEditing]);
 
-  if (isEditing) {
-    return (
-      <div className="flex items-center gap-1">
-        <input
+  // Single stable wrapper. Same width/height in both states.
+  return (
+    <div className="relative h-8 w-full min-w-0">
+      {isEditing && !readOnly ? (
+        <Input
           ref={inputRef}
-          className="w-full rounded border border-cobam-dark-blue/30 bg-white px-2 py-1 text-sm outline-none focus:border-cobam-dark-blue focus:ring-1 focus:ring-cobam-dark-blue/20"
+          className={`${CELL_BOX_CLASS} border-cobam-dark-blue/40 bg-white shadow-none outline-none ring-0 ring-offset-0 focus-visible:border-cobam-dark-blue focus-visible:ring-0 focus-visible:ring-offset-0`}
           type={type}
           step={type === "number" ? "any" : undefined}
           value={editing.value}
@@ -85,45 +124,64 @@ function EditableCell({
           }}
           onBlur={onCommitEdit}
         />
-      </div>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      className="group/cell flex w-full items-center gap-1.5 rounded px-2 py-1 text-left text-sm text-slate-700 transition-colors hover:bg-cobam-dark-blue/5"
-      onClick={() => onStartEdit(rowId, field, value)}
-    >
-      <span className="truncate">{value || <span className="text-slate-300">—</span>}</span>
-      <Pencil className="h-3 w-3 shrink-0 text-slate-300 opacity-0 transition-opacity group-hover/cell:opacity-100" />
-    </button>
+      ) : readOnly ? (
+        <div className={`${CELL_BOX_CLASS} cursor-default overflow-hidden`}>
+          <span className="block w-full truncate">
+            {value || <span className="text-slate-300">—</span>}
+          </span>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className={`${CELL_BOX_CLASS} cursor-text overflow-hidden text-left transition-colors hover:border-cobam-dark-blue/10 hover:bg-cobam-dark-blue/5`}
+          onClick={() => onStartEdit(rowId, field, value)}
+        >
+          <span className="block w-full truncate">
+            {value || <span className="text-slate-300">—</span>}
+          </span>
+        </button>
+      )}
+    </div>
   );
 }
 
-function LifecycleCell({
+const EditableCell = React.memo(EditableCellInner);
+
+
+function LifecycleCellInner({
   rowId,
   value,
   onSave,
   saving,
+  readOnly = false,
 }: {
   rowId: number;
   value: string;
   onSave: (rowId: number, field: string, value: string) => void;
   saving: boolean;
+  readOnly?: boolean;
 }) {
   return (
-    <select
-      className="w-full cursor-pointer rounded border-0 bg-transparent px-2 py-1 text-sm text-slate-700 outline-none transition-colors hover:bg-cobam-dark-blue/5 focus:ring-1 focus:ring-cobam-dark-blue/20"
+    <Select
       value={value}
-      disabled={saving}
-      onChange={(e) => onSave(rowId, "lifecycle", e.target.value)}
+      disabled={saving || readOnly}
+      onValueChange={(nextValue) => {
+        if (!readOnly) onSave(rowId, "lifecycle", nextValue);
+      }}
     >
-      <option value="DRAFT">Brouillon</option>
-      <option value="ACTIVE">Actif</option>
-    </select>
+      <SelectTrigger className={`box-border flex h-8 w-full min-w-0 items-center rounded border border-transparent bg-transparent px-2 text-sm leading-none text-slate-700 shadow-none ring-0 ring-offset-0 transition-colors ${readOnly ? "cursor-default opacity-70" : "hover:border-cobam-dark-blue/10 hover:bg-cobam-dark-blue/5"} focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0`}>
+        <SelectValue placeholder="Cycle de vie" />
+      </SelectTrigger>
+
+      <SelectContent>
+        <SelectItem value="DRAFT">Brouillon</SelectItem>
+        <SelectItem value="ACTIVE">Actif</SelectItem>
+      </SelectContent>
+    </Select>
   );
 }
+
+const LifecycleCell = React.memo(LifecycleCellInner);
 
 function getAction(item: AllProductsListItemDto) {
   switch (item.kind) {
@@ -143,6 +201,10 @@ function getAction(item: AllProductsListItemDto) {
 export default function AllProductsPage() {
   const { user } = useStaffSessionContext();
   const canCreate = user ? canCreateProducts(user) : false;
+  const canEdit = user ? canManageProducts(user) : false;
+  const canChangeLifecycle = user
+    ? canPublishProducts(user) || canUnpublishProducts(user)
+    : false;
   const [items, setItems] = useState<AllProductsListItemDto[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<(typeof PAGE_SIZE_OPTIONS)[number]>(20);
@@ -153,7 +215,6 @@ export default function AllProductsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<EditingState>(null);
-  const [savingRowId, setSavingRowId] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [bulkEditLoading, setBulkEditLoading] = useState(false);
@@ -333,6 +394,13 @@ export default function AllProductsPage() {
   }, []);
 
   const handleInlineSave = useCallback(async (rowId: number, field: string, rawValue: string) => {
+    // Permission guard: lifecycle needs publish/unpublish, everything else needs manage
+    const hasPermission = field === "lifecycle" ? canChangeLifecycle : canEdit;
+    if (!hasPermission) {
+      setEditing(null);
+      return;
+    }
+
     const item = items.find((i) => i.id === rowId);
     if (!item) return;
 
@@ -343,22 +411,39 @@ export default function AllProductsPage() {
     }
 
     const data: Record<string, unknown> = {};
+    let localValue: unknown = rawValue;
     if (field === "basePriceAmount" || field === "stock") {
-      data[field] = rawValue.trim() === "" ? null : rawValue.trim();
+      const trimmed = rawValue.trim();
+      data[field] = trimmed === "" ? null : trimmed;
+      localValue = trimmed === "" ? null : trimmed;
     } else if (field === "vatRate") {
-      data[field] = rawValue.trim() === "" ? null : Number(rawValue);
+      const trimmed = rawValue.trim();
+      data[field] = trimmed === "" ? null : Number(trimmed);
+      localValue = trimmed === "" ? null : Number(trimmed);
     } else {
       data[field] = rawValue;
+      localValue = rawValue;
     }
 
-    setSavingRowId(rowId);
+    // Optimistic update: immediately reflect the change in local state
+    setItems((current) =>
+      current.map((row) =>
+        row.id === rowId ? { ...row, [field]: localValue } : row,
+      ),
+    );
     setEditing(null);
     setError(null);
 
+    // Save in background — no loading spinner, no refetch
     try {
       await updateAllProductsBulkClient({ ids: [rowId], data });
-      setReloadToken((t) => t + 1);
     } catch (err: unknown) {
+      // Revert optimistic update on failure
+      setItems((current) =>
+        current.map((row) =>
+          row.id === rowId ? { ...row, [field]: (item as Record<string, unknown>)[field] } : row,
+        ),
+      );
       setError(
         err instanceof AllProductsClientError
           ? err.message
@@ -366,10 +451,8 @@ export default function AllProductsPage() {
             ? err.message
             : "Impossible de sauvegarder.",
       );
-    } finally {
-      setSavingRowId(null);
     }
-  }, [items]);
+  }, [items, canEdit, canChangeLifecycle]);
 
   const handleCommitEdit = useCallback(() => {
     if (!editing) return;
@@ -682,26 +765,30 @@ export default function AllProductsPage() {
             {selectedIds.length} produit(s) selectionne(s)
           </p>
           <div className="flex flex-wrap gap-2">
-            <AnimatedUIButton
-              type="button"
-              variant="ghost"
-              icon="modify"
-              iconPosition="left"
-              onClick={handleBulkEditOpen}
-            >
-              Modifier
-            </AnimatedUIButton>
-            <AnimatedUIButton
-              type="button"
-              variant="outline"
-              color="error"
-              icon="trash"
-              iconPosition="left"
-              onClick={handleBulkDelete}
-              disabled={bulkEditLoading}
-            >
-              Supprimer
-            </AnimatedUIButton>
+            {canEdit ? (
+              <AnimatedUIButton
+                type="button"
+                variant="ghost"
+                icon="modify"
+                iconPosition="left"
+                onClick={handleBulkEditOpen}
+              >
+                Modifier
+              </AnimatedUIButton>
+            ) : null}
+            {canEdit ? (
+              <AnimatedUIButton
+                type="button"
+                variant="outline"
+                color="error"
+                icon="trash"
+                iconPosition="left"
+                onClick={handleBulkDelete}
+                disabled={bulkEditLoading}
+              >
+                Supprimer
+              </AnimatedUIButton>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -722,6 +809,7 @@ export default function AllProductsPage() {
           />,
           ...COLUMN_LABELS,
         ]}
+        columnWidths={COLUMN_WIDTHS}
         isLoading={isLoading}
         error={error}
         isEmpty={items.length === 0}
@@ -745,11 +833,10 @@ export default function AllProductsPage() {
       >
         {items.map((item, index) => {
           const actionHref = getAction(item);
-          const isSaving = savingRowId === item.id;
 
           return (
-            <tr key={item.id} className={`transition-colors ${isSaving ? "bg-cobam-dark-blue/5 opacity-60" : "hover:bg-slate-50/70"}`}>
-              <td className="px-4 py-2 align-middle">
+            <tr key={item.id} className="transition-colors hover:bg-slate-50/70">
+              <td className="px-2 py-1 align-middle">
                 <Checkbox
                   checked={selectedIds.includes(item.id)}
                   onCheckedChange={(checked) => {
@@ -777,7 +864,8 @@ export default function AllProductsPage() {
                   onChangeEdit={handleChangeEdit}
                   onCommitEdit={handleCommitEdit}
                   onCancelEdit={handleCancelEdit}
-                  saving={isSaving}
+                  saving={false}
+                  readOnly={!canEdit}
                 />
               </td>
               <td className="px-2 py-1 align-middle">
@@ -790,7 +878,8 @@ export default function AllProductsPage() {
                   onChangeEdit={handleChangeEdit}
                   onCommitEdit={handleCommitEdit}
                   onCancelEdit={handleCancelEdit}
-                  saving={isSaving}
+                  saving={false}
+                  readOnly={!canEdit}
                 />
               </td>
               <td className="px-2 py-1 align-middle">
@@ -803,7 +892,8 @@ export default function AllProductsPage() {
                   onChangeEdit={handleChangeEdit}
                   onCommitEdit={handleCommitEdit}
                   onCancelEdit={handleCancelEdit}
-                  saving={isSaving}
+                  saving={false}
+                  readOnly={!canEdit}
                 />
               </td>
               <td className="px-2 py-1 align-middle">
@@ -816,7 +906,8 @@ export default function AllProductsPage() {
                   onChangeEdit={handleChangeEdit}
                   onCommitEdit={handleCommitEdit}
                   onCancelEdit={handleCancelEdit}
-                  saving={isSaving}
+                  saving={false}
+                  readOnly={!canEdit}
                   type="number"
                 />
               </td>
@@ -830,7 +921,8 @@ export default function AllProductsPage() {
                   onChangeEdit={handleChangeEdit}
                   onCommitEdit={handleCommitEdit}
                   onCancelEdit={handleCancelEdit}
-                  saving={isSaving}
+                  saving={false}
+                  readOnly={!canEdit}
                   type="number"
                 />
               </td>
@@ -844,7 +936,8 @@ export default function AllProductsPage() {
                   onChangeEdit={handleChangeEdit}
                   onCommitEdit={handleCommitEdit}
                   onCancelEdit={handleCancelEdit}
-                  saving={isSaving}
+                  saving={false}
+                  readOnly={!canEdit}
                   type="number"
                 />
               </td>
@@ -853,18 +946,19 @@ export default function AllProductsPage() {
                   rowId={item.id}
                   value={item.lifecycle ?? "DRAFT"}
                   onSave={(rowId, field, val) => void handleInlineSave(rowId, field, val)}
-                  saving={isSaving}
+                  saving={false}
+                  readOnly={!canChangeLifecycle}
                 />
               </td>
               <td className="px-2 py-1 align-middle text-right">
                 {actionHref ? (
                   <AnimatedUIButton
                     href={actionHref}
-                    variant="ghost"
-                    icon="modify"
+                    variant="outline"
                     size="sm"
+                    icon="arrow-right"
                   >
-                    Modifier
+                    Voir
                   </AnimatedUIButton>
                 ) : (
                   <span className="text-sm text-slate-300">—</span>

@@ -20,6 +20,7 @@ type TablePagination = {
 
 export interface Props {
   columns: ReactNode[];
+  columnWidths?: string[];
   children: ReactNode | ReactNode[];
   isLoading: boolean;
   isEmpty: boolean;
@@ -30,6 +31,7 @@ export interface Props {
 
 export default function PanelTable({
   columns,
+  columnWidths,
   children,
   isLoading,
   isEmpty,
@@ -44,7 +46,14 @@ export default function PanelTable({
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-sm">
-      <table className="min-w-full divide-y divide-slate-100 text-sm panel-table">
+      <table className="min-w-full divide-y divide-slate-100 text-sm panel-table" style={{ tableLayout: columnWidths ? "fixed" : undefined }}>
+        {columnWidths ? (
+          <colgroup>
+            {columnWidths.map((w, i) => (
+              <col key={`cw-${i}`} style={{ width: w }} />
+            ))}
+          </colgroup>
+        ) : null}
         <thead className="bg-slate-50/80">
           <tr>
             {columns.map((column, index) => (
