@@ -742,7 +742,7 @@ export default function PublicProductsIndex({
               className="border-rose-200 bg-white text-rose-700 hover:bg-rose-100"
               onClick={() => void loadMore()}
             >
-              Reessayer
+              Réessayer
             </Button>
           </div>
         ) : hasMore ? (
