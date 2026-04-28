@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/server/db/prisma";
-import { verifyAccessToken } from "@/lib/api/auth/shared/jwt";
+import { verifyAccessToken, verifyRefreshToken } from "@/lib/api/auth/shared/jwt";
+import { sha256 } from "@/lib/api/auth/shared/token";
 import {
   STAFF_PORTAL,
   type StaffSession,
@@ -170,4 +171,48 @@ export async function requireStaffSession(
   }
 
   return session;
+}
+
+export async function getStaffSessionByRefreshToken(
+  refreshToken: string | null | undefined,
+): Promise<StaffSession | null> {
+  if (!refreshToken) {
+    return null;
+  }
+
+  try {
+    const payload = await verifyRefreshToken(refreshToken);
+    const refreshTokenHash = sha256(refreshToken);
+
+    const storedToken = await prisma.refreshToken.findUnique({
+      where: { id: payload.tokenId },
+      select: {
+        tokenHash: true,
+        revokedAt: true,
+        expiresAt: true,
+        user: {
+          select: {
+            id: true,
+            portal: true,
+          },
+        },
+      },
+    });
+
+    if (!storedToken || storedToken.user.portal !== STAFF_PORTAL) {
+      return null;
+    }
+
+    if (storedToken.tokenHash !== refreshTokenHash) {
+      return null;
+    }
+
+    if (storedToken.revokedAt || storedToken.expiresAt < new Date()) {
+      return null;
+    }
+
+    return getStaffSessionByUserId(storedToken.user.id);
+  } catch {
+    return null;
+  }
 }

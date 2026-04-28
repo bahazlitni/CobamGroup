@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import PageHeader from "@/components/ui/custom/PageHeader";
 import AnnuaireDirectory from "@/components/public/annuaire/annuaire-directory";
 import { listPublicAnnuairePeople } from "@/features/annuaire/public";
 import type { AnnuairePersonDto } from "@/features/annuaire/types";
+import { getStaffSessionByRefreshToken } from "@/features/auth/server/session";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +19,15 @@ export const metadata: Metadata = {
 };
 
 export default async function AnnuairePage() {
+  const cookieStore = await cookies();
+  const session = await getStaffSessionByRefreshToken(
+    cookieStore.get("staff_refresh_token")?.value,
+  );
+
+  if (!session) {
+    redirect("/login/staff");
+  }
+
   let people: AnnuairePersonDto[] = [];
 
   try {
