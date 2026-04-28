@@ -52,7 +52,7 @@ export default function SecurityForm({
   requireActualPassword = true,
   pretitle = "Sécurité",
   title = "Mot de passe",
-  description = "Gerez les identifiants du compte.",
+  description = "Gérez les identifiants du compte.",
   onSubmit,
   isSubmitting = false,
   submitLabel = "Enregistrer",

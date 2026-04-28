@@ -185,16 +185,20 @@ export default function AboutUsPage() {
           {vipMembers.length > 0 && (
             <div className="flex flex-wrap justify-center gap-8 mt-16 mb-24">
               {vipMembers.map((vip, idx) => (
-                <PremiumReveal key={getTeamMemberFullname(vip)} delay={idx * 0.1} blur direction="up">
+                <PremiumReveal
+                  key={getTeamMemberFullname(vip)}
+                  delay={idx * 0.1}
+                  blur
+                  direction="up"
+                  className="w-full max-w-[300px] sm:w-[300px]"
+                >
                    <TeamMemberCard member={vip} isStatic={true} />
                 </PremiumReveal>
               ))}
             </div>
           )}
 
-          <div className="mt-12">
-            <TeamCarousel />
-          </div>
+          <TeamCarousel />
         </div>
       </section>
     </main>

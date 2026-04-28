@@ -224,7 +224,7 @@ function ProductPackEditPageContent() {
       setForm(nextForm);
       setSavedPack(result);
       setInitialSnapshot(JSON.stringify(nextForm));
-      toast.success(isEdit ? "Pack mis a jour." : "Pack cree.");
+      toast.success(isEdit ? "Pack mis à jour." : "Pack cree.");
       if (!isEdit) {
         router.replace(`/espace/staff/gestion-des-produits/packs/edit?id=${result.id}`);
       }

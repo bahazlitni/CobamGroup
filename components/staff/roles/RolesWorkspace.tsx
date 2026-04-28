@@ -163,7 +163,7 @@ export default function RolesWorkspace() {
       return;
     }
 
-    toast.success(isCreating ? "Role cree." : "Role mis a jour.");
+    toast.success(isCreating ? "Role cree." : "Role mis à jour.");
     await reload();
     setIsCreating(false);
     setSelectedRoleId(nextRole.id);
@@ -239,7 +239,7 @@ export default function RolesWorkspace() {
       const result = await reorderRolesClient(nextOrder);
       setOrderedRoles(result.items);
       await reload();
-      toast.success("Ordre des roles mis a jour.");
+      toast.success("Ordre des roles mis à jour.");
     } catch (nextError: unknown) {
       await reload();
       toast.error(
@@ -407,7 +407,7 @@ export default function RolesWorkspace() {
               loadingText="Enregistrement..."
               onClick={() => void handleSave()}
             >
-              {isCreating ? "Creer le role" : "Enregistrer"}
+              {isCreating ? "Créer le role" : "Enregistrer"}
             </AnimatedUIButton>
           </div>
         </div>

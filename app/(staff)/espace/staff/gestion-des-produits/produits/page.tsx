@@ -612,7 +612,7 @@ export default function AllProductsPage() {
             icon="plus"
             iconPosition="left"
           >
-            Creer un produit simple
+            Créer un produit simple
           </AnimatedUIButton>
         ) : null}
       </StaffPageHeader>

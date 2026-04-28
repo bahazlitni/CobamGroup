@@ -474,7 +474,7 @@ export default function ProductPacksListPage() {
             icon="plus"
             iconPosition="left"
           >
-            Creer un pack
+            Créer un pack
           </AnimatedUIButton>
         ) : null}
       </StaffPageHeader>

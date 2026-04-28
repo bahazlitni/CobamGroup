@@ -17,10 +17,12 @@ export default function StaffLoginPage() {
 
   const [step, setStep] = useState<LoginStep>("password");
   const [email, setEmail] = useState("");
+  const [pendingPassword, setPendingPassword] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isResendingOtp, setIsResendingOtp] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [otpStatusText, setOtpStatusText] = useState<string | null>(null);
@@ -95,6 +97,7 @@ export default function StaffLoginPage() {
       }
 
       setEmail(nextEmail);
+      setPendingPassword(password);
       setStep("otp");
       setOtpVisualState("idle");
       setOtpStatusText(null);
@@ -138,6 +141,7 @@ export default function StaffLoginPage() {
 
       localStorage.setItem("staff_access_token", data.accessToken);
       localStorage.setItem("staff_auth_user", JSON.stringify(data.user));
+      setPendingPassword("");
 
       router.replace("/espace/staff/accueil/tableau-de-bord");
     } catch (err: unknown) {
@@ -149,6 +153,48 @@ export default function StaffLoginPage() {
       setError(err instanceof Error ? err.message : "Erreur inattendue");
     } finally {
       setIsVerifyingOtp(false);
+    }
+  };
+
+  const handleOtpResend = async () => {
+    if (!email || !pendingPassword) {
+      setStep("password");
+      setError("Veuillez saisir vos identifiants a nouveau.");
+      return;
+    }
+
+    setError(null);
+    setOtpStatusText(null);
+    setOtpVisualState("idle");
+    setIsResendingOtp(true);
+
+    try {
+      const res = await fetch("/api/auth/staff/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password: pendingPassword,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.ok || !data.requiresOtp) {
+        throw new Error(data.message || "Erreur lors du renvoi du code OTP.");
+      }
+
+      setOtpStatusText("Nouveau code OTP envoyé.");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Erreur lors du renvoi du code OTP.";
+      setOtpVisualState("error");
+      setOtpStatusText(message);
+      setError(message);
+    } finally {
+      setIsResendingOtp(false);
     }
   };
 
@@ -324,24 +370,16 @@ export default function StaffLoginPage() {
                       : otpStatusText
                   }
                   onVerify={handleOtpVerify}
+                  onBack={() => {
+                    setStep("password");
+                    setPendingPassword("");
+                    setError(null);
+                    setOtpStatusText(null);
+                    setOtpVisualState("idle");
+                  }}
+                  onResend={handleOtpResend}
+                  resending={isResendingOtp}
                 />
-
-                <div className="mt-8 flex justify-between">
-                  <AnimatedUIButton
-                    type="button"
-                    variant="secondary"
-                    icon="arrow-left"
-                    disabled={isVerifyingOtp || isAuthenticating}
-                    onClick={() => {
-                      setStep("password");
-                      setError(null);
-                      setOtpStatusText(null);
-                      setOtpVisualState("idle");
-                    }}
-                  >
-                    Retour
-                  </AnimatedUIButton>
-                </div>
               </motion.div>
             )}
           </AnimatePresence>

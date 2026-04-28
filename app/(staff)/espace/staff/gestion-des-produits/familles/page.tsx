@@ -446,7 +446,7 @@ export default function ProductsListPage() {
             icon="plus"
             iconPosition="left"
           >
-            Creer une famille
+            Créer une famille
           </AnimatedUIButton>
         ) : null}
       </StaffPageHeader>

@@ -53,7 +53,7 @@ export default function PersonalDetailsForm({
   state,
   onChange,
   disableEmail = false,
-  description = "Gerez les informations de profil.",
+  description = "Gérez les informations de profil.",
   title = "Détails personnels",
   pretitle = "Compte",
 }: PersonalDetailsFormProps) {
@@ -88,7 +88,7 @@ export default function PersonalDetailsForm({
         <PanelField
           id="email"
           label="Adresse e-mail"
-          hint={disableEmail ? "L'email ne peut pas etre modifie ici." : undefined}
+          hint={disableEmail ? "L'email ne peut pas être modifié ici." : undefined}
         >
           <PanelInput
           fullWidth

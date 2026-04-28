@@ -78,7 +78,7 @@ export default function MediaFolderCreateDialog({
             onClick={() => void handleSubmit()}
             disabled={isCreating || name.trim().length === 0}
           >
-            Creer le dossier
+            Créer le dossier
           </AnimatedUIButton>
         </DialogFooter>
       </DialogContent>
