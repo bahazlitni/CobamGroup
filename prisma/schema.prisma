@@ -98,6 +98,12 @@ enum AuditActionType {
   LOGOUT
 }
 
+enum OTPType {
+  LOGIN
+  RESET_PASSWORD
+  VERIFY_EMAIL
+}
+
 model User {
   id                String     @id @default(cuid())
   email             String     @unique
@@ -114,6 +120,7 @@ model User {
   updatedAt         DateTime   @updatedAt @map("updated_at")
 
   refreshTokens            RefreshToken[]
+  otpChallenges            OTPChallenge[]
   uploadedMedia            Media[]             @relation("MediaUploadedByUser")
   articles                 Article[]           @relation("ArticleAuthor")
   articleAuthorLinks       ArticleAuthorLink[]
@@ -129,6 +136,21 @@ model User {
   @@index([powerType])
   @@index([status])
   @@map("users")
+}
+
+model OTPChallenge {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  codeHash  String   @map("code_hash")
+  type      OTPType
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
+  @@index([createdAt])
+  @@map("otp_challenges")
 }
 
 model StaffProfile {

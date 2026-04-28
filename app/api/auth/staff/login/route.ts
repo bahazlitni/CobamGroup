@@ -1,12 +1,19 @@
+// /api/auth/staff/login/route.ts
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/server/db/prisma";
 import { verifyPassword } from "@/lib/api/auth/shared/password";
-import { signAccessToken, signRefreshToken } from "@/lib/api/auth/shared/jwt";
-import { sha256 } from "@/lib/api/auth/shared/token";
-import { v4 as uuidv4 } from "uuid";
 import { STAFF_PORTAL } from "@/features/auth/types";
-import { getStaffSessionByUserId } from "@/features/auth/server/session";
 import { ensureRbacBootstrap } from "@/features/rbac/bootstrap";
+import { OTP_CODE_LENGTH } from "@/lib/api/auth/otp/config";
+import { generateOtpCode } from "@/lib/api/auth/otp/code";
+import { hashOtpCode } from "@/lib/api/auth/otp/hash";
+import { requiredEnv } from "@/lib/utils";
+import { createTransporter } from "@/lib/nodemailer/create-transporter";
+import { sendEmail } from "@/lib/nodemailer/send-email";
+import buildLoginOtpCodeHtml from "@/lib/html-builders/buildLoginOtpCodeHtml";
+
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
@@ -49,54 +56,43 @@ export async function POST(req: Request) {
       );
     }
 
-    const tokenId = uuidv4();
+    const code = generateOtpCode(OTP_CODE_LENGTH);
+    const codeHash = hashOtpCode(code);
 
-    const accessToken = await signAccessToken({
-      userId: user.id,
-      email: user.email,
-      portal: user.portal,
-    });
-
-    const refreshToken = await signRefreshToken({
-      userId: user.id,
-      tokenId,
-    });
-
-    const refreshTokenHash = sha256(refreshToken);
-
-    await prisma.refreshToken.create({
-      data: {
-        id: tokenId,
+    await prisma.oTPChallenge.upsert({
+      where: {
+        userId_type: {
+          userId: user.id,
+          type: "LOGIN",
+        },
+      },
+      update: {
+        codeHash,
+        attempts: 0,
+        createdAt: new Date(),
+      },
+      create: {
         userId: user.id,
-        tokenHash: refreshTokenHash,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        type: "LOGIN",
+        codeHash,
       },
     });
 
-    const session = await getStaffSessionByUserId(user.id);
+    const transporter = createTransporter();
+    await sendEmail(transporter, {
+      fromEmail: requiredEnv("CONTACT_EMAIL"),
+      fromName: process.env.CONTACT_NAME?.trim() || "Cobam Group",
+      to: user.email,
+      subject: "Votre code de connexion | Cobam Group",
+      text: `Votre code de connexion Cobam Group est : ${code}`,
+      html: buildLoginOtpCodeHtml(code),
+    });
 
-    if (!session) {
-      return NextResponse.json(
-        { ok: false, message: "Impossible de charger la session staff" },
-        { status: 500 },
-      );
-    }
-
-    const response = NextResponse.json({
+    return NextResponse.json({
       ok: true,
-      accessToken,
-      user: session,
+      requiresOtp: true,
+      message: "Code OTP envoyé.",
     });
-
-    response.cookies.set("staff_refresh_token", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30,
-    });
-
-    return response;
   } catch (error) {
     console.error("LOGIN_ERROR:", error);
 

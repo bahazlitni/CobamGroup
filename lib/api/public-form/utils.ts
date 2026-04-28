@@ -124,9 +124,9 @@ export const PUBLIC_FORM_CONFIGS = {
   contact: {
     type: "contact",
     rules: CONTACT_RULES,
-    toEmailEnv: "CONTACT_TO_EMAIL",
-    fromEmailEnv: "CONTACT_FROM_EMAIL",
-    fromNameEnv: "CONTACT_FROM_NAME",
+    toEmailEnv: "CONTACT_EMAIL",
+    fromEmailEnv: "CONTACT_EMAIL",
+    fromNameEnv: "CONTACT_NAME",
     defaultFromName: "Contact | Cobam Group",
     staffSubjectPrefix: "Contact",
     staffTitle: "Nouvelle soumission du formulaire de contact",
@@ -139,9 +139,9 @@ export const PUBLIC_FORM_CONFIGS = {
   devis: {
     type: "devis",
     rules: DEVIS_RULES,
-    toEmailEnv: "DEVIS_TO_EMAIL",
-    fromEmailEnv: "CONTACT_FROM_EMAIL", // Using contact@ as it is the verified Brevo sender
-    fromNameEnv: "DEVIS_FROM_NAME",
+    toEmailEnv: "DEVIS_EMAIL",
+    fromEmailEnv: "CONTACT_EMAIL", // Using contact@ as it is the verified Brevo sender
+    fromNameEnv: "DEVIS_NAME",
     defaultFromName: "Devis | Cobam Group",
     staffSubjectPrefix: "Devis",
     staffTitle: "Nouvelle demande de devis",
@@ -297,21 +297,4 @@ export function buildSchema(formRules: FormRules) {
   }
 
   return z.object(shape);
-}
-
-export function escapeHtml(value: unknown): string {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-export function requiredEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing environment variable: ${name}`);
-  }
-  return value;
 }

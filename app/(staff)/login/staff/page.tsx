@@ -1,27 +1,31 @@
-// /app/login/staff/page.tsx
-
 "use client";
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Lock, Mail, HelpCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Lock, Mail } from "lucide-react";
 import { staffApiFetch } from "@/lib/api/auth/staff/api-fetch";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
+import OTPInput from "@/components/ui/custom/OTPInput";
 
+type LoginStep = "password" | "otp";
+type OtpVisualState = "idle" | "error" | "success";
 
 export default function StaffLoginPage() {
   const router = useRouter();
 
+  const [step, setStep] = useState<LoginStep>("password");
+  const [email, setEmail] = useState("");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
+  const [otpStatusText, setOtpStatusText] = useState<string | null>(null);
+  const [otpVisualState, setOtpVisualState] = useState<OtpVisualState>("idle");
+
   const [isCheckingSession, setIsCheckingSession] = useState(true);
 
   useEffect(() => {
@@ -54,15 +58,19 @@ export default function StaffLoginPage() {
     checkExistingSession();
   }, [router]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handlePasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     setError(null);
     setIsSubmitting(true);
 
     try {
       const formData = new FormData(e.currentTarget);
 
-      const email = String(formData.get("username") ?? "").trim();
+      const nextEmail = String(formData.get("username") ?? "")
+        .trim()
+        .toLowerCase();
+
       const password = String(formData.get("password") ?? "");
 
       const res = await fetch("/api/auth/staff/login", {
@@ -70,7 +78,10 @@ export default function StaffLoginPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email: nextEmail,
+          password,
+        }),
       });
 
       const data = await res.json();
@@ -79,10 +90,14 @@ export default function StaffLoginPage() {
         throw new Error(data.message || "Erreur de connexion");
       }
 
-      localStorage.setItem("staff_access_token", data.accessToken);
-      localStorage.setItem("staff_auth_user", JSON.stringify(data.user));
+      if (!data.requiresOtp) {
+        throw new Error("Réponse invalide. Vérification OTP manquante.");
+      }
 
-      router.replace("/espace/staff//accueil/tableau-de-bord");
+      setEmail(nextEmail);
+      setStep("otp");
+      setOtpVisualState("idle");
+      setOtpStatusText(null);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erreur inattendue");
     } finally {
@@ -90,19 +105,58 @@ export default function StaffLoginPage() {
     }
   };
 
+  const handleOtpVerify = async (code: string) => {
+    setError(null);
+    setOtpVisualState("idle");
+    setOtpStatusText("Vérification en cours...");
+    setIsVerifyingOtp(true);
+
+    try {
+      const res = await fetch("/api/auth/staff/login/otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          code,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        setOtpVisualState("error");
+        setOtpStatusText(data.message);
+        throw new Error(data.message);
+      }
+
+      setOtpVisualState("success");
+      setOtpStatusText("Le code OTP est correct.");
+      setIsAuthenticating(true);
+      setOtpStatusText("Authentification en cours...");
+
+      localStorage.setItem("staff_access_token", data.accessToken);
+      localStorage.setItem("staff_auth_user", JSON.stringify(data.user));
+
+      router.replace("/espace/staff/accueil/tableau-de-bord");
+    } catch (err: unknown) {
+      if (otpVisualState !== "error") {
+        setOtpVisualState("error");
+        setOtpStatusText("Le code OTP est incorrect.");
+      }
+
+      setError(err instanceof Error ? err.message : "Erreur inattendue");
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
 
   return (
-    <main className="min-h-screen bg-[#FDFDFD] flex flex-col lg:flex-row">
-      {/* Left Side: Full Image */}
-      <div className="hidden lg:block relative w-full lg:w-1/2 lg:fixed lg:inset-y-0 lg:left-0 min-h-[40vh] lg:min-h-screen bg-cobam-dark-blue flex flex-col justify-end overflow-hidden">
-        
-        {/* Go Back Button */}
-        <div className="absolute top-6 left-6 lg:top-10 lg:left-10 z-50">
-          <AnimatedUIButton
-            href="/"
-            variant="secondary"
-            icon="arrow-left"
-          >
+    <main className="flex min-h-screen flex-col bg-[#FDFDFD] lg:flex-row">
+      <div className="relative hidden min-h-[40vh] w-full flex-col justify-end overflow-hidden bg-cobam-dark-blue lg:fixed lg:inset-y-0 lg:left-0 lg:block lg:min-h-screen lg:w-1/2">
+        <div className="absolute left-6 top-6 z-50 lg:left-10 lg:top-10">
+          <AnimatedUIButton href="/" variant="secondary" icon="arrow-left">
             Retour
           </AnimatedUIButton>
         </div>
@@ -123,22 +177,24 @@ export default function StaffLoginPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
         </motion.div>
 
-        <div className="relative z-10 p-8 sm:p-12 lg:p-16 xl:p-24 flex flex-col justify-end h-full">
+        <div className="relative z-10 flex h-full flex-col justify-end p-8 sm:p-12 lg:p-16 xl:p-24">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
           >
-            <p className="text-xs sm:text-sm font-bold tracking-[0.25em] uppercase text-cobam-water-blue mb-4">
+            <p className="mb-4 text-xs font-bold uppercase tracking-[0.25em] text-cobam-water-blue sm:text-sm">
               Portail privé
             </p>
+
             <h1
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight"
+              className="mb-6 text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl"
               style={{ fontFamily: "var(--font-playfair), serif" }}
             >
               Espace Team
             </h1>
-            <p className="text-sm sm:text-base text-white/80 max-w-lg leading-relaxed font-light">
+
+            <p className="max-w-lg text-sm font-light leading-relaxed text-white/80 sm:text-base">
               Gérez le contenu du site, les produits et les marques depuis une
               interface dédiée aux équipes COBAM GROUP.
             </p>
@@ -146,95 +202,149 @@ export default function StaffLoginPage() {
         </div>
       </div>
 
-      {/* Right Side: Form and FAQ */}
-      <div className="w-full lg:w-1/2 lg:ml-auto min-h-screen flex flex-col py-12 px-6 sm:px-12 lg:px-16 xl:px-24 bg-white justify-center">
-        <div className="max-w-md w-full mx-auto">
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
-            className="mb-12"
-          >
-            <div className="mb-10">
-              <h2
-                className="text-3xl sm:text-4xl font-bold text-cobam-dark-blue mb-4"
-                style={{ fontFamily: "var(--font-playfair), serif" }}
+      <div className="flex min-h-screen w-full flex-col justify-center bg-white px-6 py-12 sm:px-12 lg:ml-auto lg:w-1/2 lg:px-16 xl:px-24">
+        <div className="mx-auto w-full max-w-md">
+          <AnimatePresence mode="wait">
+            {step === "password" ? (
+              <motion.div
+                key="password-step"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="mb-12"
               >
-                Connexion
-              </h2>
-              <p className="text-sm text-cobam-carbon-grey leading-relaxed">
-                Veuillez saisir vos identifiants professionnels pour accéder à
-                votre tableau de bord.
-              </p>
-            </div>
+                <div className="mb-10">
+                  <h2
+                    className="mb-4 text-3xl font-bold text-cobam-dark-blue sm:text-4xl"
+                    style={{ fontFamily: "var(--font-playfair), serif" }}
+                  >
+                    Connexion
+                  </h2>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <label
-                  htmlFor="username"
-                  className="text-xs font-bold tracking-[0.1em] uppercase text-cobam-dark-blue flex items-center gap-2 ml-1"
-                >
-                  <Mail size={14} className="text-cobam-water-blue" />
-                  Adresse e-mail
-                </label>
-                <input
-                  id="username"
-                  name="username"
-                  type="email"
-                  autoComplete="username"
-                  required
-                  disabled={isCheckingSession || isSubmitting}
-                  className="w-full rounded-2xl border border-gray-200 bg-[#F8F9FA] px-5 py-4 text-sm text-cobam-dark-blue focus:outline-none focus:ring-2 focus:ring-cobam-water-blue/40 focus:border-cobam-water-blue focus:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_2px_10px_rgba(0,0,0,0.02)]"
-                  placeholder="votre.nom@cobamgroup.com"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label
-                  htmlFor="password"
-                  className="text-xs font-bold tracking-[0.1em] uppercase text-cobam-dark-blue flex items-center gap-2 ml-1"
-                >
-                  <Lock size={14} className="text-cobam-water-blue" />
-                  Mot de passe
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  disabled={isCheckingSession || isSubmitting}
-                  className="w-full rounded-2xl border border-gray-200 bg-[#F8F9FA] px-5 py-4 text-sm text-cobam-dark-blue focus:outline-none focus:ring-2 focus:ring-cobam-water-blue/40 focus:border-cobam-water-blue focus:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_2px_10px_rgba(0,0,0,0.02)]"
-                  placeholder="••••••••"
-                />
-              </div>
-
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-red-50 border border-red-100 rounded-2xl px-4 py-3"
-                >
-                  <p className="text-xs text-red-600 font-medium text-center">
-                    {error}
+                  <p className="text-sm leading-relaxed text-cobam-carbon-grey">
+                    Veuillez saisir vos identifiants professionnels pour accéder
+                    à votre tableau de bord.
                   </p>
-                </motion.div>
-              )}
+                </div>
 
-              <div className="pt-4 flex justify-end">
-                <AnimatedUIButton
-                  type="submit"
-                  disabled={isCheckingSession || isSubmitting}
-                  variant="primary"
-                  loading={isCheckingSession || isSubmitting}
-                  icon="arrow-right"
-                  loadingText={isCheckingSession ? "Vérification..." : "Connexion..."}
-                >
-                  {isCheckingSession ? "Vérification..." : isSubmitting ? "Connexion..." : "Se connecter"}
-                </AnimatedUIButton>
-              </div>
-            </form>
-          </motion.div>
+                <form onSubmit={handlePasswordSubmit} className="space-y-6">
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="username"
+                      className="ml-1 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-cobam-dark-blue"
+                    >
+                      <Mail size={14} className="text-cobam-water-blue" />
+                      Adresse e-mail
+                    </label>
+
+                    <input
+                      id="username"
+                      name="username"
+                      type="email"
+                      autoComplete="username"
+                      required
+                      disabled={isCheckingSession || isSubmitting}
+                      className="w-full rounded-2xl border border-gray-200 bg-[#F8F9FA] px-5 py-4 text-sm text-cobam-dark-blue shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all focus:border-cobam-water-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-cobam-water-blue/40 disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder="votre.nom@cobamgroup.com"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="password"
+                      className="ml-1 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-cobam-dark-blue"
+                    >
+                      <Lock size={14} className="text-cobam-water-blue" />
+                      Mot de passe
+                    </label>
+
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      autoComplete="current-password"
+                      required
+                      disabled={isCheckingSession || isSubmitting}
+                      className="w-full rounded-2xl border border-gray-200 bg-[#F8F9FA] px-5 py-4 text-sm text-cobam-dark-blue shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all focus:border-cobam-water-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-cobam-water-blue/40 disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder="••••••••"
+                    />
+                  </div>
+
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3"
+                    >
+                      <p className="text-center text-xs font-medium text-red-600">
+                        {error}
+                      </p>
+                    </motion.div>
+                  )}
+
+                  <div className="flex justify-end pt-4">
+                    <AnimatedUIButton
+                      type="submit"
+                      disabled={isCheckingSession || isSubmitting}
+                      variant="primary"
+                      loading={isCheckingSession || isSubmitting}
+                      icon="arrow-right"
+                      loadingText={
+                        isCheckingSession ? "Vérification..." : "Connexion..."
+                      }
+                    >
+                      {isCheckingSession
+                        ? "Vérification..."
+                        : isSubmitting
+                          ? "Connexion..."
+                          : "Se connecter"}
+                    </AnimatedUIButton>
+                  </div>
+                </form>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="otp-step"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="mb-12"
+              >
+                <OTPInput
+                  email={email}
+                  length={6}
+                  disabled={isAuthenticating}
+                  loading={isVerifyingOtp || isAuthenticating}
+                  visualState={otpVisualState}
+                  statusText={
+                    isAuthenticating
+                      ? "Authentification en cours..."
+                      : otpStatusText
+                  }
+                  onVerify={handleOtpVerify}
+                />
+
+                <div className="mt-8 flex justify-between">
+                  <AnimatedUIButton
+                    type="button"
+                    variant="secondary"
+                    icon="arrow-left"
+                    disabled={isVerifyingOtp || isAuthenticating}
+                    onClick={() => {
+                      setStep("password");
+                      setError(null);
+                      setOtpStatusText(null);
+                      setOtpVisualState("idle");
+                    }}
+                  >
+                    Retour
+                  </AnimatedUIButton>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </main>
