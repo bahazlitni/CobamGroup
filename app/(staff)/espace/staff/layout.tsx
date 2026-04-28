@@ -33,6 +33,7 @@ import {
 import { staffApiFetch } from "@/lib/api/auth/staff/api-fetch";
 import { cn } from "@/lib/utils";
 import { canAccessPersonalDetails, canAccessSecuritySettings } from "@/features/account/access";
+import { canAccessAnnuaire } from "@/features/annuaire/access";
 import { canAccessArticleCategories } from "@/features/article-categories/access";
 import { canAccessArticles } from "@/features/articles/access";
 import { canAccessMediaLibrary } from "@/features/media/access";
@@ -166,10 +167,10 @@ const STAFF_TABS: Record<string, StaffTabGroup> = {
         icon: Boxes,
       },
       "categories-produits": {
-          key: "categories-produits",
-          label: "Catégories produits",
-          icon: ListTree,
-        },
+        key: "categories-produits",
+        label: "Catégories produits",
+        icon: ListTree,
+      },
     }
   },
   autres: {
@@ -180,6 +181,11 @@ const STAFF_TABS: Record<string, StaffTabGroup> = {
         key: "medias",
         label: "Médias",
         icon: ImageIcon,
+      },
+      annuaire: {
+        key: "annuaire",
+        label: "Annuaire",
+        icon: Users,
       },
     }
   },
@@ -245,6 +251,7 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
       },
       autres: {
         medias: user ? canAccessMediaLibrary(user) : false,
+        annuaire: user ? canAccessAnnuaire(user) : false,
       },
       "administration": {
         roles: user ? canAccessRoles(user) : false,
@@ -379,7 +386,7 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
   return (
     <main className="flex min-h-screen bg-slate-50 text-slate-900">
       {/* Sidebar: narrow on mobile, normal on sm+ */}
-      <aside className="sticky left-0 top-0 max-h-screen flex w-14 flex-col border-r border-slate-300 bg-white md:w-64 scrollbar-left">        
+      <aside className="sticky left-0 top-0 max-h-screen flex w-14 flex-col border-r border-slate-300 bg-white md:w-64 scrollbar-left">
         <div className="border-b border-slate-300 px-2 py-3 text-[10px] text-slate-500 md:space-y-2 md:px-5 md:py-5">
           <p className="hidden md:block">
             Connecté en tant que : <strong>{displayEmail}</strong>
@@ -437,7 +444,7 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
         {/* Footer: public site + logout */}
         <div className="flex flex-col space-y-2 border-t border-slate-300 px-2 py-3 text-[10px] text-slate-500 md:px-5 md:py-5">
           {/* Public site link: icon-only on mobile, full on sm+ */}
-                    <AnimatedUIButton
+          <AnimatedUIButton
             icon="external-link"
             color="default"
             size="sm"

@@ -197,6 +197,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     mapUrl("/promotions"),
     mapUrl("/references"),
     mapUrl("/actualites"),
+    mapUrl("/annuaire"),
     mapUrl("/produits"),
     
     ...categories.map((category) =>

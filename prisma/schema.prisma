@@ -152,6 +152,26 @@ model StaffProfile {
   @@map("profiles")
 }
 
+model AnnuairePerson {
+  id        BigInt   @id @default(autoincrement())
+  lastName  String   @default("") @map("last_name") @db.VarChar(150)
+  firstName String   @default("") @map("first_name") @db.VarChar(150)
+  jobTitle  String   @default("") @map("job_title") @db.VarChar(200)
+  email     String   @default("") @db.VarChar(255)
+  site      String   @default("") @db.VarChar(200)
+  extension String   @default("") @db.VarChar(80)
+  whatsapp  String   @default("") @db.VarChar(80)
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([lastName, firstName])
+  @@index([site])
+  @@index([jobTitle])
+  @@index([sortOrder])
+  @@map("annuaire_people")
+}
+
 model Permission {
   id          BigInt   @id @default(autoincrement())
   key         String   @unique @db.VarChar(150) // e.g. "products.update.own"

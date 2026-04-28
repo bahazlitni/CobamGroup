@@ -764,6 +764,20 @@ export const PERMISSION_DEFINITIONS = [
     description:
       "Déréférence un média encore utilisé avant de le supprimer définitivement. Nécessite aussi l'accès et la gestion des médias.",
   }),
+  definePermission({
+    key: "annuaire.view",
+    label: "Voir l'annuaire",
+    resource: "annuaire",
+    action: "view",
+    group: "Annuaire",
+  }),
+  definePermission({
+    key: "annuaire.manage",
+    label: "Gerer l'annuaire",
+    resource: "annuaire",
+    action: "manage",
+    group: "Annuaire",
+  }),
 ] as const satisfies readonly PermissionDefinition[];
 
 export type PermissionKey = (typeof PERMISSION_DEFINITIONS)[number]["key"];
@@ -796,6 +810,11 @@ export const MEDIA_MANAGE_PERMISSION_KEYS = [
   PERMISSIONS.MEDIA_DELETE_ALL,
   PERMISSIONS.MEDIA_DELETE_BELOW_ROLE,
   PERMISSIONS.MEDIA_DELETE_OWN,
+] as const satisfies readonly PermissionKey[];
+
+export const ANNUAIRE_ACCESS_PERMISSION_KEYS = [
+  PERMISSIONS.ANNUAIRE_VIEW,
+  PERMISSIONS.ANNUAIRE_MANAGE,
 ] as const satisfies readonly PermissionKey[];
 
 export const ARTICLE_CATEGORY_ACCESS_PERMISSION_KEYS = [

@@ -22,6 +22,7 @@ const discoverLinks = [
   { label: "Partenaires", href: "/partenaires" },
   { label: "Références", href: "/references" },
   { label: "Actualités", href: "/actualites" },
+  { label: "Annuaire", href: "/annuaire" },
 ];
 
 const legalLinks = [

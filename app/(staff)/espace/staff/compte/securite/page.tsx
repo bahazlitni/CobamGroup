@@ -81,8 +81,8 @@ export default function SecurityPage() {
           : session?.email ?? null,
       );
       setStep("otp");
-      setOtpStatusText("Code OTP envoyé. Consultez votre boîte e-mail.");
-      toast.success("Code OTP envoyé");
+      setOtpStatusText("Code OTP envoye. Consultez votre boite e-mail.");
+      toast.success("Code OTP envoye");
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Erreur lors de l'envoi du code OTP";
@@ -170,7 +170,7 @@ export default function SecurityPage() {
         <Panel
           pretitle="Verification"
           title="Confirmer le changement"
-          description={`Un code de confirmation a été envoyé à ${
+          description={`Un code de confirmation a ete envoye a ${
             otpEmail ?? session?.email ?? "votre adresse e-mail"
           }.`}
         >
