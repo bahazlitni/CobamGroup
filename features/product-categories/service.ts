@@ -223,15 +223,6 @@ export async function createProductCategoryService(
 
   const category = await createProductCategory(input);
 
-  await createProductCategoryAuditLog({
-    actorUserId: session.id,
-    actionType: "CREATE",
-    entityId: String(category.id),
-    targetLabel: category.name,
-    summary: "Création d'une nouvelle catégorie produit",
-    afterSnapshotJson: toProductCategoryAuditSnapshot(category),
-  });
-
   return mapProductCategoryToDetailDto(category);
 }
 
@@ -262,16 +253,6 @@ export async function updateProductCategoryService(
 
   const category = await updateProductCategory(categoryId, input);
 
-  await createProductCategoryAuditLog({
-    actorUserId: session.id,
-    actionType: "UPDATE",
-    entityId: String(category.id),
-    targetLabel: category.name,
-    summary: "Mise à jour d'une catégorie produit",
-    beforeSnapshotJson: toProductCategoryAuditSnapshot(before),
-    afterSnapshotJson: toProductCategoryAuditSnapshot(category),
-  });
-
   return mapProductCategoryToDetailDto(category);
 }
 
@@ -300,13 +281,4 @@ export async function deleteProductCategoryService(
   }
 
   await deleteProductCategory(categoryId);
-
-  await createProductCategoryAuditLog({
-    actorUserId: session.id,
-    actionType: "DELETE",
-    entityId: String(before.id),
-    targetLabel: before.name,
-    summary: "Suppression d'une catégorie produit",
-    beforeSnapshotJson: toProductCategoryAuditSnapshot(before),
-  });
 }

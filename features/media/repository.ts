@@ -1009,34 +1009,3 @@ export async function detachMediaReferencesAndDeleteMediaRecord(mediaId: number)
     };
   });
 }
-
-function toAuditJson(
-  value: unknown,
-): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
-  if (value === undefined) return undefined;
-  if (value === null) return Prisma.JsonNull;
-  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
-}
-
-export async function createMediaAuditLog(data: {
-  actorUserId: string;
-  actionType: "CREATE" | "UPDATE" | "DELETE";
-  entityId: string;
-  targetLabel: string;
-  summary: string;
-  beforeSnapshotJson?: unknown;
-  afterSnapshotJson?: unknown;
-}) {
-  return prisma.auditLog.create({
-    data: {
-      actorUserId: data.actorUserId,
-      actionType: data.actionType,
-      entityType: "Media",
-      entityId: data.entityId,
-      targetLabel: data.targetLabel,
-      summary: data.summary,
-      beforeSnapshotJson: toAuditJson(data.beforeSnapshotJson),
-      afterSnapshotJson: toAuditJson(data.afterSnapshotJson),
-    },
-  });
-}

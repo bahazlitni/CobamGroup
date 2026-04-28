@@ -92,14 +92,14 @@ async function syncProductSubcategories(
   await tx.productSubcategory.deleteMany({
     where: keptSubcategoryIds.length
       ? {
-          categoryId,
-          id: {
-            notIn: keptSubcategoryIds,
-          },
-        }
-      : {
-          categoryId,
+        categoryId,
+        id: {
+          notIn: keptSubcategoryIds,
         },
+      }
+      : {
+        categoryId,
+      },
   });
 
   for (const subcategory of subcategories) {
@@ -193,24 +193,24 @@ export async function findProductSubcategoriesByCategoryAndSlugs(input: {
     where: {
       ...(input.categoryId != null
         ? {
-            categoryId: BigInt(input.categoryId),
-          }
+          categoryId: BigInt(input.categoryId),
+        }
         : {}),
       ...(input.subcategoryIds != null && input.subcategoryIds.length > 0
         ? {
-            id: {
-              in: [...new Set(input.subcategoryIds)].map((subcategoryId) =>
-                BigInt(subcategoryId),
-              ),
-            },
-          }
+          id: {
+            in: [...new Set(input.subcategoryIds)].map((subcategoryId) =>
+              BigInt(subcategoryId),
+            ),
+          },
+        }
         : {}),
       ...(input.slugs != null && input.slugs.length > 0
         ? {
-            slug: {
-              in: [...new Set(input.slugs)],
-            },
-          }
+          slug: {
+            in: [...new Set(input.slugs)],
+          },
+        }
         : {}),
     },
     select: {
@@ -333,37 +333,6 @@ export async function countProductFamiliesForSubcategories(
           productLinks: true,
         },
       },
-    },
-  });
-}
-
-function toAuditJson(
-  value: unknown,
-): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
-  if (value === undefined) return undefined;
-  if (value === null) return Prisma.JsonNull;
-  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
-}
-
-export async function createProductCategoryAuditLog(data: {
-  actorUserId: string;
-  actionType: "CREATE" | "UPDATE" | "DELETE";
-  entityId: string;
-  targetLabel: string;
-  summary: string;
-  beforeSnapshotJson?: unknown;
-  afterSnapshotJson?: unknown;
-}) {
-  return prisma.auditLog.create({
-    data: {
-      actorUserId: data.actorUserId,
-      actionType: data.actionType,
-      entityType: "ProductCategory",
-      entityId: data.entityId,
-      targetLabel: data.targetLabel,
-      summary: data.summary,
-      beforeSnapshotJson: toAuditJson(data.beforeSnapshotJson),
-      afterSnapshotJson: toAuditJson(data.afterSnapshotJson),
     },
   });
 }

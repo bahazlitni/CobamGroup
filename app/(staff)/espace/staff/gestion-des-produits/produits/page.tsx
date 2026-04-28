@@ -1,10 +1,10 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { SquareStack } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Check, Pencil, SquareStack, X } from "lucide-react";
 import PanelTable from "@/components/staff/ui/PanelTable";
-import { StaffBadge, StaffFilterBar, StaffPageHeader, StaffSelect } from "@/components/staff/ui";
+import { StaffFilterBar, StaffPageHeader, StaffSelect } from "@/components/staff/ui";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { Checkbox } from "@/components/ui/checkbox";
 import ProductEssentialEntries from "@/components/staff/products/ProductEssentialEntries";
@@ -17,117 +17,124 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
-import {
-  canCreateProducts,
-  canToggleProductLifecycle,
-} from "@/features/products/access";
+import { canCreateProducts } from "@/features/products/access";
 import {
   AllProductsClientError,
   deleteAllProductsBulkClient,
   listAllProductsClient,
   updateAllProductsBulkClient,
-  updateAllProductLifecycleClient,
 } from "@/features/all-products/client";
 import type { AllProductsListItemDto } from "@/features/all-products/types";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
-const COLUMN_LABELS = ["Produit", "Marque", "Type", "Prix", "Stock", "Sous-categories", "Etat", "Actions"];
+const COLUMN_LABELS = ["SKU", "Nom", "Marque", "Prix de base", "TVA", "Stock", "Cycle de vie", ""];
 
-function getProductKindBadge(kind: AllProductsListItemDto["kind"]) {
-  switch (kind) {
-    case "SINGLE":
-      return { label: "Simple", color: "blue" as const };
-    case "VARIANT":
-      return { label: "Variante", color: "secondary" as const };
-    case "PACK":
-      return { label: "Pack", color: "green" as const };
-    default:
-      return { label: kind, color: "default" as const };
+type EditingState = {
+  rowId: number;
+  field: string;
+  value: string;
+} | null;
+
+function EditableCell({
+  value,
+  rowId,
+  field,
+  editing,
+  onStartEdit,
+  onChangeEdit,
+  onCommitEdit,
+  onCancelEdit,
+  saving,
+  type = "text",
+}: {
+  value: string;
+  rowId: number;
+  field: string;
+  editing: EditingState;
+  onStartEdit: (rowId: number, field: string, value: string) => void;
+  onChangeEdit: (value: string) => void;
+  onCommitEdit: () => void;
+  onCancelEdit: () => void;
+  saving: boolean;
+  type?: "text" | "number";
+}) {
+  const isEditing = editing?.rowId === rowId && editing?.field === field;
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  if (isEditing) {
+    return (
+      <div className="flex items-center gap-1">
+        <input
+          ref={inputRef}
+          className="w-full rounded border border-cobam-dark-blue/30 bg-white px-2 py-1 text-sm outline-none focus:border-cobam-dark-blue focus:ring-1 focus:ring-cobam-dark-blue/20"
+          type={type}
+          step={type === "number" ? "any" : undefined}
+          value={editing.value}
+          disabled={saving}
+          onChange={(e) => onChangeEdit(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onCommitEdit();
+            if (e.key === "Escape") onCancelEdit();
+          }}
+          onBlur={onCommitEdit}
+        />
+      </div>
+    );
   }
+
+  return (
+    <button
+      type="button"
+      className="group/cell flex w-full items-center gap-1.5 rounded px-2 py-1 text-left text-sm text-slate-700 transition-colors hover:bg-cobam-dark-blue/5"
+      onClick={() => onStartEdit(rowId, field, value)}
+    >
+      <span className="truncate">{value || <span className="text-slate-300">—</span>}</span>
+      <Pencil className="h-3 w-3 shrink-0 text-slate-300 opacity-0 transition-opacity group-hover/cell:opacity-100" />
+    </button>
+  );
 }
 
-function getLifecycleAction(item: AllProductsListItemDto) {
-  const currentLifecycle = item.lifecycle ?? "DRAFT";
-
-  return currentLifecycle === "ACTIVE"
-    ? {
-        label: "Remise en brouillon",
-        nextLifecycle: "DRAFT" as const,
-      }
-    : {
-        label: "Activer",
-        nextLifecycle: "ACTIVE" as const,
-      };
-}
-
-function formatPrice(value: string | null) {
-  return value ? `${value} TND` : "-";
-}
-
-function formatStock(value: string | null, unit: string | null) {
-  if (!value) {
-    return "-";
-  }
-
-  return unit ? `${value} ${unit}` : value;
-}
-
-function getStateBadges(item: AllProductsListItemDto) {
-  const badges: Array<{
-    label: string;
-    color: "warning" | "error" | "default";
-  }> = [];
-
-  if (!item.hasImage) {
-    badges.push({
-      label: "Sans image",
-      color: "warning",
-    });
-  }
-
-  if (item.kind !== "PACK" && !item.hasDatasheet) {
-    badges.push({
-      label: "Sans fiche technique",
-      color: "warning",
-    });
-  }
-
-  if (item.visibility !== true) {
-    badges.push({
-      label: "Masque",
-      color: "default",
-    });
-  }
-
-  if (item.lifecycle !== "ACTIVE") {
-    badges.push({
-      label: "Brouillon",
-      color: "default",
-    });
-  }
-
-  return badges;
+function LifecycleCell({
+  rowId,
+  value,
+  onSave,
+  saving,
+}: {
+  rowId: number;
+  value: string;
+  onSave: (rowId: number, field: string, value: string) => void;
+  saving: boolean;
+}) {
+  return (
+    <select
+      className="w-full cursor-pointer rounded border-0 bg-transparent px-2 py-1 text-sm text-slate-700 outline-none transition-colors hover:bg-cobam-dark-blue/5 focus:ring-1 focus:ring-cobam-dark-blue/20"
+      value={value}
+      disabled={saving}
+      onChange={(e) => onSave(rowId, "lifecycle", e.target.value)}
+    >
+      <option value="DRAFT">Brouillon</option>
+      <option value="ACTIVE">Actif</option>
+    </select>
+  );
 }
 
 function getAction(item: AllProductsListItemDto) {
   switch (item.kind) {
     case "SINGLE":
-      return {
-        href: `/espace/staff/gestion-des-produits/produits/edit?id=${item.id}`,
-        label: "Modifier",
-      };
+      return `/espace/staff/gestion-des-produits/produits/edit?id=${item.id}`;
     case "VARIANT":
       return item.family
-        ? {
-            href: `/espace/staff/gestion-des-produits/familles/edit?id=${item.family.id}`,
-            label: "Ouvrir la famille",
-          }
+        ? `/espace/staff/gestion-des-produits/familles/edit?id=${item.family.id}`
         : null;
     case "PACK":
-      return {
-        href: `/espace/staff/gestion-des-produits/packs/edit?id=${item.id}`,
-        label: "Modifier",
-      };
+      return `/espace/staff/gestion-des-produits/packs/edit?id=${item.id}`;
     default:
       return null;
   }
@@ -145,7 +152,8 @@ export default function AllProductsPage() {
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [pendingLifecycleId, setPendingLifecycleId] = useState<number | null>(null);
+  const [editing, setEditing] = useState<EditingState>(null);
+  const [savingRowId, setSavingRowId] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [bulkEditLoading, setBulkEditLoading] = useState(false);
@@ -312,37 +320,61 @@ export default function AllProductsPage() {
     setLastSelectedIndex(index);
   };
 
-  const handleLifecycleToggle = async (item: AllProductsListItemDto) => {
-    const lifecycleAction = getLifecycleAction(item);
+  const handleStartEdit = useCallback((rowId: number, field: string, value: string) => {
+    setEditing({ rowId, field, value });
+  }, []);
 
-    if (!user || !canToggleProductLifecycle(user, lifecycleAction.nextLifecycle)) {
+  const handleChangeEdit = useCallback((value: string) => {
+    setEditing((prev) => (prev ? { ...prev, value } : null));
+  }, []);
+
+  const handleCancelEdit = useCallback(() => {
+    setEditing(null);
+  }, []);
+
+  const handleInlineSave = useCallback(async (rowId: number, field: string, rawValue: string) => {
+    const item = items.find((i) => i.id === rowId);
+    if (!item) return;
+
+    const oldValue = String((item as Record<string, unknown>)[field] ?? "");
+    if (rawValue === oldValue) {
+      setEditing(null);
       return;
     }
 
-    setPendingLifecycleId(item.id);
+    const data: Record<string, unknown> = {};
+    if (field === "basePriceAmount" || field === "stock") {
+      data[field] = rawValue.trim() === "" ? null : rawValue.trim();
+    } else if (field === "vatRate") {
+      data[field] = rawValue.trim() === "" ? null : Number(rawValue);
+    } else {
+      data[field] = rawValue;
+    }
+
+    setSavingRowId(rowId);
+    setEditing(null);
     setError(null);
 
     try {
-      const updated = await updateAllProductLifecycleClient(
-        item.id,
-        lifecycleAction.nextLifecycle,
-      );
-
-      setItems((current) =>
-        current.map((entry) => (entry.id === updated.id ? updated : entry)),
-      );
+      await updateAllProductsBulkClient({ ids: [rowId], data });
+      setReloadToken((t) => t + 1);
     } catch (err: unknown) {
       setError(
         err instanceof AllProductsClientError
           ? err.message
           : err instanceof Error
             ? err.message
-            : "Impossible de mettre a jour le cycle de vie du produit.",
+            : "Impossible de sauvegarder.",
       );
     } finally {
-      setPendingLifecycleId(null);
+      setSavingRowId(null);
     }
-  };
+  }, [items]);
+
+  const handleCommitEdit = useCallback(() => {
+    if (!editing) return;
+    void handleInlineSave(editing.rowId, editing.field, editing.value);
+  }, [editing, handleInlineSave]);
 
   const selectedItems = useMemo(
     () => items.filter((item) => selectedIds.includes(item.id)),
@@ -712,14 +744,12 @@ export default function AllProductsPage() {
         }}
       >
         {items.map((item, index) => {
-          const kindBadge = getProductKindBadge(item.kind);
-          const lifecycleAction = getLifecycleAction(item);
-          const action = getAction(item);
-          const stateBadges = getStateBadges(item);
+          const actionHref = getAction(item);
+          const isSaving = savingRowId === item.id;
 
           return (
-            <tr key={item.id} className="hover:bg-slate-50/70">
-              <td className="px-4 py-3 align-top">
+            <tr key={item.id} className={`transition-colors ${isSaving ? "bg-cobam-dark-blue/5 opacity-60" : "hover:bg-slate-50/70"}`}>
+              <td className="px-4 py-2 align-middle">
                 <Checkbox
                   checked={selectedIds.includes(item.id)}
                   onCheckedChange={(checked) => {
@@ -737,79 +767,108 @@ export default function AllProductsPage() {
                   aria-label={`Selectionner ${item.name}`}
                 />
               </td>
-              <td className="px-4 py-3 align-top">
-                <div className="space-y-1">
-                  <p className="font-semibold text-cobam-dark-blue">{item.name}</p>
-                  <p className="text-xs text-slate-500">SKU {item.sku}</p>
-                  {item.kind === "VARIANT" && item.family ? (
-                    <p className="text-xs text-slate-400">
-                      Famille {item.family.name}
-                    </p>
-                  ) : null}
-                </div>
+              <td className="px-2 py-1 align-middle">
+                <EditableCell
+                  value={item.sku}
+                  rowId={item.id}
+                  field="sku"
+                  editing={editing}
+                  onStartEdit={handleStartEdit}
+                  onChangeEdit={handleChangeEdit}
+                  onCommitEdit={handleCommitEdit}
+                  onCancelEdit={handleCancelEdit}
+                  saving={isSaving}
+                />
               </td>
-              <td className="px-4 py-3 align-top text-sm text-slate-600">
-                {item.brand ?? "-"}
+              <td className="px-2 py-1 align-middle">
+                <EditableCell
+                  value={item.name}
+                  rowId={item.id}
+                  field="name"
+                  editing={editing}
+                  onStartEdit={handleStartEdit}
+                  onChangeEdit={handleChangeEdit}
+                  onCommitEdit={handleCommitEdit}
+                  onCancelEdit={handleCancelEdit}
+                  saving={isSaving}
+                />
               </td>
-              <td className="px-4 py-3 align-top">
-                <StaffBadge size="sm" color={kindBadge.color}>
-                  {kindBadge.label}
-                </StaffBadge>
+              <td className="px-2 py-1 align-middle">
+                <EditableCell
+                  value={item.brand ?? ""}
+                  rowId={item.id}
+                  field="brand"
+                  editing={editing}
+                  onStartEdit={handleStartEdit}
+                  onChangeEdit={handleChangeEdit}
+                  onCommitEdit={handleCommitEdit}
+                  onCancelEdit={handleCancelEdit}
+                  saving={isSaving}
+                />
               </td>
-              <td className="px-4 py-3 align-top text-sm text-slate-600">
-                {formatPrice(item.basePriceAmount)}
+              <td className="px-2 py-1 align-middle">
+                <EditableCell
+                  value={item.basePriceAmount ?? ""}
+                  rowId={item.id}
+                  field="basePriceAmount"
+                  editing={editing}
+                  onStartEdit={handleStartEdit}
+                  onChangeEdit={handleChangeEdit}
+                  onCommitEdit={handleCommitEdit}
+                  onCancelEdit={handleCancelEdit}
+                  saving={isSaving}
+                  type="number"
+                />
               </td>
-              <td className="px-4 py-3 align-top text-sm text-slate-600">
-                {formatStock(item.stock, item.stockUnit)}
+              <td className="px-2 py-1 align-middle">
+                <EditableCell
+                  value={item.vatRate != null ? String(item.vatRate) : ""}
+                  rowId={item.id}
+                  field="vatRate"
+                  editing={editing}
+                  onStartEdit={handleStartEdit}
+                  onChangeEdit={handleChangeEdit}
+                  onCommitEdit={handleCommitEdit}
+                  onCancelEdit={handleCancelEdit}
+                  saving={isSaving}
+                  type="number"
+                />
               </td>
-              <td className="px-4 py-3 align-top text-sm text-slate-600">
-                {item.subcategories.length > 0
-                  ? item.subcategories.map((subcategory) => subcategory.name).join(", ")
-                  : "-"}
+              <td className="px-2 py-1 align-middle">
+                <EditableCell
+                  value={item.stock ?? ""}
+                  rowId={item.id}
+                  field="stock"
+                  editing={editing}
+                  onStartEdit={handleStartEdit}
+                  onChangeEdit={handleChangeEdit}
+                  onCommitEdit={handleCommitEdit}
+                  onCancelEdit={handleCancelEdit}
+                  saving={isSaving}
+                  type="number"
+                />
               </td>
-              <td className="px-4 py-3 align-top">
-                {stateBadges.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {stateBadges.map((badge) => (
-                      <StaffBadge
-                        key={`${item.id}-${badge.label}`}
-                        size="sm"
-                        color={badge.color}
-                      >
-                        {badge.label}
-                      </StaffBadge>
-                    ))}
-                  </div>
+              <td className="px-2 py-1 align-middle">
+                <LifecycleCell
+                  rowId={item.id}
+                  value={item.lifecycle ?? "DRAFT"}
+                  onSave={(rowId, field, val) => void handleInlineSave(rowId, field, val)}
+                  saving={isSaving}
+                />
+              </td>
+              <td className="px-2 py-1 align-middle text-right">
+                {actionHref ? (
+                  <AnimatedUIButton
+                    href={actionHref}
+                    variant="ghost"
+                    icon="modify"
+                    size="sm"
+                  >
+                    Modifier
+                  </AnimatedUIButton>
                 ) : (
-                  <span className="text-sm text-slate-400">-</span>
+                  <span className="text-sm text-slate-300">—</span>
                 )}
-              </td>
-              <td className="px-4 py-3 align-top text-right">
-                <div className="flex justify-end gap-2">
-                  {user && canToggleProductLifecycle(user, lifecycleAction.nextLifecycle) ? (
-                    <AnimatedUIButton
-                      type="button"
-                      variant="ghost"
-                      onClick={() => void handleLifecycleToggle(item)}
-                      loading={pendingLifecycleId === item.id}
-                      loadingText="Mise a jour..."
-                    >
-                      {lifecycleAction.label}
-                    </AnimatedUIButton>
-                  ) : null}
-                  {action ? (
-                    <AnimatedUIButton
-                      href={action.href}
-                      variant="ghost"
-                      icon="modify"
-                      iconPosition="left"
-                    >
-                      {action.label}
-                    </AnimatedUIButton>
-                  ) : (
-                    <span className="text-sm text-slate-400">-</span>
-                  )}
-                </div>
               </td>
             </tr>
           );

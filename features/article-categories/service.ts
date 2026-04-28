@@ -263,15 +263,6 @@ export async function createArticleCategoryService(
 
   const category = await createArticleCategory(session.id, input);
 
-  await createArticleCategoryAuditLog({
-    actorUserId: session.id,
-    actionType: "CREATE",
-    entityId: String(category.id),
-    targetLabel: category.name,
-    summary: "Création d'une catégorie d'articles",
-    afterSnapshotJson: toArticleCategoryAuditSnapshot(category),
-  });
-
   return mapArticleCategoryToDetailDto(
     category,
     getArticleCategoryAbilities(session, category),
@@ -301,16 +292,6 @@ export async function updateArticleCategoryService(
   });
 
   const category = await updateArticleCategory(categoryId, session.id, input);
-
-  await createArticleCategoryAuditLog({
-    actorUserId: session.id,
-    actionType: "UPDATE",
-    entityId: String(category.id),
-    targetLabel: category.name,
-    summary: "Mise à jour d'une catégorie d'articles",
-    beforeSnapshotJson: toArticleCategoryAuditSnapshot(before),
-    afterSnapshotJson: toArticleCategoryAuditSnapshot(category),
-  });
 
   return mapArticleCategoryToDetailDto(
     category,
@@ -355,18 +336,6 @@ export async function deleteArticleCategoryService(
         deletedCategory: await deleteArticleCategory(categoryId),
         detachedArticlesCount: 0,
       };
-
-  await createArticleCategoryAuditLog({
-    actorUserId: session.id,
-    actionType: "DELETE",
-    entityId: String(category.id),
-    targetLabel: category.name,
-    summary: forceRemove
-      ? `Suppression forcée d'une catégorie d'articles (${result.detachedArticlesCount} article(s) détaché(s))`
-      : "Suppression d'une catégorie d'articles",
-    beforeSnapshotJson: toArticleCategoryAuditSnapshot(category),
-    afterSnapshotJson: toArticleCategoryAuditSnapshot(result.deletedCategory),
-  });
 
   return {
     detachedArticlesCount: result.detachedArticlesCount,
