@@ -21,14 +21,12 @@ import {
   mapMediaFolderSummaryDto,
   mapMediaStatsDto,
   mapMediaToListItemDto,
-  toMediaAuditSnapshot,
 } from "./mappers";
 import {
   aggregateMediaStats,
   countMediaFolderContents,
   countMedia,
   createMediaFolderRecord,
-  createMediaAuditLog,
   createMediaRecord,
   deleteMediaFolderRecord,
   deleteMediaRecord,
@@ -613,15 +611,6 @@ export async function uploadMediaService(session: StaffSession, input: MediaUplo
       uploadedByUserId: session.id,
     });
 
-    await createMediaAuditLog({
-      actorUserId: session.id,
-      actionType: "CREATE",
-      entityId: String(media.id),
-      targetLabel: media.originalFilename ?? media.title ?? `Media ${media.id}`,
-      summary: "Import d'un média",
-      afterSnapshotJson: toMediaAuditSnapshot(media),
-    });
-
     return mapMediaToListItemDto(media, session);
   } catch (error) {
     if (thumbnailStored && thumbnailStoragePath) {
@@ -702,20 +691,6 @@ export async function updateMediaService(
   const updatedMedia = await updateMediaRecord(mediaId, {
     ...input,
     updatedByUserId: session.id,
-  });
-
-  await createMediaAuditLog({
-    actorUserId: session.id,
-    actionType: "UPDATE",
-    entityId: String(updatedMedia.id),
-    targetLabel: updatedMedia.originalFilename ?? updatedMedia.title ?? `Media ${updatedMedia.id}`,
-    summary: shouldChangeFolder
-      ? "Déplacement d'un média"
-      : input.visibility === MEDIA_VISIBILITY.PUBLIC
-        ? "Passage d'un média en public"
-        : "Passage d'un média en privé",
-    beforeSnapshotJson: toMediaAuditSnapshot(existingMedia),
-    afterSnapshotJson: toMediaAuditSnapshot(updatedMedia),
   });
 
   return mapMediaToListItemDto(updatedMedia, session);
@@ -912,18 +887,6 @@ export async function deleteMediaService(
     forceRemove && referenceCount > 0
       ? ` (${deletionResult.detachedReferences?.total ?? 0} reference(s) retirees)`
       : "";
-
-  await createMediaAuditLog({
-    actorUserId: session.id,
-    actionType: "DELETE",
-    entityId: String(media.id),
-    targetLabel: media.originalFilename ?? media.title ?? `Media ${media.id}`,
-    summary: forceRemove
-      ? `Suppression forcee d'un media${forceSummarySuffix}`
-      : "Suppression d'un média",
-    beforeSnapshotJson: toMediaAuditSnapshot(media),
-    afterSnapshotJson: toMediaAuditSnapshot(deletionResult.deletedMedia),
-  });
 }
 
 async function readStoredMediaObject(

@@ -79,24 +79,6 @@ enum ProductStockUnit {
   SQUARE_METER
 }
 
-enum AuditActionType {
-  CREATE
-  UPDATE
-  DELETE
-  ATTACH
-  DETACH
-  PUBLISH
-  UNPUBLISH
-  RESTORE
-  ARCHIVE
-  ROLE_GRANT
-  ROLE_REVOKE
-  BAN
-  UNBAN
-  PASSWORD_CHANGE
-  LOGIN
-  LOGOUT
-}
 
 enum OTPType {
   LOGIN
@@ -126,7 +108,6 @@ model User {
   articleAuthorLinks       ArticleAuthorLink[]
   createdArticleCategories ArticleCategory[]   @relation("ArticleCategoryCreatedByUser")
   updatedArticleCategories ArticleCategory[]   @relation("ArticleCategoryUpdatedByUser")
-  auditLogs                AuditLog[]          @relation("AuditActor")
   profile                  StaffProfile?
 
   receivedRoleAssignments UserRoleAssignment[] @relation("RoleAssignmentTarget")
@@ -607,65 +588,5 @@ model Media {
   @@index([uploadedByUserId])
   @@index([deletedAt])
   @@map("media")
-}
-
-model AuditLog {
-  id                 BigInt          @id @default(autoincrement())
-  actorUserId        String?         @map("actor_user_id")
-  actionType         AuditActionType @map("action_type")
-  entityType         String          @map("entity_type") @db.VarChar(100)
-  entityId           String          @map("entity_id") @db.VarChar(100)
-  targetLabel        String?         @map("target_label") @db.VarChar(255)
-  summary            String?         @db.Text
-  reason             String?         @db.Text
-  requestId          String?         @map("request_id") @db.VarChar(255)
-  ipAddress          String?         @map("ip_address") @db.VarChar(100)
-  userAgent          String?         @map("user_agent") @db.Text
-  beforeSnapshotJson Json?           @map("before_snapshot_json")
-  afterSnapshotJson  Json?           @map("after_snapshot_json")
-  createdAt          DateTime        @default(now()) @map("created_at")
-
-  actorUser User? @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
-
-  fieldChanges    AuditLogFieldChange[]
-  relationChanges AuditLogRelationChange[]
-
-  @@index([actorUserId])
-  @@index([entityType, entityId])
-  @@index([actionType])
-  @@index([createdAt])
-  @@map("audit_logs")
-}
-
-model AuditLogFieldChange {
-  id           BigInt  @id @default(autoincrement())
-  auditLogId   BigInt  @map("audit_log_id")
-  fieldName    String  @map("field_name") @db.VarChar(255)
-  oldValueText String? @map("old_value_text") @db.Text
-  newValueText String? @map("new_value_text") @db.Text
-
-  auditLog AuditLog @relation(fields: [auditLogId], references: [id], onDelete: Cascade)
-
-  @@index([auditLogId])
-  @@map("audit_log_field_changes")
-}
-
-model AuditLogRelationChange {
-  id              BigInt          @id @default(autoincrement())
-  auditLogId      BigInt          @map("audit_log_id")
-  relationName    String          @map("relation_name") @db.VarChar(255)
-  actionType      AuditActionType @map("action_type")
-  leftEntityType  String          @map("left_entity_type") @db.VarChar(100)
-  leftEntityId    String          @map("left_entity_id") @db.VarChar(100)
-  rightEntityType String          @map("right_entity_type") @db.VarChar(100)
-  rightEntityId   String          @map("right_entity_id") @db.VarChar(100)
-  detailsJson     Json?           @map("details_json")
-
-  auditLog AuditLog @relation(fields: [auditLogId], references: [id], onDelete: Cascade)
-
-  @@index([auditLogId])
-  @@index([leftEntityType, leftEntityId])
-  @@index([rightEntityType, rightEntityId])
-  @@map("audit_log_relation_changes")
 }
 

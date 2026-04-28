@@ -255,13 +255,6 @@ export async function listArticleAuthorOptions(query: ArticleAuthorOptionsQuery)
   });
 }
 
-function toAuditJson(
-  value: unknown,
-): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
-  if (value === undefined) return undefined;
-  if (value === null) return Prisma.JsonNull;
-  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
-}
 
 export async function createArticle(
   authorId: string,
@@ -379,25 +372,3 @@ export async function deleteArticle(articleId: number) {
   });
 }
 
-export async function createArticleAuditLog(data: {
-  actorUserId: string;
-  actionType: "CREATE" | "UPDATE" | "PUBLISH" | "UNPUBLISH" | "DELETE";
-  entityId: string;
-  targetLabel: string;
-  summary: string;
-  beforeSnapshotJson?: unknown;
-  afterSnapshotJson?: unknown;
-}) {
-  return prisma.auditLog.create({
-    data: {
-      actorUserId: data.actorUserId,
-      actionType: data.actionType,
-      entityType: "Article",
-      entityId: data.entityId,
-      targetLabel: data.targetLabel,
-      summary: data.summary,
-      beforeSnapshotJson: toAuditJson(data.beforeSnapshotJson),
-      afterSnapshotJson: toAuditJson(data.afterSnapshotJson),
-    },
-  });
-}

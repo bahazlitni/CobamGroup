@@ -134,14 +134,3 @@ export async function resolveOrCreateTagsByNames(tagNames: readonly string[]) {
   }));
 }
 
-export async function createTagAuditLog(_data: {
-  actorUserId: string;
-  actionType: "CREATE" | "UPDATE" | "DELETE";
-  entityId: string;
-  targetLabel: string;
-  summary: string;
-  beforeSnapshotJson?: unknown;
-  afterSnapshotJson?: unknown;
-}) {
-  return null;
-}

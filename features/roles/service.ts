@@ -2,7 +2,6 @@ import type { StaffSession } from "@/features/auth/types";
 import { hasAnyPermission, hasPermission } from "@/features/rbac/access";
 import { PERMISSIONS } from "@/features/rbac/permissions";
 import { getAssignableRoles } from "@/features/rbac/roles";
-import { createUserAuditLog } from "@/features/users/repository";
 import {
   countUsersWithRole,
   createRole,
@@ -146,15 +145,6 @@ export async function createRoleService(
     isActive: input.isActive ?? true,
   });
 
-  await createUserAuditLog({
-    actorUserId: session.id,
-    entityId: String(role.id),
-    targetLabel: role.name,
-    summary: "Création d'un rôle dynamique",
-    actionType: "CREATE",
-    afterSnapshotJson: mapRole(role),
-  });
-
   return mapRole(role);
 }
 
@@ -181,15 +171,6 @@ export async function updateRoleService(
     ...input,
     description: input.description ?? null,
     isActive: input.isActive ?? true,
-  });
-
-  await createUserAuditLog({
-    actorUserId: session.id,
-    entityId: String(role.id),
-    targetLabel: role.name,
-    summary: "Mise à jour d'un rôle dynamique",
-    beforeSnapshotJson: mapRole(before),
-    afterSnapshotJson: mapRole(role),
   });
 
   return mapRole(role);
@@ -237,13 +218,4 @@ export async function deleteRoleService(
 
   const affectedUsers = await countUsersWithRole(roleId);
   const deleted = await deleteRole(roleId);
-
-  await createUserAuditLog({
-    actorUserId: session.id,
-    entityId: String(deleted.id),
-    targetLabel: deleted.name,
-    summary: `Suppression d'un rôle dynamique (${affectedUsers} utilisateur(s) impacté(s))`,
-    actionType: "DELETE",
-    beforeSnapshotJson: mapRole(before),
-  });
 }

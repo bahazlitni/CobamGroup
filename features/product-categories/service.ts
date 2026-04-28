@@ -10,7 +10,6 @@ import {
   countProductFamiliesForCategory,
   countProductFamiliesForSubcategories,
   createProductCategory,
-  createProductCategoryAuditLog,
   deleteProductCategory,
   findProductCategoryById,
   findProductCategoryBySlug,
@@ -21,7 +20,6 @@ import {
 import {
   mapProductCategoryToDetailDto,
   mapProductCategoryToListItemDto,
-  toProductCategoryAuditSnapshot,
 } from "./mappers";
 import type {
   ProductCategoryCreateInput,

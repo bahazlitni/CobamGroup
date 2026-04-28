@@ -14,14 +14,12 @@ import { buildBanSummary, serializeBanDetails } from "./ban-details";
 import {
   mapUserToDetailDto,
   mapUserToListItemDto,
-  toUserAuditSnapshot,
 } from "./mappers";
 import {
   countArticlesByAuthor,
   countUsers,
   createUser,
-  createUserAuditLog,
-  deleteUserWithAudit,
+  deleteUser,
   findRolesByIds,
   findUserByEmail,
   findUserById,
@@ -300,17 +298,6 @@ export async function updateUserProfileService(
     throw new UserServiceError("Utilisateur introuvable", 404);
   }
 
-  await createUserAuditLog({
-    actorUserId: session.id,
-    entityId: after.id,
-    targetLabel: after.email,
-    summary: isSelf
-      ? "Mise à jour du profil personnel"
-      : "Mise à jour du profil utilisateur",
-    beforeSnapshotJson: toUserAuditSnapshot(before),
-    afterSnapshotJson: toUserAuditSnapshot(after),
-  });
-
   return mapUserToDetailDto(after);
 }
 
@@ -347,20 +334,6 @@ export async function updateUserCredentialsService(
     userId,
     email: input.email,
     passwordHash,
-  });
-
-  await createUserAuditLog({
-    actorUserId: session.id,
-    entityId: after.id,
-    targetLabel: after.email,
-    summary:
-      input.email && input.password
-        ? "Mise à jour des identifiants (email + mot de passe)"
-        : input.email
-          ? "Mise à jour de l'email"
-          : "Mise à jour du mot de passe",
-    beforeSnapshotJson: toUserAuditSnapshot(before),
-    afterSnapshotJson: toUserAuditSnapshot(after),
   });
 
   return mapUserToDetailDto(after);
@@ -401,15 +374,6 @@ export async function createUserService(
   });
 
   const createdDto = mapUserToDetailDto(created);
-
-  await createUserAuditLog({
-    actorUserId: session.id,
-    entityId: created.id,
-    targetLabel: created.email,
-    summary: `Création d'utilisateur (${createdDto.roleLabel})`,
-    actionType: "CREATE",
-    afterSnapshotJson: toUserAuditSnapshot(created),
-  });
 
   return createdDto;
 }
@@ -455,15 +419,6 @@ export async function updateUserAccessService(
 
   const afterDto = mapUserToDetailDto(after);
 
-  await createUserAuditLog({
-    actorUserId: session.id,
-    entityId: after.id,
-    targetLabel: after.email,
-    summary: `Mise à jour des accès: ${beforeDto.roleLabel} -> ${afterDto.roleLabel}`,
-    beforeSnapshotJson: toUserAuditSnapshot(before),
-    afterSnapshotJson: toUserAuditSnapshot(after),
-  });
-
   return afterDto;
 }
 
@@ -502,13 +457,7 @@ export async function deleteUserService(
     );
   }
 
-  await deleteUserWithAudit({
-    actorUserId: session.id,
-    userId,
-    targetLabel: before.email,
-    summary: `Suppression d'utilisateur (${getRoleLabel(beforeDto)})`,
-    beforeSnapshotJson: toUserAuditSnapshot(before),
-  });
+  await deleteUser(userId);
 }
 
 export async function updateUserBanService(
@@ -564,18 +513,6 @@ export async function updateUserBanService(
           description: input.description,
         })
       : null,
-  });
-
-  await createUserAuditLog({
-    actorUserId: session.id,
-    entityId: after.id,
-    targetLabel: after.email,
-    summary: input.banned
-      ? `Bannissement du compte (${beforeDto.roleLabel}) - ${banSummary || "Motif non renseigné"}`
-      : `Réactivation du compte (${beforeDto.roleLabel})`,
-    actionType: input.banned ? "BAN" : "UNBAN",
-    beforeSnapshotJson: toUserAuditSnapshot(before),
-    afterSnapshotJson: toUserAuditSnapshot(after),
   });
 
   return mapUserToDetailDto(after);

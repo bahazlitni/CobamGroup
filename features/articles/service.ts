@@ -6,7 +6,6 @@ import {
   mapArticleToDetailDto,
   mapArticleToListItemDto,
   mapAuthorRecordToAssignableDto,
-  toAuditSnapshot,
 } from "@/features/articles/mappers";
 import { findImageMediaById, makeMediaPublicMany } from "@/features/media/repository";
 import { hasPermission } from "@/features/rbac/access";
@@ -30,7 +29,6 @@ import type {
 } from "./types";
 import {
   createArticle,
-  createArticleAuditLog,
   deleteArticle,
   findArticleAuthorCandidatesByIds,
   findExistingArticleCategoryIds,
@@ -429,15 +427,6 @@ export async function createArticleService(
     tags: serializeOwnedTagNames(input.tagNames),
   });
 
-  await createArticleAuditLog({
-    actorUserId: session.id,
-    actionType: "CREATE",
-    entityId: String(article.id),
-    targetLabel: article.title,
-    summary: "Création d'un nouvel article",
-    afterSnapshotJson: toAuditSnapshot(article),
-  });
-
   return mapArticleToDetailDto(article, getArticleAbilities(session, article));
 }
 
@@ -495,16 +484,6 @@ export async function updateArticleService(
     });
   }
 
-  await createArticleAuditLog({
-    actorUserId: session.id,
-    actionType: "UPDATE",
-    entityId: String(article.id),
-    targetLabel: article.title,
-    summary: "Mise à jour d'un article",
-    beforeSnapshotJson: toAuditSnapshot(before),
-    afterSnapshotJson: toAuditSnapshot(article),
-  });
-
   return mapArticleToDetailDto(article, getArticleAbilities(session, article));
 }
 
@@ -535,16 +514,6 @@ export async function publishArticleService(
     content: article.content,
   });
 
-  await createArticleAuditLog({
-    actorUserId: session.id,
-    actionType: "PUBLISH",
-    entityId: String(article.id),
-    targetLabel: article.title,
-    summary: "Publication de l'article",
-    beforeSnapshotJson: toAuditSnapshot(before),
-    afterSnapshotJson: toAuditSnapshot(article),
-  });
-
   return mapArticleToDetailDto(article, getArticleAbilities(session, article));
 }
 
@@ -567,16 +536,6 @@ export async function unpublishArticleService(
     ArticleStatus.DRAFT,
   );
 
-  await createArticleAuditLog({
-    actorUserId: session.id,
-    actionType: "UNPUBLISH",
-    entityId: String(article.id),
-    targetLabel: article.title,
-    summary: "Depublication de l'article",
-    beforeSnapshotJson: toAuditSnapshot(before),
-    afterSnapshotJson: toAuditSnapshot(article),
-  });
-
   return mapArticleToDetailDto(article, getArticleAbilities(session, article));
 }
 
@@ -595,13 +554,4 @@ export async function deleteArticleService(
   }
 
   const article = await deleteArticle(articleId);
-
-  await createArticleAuditLog({
-    actorUserId: session.id,
-    actionType: "DELETE",
-    entityId: String(article.id),
-    targetLabel: article.title,
-    summary: "Suppression definitive d'un article",
-    beforeSnapshotJson: toAuditSnapshot(before),
-  });
 }

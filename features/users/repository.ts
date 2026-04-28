@@ -247,13 +247,6 @@ export async function upsertUserProfile(
   return findUserById(userId);
 }
 
-function toAuditJson(
-  value: unknown,
-): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
-  if (value === undefined) return undefined;
-  if (value === null) return Prisma.JsonNull;
-  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
-}
 
 export async function updateUserAccess(data: {
   actorUserId: string;
@@ -414,51 +407,8 @@ export async function createUser(data: {
   });
 }
 
-export async function createUserAuditLog(data: {
-  actorUserId: string;
-  entityId: string;
-  targetLabel: string;
-  summary: string;
-  actionType?: "CREATE" | "UPDATE" | "DELETE" | "BAN" | "UNBAN";
-  beforeSnapshotJson?: unknown;
-  afterSnapshotJson?: unknown;
-}) {
-  return prisma.auditLog.create({
-    data: {
-      actorUserId: data.actorUserId,
-      actionType: data.actionType ?? "UPDATE",
-      entityType: "User",
-      entityId: data.entityId,
-      targetLabel: data.targetLabel,
-      summary: data.summary,
-      beforeSnapshotJson: toAuditJson(data.beforeSnapshotJson),
-      afterSnapshotJson: toAuditJson(data.afterSnapshotJson),
-    },
-  });
-}
-
-export async function deleteUserWithAudit(data: {
-  actorUserId: string;
-  userId: string;
-  targetLabel: string;
-  summary: string;
-  beforeSnapshotJson?: unknown;
-}) {
-  return prisma.$transaction(async (tx) => {
-    await tx.auditLog.create({
-      data: {
-        actorUserId: data.actorUserId,
-        actionType: "DELETE",
-        entityType: "User",
-        entityId: data.userId,
-        targetLabel: data.targetLabel,
-        summary: data.summary,
-        beforeSnapshotJson: toAuditJson(data.beforeSnapshotJson),
-      },
-    });
-
-    await tx.user.delete({
-      where: { id: data.userId },
-    });
+export async function deleteUser(userId: string) {
+  return prisma.user.delete({
+    where: { id: userId },
   });
 }

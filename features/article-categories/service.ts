@@ -11,11 +11,9 @@ import {
   mapArticleCategoryToDetailDto,
   mapArticleCategoryToListItemDto,
   resolveArticleCategoryCreatorAccess,
-  toArticleCategoryAuditSnapshot,
 } from "./mappers";
 import {
   createArticleCategory,
-  createArticleCategoryAuditLog,
   deleteArticleCategory,
   detachArticlesAndDeleteArticleCategory,
   findArticleCategoryById,

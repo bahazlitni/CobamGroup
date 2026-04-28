@@ -709,31 +709,6 @@ export const PERMISSION_DEFINITIONS = [
   }),
 
   definePermission({
-    key: "audit.read.self",
-    label: "Voir mes journaux d'audit",
-    resource: "audit",
-    action: "read",
-    scope: "self",
-    group: "Audit",
-  }),
-  definePermission({
-    key: "audit.read.all",
-    label: "Voir tous les journaux d'audit",
-    resource: "audit",
-    action: "read",
-    scope: "all",
-    group: "Audit",
-  }),
-  definePermission({
-    key: "audit.read.below_role",
-    label: "Voir les journaux d'audit sous mon rôle",
-    resource: "audit",
-    action: "read",
-    scope: "below_role",
-    group: "Audit",
-  }),
-
-  definePermission({
     key: "media.create",
     label: "Ajouter un média",
     resource: "media",

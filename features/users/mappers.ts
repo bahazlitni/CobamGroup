@@ -91,23 +91,3 @@ export function mapUserToDetailDto(user: Parameters<typeof mapUserToListItemDto>
   return mapUserToListItemDto(user);
 }
 
-export function toUserAuditSnapshot(value: unknown): unknown {
-  if (value == null) return value;
-
-  if (value instanceof Date) return value.toISOString();
-  if (typeof value === "bigint") return value.toString();
-
-  if (Array.isArray(value)) {
-    return value.map(toUserAuditSnapshot);
-  }
-
-  if (typeof value === "object") {
-    const result: Record<string, unknown> = {};
-    for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
-      result[key] = toUserAuditSnapshot(item);
-    }
-    return result;
-  }
-
-  return value;
-}

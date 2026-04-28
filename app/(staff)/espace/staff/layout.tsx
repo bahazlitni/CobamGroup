@@ -18,7 +18,6 @@ import {
   ImageIcon,
   ListTree,
   LockKeyhole,
-  Logs,
   LucideProps,
   Package,
   Shield,
@@ -198,11 +197,6 @@ const STAFF_TABS: Record<string, StaffTabGroup> = {
         label: "Rôles",
         icon: Shield,
       },
-      audit: {
-        key: "audit",
-        label: "Audit",
-        icon: Logs,
-      },
     },
   },
 };
@@ -253,7 +247,6 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
         medias: user ? canAccessMediaLibrary(user) : false,
       },
       "administration": {
-        audit: false,
         roles: user ? canAccessRoles(user) : false,
         membres: user ? canAccessUsers(user) : false,
       },
