@@ -1,4 +1,10 @@
 import { ProductLifecycle } from "@prisma/client";
+import {
+  ALL_PRODUCTS_EXPORT_FORMATS,
+  ALL_PRODUCTS_EXPORT_MODES,
+  type AllProductsExportFormat,
+  type AllProductsExportMode,
+} from "./types";
 
 export class AllProductsValidationError extends Error {
   status: number;
@@ -29,6 +35,52 @@ export function parseAllProductsListQuery(searchParams: URLSearchParams) {
     q: parseOptionalString(searchParams.get("q")),
     kind: kind ?? null,
   };
+}
+
+export function parseAllProductsExportMode(
+  value: string | null | undefined,
+): AllProductsExportMode {
+  const mode = value?.trim().toLowerCase();
+
+  if (
+    !mode ||
+    !ALL_PRODUCTS_EXPORT_MODES.includes(mode as AllProductsExportMode)
+  ) {
+    throw new AllProductsValidationError("Mode d'export invalide.", 400);
+  }
+
+  return mode as AllProductsExportMode;
+}
+
+function parseAllProductsExportFormat(
+  value: string | null | undefined,
+  mode: AllProductsExportMode,
+): AllProductsExportFormat {
+  const format = value?.trim().toLowerCase();
+
+  if (!format) {
+    return mode === "super" ? "csv" : "pdf";
+  }
+
+  if (!ALL_PRODUCTS_EXPORT_FORMATS.includes(format as AllProductsExportFormat)) {
+    throw new AllProductsValidationError("Format d'export invalide.", 400);
+  }
+
+  if (mode === "super" && format === "pdf") {
+    throw new AllProductsValidationError(
+      "L'export Super est disponible uniquement en CSV.",
+      400,
+    );
+  }
+
+  return format as AllProductsExportFormat;
+}
+
+export function parseAllProductsExportQuery(searchParams: URLSearchParams) {
+  const mode = parseAllProductsExportMode(searchParams.get("mode"));
+  const format = parseAllProductsExportFormat(searchParams.get("format"), mode);
+
+  return { mode, format };
 }
 
 export function parseAllProductIdParam(value: string) {

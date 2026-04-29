@@ -2,9 +2,14 @@
 
 import type { FormEvent } from "react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pencil, SquareStack } from "lucide-react";
+import { SquareStack } from "lucide-react";
 import PanelTable from "@/components/staff/ui/PanelTable";
-import { StaffFilterBar, StaffPageHeader, StaffSelect } from "@/components/staff/ui";
+import {
+  ExportSplitButton,
+  StaffFilterBar,
+  StaffPageHeader,
+  StaffSelect,
+} from "@/components/staff/ui";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { Checkbox } from "@/components/ui/checkbox";
 import ProductEssentialEntries from "@/components/staff/products/ProductEssentialEntries";
@@ -26,15 +31,23 @@ import {
 import {
   AllProductsClientError,
   deleteAllProductsBulkClient,
+  exportAllProductsClient,
   listAllProductsClient,
   updateAllProductsBulkClient,
 } from "@/features/all-products/client";
-import type { AllProductsListItemDto } from "@/features/all-products/types";
+import {
+  ALL_PRODUCTS_EXPORT_ACTIONS,
+  ALL_PRODUCTS_EXPORT_MODES,
+  type AllProductsExportAction,
+  type AllProductsExportMode,
+  type AllProductsListItemDto,
+} from "@/features/all-products/types";
 import { EditableCell, EditingState, SelectCell } from "@/components/staff/ui/Cells";
 
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
 const COLUMN_LABELS = ["SKU", "Nom", "Marque", "Prix", "TVA", "Stock", "Cycle", ""];
+const EXPORT_MODE_STORAGE_KEY = "all-products-export-mode";
 
 // Explicit column widths so columns never react to content changes.
 // Order matches the columns array passed to PanelTable below:
@@ -71,6 +84,26 @@ function getAction(item: AllProductsListItemDto) {
   }
 }
 
+function isAllProductsExportMode(value: string | null): value is AllProductsExportMode {
+  return ALL_PRODUCTS_EXPORT_MODES.includes(value as AllProductsExportMode);
+}
+
+function isAllProductsExportAction(value: string | null): value is AllProductsExportAction {
+  return ALL_PRODUCTS_EXPORT_ACTIONS.some((action) => action.value === value);
+}
+
+function getStoredExportAction(value: string | null): AllProductsExportAction | null {
+  if (isAllProductsExportAction(value)) {
+    return value;
+  }
+
+  if (isAllProductsExportMode(value)) {
+    return value === "super" ? "super-csv" : `${value}-pdf`;
+  }
+
+  return null;
+}
+
 export default function AllProductsPage() {
   const { user } = useStaffSessionContext();
   const canCreate = user ? canCreateProducts(user) : false;
@@ -87,6 +120,10 @@ export default function AllProductsPage() {
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exportAction, setExportAction] =
+    useState<AllProductsExportAction>("extended-pdf");
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
   const [editing, setEditing] = useState<EditingState>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
@@ -94,6 +131,7 @@ export default function AllProductsPage() {
   const [reloadToken, setReloadToken] = useState(0);
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
   const shiftKeyRef = useRef(false);
+  const exportInFlightRef = useRef(false);
   const [bulkForm, setBulkForm] = useState({
     sku: "",
     name: "",
@@ -137,6 +175,16 @@ export default function AllProductsPage() {
     },
     touched: {} as Record<string, boolean>,
   });
+
+  useEffect(() => {
+    const storedAction = getStoredExportAction(
+      window.localStorage.getItem(EXPORT_MODE_STORAGE_KEY),
+    );
+
+    if (storedAction) {
+      setExportAction(storedAction);
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -223,6 +271,41 @@ export default function AllProductsPage() {
     setPage(1);
     setSearch(searchDraft.trim());
   };
+
+  const handleExportActionChange = useCallback((action: AllProductsExportAction) => {
+    setExportAction(action);
+
+    try {
+      window.localStorage.setItem(EXPORT_MODE_STORAGE_KEY, action);
+    } catch {
+      // localStorage can fail in restricted browser contexts; state still updates.
+    }
+  }, []);
+
+  const handleExport = useCallback(async (action: AllProductsExportAction) => {
+    if (exportInFlightRef.current) {
+      return;
+    }
+
+    exportInFlightRef.current = true;
+    setIsExporting(true);
+    setExportError(null);
+
+    try {
+      await exportAllProductsClient(action);
+    } catch (err: unknown) {
+      setExportError(
+        err instanceof AllProductsClientError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Impossible de générer l'export.",
+      );
+    } finally {
+      exportInFlightRef.current = false;
+      setIsExporting(false);
+    }
+  }, []);
 
   const handleToggleSelection = (
     index: number,
@@ -593,17 +676,30 @@ export default function AllProductsPage() {
   return (
     <div className="space-y-6">
       <StaffPageHeader eyebrow="Produits" title="Tous les produits" icon={SquareStack}>
-        {canCreate ? (
-          <AnimatedUIButton
-            href="/espace/staff/gestion-des-produits/produits/edit"
-            variant="secondary"
-            icon="plus"
-            iconPosition="left"
-          >
-            Créer un produit simple
-          </AnimatedUIButton>
-        ) : null}
+        <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
+          <ExportSplitButton
+            value={exportAction}
+            onActionChange={handleExportActionChange}
+            onExport={handleExport}
+            loading={isExporting}
+            disabled={!user}
+          />
+          {canCreate ? (
+            <AnimatedUIButton
+              href="/espace/staff/gestion-des-produits/produits/edit"
+              variant="secondary"
+              icon="plus"
+              iconPosition="left"
+            >
+              Créer un produit simple
+            </AnimatedUIButton>
+          ) : null}
+        </div>
       </StaffPageHeader>
+
+      {exportError ? (
+        <p className="text-sm font-medium text-red-600">{exportError}</p>
+      ) : null}
 
       <form onSubmit={handleSubmit}>
         <StaffFilterBar
@@ -850,7 +946,7 @@ export default function AllProductsPage() {
               <div>
                 <DialogTitle>Modifier les produits</DialogTitle>
                 <DialogDescription>
-                  Les champs indiques "Mixed" seront unifies si vous les modifiez.
+                  Les champs indiques &quot;Mixed&quot; seront unifies si vous les modifiez.
                 </DialogDescription>
               </div>
               <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500">
