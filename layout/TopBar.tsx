@@ -1,14 +1,21 @@
 "use client";
 
-import { MapPin, UserCircle, Phone, BookUser } from "lucide-react";
+import { UserCircle, Phone, BookUser, LucideProps } from "lucide-react";
 import { COBAM_CONTACT_DETAILS, getPhoneHref } from "@/data/contact-details";
 import { cn } from "@/lib/utils";
 import { useNavbarVisibility } from "@/layout/navbar-visibility";
 import Link from "next/link";
+import { ForwardRefExoticComponent, RefAttributes } from "react";
+
+function TopBarLink({href, Icon, label}: {label:string, href: string, Icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>}){
+  return <Link href={href} className="flex items-center gap-1 text-cobam-quill-grey hover:text-cobam-water-blue transition-colors">
+    <Icon size={12} />
+    {label}
+  </Link>
+}
 
 export default function TopBar() {
   const { isNavbarHidden } = useNavbarVisibility();
-
   return (
     <div
       className={cn(
@@ -33,10 +40,8 @@ export default function TopBar() {
 
         {/* Right: Quick access */}
         <div className="flex items-center gap-5">
-          <Link href="/login/staff" className="flex items-center gap-1 text-cobam-quill-grey hover:text-cobam-water-blue transition-colors">
-            <UserCircle size={12} />
-            Espace Team
-          </Link>
+          <TopBarLink label="Annuaire" Icon={BookUser} href="/annuaire" />
+          <TopBarLink label="Espace Team" Icon={UserCircle} href="/login/staff" />
         </div>
       </div>
     </div>
