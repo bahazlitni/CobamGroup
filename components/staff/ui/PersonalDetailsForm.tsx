@@ -6,6 +6,7 @@ import Panel from "@/components/staff/ui/Panel";
 import PanelInput from "@/components/staff/ui/PanelInput";
 import { PhoneInput } from "@/components/ui/custom/PhoneInput";
 import { PanelBirthdayPicker } from "@/components/staff/ui/PanelBirthdayPicker";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import type { E164Number } from "libphonenumber-js/core";
 import {
   JOB_TITLE_OPTIONS, findKnownJobTitle, OTHER_JOB_TITLE_VALUE
@@ -52,6 +53,10 @@ export function normalizeJobTitleState(state: PersonalFormState) {
 export default function PersonalDetailsForm({
   state,
   onChange,
+  onSubmit,
+  isSubmitting = false,
+  submitLabel = "Enregistrer",
+  actionSlot,
   disableEmail = false,
   description = "Gérez les informations de profil.",
   title = "Détails personnels",
@@ -162,6 +167,22 @@ export default function PersonalDetailsForm({
           </PanelField>
         </div>
       </div>
+
+      {actionSlot}
+
+      {onSubmit ? (
+        <AnimatedUIButton
+          type="button"
+          onClick={() => void onSubmit()}
+          disabled={isSubmitting}
+          loading={isSubmitting}
+          loadingText="Enregistrement..."
+          variant="primary"
+          className="w-full"
+        >
+          {submitLabel}
+        </AnimatedUIButton>
+      ) : null}
     </Panel>
   );
 }

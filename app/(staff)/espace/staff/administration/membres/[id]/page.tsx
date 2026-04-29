@@ -99,7 +99,8 @@ export default function UserDetailPage() {
     !!authUser &&
     !!user &&
     (
-      authUser.id === user.id ||
+      (authUser.id === user.id &&
+        hasPermission(authUser, PERMISSIONS.ACCOUNT_UPDATE_SELF)) ||
       ((hasPermission(authUser, PERMISSIONS.USERS_UPDATE_PROFILE_ALL) ||
         hasPermission(authUser, PERMISSIONS.USERS_UPDATE_PROFILE_BELOW_ROLE)) &&
         canAffectTargetUser(authUser, user))
@@ -108,7 +109,8 @@ export default function UserDetailPage() {
     !!authUser &&
     !!user &&
     (
-      authUser.id === user.id ||
+      (authUser.id === user.id &&
+        hasPermission(authUser, PERMISSIONS.ACCOUNT_CREDENTIALS_UPDATE_SELF)) ||
       ((hasPermission(authUser, PERMISSIONS.USERS_UPDATE_CREDENTIALS_ALL) ||
         hasPermission(authUser, PERMISSIONS.USERS_UPDATE_CREDENTIALS_BELOW_ROLE)) &&
         canAffectTargetUser(authUser, user))
@@ -134,13 +136,15 @@ export default function UserDetailPage() {
     !!authUser &&
     !!user &&
     authUser.status !== "BANNED" &&
-    (authUser.powerType === "ROOT" ||
-      authUser.powerType === "ADMIN" ||
+    (
       (authUser.id === user.id &&
         hasPermission(
           authUser,
           PERMISSIONS.ACCOUNT_TWO_STEP_VERIFICATION_TOGGLE_SELF,
-        )));
+        )) ||
+      (authUser.id !== user.id &&
+        (authUser.powerType === "ROOT" || authUser.powerType === "ADMIN"))
+    );
   const isTwoStepVerificationDirty =
     !!user && twoStepVerificationEnabled !== user.twoStepVerificationEnabled;
   const emailChanged =

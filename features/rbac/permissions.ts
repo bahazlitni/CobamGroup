@@ -910,10 +910,6 @@ export function normalizeArticleCategoryForceRemovePermissionDependencies(
 }
 
 export const STAFF_BASE_PERMISSION_KEYS = [
-  "account.read.self",
-  "account.update.self",
-  "account.credentials.update.self",
-  "account.two_step_verification.toggle.self",
 ] as const satisfies readonly PermissionKey[];
 
 export function getProtectedPowerTypePermissions(input: {
