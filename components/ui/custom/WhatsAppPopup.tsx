@@ -30,7 +30,7 @@ export function WhatsAppPopup() {
               stiffness: 400,
               damping: 30,
             }}
-            className="mb-4 w-[calc(100vw-2rem)] max-w-sm origin-bottom-right overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/10"
+            className="mb-4 w-[calc(100vw-2rem)] max-w-sm origin-bottom-right overflow-hidden rounded-lg bg-white shadow-2xl ring-1 ring-black/10"
           >
             {/* Header */}
             <div className="flex items-center justify-between bg-green-600 px-5 py-4 text-white">
@@ -53,7 +53,7 @@ export function WhatsAppPopup() {
 
             {/* Body */}
             <div className="space-y-4 p-5 text-sm text-cobam-carbon-grey">
-              <div className="rounded-2xl bg-cobam-light-bg p-4">
+              <div className="rounded-lg bg-cobam-light-bg p-4">
                 Bonjour 👋
                 <br />
                 Comment pouvons-nous vous aider aujourd’hui ?

@@ -140,7 +140,7 @@ export default function CreateUserPage() {
 
   if (!canCreate) {
     return (
-      <div className="max-w-md mx-auto rounded-2xl border border-red-100 bg-white p-6 shadow-sm">
+      <div className="max-w-md mx-auto rounded-lg border border-red-100 bg-white p-6 shadow-sm">
         <h1 className="text-lg font-semibold text-cobam-dark-blue mb-2">
           Accès refusé
         </h1>

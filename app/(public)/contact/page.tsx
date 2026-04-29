@@ -85,7 +85,7 @@ export default function ContactPage() {
               <h2 className="text-2xl font-normal flex items-center gap-3" style={{ fontFamily: "var(--font-playfair), serif" }}>
                 Horaires d'ouverture
               </h2>
-              <div className="mt-6 space-y-3 rounded-2xl border border-cobam-quill-grey/40 bg-cobam-light-bg p-6">
+              <div className="mt-6 space-y-3 rounded-lg border border-cobam-quill-grey/40 bg-cobam-light-bg p-6">
                 {COBAM_OPENING_HOURS.map((slot) => (
                   <div
                     key={slot.label}
@@ -117,7 +117,7 @@ export default function ContactPage() {
                     href={href}
                     target={label === "WhatsApp" ? "_blank" : undefined}
                     rel={label === "WhatsApp" ? "noreferrer" : undefined}
-                    className="group flex flex-col gap-2 rounded-2xl border border-cobam-quill-grey/40 bg-cobam-light-bg p-6 transition-colors hover:border-cobam-water-blue/40 hover:bg-white"
+                    className="group flex flex-col gap-2 rounded-lg border border-cobam-quill-grey/40 bg-cobam-light-bg p-6 transition-colors hover:border-cobam-water-blue/40 hover:bg-white"
                   >
                     <Icon className="h-5 w-5 text-cobam-water-blue transition-transform group-hover:scale-110" />
                     <div>

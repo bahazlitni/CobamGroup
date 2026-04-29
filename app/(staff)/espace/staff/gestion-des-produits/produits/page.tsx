@@ -30,15 +30,7 @@ import {
   updateAllProductsBulkClient,
 } from "@/features/all-products/client";
 import type { AllProductsListItemDto } from "@/features/all-products/types";
-
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { EditableCell, EditingState, SelectCell } from "@/components/staff/ui/Cells";
 
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
@@ -62,126 +54,7 @@ const COLUMN_WIDTHS = [
 // Shared box class: identical dimensions in idle and editing states.
 // h-8 = 32px. border is always present (transparent when idle) so the
 // 1px border on the input doesn't change the box size when swapping.
-const CELL_BOX_CLASS =
-  "box-border flex h-8 w-full min-w-0 items-center rounded border border-transparent bg-transparent px-2 text-sm leading-none text-slate-700";
 
-type EditingState = {
-  rowId: number;
-  field: string;
-  value: string;
-} | null;
-
-function EditableCellInner({
-  value,
-  rowId,
-  field,
-  editing,
-  onStartEdit,
-  onChangeEdit,
-  onCommitEdit,
-  onCancelEdit,
-  saving,
-  readOnly = false,
-  type = "text",
-}: {
-  value: string;
-  rowId: number;
-  field: string;
-  editing: EditingState;
-  onStartEdit: (rowId: number, field: string, value: string) => void;
-  onChangeEdit: (value: string) => void;
-  onCommitEdit: () => void;
-  onCancelEdit: () => void;
-  saving: boolean;
-  readOnly?: boolean;
-  type?: "text" | "number";
-}) {
-  const isEditing = editing?.rowId === rowId && editing?.field === field;
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [isEditing]);
-
-  // Single stable wrapper. Same width/height in both states.
-  return (
-    <div className="relative h-8 w-full min-w-0">
-      {isEditing && !readOnly ? (
-        <Input
-          ref={inputRef}
-          className={`${CELL_BOX_CLASS} border-cobam-dark-blue/40 bg-white shadow-none outline-none ring-0 ring-offset-0 focus-visible:border-cobam-dark-blue focus-visible:ring-0 focus-visible:ring-offset-0`}
-          type={type}
-          step={type === "number" ? "any" : undefined}
-          value={editing.value}
-          disabled={saving}
-          onChange={(e) => onChangeEdit(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") onCommitEdit();
-            if (e.key === "Escape") onCancelEdit();
-          }}
-          onBlur={onCommitEdit}
-        />
-      ) : readOnly ? (
-        <div className={`${CELL_BOX_CLASS} cursor-default overflow-hidden`}>
-          <span className="block w-full truncate">
-            {value || <span className="text-slate-300">—</span>}
-          </span>
-        </div>
-      ) : (
-        <button
-          type="button"
-          className={`${CELL_BOX_CLASS} cursor-text overflow-hidden text-left transition-colors hover:border-cobam-dark-blue/10 hover:bg-cobam-dark-blue/5`}
-          onClick={() => onStartEdit(rowId, field, value)}
-        >
-          <span className="block w-full truncate">
-            {value || <span className="text-slate-300">—</span>}
-          </span>
-        </button>
-      )}
-    </div>
-  );
-}
-
-const EditableCell = React.memo(EditableCellInner);
-
-
-function LifecycleCellInner({
-  rowId,
-  value,
-  onSave,
-  saving,
-  readOnly = false,
-}: {
-  rowId: number;
-  value: string;
-  onSave: (rowId: number, field: string, value: string) => void;
-  saving: boolean;
-  readOnly?: boolean;
-}) {
-  return (
-    <Select
-      value={value}
-      disabled={saving || readOnly}
-      onValueChange={(nextValue) => {
-        if (!readOnly) onSave(rowId, "lifecycle", nextValue);
-      }}
-    >
-      <SelectTrigger className={`box-border flex h-8 w-full min-w-0 items-center rounded border border-transparent bg-transparent px-2 text-sm leading-none text-slate-700 shadow-none ring-0 ring-offset-0 transition-colors ${readOnly ? "cursor-default opacity-70" : "hover:border-cobam-dark-blue/10 hover:bg-cobam-dark-blue/5"} focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0`}>
-        <SelectValue placeholder="Cycle de vie" />
-      </SelectTrigger>
-
-      <SelectContent>
-        <SelectItem value="DRAFT">Brouillon</SelectItem>
-        <SelectItem value="ACTIVE">Actif</SelectItem>
-      </SelectContent>
-    </Select>
-  );
-}
-
-const LifecycleCell = React.memo(LifecycleCellInner);
 
 function getAction(item: AllProductsListItemDto) {
   switch (item.kind) {
@@ -760,7 +633,7 @@ export default function AllProductsPage() {
       </form>
 
       {selectedIds.length > 0 ? (
-        <div className="fixed bottom-6 right-6 z-30 flex w-[min(560px,calc(100vw-3rem))] flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-lg">
+        <div className="fixed bottom-6 right-6 z-30 flex w-[min(560px,calc(100vw-3rem))] flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-lg">
           <p className="text-sm text-slate-600">
             {selectedIds.length} produit(s) selectionne(s)
           </p>
@@ -836,7 +709,7 @@ export default function AllProductsPage() {
 
           return (
             <tr key={item.id} className="transition-colors hover:bg-slate-50/70">
-              <td className="px-2 py-1 align-middle">
+              <td className="px-4 align-middle">
                 <Checkbox
                   checked={selectedIds.includes(item.id)}
                   onCheckedChange={(checked) => {
@@ -854,7 +727,7 @@ export default function AllProductsPage() {
                   aria-label={`Selectionner ${item.name}`}
                 />
               </td>
-              <td className="px-2 py-1 align-middle">
+              <td className="align-middle">
                 <EditableCell
                   value={item.sku}
                   rowId={item.id}
@@ -868,7 +741,7 @@ export default function AllProductsPage() {
                   readOnly={!canEdit}
                 />
               </td>
-              <td className="px-2 py-1 align-middle">
+              <td className="align-middle">
                 <EditableCell
                   value={item.name}
                   rowId={item.id}
@@ -882,7 +755,7 @@ export default function AllProductsPage() {
                   readOnly={!canEdit}
                 />
               </td>
-              <td className="px-2 py-1 align-middle">
+              <td className="align-middle">
                 <EditableCell
                   value={item.brand ?? ""}
                   rowId={item.id}
@@ -896,7 +769,7 @@ export default function AllProductsPage() {
                   readOnly={!canEdit}
                 />
               </td>
-              <td className="px-2 py-1 align-middle">
+              <td className="align-middle">
                 <EditableCell
                   value={item.basePriceAmount ?? ""}
                   rowId={item.id}
@@ -911,7 +784,7 @@ export default function AllProductsPage() {
                   type="number"
                 />
               </td>
-              <td className="px-2 py-1 align-middle">
+              <td className="align-middle">
                 <EditableCell
                   value={item.vatRate != null ? String(item.vatRate) : ""}
                   rowId={item.id}
@@ -926,7 +799,7 @@ export default function AllProductsPage() {
                   type="number"
                 />
               </td>
-              <td className="px-2 py-1 align-middle">
+              <td className="align-middle">
                 <EditableCell
                   value={item.stock ?? ""}
                   rowId={item.id}
@@ -941,16 +814,17 @@ export default function AllProductsPage() {
                   type="number"
                 />
               </td>
-              <td className="px-2 py-1 align-middle">
-                <LifecycleCell
-                  rowId={item.id}
+              <td className="align-middle">
+                <SelectCell
                   value={item.lifecycle ?? "DRAFT"}
-                  onSave={(rowId, field, val) => void handleInlineSave(rowId, field, val)}
+                  onValueChange={(nextValue: string) => void handleInlineSave(item.id, "lifecycle", nextValue)}
                   saving={false}
                   readOnly={!canChangeLifecycle}
+                  items={[{label:"Brouillon", value:"DRAFT"}, {label:"Actif", value:"ACTIVE"}]}
+                  placeholder="Cycle de vie"
                 />
               </td>
-              <td className="px-2 py-1 align-middle text-right">
+              <td className="align-middle text-right">
                 {actionHref ? (
                   <AnimatedUIButton
                     href={actionHref}

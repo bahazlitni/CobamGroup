@@ -192,7 +192,7 @@ export default function ProductCategoriesListPage() {
       </form>
 
       {isLoading ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-8">
+        <div className="rounded-lg border border-dashed border-slate-300 px-4 py-8">
           <Loading />
         </div>
       ) : null}
@@ -204,7 +204,7 @@ export default function ProductCategoriesListPage() {
       ) : null}
 
       {!isLoading && !error && tree.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500">
+        <div className="rounded-lg border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500">
           Aucune catégorie ne correspond à ces critères.
         </div>
       ) : null}

@@ -709,7 +709,7 @@ export function getAnimatedButtonSizeStyles(
         px: "px-6",
         py: "py-3",
         textSize: "text-lg",
-        rounded: "rounded-2xl",
+        rounded: "rounded-lg",
         gap: "gap-3",
         minHeight: "min-h-10",
       };

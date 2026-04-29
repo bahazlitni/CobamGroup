@@ -125,7 +125,7 @@ export default function UserBanDialog({
                 return (
                   <label
                     key={option.id}
-                    className={`flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3 transition ${
+                    className={`flex cursor-pointer items-start gap-3 rounded-lg border px-4 py-3 transition ${
                       checked
                         ? "border-amber-300 bg-amber-50"
                         : "border-slate-300 bg-white hover:border-slate-300"
@@ -146,7 +146,7 @@ export default function UserBanDialog({
             </div>
           </div>
 
-          <div className="space-y-3 rounded-2xl border border-slate-300 bg-slate-50/70 p-4">
+          <div className="space-y-3 rounded-lg border border-slate-300 bg-slate-50/70 p-4">
             <label className="flex items-center gap-3 text-sm font-semibold text-cobam-dark-blue">
               <input
                 type="checkbox"
@@ -163,7 +163,7 @@ export default function UserBanDialog({
                 value={otherReason}
                 onChange={(event) => setOtherReason(event.target.value)}
                 placeholder="Autre motif"
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200"
+                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200"
               />
             ) : null}
           </div>
@@ -181,12 +181,12 @@ export default function UserBanDialog({
               onChange={(event) => setDescription(event.target.value)}
               rows={5}
               placeholder="Ajoutez un contexte plus detaille pour ce bannissement."
-              className="min-h-[140px] rounded-2xl border-slate-300 px-4 py-3 text-sm"
+              className="min-h-[140px] rounded-lg border-slate-300 px-4 py-3 text-sm"
             />
           </div>
 
           {error ? (
-            <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}
             </p>
           ) : null}

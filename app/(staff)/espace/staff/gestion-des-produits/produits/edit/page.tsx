@@ -753,7 +753,7 @@ function SingleProductEditPageContent() {
       </Panel>
 
       {form.name.trim() || isAiSuggesting || aiSuggestionError || hasActiveAiSuggestions(aiSuggestions) ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-cobam-water-blue/15 bg-cobam-water-blue/5 px-4 py-3 text-sm text-cobam-dark-blue">
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-cobam-water-blue/15 bg-cobam-water-blue/5 px-4 py-3 text-sm text-cobam-dark-blue">
           <AnimatedUIButton
             type="button"
             variant="ghost"
@@ -827,7 +827,7 @@ function SingleProductEditPageContent() {
 function EditorLoading() {
   return (
     <div className="flex min-h-[40vh] items-center justify-center">
-      <div className="inline-flex items-center gap-3 rounded-2xl border border-slate-300 bg-white px-5 py-4 shadow-sm">
+      <div className="inline-flex items-center gap-3 rounded-lg border border-slate-300 bg-white px-5 py-4 shadow-sm">
         <Loading />
       </div>
     </div>

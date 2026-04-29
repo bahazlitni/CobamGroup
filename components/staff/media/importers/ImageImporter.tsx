@@ -115,7 +115,7 @@ export default function ImageImporter({
               </div>
 
               {media ? (
-                <div className="space-y-1 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3">
+                <div className="space-y-1 rounded-lg border border-slate-300 bg-slate-50 px-4 py-3">
                   <p className="truncate text-sm font-medium text-cobam-dark-blue">
                     {getMediaDisplayTitle(media)}
                   </p>
@@ -128,7 +128,7 @@ export default function ImageImporter({
                   </div>
                 </div>
               ) : (
-                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-500">
                   {isLoading
                     ? "Chargement de l'image..."
                     : error

@@ -19,7 +19,7 @@ export default function StaffFilterBar({
     typeof onSearchChange === "function" && typeof searchValue === "string";
 
   return (
-    <div className="rounded-xl bg-white p-4 shadow-sm">
+    <div className="border border-slate-300 rounded-lg bg-white p-4 shadow-sm">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         {summary ? (
           <div className="text-sm text-slate-500">{summary}</div>

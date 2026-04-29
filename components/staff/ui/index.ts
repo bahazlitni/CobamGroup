@@ -6,9 +6,9 @@ export {
   StaffEditorInfoPanel,
   StaffEditorLayout,
 } from "./editor-shell";
-export { default as StaffFilterBar } from "./filter-bar";
+export { default as StaffFilterBar } from "./StaffFilterBar";
 export { default as StaffNotice } from "./notice";
-export { default as StaffPageHeader } from "./page-header";
+export { default as StaffPageHeader } from "./StaffPageHeader";
 export { default as StaffSelect } from "./PanelSelect";
 export { default as PanelAutoCompleteInput } from "./PanelAutoCompleteInput";
 export { default as AiPanelAutocompleteInput } from "./AiPanelAutocompleteInput";

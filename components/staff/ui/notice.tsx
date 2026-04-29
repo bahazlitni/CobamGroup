@@ -62,7 +62,7 @@ export default function StaffNotice({
   return (
     <Alert
       className={cn(
-        "rounded-2xl border px-4 py-3 shadow-sm [&>svg]:mt-0.5",
+        "rounded-lg border px-4 py-3 shadow-sm [&>svg]:mt-0.5",
         variantMap[variant].container,
         className,
       )}

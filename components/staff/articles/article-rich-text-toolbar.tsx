@@ -318,7 +318,7 @@ export default function ArticleRichTextToolbar({
             side="bottom"
             sideOffset={8}
             onOpenAutoFocus={(event) => event.preventDefault()}
-            className="w-[22rem] rounded-2xl border border-slate-300 bg-white p-3"
+            className="w-[22rem] rounded-lg border border-slate-300 bg-white p-3"
           >
             <div className="space-y-3">
               <div className="space-y-1">
@@ -436,7 +436,7 @@ export default function ArticleRichTextToolbar({
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-2">
-        <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-300 bg-white px-3 py-2">
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2">
           <div className="inline-flex items-center gap-2 pr-1 text-xs font-medium text-slate-600">
             <Type className="h-4 w-4 text-slate-400" />
             <span>Palette COBAM</span>
@@ -495,7 +495,7 @@ export default function ArticleRichTextToolbar({
       </div>
 
       {editorState.isTable ? (
-        <div className="flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white p-3">
+        <div className="flex flex-wrap items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white p-3">
           <ToolbarButton
             label="Ajouter une ligne avant"
             disabled={isReadOnly}

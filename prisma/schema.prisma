@@ -98,6 +98,7 @@ model User {
   closedAt          DateTime?  @map("closed_at")
   lastLoginAt       DateTime?  @map("last_login_at")
   passwordChangedAt DateTime?  @map("password_changed_at")
+  twoStepVerificationEnabled Boolean    @default(true) @map("two_step_verification_enabled")
   createdAt         DateTime   @default(now()) @map("created_at")
   updatedAt         DateTime   @updatedAt @map("updated_at")
 
@@ -609,4 +610,3 @@ model Media {
   @@index([deletedAt])
   @@map("media")
 }
-

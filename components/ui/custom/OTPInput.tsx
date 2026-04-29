@@ -255,7 +255,7 @@ export default function OTPInput({
 
   const getCellClass = (index: number) => {
     const base =
-      "aspect-square w-11 rounded-2xl border text-center text-lg font-bold transition-all sm:w-14 sm:text-xl";
+      "aspect-square w-11 rounded-lg border text-center text-lg font-bold transition-all sm:w-14 sm:text-xl";
 
     if (isLocked) {
       return `${base} opacity-50 border-cobam-dark-blue/20`;

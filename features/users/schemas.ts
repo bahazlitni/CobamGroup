@@ -7,6 +7,7 @@ import type {
   UpdateStaffUserBanInput,
   UpdateStaffUserCredentialsInput,
   UpdateStaffUserProfileInput,
+  UpdateStaffUserTwoStepVerificationInput,
 } from "./types";
 
 export class UserValidationError extends Error {
@@ -199,6 +200,22 @@ export function parseUpdateStaffUserBanInput(
     presetReasonIds: parseBanReasonIds(raw.presetReasonIds),
     otherReason: parseOptionalNullableString(raw.otherReason),
     description: parseOptionalNullableString(raw.description),
+  };
+}
+
+export function parseUpdateStaffUserTwoStepVerificationInput(
+  raw: unknown,
+): UpdateStaffUserTwoStepVerificationInput {
+  if (!isRecord(raw)) {
+    throw new UserValidationError("Invalid request body");
+  }
+
+  if (typeof raw.enabled !== "boolean") {
+    throw new UserValidationError("Invalid two-step verification flag");
+  }
+
+  return {
+    enabled: raw.enabled,
   };
 }
 

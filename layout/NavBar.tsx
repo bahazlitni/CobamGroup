@@ -144,7 +144,7 @@ export default function NavBar({
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 10, scale: 0.98 }}
                           transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                          className="absolute top-full left-0 bg-white shadow-[0_20px_40px_rgba(20,32,46,0.08)] border border-cobam-quill-grey/30 rounded-2xl py-3 w-64 z-50 mt-1"
+                          className="absolute top-full left-0 bg-white shadow-[0_20px_40px_rgba(20,32,46,0.08)] border border-cobam-quill-grey/30 rounded-lg py-3 w-64 z-50 mt-1"
                         >
                           {link.children.map((child) => (
                             <a

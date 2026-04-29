@@ -46,7 +46,7 @@ export function TeamMemberCard({
   return (
     <div className={cn("w-[260px] sm:w-[300px] flex-shrink-0", isStatic && "w-full sm:w-[300px]")}>
       <Magnetic strength={10} className="block w-full">
-        <div className="group relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-cobam-quill-grey/20 bg-white shadow-sm transition-all duration-700 hover:border-cobam-water-blue/40 hover:shadow-xl">
+        <div className="group relative aspect-[4/5] w-full overflow-hidden rounded-lg border border-cobam-quill-grey/20 bg-white shadow-sm transition-all duration-700 hover:border-cobam-water-blue/40 hover:shadow-xl">
           <PremiumImageWrapper className="h-full">
             <Image
               src={resolveTeamMemberUrl(member)}

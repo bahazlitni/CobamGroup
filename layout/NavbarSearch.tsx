@@ -328,7 +328,7 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
                           onMouseEnter={() => setTargetIndex(idx)}
                           onClick={() => goToProduct(product)}
                           className={cn(
-                             "group flex items-center gap-6 p-5 rounded-2xl border text-left transition-all duration-500 overflow-hidden relative",
+                             "group flex items-center gap-6 p-5 rounded-lg border text-left transition-all duration-500 overflow-hidden relative",
                              targetIndex === idx
                                ? "bg-white border-cobam-water-blue -translate-y-1 shadow-[0_10px_40px_rgba(0,174,239,0.08)]"
                                : "bg-transparent border-transparent hover:bg-white/60"
@@ -369,7 +369,7 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
                       {results.length >= 6 && (
                         <button
                           onClick={goToSearchPage}
-                          className="md:col-span-2 flex items-center justify-center gap-4 py-8 rounded-2xl border border-dashed border-cobam-quill-grey/50 bg-white/40 text-cobam-carbon-grey hover:text-cobam-water-blue hover:border-cobam-water-blue hover:bg-cobam-water-blue/5 hover:shadow-[0_0_30px_rgba(0,174,239,0.05)] transition-all duration-300 group"
+                          className="md:col-span-2 flex items-center justify-center gap-4 py-8 rounded-lg border border-dashed border-cobam-quill-grey/50 bg-white/40 text-cobam-carbon-grey hover:text-cobam-water-blue hover:border-cobam-water-blue hover:bg-cobam-water-blue/5 hover:shadow-[0_0_30px_rgba(0,174,239,0.05)] transition-all duration-300 group"
                         >
                           <span className="text-sm font-bold tracking-[0.2em] uppercase">Voir tous les résultats</span>
                           <ArrowRight size={20} className="group-hover:translate-x-3 transition-transform duration-500 text-cobam-water-blue" />

@@ -15,7 +15,7 @@ export default function TestimonialCard({
   rating = 5,
 }: TestimonialCardProps) {
   return (
-    <div className="group relative overflow-hidden rounded-2xl bg-white/60 backdrop-blur-sm p-6 shadow-sm transition-all duration-500 hover:shadow-xl hover:scale-[1.02] border border-slate-200/50">
+    <div className="group relative overflow-hidden rounded-lg bg-white/60 backdrop-blur-sm p-6 shadow-sm transition-all duration-500 hover:shadow-xl hover:scale-[1.02] border border-slate-200/50">
       <div className="absolute inset-0 bg-gradient-to-br from-cobam-water-blue/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
       <div className="relative z-10 flex flex-col gap-4">
         <div className="flex gap-1">

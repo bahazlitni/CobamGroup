@@ -12,6 +12,7 @@ import { requiredEnv } from "@/lib/utils";
 import { createTransporter } from "@/lib/nodemailer/create-transporter";
 import { sendEmail } from "@/lib/nodemailer/send-email";
 import buildLoginOtpCodeHtml from "@/lib/html-builders/buildLoginOtpCodeHtml";
+import { createStaffLoginResponse } from "@/features/auth/server/staff-login-response";
 
 export const runtime = "nodejs";
 
@@ -37,6 +38,7 @@ export async function POST(req: Request) {
         email: true,
         passwordHash: true,
         portal: true,
+        twoStepVerificationEnabled: true,
       },
     });
 
@@ -54,6 +56,13 @@ export async function POST(req: Request) {
         { ok: false, message: "Invalid credentials" },
         { status: 401 },
       );
+    }
+
+    if (!user.twoStepVerificationEnabled) {
+      return createStaffLoginResponse(user, {
+        body: { requiresOtp: false },
+        clearLoginOtpChallenge: true,
+      });
     }
 
     const code = generateOtpCode(OTP_CODE_LENGTH);

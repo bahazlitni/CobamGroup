@@ -29,6 +29,7 @@ export type StaffSession = {
   status: StaffUserStatus;
   bannedAt: string | null;
   banDetails: UserBanDetails | null;
+  twoStepVerificationEnabled: boolean;
   profile: StaffSessionProfile | null;
 };
 

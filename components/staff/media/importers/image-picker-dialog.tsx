@@ -449,7 +449,7 @@ export default function ImagePickerDialog({
             <SearchInput value={search} onChange={(s: string) => setSearch(s)} fullWidth />
 
             {error ? (
-              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {error}
               </div>
             ) : null}
@@ -491,7 +491,7 @@ export default function ImagePickerDialog({
                 </div>
 
                 {selectedExistingAspectMessage ? (
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
                     {selectedExistingAspectMessage}
                   </div>
                 ) : null}
@@ -533,13 +533,13 @@ export default function ImagePickerDialog({
             >
               <div className="space-y-4">
                 {error ? (
-                  <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                     {error}
                   </div>
                 ) : null}
 
                 {uploadAspectError ? (
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
                     {uploadAspectError}
                   </div>
                 ) : null}

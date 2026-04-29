@@ -28,7 +28,7 @@ export default function StaffStateCard({
   const Icon = iconByVariant[variant];
 
   return (
-    <Card className="mx-auto max-w-md rounded-2xl border border-slate-300 bg-white shadow-sm">
+    <Card className="mx-auto max-w-md rounded-lg border border-slate-300 bg-white shadow-sm">
       <CardContent className="space-y-4 p-6">
         <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-cobam-dark-blue">
           <Icon className="h-5 w-5" />

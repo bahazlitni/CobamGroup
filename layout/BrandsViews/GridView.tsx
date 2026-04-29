@@ -36,7 +36,7 @@ export default function GridView({ brands }: { brands: PublicBrand[] }) {
           className="group block h-full"
           id={brand.slug}
         >
-          <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-cobam-quill-grey/50 bg-white shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl">
+          <div className="relative flex h-full flex-col overflow-hidden rounded-lg border border-cobam-quill-grey/50 bg-white shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl">
             {/* Logo area */}
             <GridViewBrandImageBlock brand={brand} />
 

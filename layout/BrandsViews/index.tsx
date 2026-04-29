@@ -21,7 +21,7 @@ export default function BrandsViews({ brands }: { brands: PublicBrand[] }) {
   return (
     <Tabs value={view} onValueChange={setView} className="w-full flex-col">
       <div className="mb-10 flex justify-center lg:justify-start">
-        <TabsList className="h-auto rounded-2xl border border-cobam-quill-grey/50 bg-white p-1 shadow-sm">
+        <TabsList className="h-auto rounded-lg border border-cobam-quill-grey/50 bg-white p-1 shadow-sm">
 
           <TabsTrigger
             value="timeline"

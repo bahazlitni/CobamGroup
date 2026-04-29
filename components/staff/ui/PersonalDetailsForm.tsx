@@ -157,7 +157,7 @@ export default function PersonalDetailsForm({
               onChange={(e) => onChange({ bio: e.target.value })}
               rows={6}
               placeholder="Quelques lignes sur l'utilisateur..."
-              className="min-h-[160px] rounded-2xl border-slate-300 px-4 py-3 text-base resize-none"
+              className="min-h-[160px] rounded-lg border-slate-300 px-4 py-3 text-base resize-none"
             />
           </PanelField>
         </div>

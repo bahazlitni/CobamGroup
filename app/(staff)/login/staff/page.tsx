@@ -12,6 +12,44 @@ import OTPInput from "@/components/ui/custom/OTPInput";
 type LoginStep = "password" | "otp";
 type OtpVisualState = "idle" | "error" | "success";
 
+const DEFAULT_STAFF_LOGIN_REDIRECT =
+  "/espace/staff/accueil/tableau-de-bord";
+
+function resolveStaffLoginRedirect(value: string | null) {
+  if (!value) {
+    return DEFAULT_STAFF_LOGIN_REDIRECT;
+  }
+
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) {
+    return DEFAULT_STAFF_LOGIN_REDIRECT;
+  }
+
+  const redirectPath = trimmedValue.startsWith("/")
+    ? trimmedValue
+    : `/${trimmedValue}`;
+
+  if (
+    redirectPath === "/annuaire" ||
+    redirectPath.startsWith("/espace/staff/")
+  ) {
+    return redirectPath;
+  }
+
+  return DEFAULT_STAFF_LOGIN_REDIRECT;
+}
+
+function getRedirectAfterLogin() {
+  if (typeof window === "undefined") {
+    return DEFAULT_STAFF_LOGIN_REDIRECT;
+  }
+
+  return resolveStaffLoginRedirect(
+    new URLSearchParams(window.location.search).get("redirect"),
+  );
+}
+
 export default function StaffLoginPage() {
   const router = useRouter();
 
@@ -48,7 +86,7 @@ export default function StaffLoginPage() {
         const data = await res.json();
 
         if (res.ok && data?.ok && data?.user?.portal === "STAFF") {
-          router.replace("/espace/staff/accueil/tableau-de-bord");
+          router.replace(getRedirectAfterLogin());
           return;
         }
       } catch {
@@ -90,6 +128,14 @@ export default function StaffLoginPage() {
 
       if (!res.ok || !data.ok) {
         throw new Error(data.message || "Erreur de connexion");
+      }
+
+      if (!data.requiresOtp && data.accessToken && data.user) {
+        localStorage.setItem("staff_access_token", data.accessToken);
+        localStorage.setItem("staff_auth_user", JSON.stringify(data.user));
+        setPendingPassword("");
+        router.replace(getRedirectAfterLogin());
+        return;
       }
 
       if (!data.requiresOtp) {
@@ -143,7 +189,7 @@ export default function StaffLoginPage() {
       localStorage.setItem("staff_auth_user", JSON.stringify(data.user));
       setPendingPassword("");
 
-      router.replace("/espace/staff/accueil/tableau-de-bord");
+      router.replace(getRedirectAfterLogin());
     } catch (err: unknown) {
       if (otpVisualState !== "error") {
         setOtpVisualState("error");
@@ -291,7 +337,7 @@ export default function StaffLoginPage() {
                       autoComplete="username"
                       required
                       disabled={isCheckingSession || isSubmitting}
-                      className="w-full rounded-2xl border border-gray-200 bg-[#F8F9FA] px-5 py-4 text-sm text-cobam-dark-blue shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all focus:border-cobam-water-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-cobam-water-blue/40 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="w-full rounded-lg border border-gray-200 bg-[#F8F9FA] px-5 py-4 text-sm text-cobam-dark-blue shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all focus:border-cobam-water-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-cobam-water-blue/40 disabled:cursor-not-allowed disabled:opacity-50"
                       placeholder="votre.nom@cobamgroup.com"
                     />
                   </div>
@@ -312,7 +358,7 @@ export default function StaffLoginPage() {
                       autoComplete="current-password"
                       required
                       disabled={isCheckingSession || isSubmitting}
-                      className="w-full rounded-2xl border border-gray-200 bg-[#F8F9FA] px-5 py-4 text-sm text-cobam-dark-blue shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all focus:border-cobam-water-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-cobam-water-blue/40 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="w-full rounded-lg border border-gray-200 bg-[#F8F9FA] px-5 py-4 text-sm text-cobam-dark-blue shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all focus:border-cobam-water-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-cobam-water-blue/40 disabled:cursor-not-allowed disabled:opacity-50"
                       placeholder="••••••••"
                     />
                   </div>
@@ -321,7 +367,7 @@ export default function StaffLoginPage() {
                     <motion.div
                       initial={{ opacity: 0, y: -5 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3"
+                      className="rounded-lg border border-red-100 bg-red-50 px-4 py-3"
                     >
                       <p className="text-center text-xs font-medium text-red-600">
                         {error}

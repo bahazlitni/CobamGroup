@@ -32,6 +32,7 @@ export function mapUserToListItemDto(user: {
   status: StaffUserListItemDto["status"];
   bannedAt: Date | null;
   bannedReason: string | null;
+  twoStepVerificationEnabled: boolean;
   portal: string;
   createdAt: Date;
   updatedAt: Date;
@@ -80,6 +81,7 @@ export function mapUserToListItemDto(user: {
     status: user.status,
     bannedAt: user.bannedAt ? user.bannedAt.toISOString() : null,
     banDetails: parseBanDetails(user.bannedReason),
+    twoStepVerificationEnabled: user.twoStepVerificationEnabled,
     portal: "STAFF",
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),

@@ -45,7 +45,7 @@ export default function BannedAccountNoticeDialog({
         </div>
 
         <div className="space-y-5 px-6 py-6">
-          <div className="rounded-2xl border border-slate-300 bg-slate-50/70 p-4">
+          <div className="rounded-lg border border-slate-300 bg-slate-50/70 p-4">
             <p className="text-sm font-semibold text-cobam-dark-blue">
               Motifs communiques
             </p>
@@ -67,7 +67,7 @@ export default function BannedAccountNoticeDialog({
           </div>
 
           {banDetails?.description ? (
-            <div className="rounded-2xl border border-slate-300 p-4">
+            <div className="rounded-lg border border-slate-300 p-4">
               <p className="text-sm font-semibold text-cobam-dark-blue">
                 Description complementaire
               </p>
@@ -77,7 +77,7 @@ export default function BannedAccountNoticeDialog({
             </div>
           ) : null}
 
-          <label className="flex items-start gap-3 rounded-2xl border border-slate-300 p-4 text-sm text-slate-600">
+          <label className="flex items-start gap-3 rounded-lg border border-slate-300 p-4 text-sm text-slate-600">
             <input
               type="checkbox"
               checked={remember}

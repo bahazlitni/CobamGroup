@@ -8,8 +8,13 @@ import PersonalDetailsForm, {
   PersonalFormState,
 } from "@/components/staff/ui/PersonalDetailsForm";
 import PersonalDetailsPreviewAndAvatar from "@/components/staff/ui/PersonalDetailsPreviewAndAvatar";
+import TwoStepVerificationPanel from "@/components/staff/ui/TwoStepVerificationPanel";
 import { StaffPageHeader } from "@/components/staff/ui";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
+import { hasPermission } from "@/features/rbac/access";
+import { PERMISSIONS } from "@/features/rbac/permissions";
+import type { StaffSession } from "@/features/auth/types";
+import { updateUserTwoStepVerificationClient } from "@/features/users/client";
 import {
   findKnownJobTitle,
   OTHER_JOB_TITLE_VALUE,
@@ -17,19 +22,7 @@ import {
 
 type MeResponse = {
   ok: boolean;
-  user?: {
-    id: string;
-    email: string;
-    profile?: {
-      firstName: string | null;
-      lastName: string | null;
-      jobTitle: string | null;
-      phone: string | null;
-      birthDate: string | null;
-      avatarMediaId: number | null;
-      bio: string | null;
-    } | null;
-  };
+  user?: StaffSession;
   message?: string;
 };
 
@@ -47,6 +40,13 @@ export default function PersonalDetailsPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [currentUser, setCurrentUser] = useState<StaffSession | null>(null);
+  const [twoStepVerificationEnabled, setTwoStepVerificationEnabled] =
+    useState(true);
+  const [
+    isSavingTwoStepVerification,
+    setIsSavingTwoStepVerification,
+  ] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -68,6 +68,8 @@ export default function PersonalDetailsPage() {
 
         const user = data.user;
         const profile = user.profile;
+        setCurrentUser(user);
+        setTwoStepVerificationEnabled(user.twoStepVerificationEnabled);
         const incomingJobTitle = profile?.jobTitle?.trim() || "";
         const knownTitle = findKnownJobTitle(incomingJobTitle);
 
@@ -156,6 +158,50 @@ export default function PersonalDetailsPage() {
     }
   };
 
+  const canToggleTwoStepVerification = currentUser
+    ? hasPermission(
+        currentUser,
+        PERMISSIONS.ACCOUNT_TWO_STEP_VERIFICATION_TOGGLE_SELF,
+      )
+    : false;
+  const isTwoStepVerificationDirty =
+    currentUser != null &&
+    twoStepVerificationEnabled !== currentUser.twoStepVerificationEnabled;
+
+  const handleSaveTwoStepVerification = async () => {
+    if (!currentUser || !isTwoStepVerificationDirty) {
+      return;
+    }
+
+    setIsSavingTwoStepVerification(true);
+    setError(null);
+
+    try {
+      const updated = await updateUserTwoStepVerificationClient(
+        currentUser.id,
+        { enabled: twoStepVerificationEnabled },
+      );
+      const nextUser = {
+        ...currentUser,
+        twoStepVerificationEnabled: updated.twoStepVerificationEnabled,
+      };
+
+      setCurrentUser(nextUser);
+      setTwoStepVerificationEnabled(updated.twoStepVerificationEnabled);
+      localStorage.setItem("staff_auth_user", JSON.stringify(nextUser));
+      toast.success("Verification en deux etapes mise a jour");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Erreur inconnue";
+      setError(message);
+      toast.error("Erreur lors de la mise a jour", {
+        description: message || "Veuillez reessayer plus tard.",
+      });
+    } finally {
+      setIsSavingTwoStepVerification(false);
+    }
+  };
+
   if (isLoading) {
     return <Loading />;
   }
@@ -186,23 +232,39 @@ export default function PersonalDetailsPage() {
           description="Gérez vos informations de profil pour le portail staff."
         />
 
-        <PersonalDetailsPreviewAndAvatar
-          state={{
-            avatarMediaId: form.avatarMediaId,
-            firstName: form.firstName,
-            lastName: form.lastName,
-            email: form.email,
-            jobTitle:
-              form.jobTitleSelect === OTHER_JOB_TITLE_VALUE
-                ? form.jobTitleOther
-                : form.jobTitleSelect,
-            phone: form.phone,
-            birthDate: form.birthDate,
-          }}
-          onAvatarMediaIdChange={(value) =>
-            setForm((prev) => ({ ...prev, avatarMediaId: value }))
-          }
-        />
+        <div className="flex flex-col gap-6">
+          <PersonalDetailsPreviewAndAvatar
+            state={{
+              avatarMediaId: form.avatarMediaId,
+              firstName: form.firstName,
+              lastName: form.lastName,
+              email: form.email,
+              jobTitle:
+                form.jobTitleSelect === OTHER_JOB_TITLE_VALUE
+                  ? form.jobTitleOther
+                  : form.jobTitleSelect,
+              phone: form.phone,
+              birthDate: form.birthDate,
+            }}
+            onAvatarMediaIdChange={(value) =>
+              setForm((prev) => ({ ...prev, avatarMediaId: value }))
+            }
+          />
+
+          <TwoStepVerificationPanel
+            enabled={twoStepVerificationEnabled}
+            onEnabledChange={setTwoStepVerificationEnabled}
+            onSubmit={handleSaveTwoStepVerification}
+            isSubmitting={isSavingTwoStepVerification}
+            disabled={!canToggleTwoStepVerification}
+            submitDisabled={!isTwoStepVerificationDirty}
+            submitLabel={
+              isTwoStepVerificationDirty
+                ? "Enregistrer la vérification"
+                : "Vérification enregistrée"
+            }
+          />
+        </div>
       </div>
 
       {error ? (

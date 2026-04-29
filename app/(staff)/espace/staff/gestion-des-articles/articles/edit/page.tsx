@@ -530,7 +530,7 @@ function ArticleEditPageContent() {
                 rows={4}
                 placeholder="Description pour les moteurs de recherche..."
                 disabled={!canEditArticle}
-                className="min-h-[120px] rounded-2xl border-slate-300 px-4 py-3 text-base"
+                className="min-h-[120px] rounded-lg border-slate-300 px-4 py-3 text-base"
               />
             </PanelField>
 

@@ -98,7 +98,7 @@ export default function ArticleCategoriesListPage() {
             <td className="px-4 py-3 align-top">
               <div className="flex items-start gap-3">
                 <div
-                  className="mt-1 h-10 w-10 rounded-2xl border border-slate-300"
+                  className="mt-1 h-10 w-10 rounded-lg border border-slate-300"
                   style={{ backgroundColor: category.color }}
                   aria-hidden="true"
                 />

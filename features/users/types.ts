@@ -37,6 +37,7 @@ export type StaffUserListItemDto = {
   status: StaffUserStatus;
   bannedAt: string | null;
   banDetails: UserBanDetails | null;
+  twoStepVerificationEnabled: boolean;
   portal: "STAFF";
   createdAt: string;
   updatedAt: string;
@@ -77,6 +78,10 @@ export type UpdateStaffUserBanInput = {
   presetReasonIds?: BanReasonId[];
   otherReason?: string | null;
   description?: string | null;
+};
+
+export type UpdateStaffUserTwoStepVerificationInput = {
+  enabled: boolean;
 };
 
 export type CreateStaffUserInput = {

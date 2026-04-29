@@ -9,6 +9,7 @@ import {
   updateUserBanClient,
   updateUserCredentialsClient,
   updateUserProfileClient,
+  updateUserTwoStepVerificationClient,
   UsersClientError,
 } from "../client";
 import type {
@@ -79,11 +80,15 @@ export function useUserDetail(userId: string | null) {
     passwordConfirm: "",
   });
   const [access, setAccess] = useState<AccessState>(toAccessState(null));
+  const [twoStepVerificationEnabled, setTwoStepVerificationEnabled] =
+    useState(true);
 
   const [isLoading, setIsLoading] = useState(!!userId);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isSavingAccess, setIsSavingAccess] = useState(false);
   const [isSavingCredentials, setIsSavingCredentials] = useState(false);
+  const [isSavingTwoStepVerification, setIsSavingTwoStepVerification] =
+    useState(false);
   const [isSavingBan, setIsSavingBan] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +105,7 @@ export function useUserDetail(userId: string | null) {
       setUser(fetched);
       setProfile(toProfileState(fetched));
       setAccess(toAccessState(fetched));
+      setTwoStepVerificationEnabled(fetched.twoStepVerificationEnabled);
       setCredentials({
         email: fetched.email,
         password: "",
@@ -149,6 +155,7 @@ export function useUserDetail(userId: string | null) {
       setUser(updated);
       setProfile(toProfileState(updated));
       setAccess(toAccessState(updated));
+      setTwoStepVerificationEnabled(updated.twoStepVerificationEnabled);
       setNotice("Profil mis à jour.");
       return updated;
     } catch (err: unknown) {
@@ -177,6 +184,7 @@ export function useUserDetail(userId: string | null) {
       setUser(updated);
       setProfile(toProfileState(updated));
       setAccess(toAccessState(updated));
+      setTwoStepVerificationEnabled(updated.twoStepVerificationEnabled);
       setNotice("Accès mis à jour.");
       return updated;
     } catch (err: unknown) {
@@ -225,6 +233,7 @@ export function useUserDetail(userId: string | null) {
       setUser(updated);
       setProfile(toProfileState(updated));
       setAccess(toAccessState(updated));
+      setTwoStepVerificationEnabled(updated.twoStepVerificationEnabled);
       setCredentials({
         email: updated.email,
         password: "",
@@ -259,6 +268,7 @@ export function useUserDetail(userId: string | null) {
         setUser(updated);
         setProfile(toProfileState(updated));
         setAccess(toAccessState(updated));
+        setTwoStepVerificationEnabled(updated.twoStepVerificationEnabled);
         setCredentials((prev) => ({ ...prev, email: updated.email }));
         setNotice(input.banned ? "Compte banni." : "Compte réactivé.");
         return updated;
@@ -273,6 +283,41 @@ export function useUserDetail(userId: string | null) {
         return null;
       } finally {
         setIsSavingBan(false);
+      }
+    },
+    [userId],
+  );
+
+  const saveTwoStepVerification = useCallback(
+    async (enabled: boolean) => {
+      if (!userId) return null;
+
+      setIsSavingTwoStepVerification(true);
+      setError(null);
+      setNotice(null);
+
+      try {
+        const updated = await updateUserTwoStepVerificationClient(userId, {
+          enabled,
+        });
+        setUser(updated);
+        setProfile(toProfileState(updated));
+        setAccess(toAccessState(updated));
+        setTwoStepVerificationEnabled(updated.twoStepVerificationEnabled);
+        setCredentials((prev) => ({ ...prev, email: updated.email }));
+        setNotice("Verification en deux etapes mise a jour.");
+        return updated;
+      } catch (err: unknown) {
+        const message =
+          err instanceof UsersClientError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : "Erreur lors de la mise a jour de la verification en deux etapes";
+        setError(message);
+        return null;
+      } finally {
+        setIsSavingTwoStepVerification(false);
       }
     },
     [userId],
@@ -311,6 +356,7 @@ export function useUserDetail(userId: string | null) {
     isSavingProfile,
     isSavingAccess,
     isSavingCredentials,
+    isSavingTwoStepVerification,
     isSavingBan,
     isDeleting,
     error,
@@ -318,10 +364,13 @@ export function useUserDetail(userId: string | null) {
     setField,
     setCredentialField,
     setAccess,
+    twoStepVerificationEnabled,
+    setTwoStepVerificationEnabled,
     reload: load,
     saveProfile,
     saveAccess,
     saveCredentials,
+    saveTwoStepVerification,
     saveBan,
     deleteUser,
   };

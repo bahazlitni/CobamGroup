@@ -93,7 +93,7 @@ export default function AboutUsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
             <PremiumReveal blur direction="up">
               <div className="group bg-white p-12 rounded-[2.5rem] shadow-sm border border-cobam-quill-grey/20 transition-all hover:shadow-xl hover:-translate-y-1">
-                <div className="mb-8 p-4 bg-cobam-water-blue/5 rounded-2xl w-fit group-hover:bg-cobam-water-blue group-hover:text-white transition-colors">
+                <div className="mb-8 p-4 bg-cobam-water-blue/5 rounded-lg w-fit group-hover:bg-cobam-water-blue group-hover:text-white transition-colors">
                   <Target size={32} />
                 </div>
                 <h3 className="text-3xl font-playfair mb-6">Notre Mission</h3>
@@ -106,7 +106,7 @@ export default function AboutUsPage() {
 
             <PremiumReveal blur direction="up" delay={0.2}>
               <div className="group bg-white p-12 rounded-[2.5rem] shadow-sm border border-cobam-quill-grey/20 transition-all hover:shadow-xl hover:-translate-y-1">
-                <div className="mb-8 p-4 bg-cobam-water-blue/5 rounded-2xl w-fit group-hover:bg-cobam-water-blue group-hover:text-white transition-colors">
+                <div className="mb-8 p-4 bg-cobam-water-blue/5 rounded-lg w-fit group-hover:bg-cobam-water-blue group-hover:text-white transition-colors">
                   <Eye size={32} />
                 </div>
                 <h3 className="text-3xl font-playfair mb-6">Notre Vision</h3>

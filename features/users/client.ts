@@ -9,6 +9,7 @@ import type {
   UpdateStaffUserBanInput,
   UpdateStaffUserCredentialsInput,
   UpdateStaffUserProfileInput,
+  UpdateStaffUserTwoStepVerificationInput,
 } from "./types";
 
 type ApiOk<T> = { ok: true } & T;
@@ -232,6 +233,33 @@ export async function updateUserBanClient(
   if (!res.ok || !data?.ok || !data.user) {
     throw new UsersClientError(
       getErrorMessage(data) || "Erreur lors de la mise à jour du statut",
+      res.status,
+    );
+  }
+
+  return data.user;
+}
+
+export async function updateUserTwoStepVerificationClient(
+  userId: string,
+  input: UpdateStaffUserTwoStepVerificationInput,
+): Promise<StaffUserDetailDto> {
+  const res = await staffApiFetch(
+    `/api/staff/users/${userId}/two-step-verification`,
+    {
+      method: "PUT",
+      auth: true,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    },
+  );
+
+  const data = await parseJsonSafe<UserDetailResponse>(res);
+
+  if (!res.ok || !data?.ok || !data.user) {
+    throw new UsersClientError(
+      getErrorMessage(data) ||
+        "Erreur lors de la mise a jour de la verification en deux etapes",
       res.status,
     );
   }

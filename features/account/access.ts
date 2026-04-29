@@ -23,3 +23,10 @@ export function canUpdatePersonalDetails(session: StaffSession): boolean {
 export function canUpdateSecuritySettings(session: StaffSession): boolean {
   return hasPermission(session, PERMISSIONS.ACCOUNT_CREDENTIALS_UPDATE_SELF);
 }
+
+export function canToggleSelfTwoStepVerification(session: StaffSession): boolean {
+  return hasPermission(
+    session,
+    PERMISSIONS.ACCOUNT_TWO_STEP_VERIFICATION_TOGGLE_SELF,
+  );
+}

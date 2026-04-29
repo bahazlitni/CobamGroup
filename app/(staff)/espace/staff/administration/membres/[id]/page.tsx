@@ -12,6 +12,7 @@ import PersonalDetailsForm, {
 } from "@/components/staff/ui/PersonalDetailsForm";
 import SecurityForm from "@/components/staff/ui/SecurityForm";
 import PersonalDetailsPreviewAndAvatar from "@/components/staff/ui/PersonalDetailsPreviewAndAvatar";
+import TwoStepVerificationPanel from "@/components/staff/ui/TwoStepVerificationPanel";
 import RoleSelectionPanel from "@/components/staff/roles/RoleSelectionPanel";
 import {
   StaffBadge,
@@ -49,6 +50,7 @@ export default function UserDetailPage() {
     isSavingProfile,
     isSavingAccess,
     isSavingCredentials,
+    isSavingTwoStepVerification,
     isSavingBan,
     isDeleting,
     error,
@@ -56,9 +58,12 @@ export default function UserDetailPage() {
     setField,
     setCredentialField,
     setAccess,
+    twoStepVerificationEnabled,
+    setTwoStepVerificationEnabled,
     saveProfile,
     saveAccess,
     saveCredentials,
+    saveTwoStepVerification,
     saveBan,
     deleteUser,
   } = useUserDetail(userId);
@@ -125,6 +130,19 @@ export default function UserDetailPage() {
     !!user &&
     hasPermission(authUser, PERMISSIONS.USERS_DELETE_BELOW_ROLE) &&
     canAffectTargetUser(authUser, user);
+  const canToggleTwoStepVerification =
+    !!authUser &&
+    !!user &&
+    authUser.status !== "BANNED" &&
+    (authUser.powerType === "ROOT" ||
+      authUser.powerType === "ADMIN" ||
+      (authUser.id === user.id &&
+        hasPermission(
+          authUser,
+          PERMISSIONS.ACCOUNT_TWO_STEP_VERIFICATION_TOGGLE_SELF,
+        )));
+  const isTwoStepVerificationDirty =
+    !!user && twoStepVerificationEnabled !== user.twoStepVerificationEnabled;
   const emailChanged =
     !!user &&
     credentials.email.trim().toLowerCase() !== user.email.trim().toLowerCase();
@@ -214,7 +232,7 @@ export default function UserDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-[40vh] flex items-center justify-center">
-        <div className="inline-flex items-center gap-3 rounded-2xl border border-slate-300 bg-white px-5 py-4 shadow-sm">
+        <div className="inline-flex items-center gap-3 rounded-lg border border-slate-300 bg-white px-5 py-4 shadow-sm">
           <Loading />
         </div>
       </div>
@@ -344,6 +362,22 @@ export default function UserDetailPage() {
             disabled={!canEditAccess}
             currentRoleLabel={user.roleLabel}
             submitLabel="Mettre à jour les accès"
+          />
+
+          <TwoStepVerificationPanel
+            enabled={twoStepVerificationEnabled}
+            onEnabledChange={setTwoStepVerificationEnabled}
+            onSubmit={async () => {
+              await saveTwoStepVerification(twoStepVerificationEnabled);
+            }}
+            isSubmitting={isSavingTwoStepVerification}
+            disabled={!canToggleTwoStepVerification}
+            submitDisabled={!isTwoStepVerificationDirty}
+            submitLabel={
+              isTwoStepVerificationDirty
+                ? "Enregistrer la vérification"
+                : "Vérification enregistrée"
+            }
           />
 
           <PersonalDetailsPreviewAndAvatar

@@ -79,7 +79,7 @@ export default function Carousel({ media, title }: CarouselProps) {
                     type="button"
                     onClick={() => setActiveIndex(index)}
                     className={cn(
-                        "overflow-hidden rounded-2xl border bg-[#fafaf9] transition-all duration-300",
+                        "overflow-hidden rounded-lg border bg-[#fafaf9] transition-all duration-300",
                         isActive
                         ? "border-2 border-cobam-water-blue shadow-md -translate-y-1"
                         : "border-cobam-quill-grey/30 hover:border-cobam-water-blue/50",

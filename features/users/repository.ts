@@ -35,6 +35,7 @@ const USER_DETAIL_SELECT = {
   status: true,
   bannedAt: true,
   bannedReason: true,
+  twoStepVerificationEnabled: true,
   portal: true,
   createdAt: true,
   updatedAt: true,
@@ -342,6 +343,32 @@ export async function updateUserBanState(data: {
       bannedReason: data.banned ? data.reasonJson ?? null : null,
     },
     select: USER_DETAIL_SELECT,
+  });
+}
+
+export async function updateUserTwoStepVerification(data: {
+  userId: string;
+  enabled: boolean;
+}) {
+  return prisma.$transaction(async (tx) => {
+    const updatedUser = await tx.user.update({
+      where: { id: data.userId },
+      data: {
+        twoStepVerificationEnabled: data.enabled,
+      },
+      select: USER_DETAIL_SELECT,
+    });
+
+    if (!data.enabled) {
+      await tx.oTPChallenge.deleteMany({
+        where: {
+          userId: data.userId,
+          type: "LOGIN",
+        },
+      });
+    }
+
+    return updatedUser;
   });
 }
 

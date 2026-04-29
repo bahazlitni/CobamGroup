@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/server/db/prisma";
-import { signAccessToken, signRefreshToken } from "@/lib/api/auth/shared/jwt";
-import { sha256 } from "@/lib/api/auth/shared/token";
 import { hashOtpCode } from "@/lib/api/auth/otp/hash";
 import { OTP_RULES } from "@/lib/api/auth/otp/config";
-import { v4 as uuidv4 } from "uuid";
 import { STAFF_PORTAL } from "@/features/auth/types";
-import { getStaffSessionByUserId } from "@/features/auth/server/session";
+import { createStaffLoginResponse } from "@/features/auth/server/staff-login-response";
 
 export async function POST(req: Request) {
     try {
@@ -28,6 +25,7 @@ export async function POST(req: Request) {
             id: true,
             email: true,
             portal: true,
+            twoStepVerificationEnabled: true,
         },
         });
 
@@ -35,6 +33,13 @@ export async function POST(req: Request) {
         return NextResponse.json(
             { ok: false, message: "Code OTP invalide." },
             { status: 401 },
+        );
+        }
+
+        if (!user.twoStepVerificationEnabled) {
+        return NextResponse.json(
+            { ok: false, message: "La verification OTP est desactivee pour ce compte." },
+            { status: 400 },
         );
         }
 
@@ -96,65 +101,9 @@ export async function POST(req: Request) {
         );
         }
 
-        const tokenId = uuidv4();
-
-        const accessToken = await signAccessToken({
-        userId: user.id,
-        email: user.email,
-        portal: user.portal,
+        return createStaffLoginResponse(user, {
+            clearLoginOtpChallenge: true,
         });
-
-        const refreshToken = await signRefreshToken({
-        userId: user.id,
-        tokenId,
-        });
-
-        const refreshTokenHash = sha256(refreshToken);
-
-        await prisma.$transaction([
-        prisma.oTPChallenge.delete({
-            where: { id: challenge.id },
-        }),
-        prisma.refreshToken.create({
-            data: {
-            id: tokenId,
-            userId: user.id,
-            tokenHash: refreshTokenHash,
-            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-            },
-        }),
-        prisma.user.update({
-            where: { id: user.id },
-            data: {
-            lastLoginAt: new Date(),
-            },
-        }),
-        ]);
-
-        const session = await getStaffSessionByUserId(user.id);
-
-        if (!session) {
-        return NextResponse.json(
-            { ok: false, message: "Impossible de charger la session staff." },
-            { status: 500 },
-        );
-        }
-
-        const response = NextResponse.json({
-            ok: true,
-            accessToken,
-            user: session,
-        });
-
-        response.cookies.set("staff_refresh_token", refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            path: "/",
-            maxAge: 60 * 60 * 24 * 30,
-        });
-
-        return response;
     } catch (error) {
         console.error("STAFF_LOGIN_OTP_ERROR:", error);
 

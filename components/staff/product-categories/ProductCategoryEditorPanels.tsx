@@ -156,7 +156,7 @@ export default function ProductCategoryEditorPanels({
                   <ImagePreview
                     mediaId={form.imageMediaId}
                     alt="Image de catégorie"
-                    className="h-24 w-24 rounded-2xl"
+                    className="h-24 w-24 rounded-lg"
                   />
                 </div>
               ) : null}
@@ -348,7 +348,7 @@ export default function ProductCategoryEditorPanels({
           </div>
 
           {form.subcategories.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-5 py-8 text-center text-sm text-slate-500">
+            <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50/70 px-5 py-8 text-center text-sm text-slate-500">
               Aucune sous-catégorie pour le moment.
             </div>
           ) : (

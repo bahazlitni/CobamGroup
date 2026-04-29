@@ -27,7 +27,7 @@ export default function AutosaveIndicator({
     color = "blue";
     icon = "loader";
   } else if (isDirty) {
-    label = "Modifications non enregistrees";
+    label = "Modifications non enregistrées";
     color = "amber";
     icon = "warning";
   } else if (lastSavedAt) {

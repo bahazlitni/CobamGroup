@@ -41,6 +41,14 @@ export const PERMISSION_DEFINITIONS = [
     scope: "self",
     group: "Compte",
   }),
+  definePermission({
+    key: "account.two_step_verification.toggle.self",
+    label: "Can toggle 2-step-verification on self",
+    resource: "account",
+    action: "toggle_two_step_verification",
+    scope: "self",
+    group: "Compte",
+  }),
 
   definePermission({
     key: "users.view_non_banned.all",
@@ -905,6 +913,7 @@ export const STAFF_BASE_PERMISSION_KEYS = [
   "account.read.self",
   "account.update.self",
   "account.credentials.update.self",
+  "account.two_step_verification.toggle.self",
 ] as const satisfies readonly PermissionKey[];
 
 export function getProtectedPowerTypePermissions(input: {

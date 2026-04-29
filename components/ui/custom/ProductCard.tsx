@@ -16,7 +16,7 @@ export default function ProductCard({ name, category, imageUrl, href }: ProductC
   return (
     <Link
       href={href}
-      className="group relative block overflow-hidden rounded-2xl bg-white/60 backdrop-blur-sm transition-all duration-500 hover:scale-[1.02] hover:shadow-xl hover:shadow-cobam-water-blue/10 border border-slate-200/50"
+      className="group relative block overflow-hidden rounded-lg bg-white/60 backdrop-blur-sm transition-all duration-500 hover:scale-[1.02] hover:shadow-xl hover:shadow-cobam-water-blue/10 border border-slate-200/50"
     >
       <div className="aspect-square overflow-hidden bg-cobam-light-bg">
         <Image

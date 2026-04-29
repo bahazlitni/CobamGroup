@@ -460,7 +460,7 @@ export default function ProductsListPage() {
       </form>
 
       {selectedIds.length > 0 ? (
-        <div className="fixed bottom-6 right-6 z-30 flex w-[min(560px,calc(100vw-3rem))] flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-lg">
+        <div className="fixed bottom-6 right-6 z-30 flex w-[min(560px,calc(100vw-3rem))] flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-lg">
           <p className="text-sm text-slate-600">
             {selectedIds.length} famille(s) selectionnee(s)
           </p>

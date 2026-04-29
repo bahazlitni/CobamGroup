@@ -67,6 +67,7 @@ export async function getStaffSessionByUserId(
       status: true,
       bannedAt: true,
       bannedReason: true,
+      twoStepVerificationEnabled: true,
       profile: {
         select: {
           firstName: true,
@@ -131,6 +132,7 @@ export async function getStaffSessionByUserId(
     status: user.status,
     bannedAt: user.bannedAt ? user.bannedAt.toISOString() : null,
     banDetails: parseBanDetails(user.bannedReason),
+    twoStepVerificationEnabled: user.twoStepVerificationEnabled,
     profile: toSessionProfile(user.profile),
   };
 }

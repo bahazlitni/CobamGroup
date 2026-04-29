@@ -244,7 +244,7 @@ function ArticleCategoryEditPageContent() {
             <StaffEditorInfoPanel description="Vue rapide de l'identité et de l'usage actuel de cette catégorie.">
               <div className="flex items-center gap-3">
                 <div
-                  className="h-14 w-14 rounded-2xl border border-slate-300"
+                  className="h-14 w-14 rounded-lg border border-slate-300"
                   style={{ backgroundColor: form.color || "#0a8dc1" }}
                   aria-hidden="true"
                 />
@@ -374,7 +374,7 @@ function ArticleCategoryEditPageContent() {
 function ArticleCategoryEditorLoading() {
   return (
     <div className="flex min-h-[40vh] items-center justify-center">
-      <div className="inline-flex items-center gap-3 rounded-2xl border border-slate-300 bg-white px-5 py-4 shadow-sm">
+      <div className="inline-flex items-center gap-3 rounded-lg border border-slate-300 bg-white px-5 py-4 shadow-sm">
         <Loading />
       </div>
     </div>

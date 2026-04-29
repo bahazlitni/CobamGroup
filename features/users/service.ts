@@ -6,7 +6,6 @@ import {
   canAffectTargetUser,
   canAssignRole,
   canSetAdminPowerType,
-  getRoleLabel,
   isTargetBelowActor,
 } from "@/features/rbac/roles";
 import { hashPassword } from "@/lib/api/auth/shared/password";
@@ -28,6 +27,7 @@ import {
   updateUserAccess,
   updateUserBanState,
   updateUserCredentials,
+  updateUserTwoStepVerification,
   upsertUserProfile,
 } from "./repository";
 import type {
@@ -38,6 +38,7 @@ import type {
   UpdateStaffUserBanInput,
   UpdateStaffUserCredentialsInput,
   UpdateStaffUserProfileInput,
+  UpdateStaffUserTwoStepVerificationInput,
 } from "./types";
 
 export class UserServiceError extends Error {
@@ -103,6 +104,26 @@ function canUpdateOwnCredentials(session: StaffSession, targetUserId: string) {
   return (
     session.id === targetUserId &&
     hasPermission(session, PERMISSIONS.ACCOUNT_CREDENTIALS_UPDATE_SELF)
+  );
+}
+
+function canToggleOwnTwoStepVerification(
+  session: StaffSession,
+  targetUserId: string,
+) {
+  return (
+    session.id === targetUserId &&
+    hasPermission(
+      session,
+      PERMISSIONS.ACCOUNT_TWO_STEP_VERIFICATION_TOGGLE_SELF,
+    )
+  );
+}
+
+function canToggleAnyTwoStepVerification(session: StaffSession) {
+  return (
+    session.status !== "BANNED" &&
+    (session.powerType === "ROOT" || session.powerType === "ADMIN")
   );
 }
 
@@ -513,6 +534,31 @@ export async function updateUserBanService(
           description: input.description,
         })
       : null,
+  });
+
+  return mapUserToDetailDto(after);
+}
+
+export async function updateUserTwoStepVerificationService(
+  session: StaffSession,
+  userId: string,
+  input: UpdateStaffUserTwoStepVerificationInput,
+) {
+  const before = await findUserById(userId);
+  if (!before) {
+    throw new UserServiceError("Utilisateur introuvable", 404);
+  }
+
+  if (
+    !canToggleAnyTwoStepVerification(session) &&
+    !canToggleOwnTwoStepVerification(session, userId)
+  ) {
+    throw new UserServiceError("Forbidden", 403);
+  }
+
+  const after = await updateUserTwoStepVerification({
+    userId,
+    enabled: input.enabled,
   });
 
   return mapUserToDetailDto(after);

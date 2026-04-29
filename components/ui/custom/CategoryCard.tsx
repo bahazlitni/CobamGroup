@@ -17,7 +17,7 @@ export default function CategoryCard({
   return (
     <a
       href={href}
-      className="group flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+      className="group flex flex-col bg-white border border-gray-100 rounded-lg overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
     >
       {/* Image */}
       <div className="relative h-48 bg-cobam-light-bg overflow-hidden">

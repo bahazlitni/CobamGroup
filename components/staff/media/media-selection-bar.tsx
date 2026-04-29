@@ -43,7 +43,7 @@ export default function MediaSelectionBar({
       <Card className="pointer-events-auto rounded-[1.75rem] border border-cobam-water-blue/25 bg-white/95 shadow-xl backdrop-blur">
         <CardContent className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-cobam-water-blue/10 text-cobam-dark-blue">
+            <div className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-cobam-water-blue/10 text-cobam-dark-blue">
               <Layers3 className="h-5 w-5" />
             </div>
             <div className="min-w-0">

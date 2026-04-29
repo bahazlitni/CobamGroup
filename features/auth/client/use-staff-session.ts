@@ -32,7 +32,8 @@ function isStoredStaffSession(value: unknown): value is StaffSession {
     typeof candidate.roleLabel === "string" &&
     Array.isArray(candidate.assignedRoles) &&
     Array.isArray(candidate.permissions) &&
-    typeof candidate.status === "string"
+    typeof candidate.status === "string" &&
+    typeof candidate.twoStepVerificationEnabled === "boolean"
   );
 }
 

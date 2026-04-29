@@ -107,7 +107,7 @@ export default function MediaFolderCard({
             className="flex w-full flex-col gap-4 text-left"
           >
             <div className="inline-flex items-center gap-3">
-            <div className="flex h-10 w-12 items-center justify-center rounded-2xl bg-cobam-water-blue/10 text-cobam-water-blue">
+            <div className="flex h-10 w-12 items-center justify-center rounded-lg bg-cobam-water-blue/10 text-cobam-water-blue">
               <Folder className="h-6 w-6" />
             </div>
             <h2 className="line-clamp-2 text-base font-semibold text-cobam-dark-blue">

@@ -417,7 +417,7 @@ export default function MediaInspectorDialog({
                           onChange={(event) => setTitle(event.target.value)}
                           placeholder={media.originalFilename || "Titre du media"}
                           disabled={isUpdatingMetadata || !media.canUpdate}
-                          className="h-12 rounded-2xl border-slate-200/60 bg-white ring-0 transition-all focus:ring-2 focus:ring-cobam-dark-blue/5"
+                          className="h-12 rounded-lg border-slate-200/60 bg-white ring-0 transition-all focus:ring-2 focus:ring-cobam-dark-blue/5"
                         />
                         <p className="text-[10px] text-slate-400 ml-1 italic font-medium">
                           Resolut: {media.resolvedTitle}
@@ -432,7 +432,7 @@ export default function MediaInspectorDialog({
                           onChange={(event) => setAltText(event.target.value)}
                           placeholder={media.resolvedTitle}
                           disabled={isUpdatingMetadata || !media.canUpdate}
-                          className="min-h-[100px] resize-none rounded-2xl border-slate-200/60 bg-white ring-0 transition-all focus:ring-2 focus:ring-cobam-dark-blue/5"
+                          className="min-h-[100px] resize-none rounded-lg border-slate-200/60 bg-white ring-0 transition-all focus:ring-2 focus:ring-cobam-dark-blue/5"
                         />
                         <p className="text-[10px] text-slate-400 ml-1 italic font-medium">
                           Actuel: {media.resolvedAltText}
@@ -494,7 +494,7 @@ export default function MediaInspectorDialog({
                           { label: "Par", value: media.uploadedByLabel || "Systeme" },
                           { label: "Status", value: media.isActive ? "Actif" : "Inactif" },
                         ].map((spec) => (
-                          <div key={spec.label} className="group rounded-2xl border border-slate-100 bg-white p-3.5 transition-all hover:border-slate-200 hover:shadow-sm">
+                          <div key={spec.label} className="group rounded-lg border border-slate-100 bg-white p-3.5 transition-all hover:border-slate-200 hover:shadow-sm">
                             <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-cobam-dark-blue/40 transition-colors">{spec.label}</p>
                             <p className="mt-1 truncate text-xs font-semibold text-cobam-dark-blue">
                               {spec.value}
@@ -502,7 +502,7 @@ export default function MediaInspectorDialog({
                           </div>
                         ))}
                       </div>
-                      <div className="rounded-2xl border border-slate-100 bg-white p-4 space-y-3">
+                      <div className="rounded-lg border border-slate-100 bg-white p-4 space-y-3">
                          <div className="space-y-1">
                            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                              <Package className="h-2.5 w-2.5" />

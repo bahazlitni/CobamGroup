@@ -38,7 +38,7 @@ export default function MediaThumbnail({
 
   if (media.kind === "IMAGE" && objectUrl) {
     return (
-      <div className={cn("relative overflow-hidden rounded-2xl bg-slate-100", className)}>
+      <div className={cn("relative overflow-hidden rounded-lg bg-slate-100", className)}>
         <Image
           src={objectUrl}
           alt={getMediaDisplayAltText(media)}
@@ -54,12 +54,12 @@ export default function MediaThumbnail({
   return (
     <div
       className={cn(
-        "flex items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50",
+        "flex items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50",
         className,
       )}
     >
       {isLoading ? (
-        <div className="h-full w-full animate-pulse rounded-2xl bg-slate-200/70" />
+        <div className="h-full w-full animate-pulse rounded-lg bg-slate-200/70" />
       ) : (
         <div className="flex flex-col items-center gap-2 text-slate-400">
           {renderFallbackIcon(media)}

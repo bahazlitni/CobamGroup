@@ -57,7 +57,7 @@ export default function ProductSubcategoriesField({
           }))}
           fullWidth
           disabled={options.length === 0 || remainingProductSubcategories.length === 0}
-          triggerClassName="h-10 rounded-2xl border-slate-300 px-4 text-base"
+          triggerClassName="h-10 rounded-lg border-slate-300 px-4 text-base"
         />
 
         {selectedProductSubcategories.length > 0 ? (

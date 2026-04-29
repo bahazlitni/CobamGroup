@@ -437,7 +437,7 @@ function ProductPackEditPageContent() {
                 return (
                   <div
                     key={`${line.productId}-${index}`}
-                    className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-[auto_minmax(0,1fr)_8rem_auto]"
+                    className="grid gap-4 rounded-lg border border-slate-200 bg-white p-4 md:grid-cols-[auto_minmax(0,1fr)_8rem_auto]"
                   >
                     <div className="flex items-center justify-center text-slate-300">
                       <GripVertical className="h-5 w-5" />
@@ -530,7 +530,7 @@ function ProductPackEditPageContent() {
       {savedPack ? (
         <Panel pretitle="Lecture derivee" title="Synthese du pack">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                 Prix
               </p>
@@ -538,7 +538,7 @@ function ProductPackEditPageContent() {
                 {formatNumberLabel(savedPack.derived.basePriceAmount, "TND")}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                 TVA
               </p>
@@ -546,7 +546,7 @@ function ProductPackEditPageContent() {
                 {savedPack.derived.vatRate.toFixed(2)}%
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                 Stock
               </p>
@@ -554,7 +554,7 @@ function ProductPackEditPageContent() {
                 {formatNumberLabel(savedPack.derived.stock, "item")}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                 Marques
               </p>
@@ -565,7 +565,7 @@ function ProductPackEditPageContent() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="rounded-lg border border-slate-200 bg-white p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                 Cycle
               </p>
@@ -573,7 +573,7 @@ function ProductPackEditPageContent() {
                 {getLifecycleLabel(savedPack.derived.lifecycle)}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="rounded-lg border border-slate-200 bg-white p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                 Visibilite
               </p>
@@ -581,7 +581,7 @@ function ProductPackEditPageContent() {
                 {savedPack.derived.visibility ? "Visible" : "Masque"}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="rounded-lg border border-slate-200 bg-white p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                 Mode commercial
               </p>
@@ -622,7 +622,7 @@ function ProductPackEditPageContent() {
 function EditorLoading() {
   return (
     <div className="flex min-h-[40vh] items-center justify-center">
-      <div className="inline-flex items-center gap-3 rounded-2xl border border-slate-300 bg-white px-5 py-4 shadow-sm">
+      <div className="inline-flex items-center gap-3 rounded-lg border border-slate-300 bg-white px-5 py-4 shadow-sm">
         <Loading />
       </div>
     </div>

@@ -25,7 +25,7 @@ export default async function AnnuairePage() {
   );
 
   if (!session) {
-    redirect("/login/staff");
+    redirect("/login/staff?redirect=annuaire");
   }
 
   let people: AnnuairePersonDto[] = [];

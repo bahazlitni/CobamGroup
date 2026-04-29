@@ -101,7 +101,7 @@ export default function AnnuaireDirectory({
   return (
     <div className="space-y-8">
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-cobam-quill-grey/50 bg-white p-5">
+        <div className="rounded-lg border border-cobam-quill-grey/50 bg-white p-5">
           <Users className="h-5 w-5 text-cobam-water-blue" />
           <p className="mt-4 text-3xl font-light text-cobam-dark-blue">
             {people.length}
@@ -110,7 +110,7 @@ export default function AnnuaireDirectory({
             Contacts
           </p>
         </div>
-        <div className="rounded-2xl border border-cobam-quill-grey/50 bg-white p-5">
+        <div className="rounded-lg border border-cobam-quill-grey/50 bg-white p-5">
           <Building2 className="h-5 w-5 text-cobam-water-blue" />
           <p className="mt-4 text-3xl font-light text-cobam-dark-blue">
             {siteOptions.length || "-"}
@@ -119,7 +119,7 @@ export default function AnnuaireDirectory({
             Sites
           </p>
         </div>
-        <div className="rounded-2xl border border-cobam-quill-grey/50 bg-white p-5">
+        <div className="rounded-lg border border-cobam-quill-grey/50 bg-white p-5">
           <Search className="h-5 w-5 text-cobam-water-blue" />
           <p className="mt-4 text-3xl font-light text-cobam-dark-blue">
             {filteredPeople.length}
@@ -139,14 +139,14 @@ export default function AnnuaireDirectory({
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Rechercher un collaborateur, un poste, un site..."
-              className="h-12 w-full rounded-2xl border border-cobam-quill-grey/60 bg-cobam-light-bg pl-11 pr-4 text-sm text-cobam-dark-blue outline-none transition-colors placeholder:text-cobam-carbon-grey/70 focus:border-cobam-water-blue/60 focus:bg-white"
+              className="h-12 w-full rounded-lg border border-cobam-quill-grey/60 bg-cobam-light-bg pl-11 pr-4 text-sm text-cobam-dark-blue outline-none transition-colors placeholder:text-cobam-carbon-grey/70 focus:border-cobam-water-blue/60 focus:bg-white"
             />
           </label>
 
           <select
             value={site}
             onChange={(event) => setSite(event.target.value)}
-            className="h-12 rounded-2xl border border-cobam-quill-grey/60 bg-cobam-light-bg px-4 text-sm text-cobam-dark-blue outline-none transition-colors focus:border-cobam-water-blue/60 focus:bg-white"
+            className="h-12 rounded-lg border border-cobam-quill-grey/60 bg-cobam-light-bg px-4 text-sm text-cobam-dark-blue outline-none transition-colors focus:border-cobam-water-blue/60 focus:bg-white"
             aria-label="Filtrer par site"
           >
             <option value="all">Tous les sites</option>
@@ -160,7 +160,7 @@ export default function AnnuaireDirectory({
           <select
             value={jobTitle}
             onChange={(event) => setJobTitle(event.target.value)}
-            className="h-12 rounded-2xl border border-cobam-quill-grey/60 bg-cobam-light-bg px-4 text-sm text-cobam-dark-blue outline-none transition-colors focus:border-cobam-water-blue/60 focus:bg-white"
+            className="h-12 rounded-lg border border-cobam-quill-grey/60 bg-cobam-light-bg px-4 text-sm text-cobam-dark-blue outline-none transition-colors focus:border-cobam-water-blue/60 focus:bg-white"
             aria-label="Filtrer par poste"
           >
             <option value="all">Tous les postes</option>
@@ -275,7 +275,7 @@ export default function AnnuaireDirectory({
       <div className="grid gap-5 lg:hidden">
         {groupedPeople.map((group) => (
           <section key={group.siteName} className="space-y-3">
-            <div className="rounded-2xl bg-cobam-dark-blue px-5 py-3">
+            <div className="rounded-lg bg-cobam-dark-blue px-5 py-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white">
                 {group.siteName}
                 <span className="ml-3 text-white/50">

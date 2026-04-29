@@ -325,7 +325,7 @@ export default function RoleEditorForm({
         title="Gestion du rôle"
         description="Activez les permissions à accorder à ce rôle. Les permissions de base du staff restent toujours actives."
       >
-          <div className="flex gap-8 justify-center items-center w-full px-8 py-5 border border-slate-300 rounded-2xl bg-slate-50/75">
+          <div className="flex gap-8 justify-center items-center w-full px-8 py-5 border border-slate-300 rounded-lg bg-slate-50/75">
             <div className="flex-3">
               <PanelField id="name" label="Nom">
                 <PanelInput
