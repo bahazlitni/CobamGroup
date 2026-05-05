@@ -33,6 +33,7 @@ import ColorsList from "./inspector/ColorsList";
 import FinishesList from "./inspector/FinishesList";
 import NormalAttributesList from "./inspector/NormalAttributesList";
 import DatasheetLink from "./inspector/DatasheetLink";
+import ProductDevisDialog from "./inspector/ProductDevisDialog";
 
 
 function SelectorPill({ label, unit, active, onClick }: SelectorPillProps) {
@@ -161,7 +162,10 @@ export default function PublicProductInspectorView({
                     <Property name="SKU" value={selectedVariant.sku} isCopiable={true} isFemale={false} isPlural={false}/>
                     <Property name="Marque" value={normalizedProduct.brandName} isCopiable={false} isFemale={true} isPlural={true}/>
                     </div>
-                    {selectedVariant.datasheet && <DatasheetLink url={selectedVariant.datasheet.url} />}
+                    <div className="flex items-center gap-3">
+                      {selectedVariant.datasheet && <DatasheetLink url={selectedVariant.datasheet.url} />}
+                      <ProductDevisDialog productName={selectedVariant.name} sku={selectedVariant.sku ?? ""} />
+                    </div>
                   </div>
                 </div>
               </div>
