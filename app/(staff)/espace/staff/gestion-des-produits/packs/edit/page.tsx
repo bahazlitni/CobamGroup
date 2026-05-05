@@ -68,27 +68,6 @@ function getLifecycleLabel(value: ProductPackDetailDto["derived"]["lifecycle"]) 
   return value === "ACTIVE" ? "Actif" : "Brouillon";
 }
 
-function getCommercialModeLabel(value: ProductPackDetailDto["derived"]["commercialMode"]) {
-  switch (value) {
-    case "ONLINE_ONLY":
-      return "En ligne";
-    case "ON_REQUEST_OR_ONLINE":
-      return "En ligne ou sur demande";
-    case "ON_REQUEST_ONLY":
-      return "Sur demande";
-    default:
-      return "-";
-  }
-}
-
-function formatNumberLabel(value: string | null, suffix?: string) {
-  if (!value) {
-    return "-";
-  }
-
-  return suffix ? `${value} ${suffix}` : value;
-}
-
 function formatKindLabel(product: ProductPackSelectableProductDto) {
   return product.kind === "SINGLE" ? "Produit simple" : "Variante";
 }
@@ -529,31 +508,7 @@ function ProductPackEditPageContent() {
 
       {savedPack ? (
         <Panel pretitle="Lecture derivee" title="Synthese du pack">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Prix
-              </p>
-              <p className="mt-2 text-lg font-semibold text-cobam-dark-blue">
-                {formatNumberLabel(savedPack.derived.basePriceAmount, "TND")}
-              </p>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                TVA
-              </p>
-              <p className="mt-2 text-lg font-semibold text-cobam-dark-blue">
-                {savedPack.derived.vatRate.toFixed(2)}%
-              </p>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Stock
-              </p>
-              <p className="mt-2 text-lg font-semibold text-cobam-dark-blue">
-                {formatNumberLabel(savedPack.derived.stock, "item")}
-              </p>
-            </div>
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                 Marques
@@ -571,22 +526,6 @@ function ProductPackEditPageContent() {
               </p>
               <p className="mt-2 text-sm font-semibold text-cobam-dark-blue">
                 {getLifecycleLabel(savedPack.derived.lifecycle)}
-              </p>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Visibilite
-              </p>
-              <p className="mt-2 text-sm font-semibold text-cobam-dark-blue">
-                {savedPack.derived.visibility ? "Visible" : "Masque"}
-              </p>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Mode commercial
-              </p>
-              <p className="mt-2 text-sm font-semibold text-cobam-dark-blue">
-                {getCommercialModeLabel(savedPack.derived.commercialMode)}
               </p>
             </div>
           </div>

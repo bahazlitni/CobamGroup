@@ -1,8 +1,6 @@
 import type {
   MediaKind,
-  ProductCommercialMode,
   ProductLifecycle,
-  ProductStockUnit,
 } from "@prisma/client";
 
 export type ProductMediaDto = {
@@ -42,15 +40,7 @@ export type ProductVariantInputDto = {
   description: string | null;
   descriptionSeo: string | null;
   brand: string | null;
-  basePriceAmount: string | null;
-  vatRate: number | null;
-  stock: string | null;
-  stockUnit: ProductStockUnit | null;
-  visibility: boolean;
-  priceVisibility: boolean;
-  stockVisibility: boolean;
   lifecycle: ProductLifecycle;
-  commercialMode: ProductCommercialMode;
   tags: string;
   subcategoryIds: number[];
   datasheet: ProductMediaDto | null;
@@ -79,15 +69,7 @@ export type ProductFamilyListItemDto = {
   variantCount: number;
   defaultVariantSku: string | null;
   brand: string | null;
-  basePriceAmount: string | null;
-  vatRate: number | null;
-  stock: string | null;
-  stockUnit: ProductStockUnit | null;
   lifecycle: ProductLifecycle | null;
-  commercialMode: ProductCommercialMode | null;
-  visibility: boolean | null;
-  priceVisibility: boolean | null;
-  stockVisibility: boolean | null;
   subcategories: ProductSubcategoryOptionDto[];
   updatedAt: string;
 };
@@ -138,7 +120,6 @@ export type PublicProductSummary = {
   imageUrl: string | null;
   imageThumbnailUrl: string | null;
   imageAlt: string | null;
-  price: string | null;
 };
 
 export type PublicProductListResult = {
@@ -219,12 +200,6 @@ export type PublicProductInspectorVariant = {
   slug: string;
   name: string;
   description: string | null;
-  basePriceAmount: string | null;
-  priceVisibility: boolean;
-  commercialMode: ProductCommercialMode | null;
-  stock: string | null;
-  stockUnit: ProductStockUnit | null;
-  stockVisibility: boolean;
   datasheet: PublicProductInspectorMedia | null;
   media: PublicProductInspectorMedia[];
   attributes: PublicProductInspectorAttribute[];
@@ -257,12 +232,6 @@ export type PublicSimpleProductInspector = {
   brandNames: string[];
   media: PublicProductInspectorMedia[];
   datasheet: PublicProductInspectorMedia | null;
-  basePriceAmount: string | null;
-  priceVisibility: boolean;
-  stock: string | null;
-  stockUnit: ProductStockUnit | null;
-  stockVisibility: boolean;
-  commercialMode: ProductCommercialMode | null;
   subcategories: PublicProductSubcategoryLink[];
   attributes: PublicProductInspectorAttribute[];
   colorReferences: PublicProductColorReference[];

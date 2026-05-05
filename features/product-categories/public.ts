@@ -418,7 +418,6 @@ export async function listPublicProductSubcategoryCardsByCategorySlug(
             where: {
               product: {
                 lifecycle: "ACTIVE",
-                visibility: true,
                 kind: {
                   in: ["SINGLE", "VARIANT", "PACK"],
                 },

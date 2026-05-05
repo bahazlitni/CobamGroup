@@ -1,4 +1,4 @@
-import { Prisma, ProductCommercialMode, ProductLifecycle, ProductStockUnit } from "@prisma/client";
+import { Prisma, ProductLifecycle } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
 import { prisma } from "@/lib/server/db/prisma";
 import { canManageProducts } from "@/features/products/access";
@@ -8,15 +8,7 @@ export type FamilyBulkUpdateInput = {
   sku?: string | null;
   name?: string | null;
   brand?: string | null;
-  basePriceAmount?: string | null;
-  vatRate?: number | null;
-  stock?: string | null;
-  stockUnit?: ProductStockUnit | null;
   lifecycle?: ProductLifecycle | null;
-  commercialMode?: ProductCommercialMode | null;
-  visibility?: boolean | null;
-  priceVisibility?: boolean | null;
-  stockVisibility?: boolean | null;
 };
 
 export async function updateProductFamiliesBulkService(
@@ -50,33 +42,8 @@ export async function updateProductFamiliesBulkService(
   if (input.brand !== undefined) {
     data.brand = input.brand;
   }
-  if (input.basePriceAmount !== undefined) {
-    data.basePriceAmount =
-      input.basePriceAmount == null ? null : new Prisma.Decimal(input.basePriceAmount);
-  }
-  if (input.vatRate !== undefined) {
-    data.vatRate = input.vatRate;
-  }
-  if (input.stock !== undefined) {
-    data.stock = input.stock == null ? null : new Prisma.Decimal(input.stock);
-  }
-  if (input.stockUnit !== undefined) {
-    data.stockUnit = input.stockUnit;
-  }
   if (input.lifecycle !== undefined) {
     data.lifecycle = input.lifecycle;
-  }
-  if (input.commercialMode !== undefined) {
-    data.commercialMode = input.commercialMode;
-  }
-  if (input.visibility !== undefined) {
-    data.visibility = input.visibility;
-  }
-  if (input.priceVisibility !== undefined) {
-    data.priceVisibility = input.priceVisibility;
-  }
-  if (input.stockVisibility !== undefined) {
-    data.stockVisibility = input.stockVisibility;
   }
 
   if (Object.keys(data).length === 0) {

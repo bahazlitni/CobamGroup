@@ -18,7 +18,6 @@ const PACK_SELECT = {
   name: true,
   description: true,
   lifecycle: true,
-  visibility: true,
   mediaLinks: {
     orderBy: [{ sortOrder: "asc" }, { mediaId: "asc" }],
     take: 1,
@@ -66,7 +65,6 @@ export async function listPublicCollections(): Promise<PublicProductPackSummary[
     where: {
       kind: "PACK",
       lifecycle: "ACTIVE",
-      visibility: true,
     },
     orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
     take: 6,

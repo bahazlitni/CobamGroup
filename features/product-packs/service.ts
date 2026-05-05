@@ -1,9 +1,4 @@
-import {
-  Prisma,
-  ProductCommercialMode,
-  ProductLifecycle,
-  ProductStockUnit,
-} from "@prisma/client";
+import { Prisma, ProductLifecycle } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
 import { prisma } from "@/lib/server/db/prisma";
 import { canAccessProducts, canCreateProducts, canManageProducts } from "@/features/products/access";
@@ -46,14 +41,7 @@ const PACK_COMPONENT_SELECT = {
   kind: true,
   name: true,
   brand: true,
-  basePriceAmount: true,
-  priceVisibility: true,
-  visibility: true,
-  stockVisibility: true,
   lifecycle: true,
-  commercialMode: true,
-  vatRate: true,
-  stock: true,
 } satisfies Prisma.ProductSelect;
 
 const PACK_DETAIL_SELECT = {
@@ -63,12 +51,6 @@ const PACK_DETAIL_SELECT = {
   name: true,
   description: true,
   descriptionSeo: true,
-  visibility: true,
-  priceVisibility: true,
-  stockVisibility: true,
-  commercialMode: true,
-  vatRate: true,
-  stockUnit: true,
   lifecycle: true,
   createdAt: true,
   updatedAt: true,
@@ -146,57 +128,12 @@ function derivePack(record: PackDetailRecord) {
       }),
     ),
   ];
-  const visible = record.packLinesAsPack.every((line) => line.product.visibility === true);
-  const priceVisible = record.packLinesAsPack.every((line) => line.product.priceVisibility === true);
-  const stockVisible = record.packLinesAsPack.every((line) => line.product.stockVisibility === true);
   const lifecycle: ProductPackDetailDto["derived"]["lifecycle"] =
     record.lifecycle ?? "DRAFT";
 
-  let priceTotal = new Prisma.Decimal(0);
-  let vatWeighted = new Prisma.Decimal(0);
-  let missingPrice = false;
-  let missingStock = false;
-  let stockValue: Prisma.Decimal | null = null;
-  let commercialMode = null as PackDetailRecord["packLinesAsPack"][number]["product"]["commercialMode"] | null;
-
-  for (const line of record.packLinesAsPack) {
-    const componentPrice = line.product.basePriceAmount;
-    if (componentPrice == null) {
-      missingPrice = true;
-    } else {
-      const lineTotal = componentPrice.mul(line.quantity);
-      priceTotal = priceTotal.add(lineTotal);
-      const vat = line.product.vatRate ?? 0;
-      vatWeighted = vatWeighted.add(lineTotal.mul(vat));
-    }
-
-    if (line.product.stock != null) {
-      const availableBundles = line.product.stock.div(line.quantity);
-      stockValue = stockValue == null ? availableBundles : Prisma.Decimal.min(stockValue, availableBundles);
-    } else {
-      missingStock = true;
-    }
-
-    commercialMode =
-      commercialMode == null
-        ? line.product.commercialMode
-        : commercialMode === "ON_REQUEST_ONLY" || line.product.commercialMode === "ON_REQUEST_ONLY"
-          ? "ON_REQUEST_ONLY"
-          : commercialMode === "ON_REQUEST_OR_ONLINE" || line.product.commercialMode === "ON_REQUEST_OR_ONLINE"
-            ? "ON_REQUEST_OR_ONLINE"
-            : "ONLINE_ONLY";
-  }
-
   return {
     brands,
-    basePriceAmount: missingPrice ? null : priceTotal.toString(),
-    visibility: visible,
-    priceVisibility: priceVisible,
-    stockVisibility: stockVisible,
     lifecycle,
-    commercialMode,
-    vatRate: priceTotal.equals(0) ? 0 : Number(vatWeighted.div(priceTotal).toFixed(4)),
-    stock: missingStock ? null : stockValue?.toString() ?? null,
   };
 }
 
@@ -230,15 +167,7 @@ function mapPackListItem(record: PackDetailRecord): ProductPackListItemDto {
     description: record.description,
     lineCount: record.packLinesAsPack.length,
     brands: derived.brands,
-    basePriceAmount: derived.basePriceAmount,
-    vatRate: record.vatRate ?? null,
-    stock: derived.stock,
-    stockUnit: record.stockUnit ?? null,
-    visibility: derived.visibility,
-    priceVisibility: record.priceVisibility ?? false,
-    stockVisibility: record.stockVisibility ?? false,
     lifecycle: derived.lifecycle,
-    commercialMode: record.commercialMode ?? null,
     subcategories: record.subcategoryLinks.map(({ subcategory }) => ({
       id: Number(subcategory.id),
       categoryId: Number(subcategory.category.id),
@@ -318,8 +247,6 @@ async function writePack(packId: number | null, input: ProductPackUpsertInput) {
               name: input.name,
               description: input.description,
               descriptionSeo: input.descriptionSeo,
-              priceVisibility: false,
-              stockVisibility: false,
             },
             select: { id: true },
           })
@@ -555,15 +482,7 @@ export type PackBulkUpdateInput = {
   sku?: string | null;
   name?: string | null;
   brand?: string | null;
-  basePriceAmount?: string | null;
-  vatRate?: number | null;
-  stock?: string | null;
-  stockUnit?: ProductStockUnit | null;
   lifecycle?: ProductLifecycle | null;
-  commercialMode?: ProductCommercialMode | null;
-  visibility?: boolean | null;
-  priceVisibility?: boolean | null;
-  stockVisibility?: boolean | null;
 };
 
 export async function updateProductPacksBulkService(
@@ -597,33 +516,8 @@ export async function updateProductPacksBulkService(
   if (input.brand !== undefined) {
     data.brand = input.brand;
   }
-  if (input.basePriceAmount !== undefined) {
-    data.basePriceAmount =
-      input.basePriceAmount == null ? null : new Prisma.Decimal(input.basePriceAmount);
-  }
-  if (input.vatRate !== undefined) {
-    data.vatRate = input.vatRate;
-  }
-  if (input.stock !== undefined) {
-    data.stock = input.stock == null ? null : new Prisma.Decimal(input.stock);
-  }
-  if (input.stockUnit !== undefined) {
-    data.stockUnit = input.stockUnit;
-  }
   if (input.lifecycle !== undefined) {
     data.lifecycle = input.lifecycle;
-  }
-  if (input.commercialMode !== undefined) {
-    data.commercialMode = input.commercialMode;
-  }
-  if (input.visibility !== undefined) {
-    data.visibility = input.visibility;
-  }
-  if (input.priceVisibility !== undefined) {
-    data.priceVisibility = input.priceVisibility;
-  }
-  if (input.stockVisibility !== undefined) {
-    data.stockVisibility = input.stockVisibility;
   }
 
   if (Object.keys(data).length === 0) {

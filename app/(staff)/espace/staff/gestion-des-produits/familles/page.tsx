@@ -7,7 +7,6 @@ import { StaffBadge, StaffFilterBar, StaffPageHeader } from "@/components/staff/
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { Checkbox } from "@/components/ui/checkbox";
 import PanelField from "@/components/staff/ui/PanelField";
-import PanelInput from "@/components/staff/ui/PanelInput";
 import { PanelAutoCompleteInput, StaffSelect } from "@/components/staff/ui";
 import formatEnumLabel from "@/lib/formatEnumLabel";
 import { getProductBrandSuggestions } from "@/lib/static_tables/brands";
@@ -28,22 +27,10 @@ import {
   updateProductFamiliesBulkClient,
 } from "@/features/products/client";
 import type { ProductFamilyListItemDto } from "@/features/products/types";
-import { ProductCommercialMode, ProductLifecycle, ProductStockUnit } from "@prisma/client";
+import { ProductLifecycle } from "@prisma/client";
 
 const PAGE_SIZE = 20;
 const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
-
-function formatPrice(value: string | null) {
-  return value ? `${value} TND` : "-";
-}
-
-function formatStock(value: string | null, unit: string | null) {
-  if (!value) {
-    return "-";
-  }
-
-  return unit ? `${value} ${unit}` : value;
-}
 
 export default function ProductsListPage() {
   const { user } = useStaffSessionContext();
@@ -64,32 +51,14 @@ export default function ProductsListPage() {
   const shiftKeyRef = useRef(false);
   const [bulkForm, setBulkForm] = useState({
     brand: null as string | null,
-    vatRate: null as number | null,
-    stockUnit: null as ProductFamilyListItemDto["stockUnit"] | null,
     lifecycle: null as ProductFamilyListItemDto["lifecycle"] | null,
-    commercialMode: null as ProductFamilyListItemDto["commercialMode"] | null,
-    visibility: null as ProductFamilyListItemDto["visibility"] | null,
-    priceVisibility: null as ProductFamilyListItemDto["priceVisibility"] | null,
-    stockVisibility: null as ProductFamilyListItemDto["stockVisibility"] | null,
     mixed: {
       brand: false,
-      vatRate: false,
-      stockUnit: false,
       lifecycle: false,
-      commercialMode: false,
-      visibility: false,
-      priceVisibility: false,
-      stockVisibility: false,
     },
     enabled: {
       brand: false,
-      vatRate: false,
-      stockUnit: false,
       lifecycle: false,
-      commercialMode: false,
-      visibility: false,
-      priceVisibility: false,
-      stockVisibility: false,
     },
     touched: {} as Record<string, boolean>,
   });
@@ -227,42 +196,18 @@ export default function ProductsListPage() {
     };
 
     const brand = getValue((item) => item.brand ?? null);
-    const vatRate = getValue((item) => item.vatRate ?? null);
-    const stockUnit = getValue((item) => item.stockUnit ?? null);
     const lifecycle = getValue((item) => item.lifecycle ?? null);
-    const commercialMode = getValue((item) => item.commercialMode ?? null);
-    const visibility = getValue((item) => item.visibility ?? null);
-    const priceVisibility = getValue((item) => item.priceVisibility ?? null);
-    const stockVisibility = getValue((item) => item.stockVisibility ?? null);
 
     setBulkForm({
       brand: brand.mixed ? null : brand.value,
-      vatRate: vatRate.mixed ? null : vatRate.value,
-      stockUnit: stockUnit.mixed ? null : stockUnit.value,
       lifecycle: lifecycle.mixed ? null : lifecycle.value,
-      commercialMode: commercialMode.mixed ? null : commercialMode.value,
-      visibility: visibility.mixed ? null : visibility.value,
-      priceVisibility: priceVisibility.mixed ? null : priceVisibility.value,
-      stockVisibility: stockVisibility.mixed ? null : stockVisibility.value,
       mixed: {
         brand: brand.mixed,
-        vatRate: vatRate.mixed,
-        stockUnit: stockUnit.mixed,
         lifecycle: lifecycle.mixed,
-        commercialMode: commercialMode.mixed,
-        visibility: visibility.mixed,
-        priceVisibility: priceVisibility.mixed,
-        stockVisibility: stockVisibility.mixed,
       },
       enabled: {
         brand: false,
-        vatRate: false,
-        stockUnit: false,
         lifecycle: false,
-        commercialMode: false,
-        visibility: false,
-        priceVisibility: false,
-        stockVisibility: false,
       },
       touched: {},
     });
@@ -280,26 +225,8 @@ export default function ProductsListPage() {
     if (enabled.brand) {
       data.brand = bulkForm.brand ?? null;
     }
-    if (enabled.vatRate) {
-      data.vatRate = bulkForm.vatRate ?? null;
-    }
-    if (enabled.stockUnit) {
-      data.stockUnit = bulkForm.stockUnit ?? null;
-    }
     if (enabled.lifecycle) {
       data.lifecycle = bulkForm.lifecycle ?? null;
-    }
-    if (enabled.commercialMode) {
-      data.commercialMode = bulkForm.commercialMode ?? null;
-    }
-    if (enabled.visibility) {
-      data.visibility = bulkForm.visibility ?? null;
-    }
-    if (enabled.priceVisibility) {
-      data.priceVisibility = bulkForm.priceVisibility ?? null;
-    }
-    if (enabled.stockVisibility) {
-      data.stockVisibility = bulkForm.stockVisibility ?? null;
     }
 
     return data;
@@ -377,26 +304,8 @@ export default function ProductsListPage() {
           case "brand":
             next.brand = selectedItems[0]?.brand ?? null;
             break;
-          case "vatRate":
-            next.vatRate = selectedItems[0]?.vatRate ?? null;
-            break;
-          case "stockUnit":
-            next.stockUnit = selectedItems[0]?.stockUnit ?? null;
-            break;
           case "lifecycle":
             next.lifecycle = selectedItems[0]?.lifecycle ?? null;
-            break;
-          case "commercialMode":
-            next.commercialMode = selectedItems[0]?.commercialMode ?? null;
-            break;
-          case "visibility":
-            next.visibility = selectedItems[0]?.visibility ?? null;
-            break;
-          case "priceVisibility":
-            next.priceVisibility = selectedItems[0]?.priceVisibility ?? null;
-            break;
-          case "stockVisibility":
-            next.stockVisibility = selectedItems[0]?.stockVisibility ?? null;
             break;
           default:
             break;
@@ -412,13 +321,7 @@ export default function ProductsListPage() {
 
   const allFieldKeys: Array<keyof typeof bulkForm.enabled> = [
     "brand",
-    "vatRate",
-    "stockUnit",
     "lifecycle",
-    "commercialMode",
-    "visibility",
-    "priceVisibility",
-    "stockVisibility",
   ];
   const allFieldsChecked = allFieldKeys.every((field) => bulkForm.enabled[field]);
   const someFieldsChecked = allFieldKeys.some((field) => bulkForm.enabled[field]);
@@ -506,8 +409,6 @@ export default function ProductsListPage() {
           "Famille",
           "Variante par defaut",
           "Marque",
-          "Prix",
-          "Stock",
           "Sous-categories",
           "Variantes",
           "Actions",
@@ -570,12 +471,6 @@ export default function ProductsListPage() {
               )}
             </td>
             <td className="px-4 py-3 align-top text-sm text-slate-600">
-              {formatPrice(family.basePriceAmount)}
-            </td>
-            <td className="px-4 py-3 align-top text-sm text-slate-600">
-              {formatStock(family.stock, family.stockUnit)}
-            </td>
-            <td className="px-4 py-3 align-top text-sm text-slate-600">
               {family.subcategories.length > 0
                 ? family.subcategories.map((subcategory) => subcategory.name).join(", ")
                 : "-"}
@@ -621,182 +516,49 @@ export default function ProductsListPage() {
             </div>
           </DialogHeader>
           <div className="px-6 pb-4">
-          <div className="grid gap-6 md:grid-cols-5">
-            <PanelField id="family-common-brand" label={labelNode("brand", "Marque")}>
-              <PanelAutoCompleteInput
-                id="family-common-brand"
-                fullWidth
-                value={bulkForm.brand ?? ""}
-                placeholder={bulkForm.mixed.brand ? "Mixed" : undefined}
-                disabled={isDisabled("brand")}
-                suggestions={getProductBrandSuggestions(bulkForm.brand ?? "")}
-                onValueChange={(value) =>
-                  setBulkForm((current) => ({
-                    ...current,
-                    brand: value || null,
-                    mixed: { ...current.mixed, brand: false },
-                    touched: { ...current.touched, brand: true },
-                  }))
-                }
-              />
-            </PanelField>
+            <div className="grid gap-6 md:grid-cols-2">
+              <PanelField id="family-common-brand" label={labelNode("brand", "Marque")}>
+                <PanelAutoCompleteInput
+                  id="family-common-brand"
+                  fullWidth
+                  value={bulkForm.brand ?? ""}
+                  placeholder={bulkForm.mixed.brand ? "Mixed" : undefined}
+                  disabled={isDisabled("brand")}
+                  suggestions={getProductBrandSuggestions(bulkForm.brand ?? "")}
+                  onValueChange={(value) =>
+                    setBulkForm((current) => ({
+                      ...current,
+                      brand: value || null,
+                      mixed: { ...current.mixed, brand: false },
+                      touched: { ...current.touched, brand: true },
+                    }))
+                  }
+                />
+              </PanelField>
 
-            <PanelField id="family-common-vat" label={labelNode("vatRate", "TVA")}>
-              <PanelInput
-                fullWidth
-                id="family-common-vat"
-                type="number"
-                value={bulkForm.vatRate == null ? "" : String(bulkForm.vatRate)}
-                placeholder={bulkForm.mixed.vatRate ? "Mixed" : undefined}
-                disabled={isDisabled("vatRate")}
-                onChange={(event) =>
-                  setBulkForm((current) => ({
-                    ...current,
-                    vatRate: event.target.value ? Number(event.target.value) : null,
-                    mixed: { ...current.mixed, vatRate: false },
-                    touched: { ...current.touched, vatRate: true },
-                  }))
-                }
-              />
-            </PanelField>
-
-            <PanelField id="family-common-stock-unit" label={labelNode("stockUnit", "Unite de stock")}>
-              <StaffSelect
-                id="family-common-stock-unit"
-                fullWidth
-                value={bulkForm.stockUnit ?? ""}
-                placeholder={bulkForm.mixed.stockUnit ? "Mixed" : undefined}
-                disabled={isDisabled("stockUnit")}
-                onValueChange={(value: string) =>
-                  setBulkForm((current) => ({
-                    ...current,
-                    stockUnit: value ? (value as ProductStockUnit) : null,
-                    mixed: { ...current.mixed, stockUnit: false },
-                    touched: { ...current.touched, stockUnit: true },
-                  }))
-                }
-                options={Object.values(ProductStockUnit).map((value) => ({
-                  value,
-                  label: formatEnumLabel(value),
-                }))}
-              />
-            </PanelField>
-
-            <PanelField id="family-common-lifecycle" label={labelNode("lifecycle", "Cycle de vie")}>
-              <StaffSelect
-                id="family-common-lifecycle"
-                fullWidth
-                value={bulkForm.lifecycle ?? ""}
-                placeholder={bulkForm.mixed.lifecycle ? "Mixed" : undefined}
-                disabled={isDisabled("lifecycle")}
-                onValueChange={(value: string) =>
-                  setBulkForm((current) => ({
-                    ...current,
-                    lifecycle: value ? (value as ProductLifecycle) : null,
-                    mixed: { ...current.mixed, lifecycle: false },
-                    touched: { ...current.touched, lifecycle: true },
-                  }))
-                }
-                options={Object.values(ProductLifecycle).map((value) => ({
-                  value,
-                  label: formatEnumLabel(value),
-                }))}
-              />
-            </PanelField>
-
-            <PanelField id="family-common-commercial" label={labelNode("commercialMode", "Mode commercial")}>
-              <StaffSelect
-                id="family-common-commercial"
-                fullWidth
-                value={bulkForm.commercialMode ?? ""}
-                placeholder={bulkForm.mixed.commercialMode ? "Mixed" : undefined}
-                disabled={isDisabled("commercialMode")}
-                onValueChange={(value: string) =>
-                  setBulkForm((current) => ({
-                    ...current,
-                    commercialMode: value ? (value as ProductCommercialMode) : null,
-                    mixed: { ...current.mixed, commercialMode: false },
-                    touched: { ...current.touched, commercialMode: true },
-                  }))
-                }
-                options={Object.values(ProductCommercialMode).map((value) => ({
-                  value,
-                  label: formatEnumLabel(value),
-                }))}
-              />
-            </PanelField>
-
-            <PanelField id="family-common-visibility" label={labelNode("visibility", "Visible")}>
-              <StaffSelect
-                id="family-common-visibility"
-                fullWidth
-                value={bulkForm.visibility == null ? "" : String(bulkForm.visibility)}
-                placeholder={bulkForm.mixed.visibility ? "Mixed" : undefined}
-                disabled={isDisabled("visibility")}
-                onValueChange={(value: string) =>
-                  setBulkForm((current) => ({
-                    ...current,
-                    visibility: value ? value === "true" : null,
-                    mixed: { ...current.mixed, visibility: false },
-                    touched: { ...current.touched, visibility: true },
-                  }))
-                }
-                options={[
-                  { value: "true", label: "Oui" },
-                  { value: "false", label: "Non" },
-                ]}
-              />
-            </PanelField>
-
-            <PanelField id="family-common-price-visibility" label={labelNode("priceVisibility", "Prix visible")}>
-              <StaffSelect
-                id="family-common-price-visibility"
-                fullWidth
-                value={
-                  bulkForm.priceVisibility == null ? "" : String(bulkForm.priceVisibility)
-                }
-                placeholder={bulkForm.mixed.priceVisibility ? "Mixed" : undefined}
-                disabled={isDisabled("priceVisibility")}
-                onValueChange={(value: string) =>
-                  setBulkForm((current) => ({
-                    ...current,
-                    priceVisibility: value ? value === "true" : null,
-                    mixed: { ...current.mixed, priceVisibility: false },
-                    touched: { ...current.touched, priceVisibility: true },
-                  }))
-                }
-                options={[
-                  { value: "true", label: "Oui" },
-                  { value: "false", label: "Non" },
-                ]}
-              />
-            </PanelField>
-
-            <PanelField id="family-common-stock-visibility" label={labelNode("stockVisibility", "Stock visible")}>
-              <StaffSelect
-                id="family-common-stock-visibility"
-                fullWidth
-                value={
-                  bulkForm.stockVisibility == null ? "" : String(bulkForm.stockVisibility)
-                }
-                placeholder={bulkForm.mixed.stockVisibility ? "Mixed" : undefined}
-                disabled={isDisabled("stockVisibility")}
-                onValueChange={(value: string) =>
-                  setBulkForm((current) => ({
-                    ...current,
-                    stockVisibility: value ? value === "true" : null,
-                    mixed: { ...current.mixed, stockVisibility: false },
-                    touched: { ...current.touched, stockVisibility: true },
-                  }))
-                }
-                options={[
-                  { value: "true", label: "Oui" },
-                  { value: "false", label: "Non" },
-                ]}
-              />
-            </PanelField>
+              <PanelField id="family-common-lifecycle" label={labelNode("lifecycle", "Cycle de vie")}>
+                <StaffSelect
+                  id="family-common-lifecycle"
+                  fullWidth
+                  value={bulkForm.lifecycle ?? ""}
+                  placeholder={bulkForm.mixed.lifecycle ? "Mixed" : undefined}
+                  disabled={isDisabled("lifecycle")}
+                  onValueChange={(value: string) =>
+                    setBulkForm((current) => ({
+                      ...current,
+                      lifecycle: value ? (value as ProductLifecycle) : null,
+                      mixed: { ...current.mixed, lifecycle: false },
+                      touched: { ...current.touched, lifecycle: true },
+                    }))
+                  }
+                  options={Object.values(ProductLifecycle).map((value) => ({
+                    value,
+                    label: formatEnumLabel(value),
+                  }))}
+                />
+              </PanelField>
+            </div>
           </div>
-        </div>
           <DialogFooter>
             <AnimatedUIButton
               type="button"

@@ -2,11 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  ProductCommercialMode,
-  ProductLifecycle,
-  ProductStockUnit,
-} from "@prisma/client";
+import { ProductLifecycle } from "@prisma/client";
 import { ExternalLink, Package, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Loading from "@/components/staff/Loading";
@@ -60,12 +56,6 @@ type FamilyCommonValuesState = {
   brand: string;
   subcategoryIds: number[];
   lifecycle: ProductLifecycle;
-  priceVisibility: boolean;
-  stockVisibility: boolean;
-  visibility: boolean;
-  stockUnit: ProductStockUnit | null;
-  vatRate: string;
-  commercialMode: ProductCommercialMode;
   attributeKinds: string[];
 };
 
@@ -78,15 +68,7 @@ function createEmptyVariant(index: number): VariantEditorState {
     description: null,
     descriptionSeo: null,
     brand: null,
-    basePriceAmount: null,
-    vatRate: 19,
-    stock: null,
-    stockUnit: "ITEM",
-    visibility: true,
-    priceVisibility: false,
-    stockVisibility: false,
     lifecycle: "DRAFT",
-    commercialMode: "ON_REQUEST_ONLY",
     tags: "",
     subcategoryIds: [],
     datasheet: null,
@@ -113,12 +95,6 @@ function createEmptyCommonValuesState(): FamilyCommonValuesState {
     brand: "",
     subcategoryIds: [],
     lifecycle: "DRAFT",
-    priceVisibility: false,
-    stockVisibility: false,
-    visibility: true,
-    stockUnit: "ITEM",
-    vatRate: "19",
-    commercialMode: "ON_REQUEST_ONLY",
     attributeKinds: [],
   };
 }
@@ -179,25 +155,8 @@ function deriveCommonValues(form: FamilyEditorState): FamilyCommonValuesState {
     brand: defaultVariant.brand ?? "",
     subcategoryIds: [...defaultVariant.subcategoryIds],
     lifecycle: defaultVariant.lifecycle,
-    priceVisibility: defaultVariant.priceVisibility,
-    stockVisibility: defaultVariant.stockVisibility,
-    visibility: defaultVariant.visibility,
-    stockUnit: defaultVariant.stockUnit,
-    vatRate: defaultVariant.vatRate == null ? "" : String(defaultVariant.vatRate),
-    commercialMode: defaultVariant.commercialMode,
     attributeKinds: buildSharedAttributeKinds(form.variants),
   };
-}
-
-function parseCommonVatRate(value: string) {
-  const normalizedValue = value.trim();
-
-  if (!normalizedValue) {
-    return null;
-  }
-
-  const parsedValue = Number(normalizedValue);
-  return Number.isFinite(parsedValue) ? parsedValue : null;
 }
 
 function applyCommonValuesToVariant(
@@ -209,12 +168,6 @@ function applyCommonValuesToVariant(
     brand: commonValues.brand.trim() ? commonValues.brand.trim() : null,
     subcategoryIds: [...commonValues.subcategoryIds],
     lifecycle: commonValues.lifecycle,
-    priceVisibility: commonValues.priceVisibility,
-    stockVisibility: commonValues.stockVisibility,
-    visibility: commonValues.visibility,
-    stockUnit: commonValues.stockUnit,
-    vatRate: parseCommonVatRate(commonValues.vatRate),
-    commercialMode: commonValues.commercialMode,
     attributes: syncAttributesToKinds(variant.attributes, commonValues.attributeKinds),
   };
 }
@@ -575,7 +528,7 @@ function ProductEditPageContent() {
           title="Valeurs communes"
           description="Ces valeurs seront appliquées à toutes les variantes lors de l'enregistrement."
         >
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <PanelField id="family-common-brand" label="Marque">
               <PanelAutoCompleteInput
                 id="family-common-brand"
@@ -586,21 +539,6 @@ function ProductEditPageContent() {
                   setCommonValues((current) => ({
                     ...current,
                     brand: value ?? "",
-                  }))
-                }
-              />
-            </PanelField>
-
-            <PanelField id="family-common-vat" label="TVA">
-              <PanelInput
-                id="family-common-vat"
-                type="number"
-                fullWidth
-                value={commonValues.vatRate}
-                onChange={(event) =>
-                  setCommonValues((current) => ({
-                    ...current,
-                    vatRate: event.target.value,
                   }))
                 }
               />
@@ -624,97 +562,6 @@ function ProductEditPageContent() {
               />
             </PanelField>
 
-            <PanelField id="family-common-commercial" label="Mode commercial">
-              <StaffSelect
-                id="family-common-commercial"
-                fullWidth
-                value={commonValues.commercialMode}
-                onValueChange={(value) =>
-                  setCommonValues((current) => ({
-                    ...current,
-                    commercialMode: value as ProductCommercialMode,
-                  }))
-                }
-                options={Object.values(ProductCommercialMode).map((value) => ({
-                  value,
-                  label: formatEnumLabel(value),
-                }))}
-              />
-            </PanelField>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-4">
-            <PanelField id="family-common-visibility" label="Visible">
-              <StaffSelect
-                id="family-common-visibility"
-                fullWidth
-                value={String(commonValues.visibility)}
-                onValueChange={(value) =>
-                  setCommonValues((current) => ({
-                    ...current,
-                    visibility: value === "true",
-                  }))
-                }
-                options={[
-                  { value: "true", label: "Oui" },
-                  { value: "false", label: "Non" },
-                ]}
-              />
-            </PanelField>
-
-            <PanelField id="family-common-price-visible" label="Prix visible">
-              <StaffSelect
-                id="family-common-price-visible"
-                fullWidth
-                value={String(commonValues.priceVisibility)}
-                onValueChange={(value) =>
-                  setCommonValues((current) => ({
-                    ...current,
-                    priceVisibility: value === "true",
-                  }))
-                }
-                options={[
-                  { value: "true", label: "Oui" },
-                  { value: "false", label: "Non" },
-                ]}
-              />
-            </PanelField>
-
-            <PanelField id="family-common-stock-visible" label="Stock visible">
-              <StaffSelect
-                id="family-common-stock-visible"
-                fullWidth
-                value={String(commonValues.stockVisibility)}
-                onValueChange={(value) =>
-                  setCommonValues((current) => ({
-                    ...current,
-                    stockVisibility: value === "true",
-                  }))
-                }
-                options={[
-                  { value: "true", label: "Oui" },
-                  { value: "false", label: "Non" },
-                ]}
-              />
-            </PanelField>
-
-            <PanelField id="family-common-stock-unit" label="Unité de stock">
-              <StaffSelect
-                id="family-common-stock-unit"
-                fullWidth
-                value={commonValues.stockUnit ?? ""}
-                onValueChange={(value) =>
-                  setCommonValues((current) => ({
-                    ...current,
-                    stockUnit: value ? (value as ProductStockUnit) : null,
-                  }))
-                }
-                options={Object.values(ProductStockUnit).map((value) => ({
-                  value,
-                  label: formatEnumLabel(value),
-                }))}
-              />
-            </PanelField>
           </div>
 
           <ProductSubcategoriesField
@@ -830,37 +677,6 @@ function ProductEditPageContent() {
                 />
               </PanelField>
 
-              <PanelField className="flex-2" id={`${variant.formKey}-price`} label="Prix de base">
-                <PanelInput
-                fullWidth
-                  id={`${variant.formKey}-price`}
-                  value={variant.basePriceAmount ?? ""}
-                  onChange={(event) =>
-                    setForm((current) =>
-                      updateVariantState(current, variant.formKey, (entry) => ({
-                        ...entry,
-                        basePriceAmount: event.target.value || null,
-                      })),
-                    )
-                  }
-                />
-              </PanelField>
-
-              <PanelField className="flex-2" id={`${variant.formKey}-stock`} label="Stock">
-                <PanelInput
-                fullWidth
-                  id={`${variant.formKey}-stock`}
-                  value={variant.stock ?? ""}
-                  onChange={(event) =>
-                    setForm((current) =>
-                      updateVariantState(current, variant.formKey, (entry) => ({
-                        ...entry,
-                        stock: event.target.value || null,
-                      })),
-                    )
-                  }
-                />
-              </PanelField>
             </div>
 
             <div className="grid gap-6">

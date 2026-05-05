@@ -69,15 +69,7 @@ const PUBLIC_PRODUCT_SELECT = {
   description: true,
   descriptionSeo: true,
   brand: true,
-  basePriceAmount: true,
-  vatRate: true,
-  visibility: true,
-  priceVisibility: true,
-  stockVisibility: true,
-  stock: true,
-  stockUnit: true,
   lifecycle: true,
-  commercialMode: true,
   tags: true,
   datasheetMedia: {
     select: MEDIA_SELECT,
@@ -127,13 +119,7 @@ const PACK_COMPONENT_SELECT = {
   description: true,
   descriptionSeo: true,
   brand: true,
-  basePriceAmount: true,
-  vatRate: true,
-  visibility: true,
-  priceVisibility: true,
-  stockVisibility: true,
   lifecycle: true,
-  commercialMode: true,
   tags: true,
 } satisfies Prisma.ProductSelect;
 
@@ -304,11 +290,11 @@ function collectProductMediaIdsForPublishing(
 }
 
 function isPublicProduct(product: PublicProductRecord) {
-  return product.kind === "VARIANT" && product.lifecycle === "ACTIVE" && product.visibility === true;
+  return product.kind === "VARIANT" && product.lifecycle === "ACTIVE";
 }
 
 function isPublicSingleProduct(product: PublicProductRecord) {
-  return product.kind === "SINGLE" && product.lifecycle === "ACTIVE" && product.visibility === true;
+  return product.kind === "SINGLE" && product.lifecycle === "ACTIVE";
 }
 
 function getBrandName(brand: string | null | undefined) {
@@ -318,10 +304,6 @@ function getBrandName(brand: string | null | undefined) {
 function parseRichTextPreview(value: string | null | undefined) {
   const text = getArticlePlainText(value ?? "").trim();
   return text || null;
-}
-
-function formatDecimal(value: Prisma.Decimal | null | undefined) {
-  return value == null ? null : value.toString();
 }
 
 function mapSubcategoryLinks(
@@ -435,58 +417,15 @@ function derivePack(record: PublicPackRecord) {
       }),
     ),
   ];
-  const visibility =
-    record.packLinesAsPack.length > 0 &&
-    record.packLinesAsPack.every((line) => line.product.visibility === true);
-  const priceVisibility =
-    record.packLinesAsPack.length > 0 &&
-    record.packLinesAsPack.every((line) => line.product.priceVisibility === true);
   const lifecycle =
     record.packLinesAsPack.length > 0 &&
     record.packLinesAsPack.every((line) => line.product.lifecycle === "ACTIVE")
       ? "ACTIVE"
       : "DRAFT";
 
-  let priceTotal = new Prisma.Decimal(0);
-  let vatWeighted = new Prisma.Decimal(0);
-  let missingPrice = false;
-  let commercialMode: PublicPackRecord["packLinesAsPack"][number]["product"]["commercialMode"] | null = null;
-  const tagValues = new Set<string>();
-
-  for (const line of record.packLinesAsPack) {
-    const componentPrice = line.product.basePriceAmount;
-    if (componentPrice == null) {
-      missingPrice = true;
-    } else {
-      const lineTotal = componentPrice.mul(line.quantity);
-      priceTotal = priceTotal.add(lineTotal);
-      vatWeighted = vatWeighted.add(lineTotal.mul(line.product.vatRate ?? 0));
-    }
-
-    for (const tag of line.product.tags.split(/\s+/).filter(Boolean)) {
-      tagValues.add(tag);
-    }
-
-    commercialMode =
-      commercialMode == null
-        ? line.product.commercialMode
-        : commercialMode === "ON_REQUEST_ONLY" || line.product.commercialMode === "ON_REQUEST_ONLY"
-          ? "ON_REQUEST_ONLY"
-          : commercialMode === "ON_REQUEST_OR_ONLINE" || line.product.commercialMode === "ON_REQUEST_OR_ONLINE"
-            ? "ON_REQUEST_OR_ONLINE"
-            : "ONLINE_ONLY";
-  }
-
   return {
     brandNames,
-    visibility,
-    priceVisibility,
     lifecycle,
-    commercialMode,
-    basePriceAmount: missingPrice ? null : priceTotal.toString(),
-    vatRate: priceTotal.equals(0) ? 0 : Number(vatWeighted.div(priceTotal).toFixed(4)),
-    tags: [...tagValues].sort((left, right) => left.localeCompare(right, "fr-FR")).join(" "),
-    searchProducts: record.packLinesAsPack.map((line) => line.product),
   };
 }
 
@@ -539,10 +478,6 @@ function mapFamilySummary(record: PublicFamilyRecord, defaultVariant: PublicProd
     imageUrl: coverMedia?.url ?? null,
     imageThumbnailUrl: coverMedia?.thumbnailUrl ?? null,
     imageAlt: coverMedia?.altText ?? record.name,
-    price:
-      defaultVariant?.priceVisibility && defaultVariant.basePriceAmount != null
-        ? formatDecimal(defaultVariant.basePriceAmount)
-        : null,
   };
 }
 
@@ -563,10 +498,6 @@ function mapProductSummary(
     imageUrl: coverMedia?.kind === "IMAGE" ? coverMedia.url : null,
     imageThumbnailUrl: coverMedia?.kind === "IMAGE" ? coverMedia.thumbnailUrl : null,
     imageAlt: coverMedia?.altText ?? record.name,
-    price:
-      record.priceVisibility && record.basePriceAmount != null
-        ? formatDecimal(record.basePriceAmount)
-        : null,
   };
 }
 
@@ -584,7 +515,6 @@ function mapPackSummary(record: PublicPackRecord, derived: ReturnType<typeof der
     imageUrl: coverMedia?.kind === "IMAGE" ? coverMedia.url : null,
     imageThumbnailUrl: coverMedia?.kind === "IMAGE" ? coverMedia.thumbnailUrl : null,
     imageAlt: coverMedia?.altText ?? record.name,
-    price: derived.priceVisibility ? derived.basePriceAmount : null,
   };
 }
 
@@ -665,15 +595,6 @@ function mapInspectorVariant(product: PublicProductRecord): PublicProductInspect
     slug: product.slug,
     name: product.name,
     description: product.description,
-    basePriceAmount:
-      product.priceVisibility && product.basePriceAmount != null
-      ? formatDecimal(product.basePriceAmount)
-      : null,
-    priceVisibility: product.priceVisibility ?? false,
-    commercialMode: product.commercialMode,
-    stock: formatDecimal(product.stock),
-    stockUnit: product.stockUnit,
-    stockVisibility: product.stockVisibility ?? false,
     datasheet: mapMediaRecord(product.datasheetMedia),
     media: mapVariantMedia(product),
     attributes: mapVariantAttributes(product),
@@ -683,9 +604,6 @@ function mapInspectorVariant(product: PublicProductRecord): PublicProductInspect
 function mapSimpleInspector(record: PublicProductRecord, input: {
   kind: "PACK" | "SINGLE" | "VARIANT";
   brandNames: string[];
-  basePriceAmount: string | null;
-  priceVisibility: boolean;
-  commercialMode: PublicProductRecord["commercialMode"] | null;
 }): PublicSimpleProductInspector {
   const media = mapVariantMedia(record);
   const attributes = mapVariantAttributes(record);
@@ -701,12 +619,6 @@ function mapSimpleInspector(record: PublicProductRecord, input: {
     brandNames: input.brandNames,
     media,
     datasheet: input.kind === "PACK" ? null : mapMediaRecord(record.datasheetMedia),
-    basePriceAmount: input.priceVisibility ? input.basePriceAmount : null,
-    priceVisibility: input.priceVisibility,
-    stock: formatDecimal(record.stock),
-    stockUnit: record.stockUnit,
-    stockVisibility: record.stockVisibility ?? false,
-    commercialMode: input.commercialMode,
     subcategories: mapSubcategoryLinks(record.subcategoryLinks),
     attributes,
     colorReferences: buildColorReferencesFromAttributes([attributes]),
@@ -777,7 +689,15 @@ function sortIndexItems(items: PublicProductIndexItem[]) {
 
 
 
-function buildAdvancedSearchAst(q: string) {
+type AdvancedSearchAst =
+  | string
+  | {
+      type: "AND" | "OR" | "OR_GROUP";
+      left: AdvancedSearchAst;
+      right: AdvancedSearchAst;
+    };
+
+function buildAdvancedSearchAst(q: string): AdvancedSearchAst | null {
   const isAdvancedSearch = /^(?:brand|sku|name|date)(?::[123])?=/i.test(q);
   if (!isAdvancedSearch) return null;
 
@@ -805,7 +725,7 @@ function buildAdvancedSearchAst(q: string) {
   }
 
   // Ast building
-  const step1: any[] = [];
+  const step1: AdvancedSearchAst[] = [];
   for (let i = 0; i < tokens.length; i++) {
     if (tokens[i] === '||') {
       const left = step1.pop();
@@ -817,7 +737,7 @@ function buildAdvancedSearchAst(q: string) {
     }
   }
 
-  const step2: any[] = [];
+  const step2: AdvancedSearchAst[] = [];
   for (let i = 0; i < step1.length; i++) {
     if (step1[i] === '&') {
       const left = step2.pop();
@@ -829,7 +749,7 @@ function buildAdvancedSearchAst(q: string) {
     }
   }
 
-  const step3: any[] = [];
+  const step3: AdvancedSearchAst[] = [];
   for (let i = 0; i < step2.length; i++) {
     if (step2[i] === '|') {
       const left = step3.pop();
@@ -845,7 +765,7 @@ function buildAdvancedSearchAst(q: string) {
   return step3[0];
 }
 
-function buildSqlFromAst(node: any): import("@prisma/client").Prisma.Sql {
+function buildSqlFromAst(node: AdvancedSearchAst): import("@prisma/client").Prisma.Sql {
   if (typeof node === 'string') {
     const match = node.match(/^((?:brand|sku|name|date))(?::([123]))?=([^&|]*)$/i);
     if (!match) return Prisma.empty;
@@ -957,7 +877,7 @@ export async function listPublicProductsIndex(input: {
     JOIN product_subcategory_links l ON l.product_id = p.id
     JOIN product_subcategories s ON s.id = l.subcategory_id AND s.is_active = true
     JOIN product_types c ON c.id = s.category_id AND c.is_active = true
-    WHERE p.kind = 'VARIANT' AND p.lifecycle = 'ACTIVE' AND p.visibility IS TRUE
+    WHERE p.kind = 'VARIANT' AND p.lifecycle = 'ACTIVE'
     ${advancedSearchCondition}
     ${input.categorySlug ? Prisma.sql`AND "c".slug = ${input.categorySlug}` : Prisma.empty}
     ${input.subcategorySlug ? Prisma.sql`AND "s".slug = ${input.subcategorySlug}` : Prisma.empty}
@@ -1071,7 +991,7 @@ export async function listPublicProductsIndex(input: {
       includeFamilies
         ? Prisma.sql`(p.kind IN ('SINGLE', 'PACK') OR (p.kind = 'VARIANT' AND fm.product_id IS NULL))`
         : Prisma.sql`p.kind IN ('SINGLE', 'PACK', 'VARIANT')`
-    } AND p.lifecycle = 'ACTIVE' AND p.visibility IS TRUE
+    } AND p.lifecycle = 'ACTIVE'
     AND (
       p.kind <> 'PACK'
       OR (
@@ -1086,8 +1006,7 @@ export async function listPublicProductsIndex(input: {
           JOIN products public_component ON public_component.id = public_ppl.product_id
           WHERE public_ppl.pack_product_id = p.id
             AND (
-              public_component.visibility IS DISTINCT FROM TRUE
-              OR public_component.lifecycle IS DISTINCT FROM 'ACTIVE'
+              public_component.lifecycle IS DISTINCT FROM 'ACTIVE'
             )
         )
       )
@@ -1189,7 +1108,7 @@ export async function listPublicProductsIndex(input: {
   for (const product of products) {
     if (product.kind === "PACK") {
       const derived = derivePack(product);
-      if (!derived.visibility || derived.lifecycle !== "ACTIVE") {
+      if (derived.lifecycle !== "ACTIVE") {
         continue;
       }
       productSummaryMap.set(Number(product.id), mapPackSummary(product, derived));
@@ -1298,7 +1217,6 @@ export async function findPublicSingleProductBySlug(
       slug: productSlug,
       kind: "SINGLE",
       lifecycle: "ACTIVE",
-      visibility: true,
     },
     select: PUBLIC_PRODUCT_SELECT,
   });
@@ -1314,9 +1232,6 @@ export async function findPublicSingleProductBySlug(
   return mapSimpleInspector(record, {
     kind: "SINGLE",
     brandNames: brandName ? [brandName] : [],
-    basePriceAmount: formatDecimal(record.basePriceAmount),
-    priceVisibility: record.priceVisibility ?? false,
-    commercialMode: record.commercialMode,
   });
 }
 
@@ -1330,7 +1245,6 @@ export async function findPublicProductBySlug(
         in: ["SINGLE", "VARIANT"],
       },
       lifecycle: "ACTIVE",
-      visibility: true,
     },
     select: PUBLIC_PRODUCT_SELECT,
   });
@@ -1346,9 +1260,6 @@ export async function findPublicProductBySlug(
   return mapSimpleInspector(record, {
     kind: record.kind,
     brandNames: brandName ? [brandName] : [],
-    basePriceAmount: formatDecimal(record.basePriceAmount),
-    priceVisibility: record.priceVisibility ?? false,
-    commercialMode: record.commercialMode,
   });
 }
 
@@ -1369,7 +1280,7 @@ export async function findPublicPackBySlug(
 
   const derived = derivePack(record);
 
-  if (!derived.visibility || derived.lifecycle !== "ACTIVE") {
+  if (derived.lifecycle !== "ACTIVE") {
     return null;
   }
 
@@ -1378,9 +1289,6 @@ export async function findPublicPackBySlug(
   return mapSimpleInspector(record, {
     kind: "PACK",
     brandNames: derived.brandNames,
-    basePriceAmount: derived.basePriceAmount,
-    priceVisibility: derived.priceVisibility,
-    commercialMode: derived.commercialMode,
   });
 }
 

@@ -1,8 +1,4 @@
-import {
-  ProductCommercialMode,
-  ProductLifecycle,
-  ProductStockUnit,
-} from "@prisma/client";
+import { ProductLifecycle } from "@prisma/client";
 import {
   buildDuplicateAttributeKindMessage,
   findDuplicateAttributeKind,
@@ -60,27 +56,6 @@ function parseEnumValue<T extends string>(
     throw new SingleProductsValidationError(`Valeur invalide pour ${fieldName}.`);
   }
   return normalized;
-}
-
-function parseBoolean(value: unknown, fieldName: string) {
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  throw new SingleProductsValidationError(`Valeur booléenne invalide pour ${fieldName}.`);
-}
-
-function parseOptionalNumber(value: unknown, fieldName: string) {
-  if (value == null || value === "") {
-    return null;
-  }
-
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) {
-    throw new SingleProductsValidationError(`Valeur numérique invalide pour ${fieldName}.`);
-  }
-
-  return parsed;
 }
 
 function parseOptionalIntegerArray(value: unknown, fieldName: string) {
@@ -150,25 +125,7 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
       record.brand == null || record.brand === ""
         ? null
         : normalizeProductBrandString(String(record.brand)),
-    basePriceAmount:
-      record.basePriceAmount == null || record.basePriceAmount === ""
-        ? null
-        : String(record.basePriceAmount),
-    vatRate: parseOptionalNumber(record.vatRate, "vatRate"),
-    stock: record.stock == null || record.stock === "" ? null : String(record.stock),
-    stockUnit:
-      record.stockUnit == null || record.stockUnit === ""
-        ? null
-        : parseEnumValue(record.stockUnit, Object.values(ProductStockUnit), "stockUnit"),
-    visibility: parseBoolean(record.visibility, "visibility"),
-    priceVisibility: parseBoolean(record.priceVisibility, "priceVisibility"),
-    stockVisibility: parseBoolean(record.stockVisibility, "stockVisibility"),
     lifecycle: parseEnumValue(record.lifecycle, Object.values(ProductLifecycle), "lifecycle"),
-    commercialMode: parseEnumValue(
-      record.commercialMode,
-      Object.values(ProductCommercialMode),
-      "commercialMode",
-    ),
     tags: parseOptionalString(record.tags) ?? "",
     subcategoryIds: parseOptionalIntegerArray(
       Array.isArray(record.subcategoryIds) ? record.subcategoryIds : [],

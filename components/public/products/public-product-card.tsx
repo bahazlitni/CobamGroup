@@ -2,9 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import type { PublicProductSummary } from "@/features/products/public";
-import { normalizeThemeColor, withThemeAlpha } from "@/lib/theme-color";
+import { normalizeThemeColor } from "@/lib/theme-color";
 import { cn } from "@/lib/utils";
 
 type PublicProductCardProps = {
@@ -74,16 +73,7 @@ export default function ProductCard({
             {product.name}
           </h4>
 
-          {/* Bottom Row - Price & Link highlight */}
-          <div className="mt-2 flex items-center justify-between">
-            <div className="flex items-baseline gap-1">
-              <span className="text-lg font-medium text-cobam-dark-blue">
-                {product.price ? product.price : "Sur demande"}
-              </span>
-              {product.price && <span className="text-[10px] font-bold uppercase tracking-widest text-cobam-carbon-grey">TND</span>}
-            </div>
-
-            {/* The refined theme-colored accent */}
+          <div className="mt-2 flex justify-end">
             <div
               className="h-[2px] w-0 group-hover:w-8 transition-all duration-300 origin-right"
               style={{ backgroundColor: resolvedThemeColor }}

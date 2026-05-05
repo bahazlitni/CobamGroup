@@ -154,23 +154,6 @@ export function buildBreadcrumbStructuredData(input: {
   };
 }
 
-function buildOffer(input: {
-  path: string;
-  price: string | null;
-  priceVisibility: boolean;
-}) {
-  if (!input.priceVisibility || !input.price) {
-    return undefined;
-  }
-
-  return {
-    "@type": "Offer",
-    priceCurrency: "TND",
-    price: input.price,
-    url: buildAbsoluteUrl(input.path),
-  };
-}
-
 function mapAttributeToProperty(attribute: PublicProductInspectorAttribute) {
   return {
     "@type": "PropertyValue",
@@ -213,11 +196,6 @@ function buildVariantSchema(input: {
       input.variant.attributes.length > 0
         ? input.variant.attributes.map(mapAttributeToProperty)
         : undefined,
-    offers: buildOffer({
-      path: `${input.path}?variant=${encodeURIComponent(input.variant.slug)}`,
-      price: input.variant.basePriceAmount,
-      priceVisibility: input.variant.priceVisibility,
-    }),
   };
 }
 
@@ -381,11 +359,6 @@ export function buildSimpleProductStructuredData(
       product.attributes.length > 0
         ? product.attributes.map(mapAttributeToProperty)
         : undefined,
-    offers: buildOffer({
-      path,
-      price: product.basePriceAmount,
-      priceVisibility: product.priceVisibility,
-    }),
   };
 }
 

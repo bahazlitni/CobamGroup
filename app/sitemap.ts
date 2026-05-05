@@ -81,7 +81,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           in: [ProductKind.SINGLE, ProductKind.VARIANT],
         },
         lifecycle: "ACTIVE",
-        visibility: true,
       },
       select: {
         slug: true,
@@ -112,7 +111,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             product: {
               kind: ProductKind.VARIANT,
               lifecycle: "ACTIVE",
-              visibility: true,
             },
           },
         },
@@ -152,7 +150,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: {
         kind: ProductKind.PACK,
         lifecycle: "ACTIVE",
-        visibility: true,
       },
       select: {
         slug: true,
@@ -178,7 +175,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           select: {
             product: {
               select: {
-                visibility: true,
                 lifecycle: true,
               },
             },
@@ -232,9 +228,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         (pack) =>
           pack.packLinesAsPack.length > 0 &&
           pack.packLinesAsPack.every(
-            (line) =>
-              line.product.visibility === true &&
-              line.product.lifecycle === "ACTIVE",
+            (line) => line.product.lifecycle === "ACTIVE",
           ),
       )
       .flatMap((pack) =>

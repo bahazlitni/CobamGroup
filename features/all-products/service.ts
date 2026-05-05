@@ -1,9 +1,4 @@
-import {
-  Prisma,
-  ProductCommercialMode,
-  ProductLifecycle,
-  ProductStockUnit,
-} from "@prisma/client";
+import { Prisma, ProductLifecycle } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
 import { canAccessProducts, canToggleProductLifecycle } from "@/features/products/access";
 import formatEnumLabel from "@/lib/formatEnumLabel";
@@ -33,16 +28,8 @@ const ALL_PRODUCTS_LIST_SELECT = {
   name: true,
   description: true,
   brand: true,
-  basePriceAmount: true,
-  vatRate: true,
-  stock: true,
-  stockUnit: true,
   datasheetMediaId: true,
-  visibility: true,
-  priceVisibility: true,
-  stockVisibility: true,
   lifecycle: true,
-  commercialMode: true,
   updatedAt: true,
   mediaLinks: {
     select: {
@@ -86,12 +73,7 @@ const ALL_PRODUCTS_LIST_SELECT = {
       product: {
         select: {
           brand: true,
-          basePriceAmount: true,
-          stock: true,
-          priceVisibility: true,
-          stockVisibility: true,
           lifecycle: true,
-          visibility: true,
         },
       },
     },
@@ -137,57 +119,6 @@ function formatAllProductBrand(record: AllProductsListRecord) {
 
 function mapAllProductsListItem(record: AllProductsListRecord): AllProductsListItemDto {
   const derivedLifecycle = record.lifecycle ?? "DRAFT";
-  const derivedVisibility =
-    record.kind === "PACK"
-      ? record.packLinesAsPack.length > 0 &&
-        record.packLinesAsPack.every((line) => line.product.visibility === true)
-      : record.visibility;
-  const derivedPriceVisibility =
-    record.kind === "PACK"
-      ? record.packLinesAsPack.length > 0 &&
-        record.packLinesAsPack.every((line) => line.product.priceVisibility === true)
-      : record.priceVisibility;
-  const derivedStockVisibility =
-    record.kind === "PACK"
-      ? record.packLinesAsPack.length > 0 &&
-        record.packLinesAsPack.every((line) => line.product.stockVisibility === true)
-      : record.stockVisibility;
-  const derivedPrice =
-    record.kind === "PACK"
-      ? (() => {
-          if (record.packLinesAsPack.some((line) => line.product.basePriceAmount == null)) {
-            return null;
-          }
-
-          return record.packLinesAsPack
-            .reduce(
-              (total, line) =>
-                total.add((line.product.basePriceAmount ?? new Prisma.Decimal(0)).mul(line.quantity)),
-              new Prisma.Decimal(0),
-            )
-            .toString();
-        })()
-      : record.basePriceAmount?.toString() ?? null;
-  const derivedStock =
-    record.kind === "PACK"
-      ? (() => {
-          let stockValue: Prisma.Decimal | null = null;
-
-          for (const line of record.packLinesAsPack) {
-            if (line.product.stock == null) {
-              return null;
-            }
-
-            const availableBundles = line.product.stock.div(line.quantity);
-            stockValue =
-              stockValue == null
-                ? availableBundles
-                : Prisma.Decimal.min(stockValue, availableBundles);
-          }
-
-          return stockValue?.toString() ?? null;
-        })()
-      : record.stock?.toString() ?? null;
 
   return {
     id: Number(record.id),
@@ -197,10 +128,6 @@ function mapAllProductsListItem(record: AllProductsListRecord): AllProductsListI
     name: record.name,
     description: record.description,
     brand: formatAllProductBrand(record),
-    basePriceAmount: derivedPrice,
-    vatRate: record.vatRate ?? null,
-    stock: derivedStock,
-    stockUnit: record.kind === "PACK" ? "ITEM" : record.stockUnit,
     hasImage: record.mediaLinks.some((link) => link.media.kind === "IMAGE"),
     hasDatasheet: record.kind === "PACK" ? false : record.datasheetMediaId != null,
     subcategories: record.subcategoryLinks.map(({ subcategory }) => ({
@@ -209,11 +136,7 @@ function mapAllProductsListItem(record: AllProductsListRecord): AllProductsListI
       slug: subcategory.slug,
       categorySlug: subcategory.category.slug,
     })),
-    visibility: derivedVisibility ?? null,
-    priceVisibility: derivedPriceVisibility ?? null,
-    stockVisibility: derivedStockVisibility ?? null,
     lifecycle: derivedLifecycle,
-    commercialMode: record.commercialMode ?? null,
     updatedAt: record.updatedAt.toISOString(),
     family: record.familyMembership?.family
       ? {
@@ -247,13 +170,6 @@ const BASIC_EXPORT_COLUMNS: AllProductsExportColumn[] = [
   { header: "SKU", value: (row) => row.product.sku },
   { header: "Nom", value: (row) => row.product.name },
   { header: "Marque", value: (row) => row.product.brand },
-  { header: "Prix de base", value: (row) => row.product.basePriceAmount },
-  { header: "TVA", value: (row) => row.product.vatRate },
-  { header: "Stock", value: (row) => row.product.stock },
-  {
-    header: "Unité de stock",
-    value: (row) => formatEnumLabel(row.product.stockUnit),
-  },
 ];
 
 const EXTENDED_EXPORT_COLUMNS: AllProductsExportColumn[] = [
@@ -263,19 +179,6 @@ const EXTENDED_EXPORT_COLUMNS: AllProductsExportColumn[] = [
     value: (row) => formatEnumLabel(row.product.lifecycle),
   },
   {
-    header: "Mode commercial",
-    value: (row) => formatEnumLabel(row.product.commercialMode),
-  },
-  { header: "Visible", value: (row) => formatBooleanCell(row.product.visibility) },
-  {
-    header: "Prix visible",
-    value: (row) => formatBooleanCell(row.product.priceVisibility),
-  },
-  {
-    header: "Stock visible",
-    value: (row) => formatBooleanCell(row.product.stockVisibility),
-  },
-  {
     header: "Sous-catégories",
     value: (row) =>
       Array.from(new Set(row.product.subcategories.map((subcategory) => subcategory.name)))
@@ -283,14 +186,6 @@ const EXTENDED_EXPORT_COLUMNS: AllProductsExportColumn[] = [
         .join(" | "),
   },
 ];
-
-function formatBooleanCell(value: boolean | null | undefined) {
-  if (value == null) {
-    return "";
-  }
-
-  return value ? "Oui" : "Non";
-}
 
 function normalizeCsvCellValue(value: string | number | null | undefined) {
   return value == null ? "" : String(value);
@@ -889,15 +784,7 @@ export type BulkProductUpdateInput = {
   sku?: string | null;
   name?: string | null;
   brand?: string | null;
-  basePriceAmount?: string | null;
-  vatRate?: number | null;
-  stock?: string | null;
-  stockUnit?: string | null;
   lifecycle?: ProductLifecycle | null;
-  commercialMode?: ProductCommercialMode | null;
-  visibility?: boolean | null;
-  priceVisibility?: boolean | null;
-  stockVisibility?: boolean | null;
 };
 
 export async function updateAllProductsBulkService(
@@ -931,33 +818,8 @@ export async function updateAllProductsBulkService(
   if (input.brand !== undefined) {
     data.brand = input.brand;
   }
-  if (input.basePriceAmount !== undefined) {
-    data.basePriceAmount =
-      input.basePriceAmount == null ? null : new Prisma.Decimal(input.basePriceAmount);
-  }
-  if (input.vatRate !== undefined) {
-    data.vatRate = input.vatRate;
-  }
-  if (input.stock !== undefined) {
-    data.stock = input.stock == null ? null : new Prisma.Decimal(input.stock);
-  }
-  if (input.stockUnit !== undefined) {
-    data.stockUnit = input.stockUnit as ProductStockUnit | null;
-  }
   if (input.lifecycle !== undefined) {
     data.lifecycle = input.lifecycle;
-  }
-  if (input.commercialMode !== undefined) {
-    data.commercialMode = input.commercialMode;
-  }
-  if (input.visibility !== undefined) {
-    data.visibility = input.visibility;
-  }
-  if (input.priceVisibility !== undefined) {
-    data.priceVisibility = input.priceVisibility;
-  }
-  if (input.stockVisibility !== undefined) {
-    data.stockVisibility = input.stockVisibility;
   }
 
   if (Object.keys(data).length === 0) {

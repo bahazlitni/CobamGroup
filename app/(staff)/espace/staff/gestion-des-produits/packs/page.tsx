@@ -36,12 +36,9 @@ import type { ProductPackListItemDto } from "@/features/product-packs/types";
 const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
 const COLUMN_LABELS = [
   "Pack",
-  "Prix derive",
-  "Stock",
   "Sous-categories",
   "Marque",
   "Cycle",
-  "Visible",
   "Lignes",
   "Actions",
 ];
@@ -50,28 +47,6 @@ function formatLifecycleBadge(lifecycle: ProductPackListItemDto["lifecycle"]) {
   return lifecycle === "ACTIVE"
     ? { label: "Actif", color: "green" as const, icon: "check-circle" as const }
     : { label: "Brouillon", color: "default" as const, icon: "modify" as const };
-}
-
-function formatVisibilityBadge(visibility: boolean) {
-  return visibility
-    ? { label: "Visible", color: "blue" as const, icon: "eye" as const }
-    : { label: "Masque", color: "default" as const, icon: "eye-off" as const };
-}
-
-function formatPrice(value: string | null) {
-  if (!value) {
-    return "Masque";
-  }
-
-  return `${value} TND`;
-}
-
-function formatStock(value: string | null, unit: string | null) {
-  if (!value) {
-    return "-";
-  }
-
-  return unit ? `${value} ${unit}` : value;
 }
 
 function getLifecycleAction(pack: ProductPackListItemDto) {
@@ -108,28 +83,12 @@ export default function ProductPacksListPage() {
     sku: "",
     name: "",
     brand: null as string | null,
-    basePriceAmount: null as string | null,
-    vatRate: null as number | null,
-    stock: null as string | null,
-    stockUnit: null as ProductPackListItemDto["stockUnit"] | null,
     lifecycle: null as ProductPackListItemDto["lifecycle"] | null,
-    commercialMode: null as ProductPackListItemDto["commercialMode"] | null,
-    visibility: null as ProductPackListItemDto["visibility"] | null,
-    priceVisibility: null as ProductPackListItemDto["priceVisibility"] | null,
-    stockVisibility: null as ProductPackListItemDto["stockVisibility"] | null,
     mixed: {
       sku: false,
       name: false,
       brand: false,
-      basePriceAmount: false,
-      vatRate: false,
-      stock: false,
-      stockUnit: false,
       lifecycle: false,
-      commercialMode: false,
-      visibility: false,
-      priceVisibility: false,
-      stockVisibility: false,
     },
     touched: {} as Record<string, boolean>,
   });
@@ -314,42 +273,18 @@ export default function ProductPacksListPage() {
       selectedItems.some((item) => item.name !== selectedItems[0].name);
 
     const brand = getValue((item) => item.brands?.[0] ?? null);
-    const basePriceAmount = getValue((item) => item.basePriceAmount ?? null);
-    const vatRate = getValue((item) => item.vatRate ?? null);
-    const stock = getValue((item) => item.stock ?? null);
-    const stockUnit = getValue((item) => item.stockUnit ?? null);
     const lifecycle = getValue((item) => item.lifecycle ?? null);
-    const commercialMode = getValue((item) => item.commercialMode ?? null);
-    const visibility = getValue((item) => item.visibility ?? null);
-    const priceVisibility = getValue((item) => item.priceVisibility ?? null);
-    const stockVisibility = getValue((item) => item.stockVisibility ?? null);
 
     setBulkForm({
       sku: skuMixed ? "" : selectedItems[0].sku,
       name: nameMixed ? "" : selectedItems[0].name,
       brand: brand.mixed ? null : brand.value,
-      basePriceAmount: basePriceAmount.mixed ? null : basePriceAmount.value,
-      vatRate: vatRate.mixed ? null : vatRate.value,
-      stock: stock.mixed ? null : stock.value,
-      stockUnit: stockUnit.mixed ? null : stockUnit.value,
       lifecycle: lifecycle.mixed ? null : lifecycle.value,
-      commercialMode: commercialMode.mixed ? null : commercialMode.value,
-      visibility: visibility.mixed ? null : visibility.value,
-      priceVisibility: priceVisibility.mixed ? null : priceVisibility.value,
-      stockVisibility: stockVisibility.mixed ? null : stockVisibility.value,
       mixed: {
         sku: skuMixed,
         name: nameMixed,
         brand: brand.mixed,
-        basePriceAmount: basePriceAmount.mixed,
-        vatRate: vatRate.mixed,
-        stock: stock.mixed,
-        stockUnit: stockUnit.mixed,
         lifecycle: lifecycle.mixed,
-        commercialMode: commercialMode.mixed,
-        visibility: visibility.mixed,
-        priceVisibility: priceVisibility.mixed,
-        stockVisibility: stockVisibility.mixed,
       },
       touched: {},
     });
@@ -373,32 +308,8 @@ export default function ProductPacksListPage() {
     if (touched.brand) {
       data.brand = bulkForm.brand ?? null;
     }
-    if (touched.basePriceAmount) {
-      data.basePriceAmount = bulkForm.basePriceAmount ?? null;
-    }
-    if (touched.vatRate) {
-      data.vatRate = bulkForm.vatRate ?? null;
-    }
-    if (touched.stock) {
-      data.stock = bulkForm.stock ?? null;
-    }
-    if (touched.stockUnit) {
-      data.stockUnit = bulkForm.stockUnit ?? null;
-    }
     if (touched.lifecycle) {
       data.lifecycle = bulkForm.lifecycle ?? null;
-    }
-    if (touched.commercialMode) {
-      data.commercialMode = bulkForm.commercialMode ?? null;
-    }
-    if (touched.visibility) {
-      data.visibility = bulkForm.visibility ?? null;
-    }
-    if (touched.priceVisibility) {
-      data.priceVisibility = bulkForm.priceVisibility ?? null;
-    }
-    if (touched.stockVisibility) {
-      data.stockVisibility = bulkForm.stockVisibility ?? null;
     }
 
     return data;
@@ -556,7 +467,6 @@ export default function ProductPacksListPage() {
       >
         {items.map((pack, index) => {
           const lifecycleBadge = formatLifecycleBadge(pack.lifecycle);
-          const visibilityBadge = formatVisibilityBadge(pack.visibility);
           const lifecycleAction = getLifecycleAction(pack);
 
           return (
@@ -587,12 +497,6 @@ export default function ProductPacksListPage() {
                 </div>
               </td>
               <td className="px-4 py-3 align-top text-sm text-slate-600">
-                {formatPrice(pack.basePriceAmount)}
-              </td>
-              <td className="px-4 py-3 align-top text-sm text-slate-600">
-                {formatStock(pack.stock, pack.stockUnit ?? null)}
-              </td>
-              <td className="px-4 py-3 align-top text-sm text-slate-600">
                 {pack.subcategories.length > 0
                   ? pack.subcategories.map((subcategory) => subcategory.name).join(", ")
                   : "-"}
@@ -603,11 +507,6 @@ export default function ProductPacksListPage() {
               <td className="px-4 py-3 align-top">
                 <StaffBadge size="md" color={lifecycleBadge.color} icon={lifecycleBadge.icon}>
                   {lifecycleBadge.label}
-                </StaffBadge>
-              </td>
-              <td className="px-4 py-3 align-top">
-                <StaffBadge size="md" color={visibilityBadge.color} icon={visibilityBadge.icon}>
-                  {visibilityBadge.label}
                 </StaffBadge>
               </td>
               <td className="px-4 py-3 align-top text-sm text-slate-600">{pack.lineCount}</td>
@@ -644,7 +543,7 @@ export default function ProductPacksListPage() {
           <DialogHeader>
             <DialogTitle>Modifier les packs</DialogTitle>
             <DialogDescription>
-              Les champs indiques "Mixed" seront unifies si vous les modifiez.
+              Les champs indiques &quot;Mixed&quot; seront unifies si vous les modifiez.
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 pb-4">
@@ -652,27 +551,11 @@ export default function ProductPacksListPage() {
               sku={bulkForm.sku}
               name={bulkForm.name}
               brand={bulkForm.brand}
-              basePriceAmount={bulkForm.basePriceAmount}
-              vatRate={bulkForm.vatRate}
-              stock={bulkForm.stock}
-              stockUnit={bulkForm.stockUnit}
               lifecycle={bulkForm.lifecycle}
-              commercialMode={bulkForm.commercialMode}
-              visibility={bulkForm.visibility}
-              priceVisibility={bulkForm.priceVisibility}
-              stockVisibility={bulkForm.stockVisibility}
               skuPlaceholder={bulkForm.mixed.sku ? "Mixed" : undefined}
               namePlaceholder={bulkForm.mixed.name ? "Mixed" : undefined}
               brandPlaceholder={bulkForm.mixed.brand ? "Mixed" : undefined}
-              basePricePlaceholder={bulkForm.mixed.basePriceAmount ? "Mixed" : undefined}
-              vatRatePlaceholder={bulkForm.mixed.vatRate ? "Mixed" : undefined}
-              stockPlaceholder={bulkForm.mixed.stock ? "Mixed" : undefined}
-              stockUnitPlaceholder={bulkForm.mixed.stockUnit ? "Mixed" : undefined}
               lifecyclePlaceholder={bulkForm.mixed.lifecycle ? "Mixed" : undefined}
-              commercialModePlaceholder={bulkForm.mixed.commercialMode ? "Mixed" : undefined}
-              visibilityPlaceholder={bulkForm.mixed.visibility ? "Mixed" : undefined}
-              priceVisibilityPlaceholder={bulkForm.mixed.priceVisibility ? "Mixed" : undefined}
-              stockVisibilityPlaceholder={bulkForm.mixed.stockVisibility ? "Mixed" : undefined}
               disableSku={bulkForm.mixed.sku}
               disableName={bulkForm.mixed.name}
               onSkuChanged={(value) =>
@@ -699,76 +582,12 @@ export default function ProductPacksListPage() {
                   touched: { ...current.touched, brand: true },
                 }))
               }
-              onBasePriceAmountChanged={(value) =>
-                setBulkForm((current) => ({
-                  ...current,
-                  basePriceAmount: value,
-                  mixed: { ...current.mixed, basePriceAmount: false },
-                  touched: { ...current.touched, basePriceAmount: true },
-                }))
-              }
-              onVatRateChanged={(value) =>
-                setBulkForm((current) => ({
-                  ...current,
-                  vatRate: value,
-                  mixed: { ...current.mixed, vatRate: false },
-                  touched: { ...current.touched, vatRate: true },
-                }))
-              }
-              onStockChanged={(value) =>
-                setBulkForm((current) => ({
-                  ...current,
-                  stock: value,
-                  mixed: { ...current.mixed, stock: false },
-                  touched: { ...current.touched, stock: true },
-                }))
-              }
-              onStockUnitChanged={(value) =>
-                setBulkForm((current) => ({
-                  ...current,
-                  stockUnit: value,
-                  mixed: { ...current.mixed, stockUnit: false },
-                  touched: { ...current.touched, stockUnit: true },
-                }))
-              }
               onLifecycleChanged={(value) =>
                 setBulkForm((current) => ({
                   ...current,
                   lifecycle: value,
                   mixed: { ...current.mixed, lifecycle: false },
                   touched: { ...current.touched, lifecycle: true },
-                }))
-              }
-              onCommercialModeChanged={(value) =>
-                setBulkForm((current) => ({
-                  ...current,
-                  commercialMode: value,
-                  mixed: { ...current.mixed, commercialMode: false },
-                  touched: { ...current.touched, commercialMode: true },
-                }))
-              }
-              onVisibilityChanged={(value) =>
-                setBulkForm((current) => ({
-                  ...current,
-                  visibility: value,
-                  mixed: { ...current.mixed, visibility: false },
-                  touched: { ...current.touched, visibility: true },
-                }))
-              }
-              onPriceVisibilityChanged={(value) =>
-                setBulkForm((current) => ({
-                  ...current,
-                  priceVisibility: value,
-                  mixed: { ...current.mixed, priceVisibility: false },
-                  touched: { ...current.touched, priceVisibility: true },
-                }))
-              }
-              onStockVisibilityChanged={(value) =>
-                setBulkForm((current) => ({
-                  ...current,
-                  stockVisibility: value,
-                  mixed: { ...current.mixed, stockVisibility: false },
-                  touched: { ...current.touched, stockVisibility: true },
                 }))
               }
             />

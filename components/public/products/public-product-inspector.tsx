@@ -28,13 +28,11 @@ import {
 } from "./inspector/utils";
 import RichDescription from "./inspector/RichDescription";
 import SubcategoriesList from "./inspector/SubcategoriesList";
-import PriceBanner from "./inspector/PriceBanner";
 import VariantRail from "./inspector/VariantsRail";
 import ColorsList from "./inspector/ColorsList";
 import FinishesList from "./inspector/FinishesList";
 import NormalAttributesList from "./inspector/NormalAttributesList";
 import DatasheetLink from "./inspector/DatasheetLink";
-import StockText from "./inspector/StockText";
 
 
 function SelectorPill({ label, unit, active, onClick }: SelectorPillProps) {
@@ -162,11 +160,6 @@ export default function PublicProductInspectorView({
                     <div className="flex flex-col gap-1">
                     <Property name="SKU" value={selectedVariant.sku} isCopiable={true} isFemale={false} isPlural={false}/>
                     <Property name="Marque" value={normalizedProduct.brandName} isCopiable={false} isFemale={true} isPlural={true}/>
-                    <StockText 
-                      stock={selectedVariant.stock} 
-                      stockUnit={selectedVariant.stockUnit} 
-                      stockVisibility={selectedVariant.stockVisibility} 
-                    />
                     </div>
                     {selectedVariant.datasheet && <DatasheetLink url={selectedVariant.datasheet.url} />}
                   </div>
@@ -180,13 +173,6 @@ export default function PublicProductInspectorView({
                 </div>
               ) : null}
 
-              <PriceBanner
-                priceVisibility={selectedVariant.priceVisibility} 
-                basePriceAmount={selectedVariant.basePriceAmount}
-                commercialMode={selectedVariant.commercialMode}
-                productName={selectedVariant.name}
-                sku={selectedVariant.sku}
-              />
               <RichDescription description={selectedVariant.description}/>
               <SubcategoriesList subcategories={normalizedProduct.subcategories} />
             </div>

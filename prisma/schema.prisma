@@ -64,22 +64,6 @@ enum ProductLifecycle {
   ACTIVE
 }
 
-enum ProductCommercialMode {
-  ON_REQUEST_ONLY
-  ON_REQUEST_OR_ONLINE
-  ONLINE_ONLY
-}
-
-enum ProductStockUnit {
-  ITEM
-  KILOGRAM
-  LITER
-  CUBIC_METER
-  METER
-  SQUARE_METER
-}
-
-
 enum OTPType {
   LOGIN
   RESET_PASSWORD
@@ -319,15 +303,7 @@ model Product {
   description     String?                @db.Text
   descriptionSeo  String?                @map("description_seo") @db.VarChar(160)
   brand           String?                @map("brand")
-  basePriceAmount Decimal?               @map("base_price_amount") @db.Decimal(12, 3)
-  vatRate         Float?                 @map("vat_rate")
-  stock           Decimal?               @db.Decimal(14, 3)
-  stockUnit       ProductStockUnit?      @map("stock_unit")
-  visibility      Boolean?
-  priceVisibility Boolean?               @map("price_visibility")
-  stockVisibility Boolean?               @map("stock_visibility")
   lifecycle       ProductLifecycle?
-  commercialMode  ProductCommercialMode? @map("commercial_mode")
   tags            String                 @default("") @db.Text
   datasheetMediaId BigInt?               @map("datasheet_media_id")
   createdAt       DateTime               @default(now()) @map("created_at")
@@ -345,10 +321,6 @@ model Product {
   @@index([kind])
   @@index([brand])
   @@index([lifecycle])
-  @@index([visibility])
-  @@index([priceVisibility])
-  @@index([stockVisibility])
-  @@index([commercialMode])
   @@index([datasheetMediaId])
   @@map("products")
 }

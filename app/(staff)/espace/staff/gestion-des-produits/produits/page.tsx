@@ -46,20 +46,17 @@ import { EditableCell, EditingState, SelectCell } from "@/components/staff/ui/Ce
 
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
-const COLUMN_LABELS = ["SKU", "Nom", "Marque", "Prix", "TVA", "Stock", "Cycle", ""];
+const COLUMN_LABELS = ["SKU", "Nom", "Marque", "Cycle", ""];
 const EXPORT_MODE_STORAGE_KEY = "all-products-export-mode";
 
 // Explicit column widths so columns never react to content changes.
 // Order matches the columns array passed to PanelTable below:
-// [checkbox, SKU, Nom, Marque, Prix, TVA, Stock, Cycle, Action]
+// [checkbox, SKU, Nom, Marque, Cycle, Action]
 const COLUMN_WIDTHS = [
   "40px",
   "140px",
   "auto",
   "140px",
-  "120px",
-  "80px",
-  "100px",
   "140px",
   "100px",
 ];
@@ -136,42 +133,18 @@ export default function AllProductsPage() {
     sku: "",
     name: "",
     brand: null as string | null,
-    basePriceAmount: null as string | null,
-    vatRate: null as number | null,
-    stock: null as string | null,
-    stockUnit: null as AllProductsListItemDto["stockUnit"] | null,
     lifecycle: null as AllProductsListItemDto["lifecycle"] | null,
-    commercialMode: null as AllProductsListItemDto["commercialMode"] | null,
-    visibility: null as AllProductsListItemDto["visibility"] | null,
-    priceVisibility: null as AllProductsListItemDto["priceVisibility"] | null,
-    stockVisibility: null as AllProductsListItemDto["stockVisibility"] | null,
     mixed: {
       sku: false,
       name: false,
       brand: false,
-      basePriceAmount: false,
-      vatRate: false,
-      stock: false,
-      stockUnit: false,
       lifecycle: false,
-      commercialMode: false,
-      visibility: false,
-      priceVisibility: false,
-      stockVisibility: false,
     },
     enabled: {
       sku: false,
       name: false,
       brand: false,
-      basePriceAmount: false,
-      vatRate: false,
-      stock: false,
-      stockUnit: false,
       lifecycle: false,
-      commercialMode: false,
-      visibility: false,
-      priceVisibility: false,
-      stockVisibility: false,
     },
     touched: {} as Record<string, boolean>,
   });
@@ -366,20 +339,8 @@ export default function AllProductsPage() {
       return;
     }
 
-    const data: Record<string, unknown> = {};
-    let localValue: unknown = rawValue;
-    if (field === "basePriceAmount" || field === "stock") {
-      const trimmed = rawValue.trim();
-      data[field] = trimmed === "" ? null : trimmed;
-      localValue = trimmed === "" ? null : trimmed;
-    } else if (field === "vatRate") {
-      const trimmed = rawValue.trim();
-      data[field] = trimmed === "" ? null : Number(trimmed);
-      localValue = trimmed === "" ? null : Number(trimmed);
-    } else {
-      data[field] = rawValue;
-      localValue = rawValue;
-    }
+    const data: Record<string, unknown> = { [field]: rawValue };
+    const localValue: unknown = rawValue;
 
     // Optimistic update: immediately reflect the change in local state
     setItems((current) =>
@@ -437,56 +398,24 @@ export default function AllProductsPage() {
     const nameMixed = selectedCount > 1 || selectedItems.some((item) => item.name !== selectedItems[0].name);
 
     const brand = getValue((item) => item.brand ?? null);
-    const basePriceAmount = getValue((item) => item.basePriceAmount ?? null);
-    const vatRate = getValue((item) => item.vatRate ?? null);
-    const stock = getValue((item) => item.stock ?? null);
-    const stockUnit = getValue((item) => item.stockUnit ?? null);
     const lifecycle = getValue((item) => item.lifecycle ?? null);
-    const commercialMode = getValue((item) => item.commercialMode ?? null);
-    const visibility = getValue((item) => item.visibility ?? null);
-    const priceVisibility = getValue((item) => item.priceVisibility ?? null);
-    const stockVisibility = getValue((item) => item.stockVisibility ?? null);
 
     setBulkForm({
       sku: skuMixed ? "" : selectedItems[0].sku,
       name: nameMixed ? "" : selectedItems[0].name,
       brand: brand.mixed ? null : brand.value,
-      basePriceAmount: basePriceAmount.mixed ? null : basePriceAmount.value,
-      vatRate: vatRate.mixed ? null : vatRate.value,
-      stock: stock.mixed ? null : stock.value,
-      stockUnit: stockUnit.mixed ? null : stockUnit.value,
       lifecycle: lifecycle.mixed ? null : lifecycle.value,
-      commercialMode: commercialMode.mixed ? null : commercialMode.value,
-      visibility: visibility.mixed ? null : visibility.value,
-      priceVisibility: priceVisibility.mixed ? null : priceVisibility.value,
-      stockVisibility: stockVisibility.mixed ? null : stockVisibility.value,
       mixed: {
         sku: skuMixed,
         name: nameMixed,
         brand: brand.mixed,
-        basePriceAmount: basePriceAmount.mixed,
-        vatRate: vatRate.mixed,
-        stock: stock.mixed,
-        stockUnit: stockUnit.mixed,
         lifecycle: lifecycle.mixed,
-        commercialMode: commercialMode.mixed,
-        visibility: visibility.mixed,
-        priceVisibility: priceVisibility.mixed,
-        stockVisibility: stockVisibility.mixed,
       },
       enabled: {
         sku: false,
         name: false,
         brand: false,
-        basePriceAmount: false,
-        vatRate: false,
-        stock: false,
-        stockUnit: false,
         lifecycle: false,
-        commercialMode: false,
-        visibility: false,
-        priceVisibility: false,
-        stockVisibility: false,
       },
       touched: {},
     });
@@ -510,32 +439,8 @@ export default function AllProductsPage() {
     if (enabled.brand) {
       data.brand = bulkForm.brand ?? null;
     }
-    if (enabled.basePriceAmount) {
-      data.basePriceAmount = bulkForm.basePriceAmount ?? null;
-    }
-    if (enabled.vatRate) {
-      data.vatRate = bulkForm.vatRate ?? null;
-    }
-    if (enabled.stock) {
-      data.stock = bulkForm.stock ?? null;
-    }
-    if (enabled.stockUnit) {
-      data.stockUnit = bulkForm.stockUnit ?? null;
-    }
     if (enabled.lifecycle) {
       data.lifecycle = bulkForm.lifecycle ?? null;
-    }
-    if (enabled.commercialMode) {
-      data.commercialMode = bulkForm.commercialMode ?? null;
-    }
-    if (enabled.visibility) {
-      data.visibility = bulkForm.visibility ?? null;
-    }
-    if (enabled.priceVisibility) {
-      data.priceVisibility = bulkForm.priceVisibility ?? null;
-    }
-    if (enabled.stockVisibility) {
-      data.stockVisibility = bulkForm.stockVisibility ?? null;
     }
 
     return data;
@@ -586,32 +491,8 @@ export default function AllProductsPage() {
           case "brand":
             next.brand = selectedItems[0]?.brand ?? null;
             break;
-          case "basePriceAmount":
-            next.basePriceAmount = selectedItems[0]?.basePriceAmount ?? null;
-            break;
-          case "vatRate":
-            next.vatRate = selectedItems[0]?.vatRate ?? null;
-            break;
-          case "stock":
-            next.stock = selectedItems[0]?.stock ?? null;
-            break;
-          case "stockUnit":
-            next.stockUnit = selectedItems[0]?.stockUnit ?? null;
-            break;
           case "lifecycle":
             next.lifecycle = selectedItems[0]?.lifecycle ?? null;
-            break;
-          case "commercialMode":
-            next.commercialMode = selectedItems[0]?.commercialMode ?? null;
-            break;
-          case "visibility":
-            next.visibility = selectedItems[0]?.visibility ?? null;
-            break;
-          case "priceVisibility":
-            next.priceVisibility = selectedItems[0]?.priceVisibility ?? null;
-            break;
-          case "stockVisibility":
-            next.stockVisibility = selectedItems[0]?.stockVisibility ?? null;
             break;
           default:
             break;
@@ -629,15 +510,7 @@ export default function AllProductsPage() {
     "sku",
     "name",
     "brand",
-    "basePriceAmount",
-    "vatRate",
-    "stock",
-    "stockUnit",
     "lifecycle",
-    "commercialMode",
-    "visibility",
-    "priceVisibility",
-    "stockVisibility",
   ];
 
   const allFieldsChecked = allFieldKeys.every((field) => bulkForm.enabled[field]);
@@ -866,51 +739,6 @@ export default function AllProductsPage() {
                 />
               </td>
               <td className="align-middle">
-                <EditableCell
-                  value={item.basePriceAmount ?? ""}
-                  rowId={item.id}
-                  field="basePriceAmount"
-                  editing={editing}
-                  onStartEdit={handleStartEdit}
-                  onChangeEdit={handleChangeEdit}
-                  onCommitEdit={handleCommitEdit}
-                  onCancelEdit={handleCancelEdit}
-                  saving={false}
-                  readOnly={!canEdit}
-                  type="number"
-                />
-              </td>
-              <td className="align-middle">
-                <EditableCell
-                  value={item.vatRate != null ? String(item.vatRate) : ""}
-                  rowId={item.id}
-                  field="vatRate"
-                  editing={editing}
-                  onStartEdit={handleStartEdit}
-                  onChangeEdit={handleChangeEdit}
-                  onCommitEdit={handleCommitEdit}
-                  onCancelEdit={handleCancelEdit}
-                  saving={false}
-                  readOnly={!canEdit}
-                  type="number"
-                />
-              </td>
-              <td className="align-middle">
-                <EditableCell
-                  value={item.stock ?? ""}
-                  rowId={item.id}
-                  field="stock"
-                  editing={editing}
-                  onStartEdit={handleStartEdit}
-                  onChangeEdit={handleChangeEdit}
-                  onCommitEdit={handleCommitEdit}
-                  onCancelEdit={handleCancelEdit}
-                  saving={false}
-                  readOnly={!canEdit}
-                  type="number"
-                />
-              </td>
-              <td className="align-middle">
                 <SelectCell
                   value={item.lifecycle ?? "DRAFT"}
                   onValueChange={(nextValue: string) => void handleInlineSave(item.id, "lifecycle", nextValue)}
@@ -968,27 +796,11 @@ export default function AllProductsPage() {
               sku={bulkForm.sku}
               name={bulkForm.name}
               brand={bulkForm.brand}
-              basePriceAmount={bulkForm.basePriceAmount}
-              vatRate={bulkForm.vatRate}
-              stock={bulkForm.stock}
-              stockUnit={bulkForm.stockUnit}
               lifecycle={bulkForm.lifecycle}
-              commercialMode={bulkForm.commercialMode}
-              visibility={bulkForm.visibility}
-              priceVisibility={bulkForm.priceVisibility}
-              stockVisibility={bulkForm.stockVisibility}
               skuPlaceholder={bulkForm.mixed.sku ? "Mixed" : undefined}
               namePlaceholder={bulkForm.mixed.name ? "Mixed" : undefined}
               brandPlaceholder={bulkForm.mixed.brand ? "Mixed" : undefined}
-              basePricePlaceholder={bulkForm.mixed.basePriceAmount ? "Mixed" : undefined}
-              vatRatePlaceholder={bulkForm.mixed.vatRate ? "Mixed" : undefined}
-              stockPlaceholder={bulkForm.mixed.stock ? "Mixed" : undefined}
-              stockUnitPlaceholder={bulkForm.mixed.stockUnit ? "Mixed" : undefined}
               lifecyclePlaceholder={bulkForm.mixed.lifecycle ? "Mixed" : undefined}
-              commercialModePlaceholder={bulkForm.mixed.commercialMode ? "Mixed" : undefined}
-              visibilityPlaceholder={bulkForm.mixed.visibility ? "Mixed" : undefined}
-              priceVisibilityPlaceholder={bulkForm.mixed.priceVisibility ? "Mixed" : undefined}
-              stockVisibilityPlaceholder={bulkForm.mixed.stockVisibility ? "Mixed" : undefined}
               disableSku={bulkForm.mixed.sku}
               disableName={bulkForm.mixed.name}
               showFieldChecks
@@ -1020,76 +832,12 @@ export default function AllProductsPage() {
                   touched: { ...current.touched, brand: true },
                 }))
               }
-              onBasePriceAmountChanged={(value) =>
-                setBulkForm((current) => ({
-                  ...current,
-                  basePriceAmount: value,
-                  mixed: { ...current.mixed, basePriceAmount: false },
-                  touched: { ...current.touched, basePriceAmount: true },
-                }))
-              }
-              onVatRateChanged={(value) =>
-                setBulkForm((current) => ({
-                  ...current,
-                  vatRate: value,
-                  mixed: { ...current.mixed, vatRate: false },
-                  touched: { ...current.touched, vatRate: true },
-                }))
-              }
-              onStockChanged={(value) =>
-                setBulkForm((current) => ({
-                  ...current,
-                  stock: value,
-                  mixed: { ...current.mixed, stock: false },
-                  touched: { ...current.touched, stock: true },
-                }))
-              }
-              onStockUnitChanged={(value) =>
-                setBulkForm((current) => ({
-                  ...current,
-                  stockUnit: value,
-                  mixed: { ...current.mixed, stockUnit: false },
-                  touched: { ...current.touched, stockUnit: true },
-                }))
-              }
               onLifecycleChanged={(value) =>
                 setBulkForm((current) => ({
                   ...current,
                   lifecycle: value,
                   mixed: { ...current.mixed, lifecycle: false },
                   touched: { ...current.touched, lifecycle: true },
-                }))
-              }
-              onCommercialModeChanged={(value) =>
-                setBulkForm((current) => ({
-                  ...current,
-                  commercialMode: value,
-                  mixed: { ...current.mixed, commercialMode: false },
-                  touched: { ...current.touched, commercialMode: true },
-                }))
-              }
-              onVisibilityChanged={(value) =>
-                setBulkForm((current) => ({
-                  ...current,
-                  visibility: value,
-                  mixed: { ...current.mixed, visibility: false },
-                  touched: { ...current.touched, visibility: true },
-                }))
-              }
-              onPriceVisibilityChanged={(value) =>
-                setBulkForm((current) => ({
-                  ...current,
-                  priceVisibility: value,
-                  mixed: { ...current.mixed, priceVisibility: false },
-                  touched: { ...current.touched, priceVisibility: true },
-                }))
-              }
-              onStockVisibilityChanged={(value) =>
-                setBulkForm((current) => ({
-                  ...current,
-                  stockVisibility: value,
-                  mixed: { ...current.mixed, stockVisibility: false },
-                  touched: { ...current.touched, stockVisibility: true },
                 }))
               }
             />

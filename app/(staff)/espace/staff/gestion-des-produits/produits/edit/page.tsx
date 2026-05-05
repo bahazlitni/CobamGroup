@@ -2,11 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  ProductCommercialMode,
-  ProductLifecycle,
-  ProductStockUnit,
-} from "@prisma/client";
+import { ProductLifecycle } from "@prisma/client";
 import { ExternalLink, Package } from "lucide-react";
 import { toast } from "sonner";
 import Loading from "@/components/staff/Loading";
@@ -157,15 +153,7 @@ function createEmptyFormState(): SingleProductUpsertInput {
     description: null,
     descriptionSeo: null,
     brand: null,
-    basePriceAmount: null,
-    vatRate: 19,
-    stock: null,
-    stockUnit: "ITEM",
-    visibility: true,
-    priceVisibility: false,
-    stockVisibility: false,
     lifecycle: "DRAFT",
-    commercialMode: "ON_REQUEST_ONLY",
     tags: "",
     subcategoryIds: [],
     datasheet: null,
@@ -182,15 +170,7 @@ function mapProductToForm(product: SingleProductDetailDto): SingleProductUpsertI
     description: product.description,
     descriptionSeo: product.descriptionSeo,
     brand: product.brand,
-    basePriceAmount: product.basePriceAmount,
-    vatRate: product.vatRate,
-    stock: product.stock,
-    stockUnit: product.stockUnit,
-    visibility: product.visibility,
-    priceVisibility: product.priceVisibility,
-    stockVisibility: product.stockVisibility,
     lifecycle: product.lifecycle,
-    commercialMode: product.commercialMode,
     tags: product.tags,
     subcategoryIds: product.subcategoryIds,
     datasheet: product.datasheet,
@@ -557,27 +537,11 @@ function SingleProductEditPageContent() {
             sku={form.sku}
             name={form.name}
             brand={form.brand}
-            basePriceAmount={form.basePriceAmount}
-            vatRate={form.vatRate}
-            stock={form.stock}
-            stockUnit={form.stockUnit}
             lifecycle={form.lifecycle}
-            commercialMode={form.commercialMode}
-            visibility={form.visibility}
-            priceVisibility={form.priceVisibility}
-            stockVisibility={form.stockVisibility}
             onSkuChanged={(sku: string) => setForm((current) => ({...current, sku}))}
             onNameChanged={(name: string) => setForm((current) => ({...current, slug: slugify(name), name}))}
             onBrandChanged={(brand: null | string) => setForm((current) => ({...current, brand}))}
-            onBasePriceAmountChanged={(basePriceAmount: null | string) => setForm((current) => ({...current, basePriceAmount}))}
-            onVatRateChanged={(vatRate: null | number) => setForm((current) => ({...current, vatRate}))}
-            onStockChanged={(stock: null | string) => setForm((current) => ({...current, stock}))}
-            onStockUnitChanged={(stockUnit: null | ProductStockUnit) => setForm((current) => ({...current, stockUnit}))}
             onLifecycleChanged={(lifecycle: null | ProductLifecycle) => setForm((current) => ({...current, lifecycle: lifecycle || "DRAFT"}))}
-            onCommercialModeChanged={(commercialMode: null | ProductCommercialMode) => setForm((current) => ({...current, commercialMode: commercialMode || "ON_REQUEST_ONLY"}))}
-            onVisibilityChanged={(visibility: null | boolean) => setForm((current) => ({...current, visibility: Boolean(visibility)}))}
-            onPriceVisibilityChanged={(priceVisibility: null | boolean) => setForm((current) => ({...current, priceVisibility: Boolean(priceVisibility)}))}
-            onStockVisibilityChanged={(stockVisibility: null | boolean) => setForm((current) => ({...current, stockVisibility: Boolean(stockVisibility)}))}
           />
         <ProductSubcategoriesField
           value={form.subcategoryIds.map(String)}

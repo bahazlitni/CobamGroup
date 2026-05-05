@@ -48,15 +48,7 @@ const STAFF_PRODUCT_SELECT = {
   description: true,
   descriptionSeo: true,
   brand: true,
-  basePriceAmount: true,
-  vatRate: true,
-  stock: true,
-  stockUnit: true,
-  visibility: true,
-  priceVisibility: true,
-  stockVisibility: true,
   lifecycle: true,
-  commercialMode: true,
   tags: true,
   datasheetMedia: {
     select: STAFF_MEDIA_SELECT,
@@ -139,15 +131,7 @@ const STAFF_FAMILY_LIST_SELECT = {
       id: true,
       sku: true,
       brand: true,
-      basePriceAmount: true,
-      vatRate: true,
-      stock: true,
-      stockUnit: true,
       lifecycle: true,
-      commercialMode: true,
-      visibility: true,
-      priceVisibility: true,
-      stockVisibility: true,
       subcategoryLinks: {
         select: {
           subcategory: {
@@ -214,15 +198,7 @@ function mapVariant(record: StaffFamilyDetailRecord["members"][number]["product"
     description: record.description,
     descriptionSeo: record.descriptionSeo,
     brand: formatProductBrandValue(record.brand),
-    basePriceAmount: record.basePriceAmount?.toString() ?? null,
-    vatRate: record.vatRate,
-    stock: record.stock?.toString() ?? null,
-    stockUnit: record.stockUnit,
-    visibility: record.visibility ?? true,
-    priceVisibility: record.priceVisibility ?? false,
-    stockVisibility: record.stockVisibility ?? false,
     lifecycle: record.lifecycle ?? "DRAFT",
-    commercialMode: record.commercialMode ?? "ON_REQUEST_ONLY",
     tags: record.tags,
     subcategoryIds: record.subcategoryLinks.map((link) => Number(link.subcategoryId)),
     datasheet: record.datasheetMedia ? mapMedia(record.datasheetMedia) : null,
@@ -273,15 +249,7 @@ function mapFamilyListItem(record: StaffFamilyListRecord): ProductFamilyListItem
     variantCount: record.members.length,
     defaultVariantSku: record.defaultProduct?.sku ?? null,
     brand: formatProductBrandValue(record.defaultProduct?.brand ?? null),
-    basePriceAmount: record.defaultProduct?.basePriceAmount?.toString() ?? null,
-    vatRate: record.defaultProduct?.vatRate ?? null,
-    stock: record.defaultProduct?.stock?.toString() ?? null,
-    stockUnit: record.defaultProduct?.stockUnit ?? null,
     lifecycle: record.defaultProduct?.lifecycle ?? null,
-    commercialMode: record.defaultProduct?.commercialMode ?? null,
-    visibility: record.defaultProduct?.visibility ?? null,
-    priceVisibility: record.defaultProduct?.priceVisibility ?? null,
-    stockVisibility: record.defaultProduct?.stockVisibility ?? null,
     subcategories:
       record.defaultProduct?.subcategoryLinks.map(({ subcategory }) => ({
         id: Number(subcategory.id),
@@ -566,19 +534,7 @@ async function writeFamily(
         description: variant.description,
         descriptionSeo: variant.descriptionSeo,
         brand: variant.brand,
-        basePriceAmount:
-          variant.basePriceAmount == null
-            ? null
-            : new Prisma.Decimal(variant.basePriceAmount),
-        vatRate: variant.vatRate,
-        stock:
-          variant.stock == null ? null : new Prisma.Decimal(variant.stock),
-        stockUnit: variant.stockUnit,
-        visibility: variant.visibility,
-        priceVisibility: variant.priceVisibility,
-        stockVisibility: variant.stockVisibility,
         lifecycle: variant.lifecycle,
-        commercialMode: variant.commercialMode,
         tags: variant.tags,
         datasheetMediaId:
           variant.datasheet?.id == null ? null : BigInt(variant.datasheet.id),

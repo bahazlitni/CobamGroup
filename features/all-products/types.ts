@@ -1,8 +1,6 @@
 import type {
-  ProductCommercialMode,
   ProductKind,
   ProductLifecycle,
-  ProductStockUnit,
 } from "@prisma/client";
 
 export const ALL_PRODUCTS_EXPORT_MODES = ["basic", "extended", "super"] as const;
@@ -50,10 +48,6 @@ export type AllProductsListItemDto = {
   name: string;
   description: string | null;
   brand: string | null;
-  basePriceAmount: string | null;
-  vatRate: number | null;
-  stock: string | null;
-  stockUnit: ProductStockUnit | null;
   hasImage: boolean;
   hasDatasheet: boolean;
   subcategories: {
@@ -62,11 +56,7 @@ export type AllProductsListItemDto = {
     slug: string;
     categorySlug: string;
   }[];
-  visibility: boolean | null;
-  priceVisibility: boolean | null;
-  stockVisibility: boolean | null;
   lifecycle: ProductLifecycle | null;
-  commercialMode: ProductCommercialMode | null;
   updatedAt: string;
   family:
     | {
