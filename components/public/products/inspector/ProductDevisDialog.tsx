@@ -28,7 +28,7 @@ export default function ProductDevisDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <AnimatedUIButton
         size="md"
-        variant="outline"
+        variant="primary"
         type="button"
         onClick={() => setOpen(true)}
       >
