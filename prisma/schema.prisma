@@ -64,6 +64,15 @@ enum ProductLifecycle {
   ACTIVE
 }
 
+enum ProductTypeAttributeInputType {
+  TEXT
+  NUMBER
+  BOOLEAN
+  SELECT
+  COLOR
+  FINISH
+}
+
 enum OTPType {
   LOGIN
   RESET_PASSWORD
@@ -299,6 +308,7 @@ model Product {
   sku             String                 @unique @db.VarChar(255)
   slug            String                 @unique @db.VarChar(255)
   kind            ProductKind
+  productTypeId   BigInt?                @map("product_type_id")
   name            String                 @db.VarChar(255)
   description     String?                @db.Text
   descriptionSeo  String?                @map("description_seo") @db.VarChar(160)
@@ -309,6 +319,7 @@ model Product {
   createdAt       DateTime               @default(now()) @map("created_at")
   updatedAt       DateTime               @updatedAt @map("updated_at")
 
+  productType         ProductType?              @relation(fields: [productTypeId], references: [id], onDelete: SetNull)
   familyMembership     ProductFamilyMember?
   defaultForFamilies   ProductFamily[]          @relation("ProductFamilyDefaultProduct")
   subcategoryLinks     ProductSubcategoryLink[]
@@ -319,6 +330,7 @@ model Product {
   packLinesAsComponent ProductPackLine[]        @relation("ProductPackComponents")
 
   @@index([kind])
+  @@index([productTypeId])
   @@index([brand])
   @@index([lifecycle])
   @@index([datasheetMediaId])
@@ -387,17 +399,140 @@ model ProductFamilyMember {
   @@map("product_family_members")
 }
 
+model ProductTypeGroup {
+  id        BigInt   @id @default(autoincrement())
+  name      String   @db.VarChar(255)
+  slug      String   @unique @db.VarChar(255)
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  productTypes ProductType[]
+
+  @@index([sortOrder])
+  @@index([isActive])
+  @@map("product_type_groups")
+}
+
+model ProductType {
+  id          BigInt   @id @default(autoincrement())
+  groupId     BigInt?  @map("group_id")
+  name        String   @db.VarChar(255)
+  slug        String   @unique @db.VarChar(255)
+  description String?  @db.Text
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  group           ProductTypeGroup?       @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  attributeGroups ProductAttributeGroup[]
+  attributes      ProductTypeAttribute[]
+  products        Product[]
+
+  @@index([groupId])
+  @@index([sortOrder])
+  @@index([isActive])
+  @@map("product_type_templates")
+}
+
+model ProductAttributeGroup {
+  id            BigInt   @id @default(autoincrement())
+  productTypeId BigInt?  @map("product_type_id")
+  name          String   @db.VarChar(255)
+  slug          String   @db.VarChar(255)
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  productType       ProductType?            @relation(fields: [productTypeId], references: [id], onDelete: Cascade)
+  attributeDefs     ProductTypeAttribute[]
+  productAttributes ProductAttribute[]
+
+  @@unique([productTypeId, slug])
+  @@index([productTypeId])
+  @@index([sortOrder])
+  @@map("product_attribute_groups")
+}
+
+model ProductTypeAttribute {
+  id               BigInt                         @id @default(autoincrement())
+  productTypeId    BigInt                         @map("product_type_id")
+  attributeGroupId BigInt?                        @map("attribute_group_id")
+  name             String                         @db.VarChar(150)
+  label            String                         @default("") @db.VarChar(255)
+  unit             String?                        @db.VarChar(50)
+  inputType        ProductTypeAttributeInputType  @default(TEXT) @map("input_type")
+  isRequired       Boolean                        @default(false) @map("is_required")
+  isFilterable     Boolean                        @default(false) @map("is_filterable")
+  sortOrder        Int                            @default(0) @map("sort_order")
+  createdAt        DateTime                       @default(now()) @map("created_at")
+  updatedAt        DateTime                       @updatedAt @map("updated_at")
+
+  productType       ProductType            @relation(fields: [productTypeId], references: [id], onDelete: Cascade)
+  attributeGroup    ProductAttributeGroup? @relation(fields: [attributeGroupId], references: [id], onDelete: SetNull)
+  productAttributes ProductAttribute[]
+
+  @@unique([productTypeId, name])
+  @@index([productTypeId])
+  @@index([attributeGroupId])
+  @@index([sortOrder])
+  @@map("product_type_attributes")
+}
+
 model ProductAttribute {
-  productId BigInt               @map("product_id")
-  kind      String
-  value     String               @db.Text
-  sortOrder Int                  @default(0) @map("sort_order")
+  id               BigInt                         @id @default(autoincrement())
+  productId        BigInt                         @map("product_id")
+  attributeDefId   BigInt?                        @map("attribute_def_id")
+  attributeGroupId BigInt?                        @map("attribute_group_id")
+  name             String                         @db.VarChar(150)
+  label            String                         @default("") @db.VarChar(255)
+  value            String                         @db.VarChar(255)
+  unit             String?                        @db.VarChar(50)
+  inputType        ProductTypeAttributeInputType  @default(TEXT) @map("input_type")
+  isRequired       Boolean                        @default(false) @map("is_required")
+  isFilterable     Boolean                        @default(false) @map("is_filterable")
+  groupName        String?                        @map("group_name") @db.VarChar(255)
+  groupSortOrder   Int                            @default(0) @map("group_sort_order")
+  sortOrder        Int                            @default(0) @map("sort_order")
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product        Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attributeDef   ProductTypeAttribute?  @relation(fields: [attributeDefId], references: [id], onDelete: SetNull)
+  attributeGroup ProductAttributeGroup? @relation(fields: [attributeGroupId], references: [id], onDelete: SetNull)
 
-  @@id([productId, kind])
+  @@index([productId])
+  @@index([attributeDefId])
+  @@index([attributeGroupId])
+  @@index([groupSortOrder])
   @@index([sortOrder])
   @@map("product_attributes")
+}
+
+model ProductColor {
+  id        BigInt   @id @default(autoincrement())
+  key       String   @unique @db.VarChar(150)
+  label     String   @db.VarChar(255)
+  value     String   @db.VarChar(30)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("product_colors")
+}
+
+model ProductFinish {
+  id           BigInt   @id @default(autoincrement())
+  key          String   @unique @db.VarChar(150)
+  label        String   @db.VarChar(255)
+  color        String?  @db.VarChar(30)
+  imageMediaId BigInt?  @map("image_media_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  imageMedia Media? @relation("ProductFinishImageMedia", fields: [imageMediaId], references: [id], onDelete: SetNull)
+
+  @@index([imageMediaId])
+  @@map("product_finishes")
 }
 
 model ProductPackLine {
@@ -573,6 +708,7 @@ model Media {
     productCategoryImageFor    ProductCategory[]    @relation("ProductCategoryImageMedia")
   productSubcategoryImageFor ProductSubcategory[] @relation("ProductSubcategoryImageMedia")
   staffProfileAvatarFor      StaffProfile[]       @relation("StaffProfileAvatarMedia")
+  productFinishImageFor      ProductFinish[]      @relation("ProductFinishImageMedia")
   articleCoverFor            Article[]            @relation("ArticleCoverMedia")
   articleOgImageFor          Article[]            @relation("ArticleOgImageMedia")
   articleMediaLinks          ArticleMediaLink[]

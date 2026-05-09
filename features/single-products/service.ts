@@ -4,6 +4,10 @@ import {
   buildDuplicateAttributeKindMessage,
   findDuplicateAttributeKind,
 } from "@/features/products/attribute-kinds";
+import {
+  buildProductAttributeCreateData,
+  mapProductAttributeRecord,
+} from "@/features/products/attribute-records";
 import { assertProductDatasheetMedia } from "@/features/products/datasheet";
 import { canAccessProducts, canCreateProducts, canManageProducts } from "@/features/products/access";
 import { getProductFormOptionsService } from "@/features/products/service";
@@ -40,6 +44,7 @@ const STAFF_MEDIA_SELECT = {
 
 const SINGLE_PRODUCT_SELECT = {
   id: true,
+  productTypeId: true,
   sku: true,
   slug: true,
   name: true,
@@ -67,10 +72,21 @@ const SINGLE_PRODUCT_SELECT = {
     },
   },
   attributes: {
-    orderBy: [{ sortOrder: "asc" }, { kind: "asc" }],
+    orderBy: [{ groupSortOrder: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
     select: {
-      kind: true,
+      id: true,
+      attributeDefId: true,
+      attributeGroupId: true,
+      name: true,
+      label: true,
       value: true,
+      unit: true,
+      inputType: true,
+      isRequired: true,
+      isFilterable: true,
+      groupName: true,
+      groupSortOrder: true,
+      sortOrder: true,
     },
   },
 } satisfies Prisma.ProductSelect;
@@ -106,6 +122,7 @@ function mapMedia(
 function mapSingleProductDetail(record: SingleProductRecord): SingleProductDetailDto {
   return {
     id: Number(record.id),
+    productTypeId: record.productTypeId == null ? null : Number(record.productTypeId),
     sku: record.sku,
     slug: record.slug,
     name: record.name,
@@ -117,10 +134,7 @@ function mapSingleProductDetail(record: SingleProductRecord): SingleProductDetai
     subcategoryIds: record.subcategoryLinks.map((link) => Number(link.subcategoryId)),
     datasheet: record.datasheetMedia ? mapMedia(record.datasheetMedia) : null,
     media: record.mediaLinks.map((link) => mapMedia(link.media)),
-    attributes: record.attributes.map((attribute) => ({
-      kind: attribute.kind,
-      value: attribute.value,
-    })),
+    attributes: record.attributes.map(mapProductAttributeRecord),
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString(),
   };
@@ -218,10 +232,7 @@ async function syncSingleProductRelations(
   if (input.attributes.length > 0) {
     await tx.productAttribute.createMany({
       data: input.attributes.map((attribute, index) => ({
-        productId,
-        kind: attribute.kind,
-        value: attribute.value,
-        sortOrder: index,
+        ...buildProductAttributeCreateData(productId, attribute, index),
       })),
     });
   }
@@ -253,6 +264,8 @@ async function writeSingleProduct(productId: number | null, input: SingleProduct
               sku: input.sku,
               slug: input.slug,
               kind: "SINGLE",
+              productTypeId:
+                input.productTypeId == null ? null : BigInt(input.productTypeId),
               name: input.name,
               description: input.description,
               descriptionSeo: input.descriptionSeo,
@@ -273,6 +286,8 @@ async function writeSingleProduct(productId: number | null, input: SingleProduct
             data: {
               sku: input.sku,
               slug: input.slug,
+              productTypeId:
+                input.productTypeId == null ? null : BigInt(input.productTypeId),
               name: input.name,
               description: input.description,
               descriptionSeo: input.descriptionSeo,

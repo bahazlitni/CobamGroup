@@ -19,8 +19,11 @@ import {
   ListTree,
   LockKeyhole,
   LucideProps,
+  Paintbrush,
   Package,
+  Palette,
   Shield,
+  Shapes,
   User,
   Users,
 } from "lucide-react";
@@ -171,6 +174,21 @@ const STAFF_TABS: Record<string, StaffTabGroup> = {
         label: "Catégories produits",
         icon: ListTree,
       },
+      "types-produits": {
+        key: "types-produits",
+        label: "Types produit",
+        icon: Shapes,
+      },
+      couleurs: {
+        key: "couleurs",
+        label: "Couleurs",
+        icon: Palette,
+      },
+      finitions: {
+        key: "finitions",
+        label: "Finitions",
+        icon: Paintbrush,
+      },
     }
   },
   autres: {
@@ -248,6 +266,9 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
         "categories-produits": user
           ? canAccessProductCategories(user)
           : false,
+        "types-produits": user ? canAccessProducts(user) : false,
+        couleurs: user ? canAccessProducts(user) : false,
+        finitions: user ? canAccessProducts(user) : false,
       },
       autres: {
         medias: user ? canAccessMediaLibrary(user) : false,

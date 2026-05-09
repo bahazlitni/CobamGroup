@@ -1,4 +1,4 @@
-import { ProductLifecycle } from "@prisma/client";
+import { ProductLifecycle, ProductTypeAttributeInputType } from "@prisma/client";
 import {
   buildDuplicateAttributeKindMessage,
   findDuplicateAttributeKind,
@@ -77,6 +77,40 @@ function parseOptionalIntegerArray(value: unknown, fieldName: string) {
   });
 }
 
+function parseOptionalPositiveInteger(value: unknown, fieldName: string) {
+  if (value == null || value === "") {
+    return null;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new ProductValidationError(`Identifiant invalide pour ${fieldName}.`);
+  }
+  return parsed;
+}
+
+function parseOptionalInteger(value: unknown, fieldName: string, fallback = 0) {
+  if (value == null || value === "") {
+    return fallback;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed)) {
+    throw new ProductValidationError(`Valeur invalide pour ${fieldName}.`);
+  }
+  return parsed;
+}
+
+function parseOptionalBoolean(value: unknown, fallback = false) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+  if (value == null || value === "") {
+    return fallback;
+  }
+  return String(value).toLowerCase() === "true";
+}
+
 function parseVariant(input: unknown): ProductVariantInputDto {
   if (!input || typeof input !== "object") {
     throw new ProductValidationError("Variante invalide.");
@@ -90,17 +124,55 @@ function parseVariant(input: unknown): ProductVariantInputDto {
       ? (record.datasheet as Record<string, unknown>)
       : null;
 
-  const parsedAttributes = attributes.map((entry) => {
+  const parsedAttributes = attributes.map((entry, index) => {
     if (!entry || typeof entry !== "object") {
       throw new ProductValidationError("Attribut de variante invalide.");
     }
 
     const attributeRecord = entry as Record<string, unknown>;
-    return {
-      kind: normalizeProductAttributeKind(
-        parseRequiredString(attributeRecord.kind, "variant.attribute.kind"),
+    const name = normalizeProductAttributeKind(
+      parseRequiredString(
+        attributeRecord.name ?? attributeRecord.kind,
+        "variant.attribute.name",
       ),
-      value: parseRequiredString(attributeRecord.value, "variant.attribute.value"),
+    );
+    const inputType =
+      attributeRecord.inputType == null || attributeRecord.inputType === ""
+        ? undefined
+        : parseEnumValue(
+            attributeRecord.inputType,
+            Object.values(ProductTypeAttributeInputType),
+            "variant.attribute.inputType",
+          );
+
+    return {
+      id: parseOptionalPositiveInteger(attributeRecord.id, "variant.attribute.id") ?? undefined,
+      attributeDefId: parseOptionalPositiveInteger(
+        attributeRecord.attributeDefId,
+        "variant.attribute.attributeDefId",
+      ),
+      attributeGroupId: parseOptionalPositiveInteger(
+        attributeRecord.attributeGroupId,
+        "variant.attribute.attributeGroupId",
+      ),
+      kind: name,
+      name,
+      label: parseOptionalString(attributeRecord.label) ?? name,
+      value: parseOptionalString(attributeRecord.value) ?? "",
+      unit: parseOptionalString(attributeRecord.unit),
+      inputType,
+      isRequired: parseOptionalBoolean(attributeRecord.isRequired),
+      isFilterable: parseOptionalBoolean(attributeRecord.isFilterable),
+      groupName: parseOptionalString(attributeRecord.groupName),
+      groupSortOrder: parseOptionalInteger(
+        attributeRecord.groupSortOrder,
+        "variant.attribute.groupSortOrder",
+      ),
+      sortOrder: parseOptionalInteger(
+        attributeRecord.sortOrder,
+        "variant.attribute.sortOrder",
+        index,
+      ),
     };
   });
 
@@ -123,6 +195,7 @@ function parseVariant(input: unknown): ProductVariantInputDto {
             }
             return parsed;
           })(),
+    productTypeId: parseOptionalPositiveInteger(record.productTypeId, "variant.productTypeId"),
     sku: parseRequiredString(record.sku, "variant.sku"),
     slug: parseRequiredString(record.slug, "variant.slug"),
     name: parseRequiredString(record.name, "variant.name"),

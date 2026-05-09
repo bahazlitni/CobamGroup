@@ -6,6 +6,10 @@ import {
   buildDuplicateAttributeKindMessage,
   findDuplicateAttributeKind,
 } from "./attribute-kinds";
+import {
+  buildProductAttributeCreateData,
+  mapProductAttributeRecord,
+} from "./attribute-records";
 import { assertProductDatasheetMedia } from "./datasheet";
 import { formatProductBrandValue } from "@/lib/static_tables/brands";
 import type {
@@ -42,6 +46,7 @@ const STAFF_MEDIA_SELECT = {
 
 const STAFF_PRODUCT_SELECT = {
   id: true,
+  productTypeId: true,
   sku: true,
   slug: true,
   name: true,
@@ -81,10 +86,20 @@ const STAFF_PRODUCT_SELECT = {
     },
   },
   attributes: {
-    orderBy: [{ sortOrder: "asc" }, { kind: "asc" }],
+    orderBy: [{ groupSortOrder: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
     select: {
-      kind: true,
+      id: true,
+      attributeDefId: true,
+      attributeGroupId: true,
+      name: true,
+      label: true,
       value: true,
+      unit: true,
+      inputType: true,
+      isRequired: true,
+      isFilterable: true,
+      groupName: true,
+      groupSortOrder: true,
       sortOrder: true,
     },
   },
@@ -192,6 +207,7 @@ function mapMedia(media: Prisma.MediaGetPayload<{ select: typeof STAFF_MEDIA_SEL
 function mapVariant(record: StaffFamilyDetailRecord["members"][number]["product"]): ProductVariantInputDto {
   return {
     id: Number(record.id),
+    productTypeId: record.productTypeId == null ? null : Number(record.productTypeId),
     sku: record.sku,
     slug: record.slug,
     name: record.name,
@@ -203,10 +219,7 @@ function mapVariant(record: StaffFamilyDetailRecord["members"][number]["product"
     subcategoryIds: record.subcategoryLinks.map((link) => Number(link.subcategoryId)),
     datasheet: record.datasheetMedia ? mapMedia(record.datasheetMedia) : null,
     media: record.mediaLinks.map((link) => mapMedia(link.media)),
-    attributes: record.attributes.map((attribute) => ({
-      kind: attribute.kind,
-      value: attribute.value,
-    })),
+    attributes: record.attributes.map(mapProductAttributeRecord),
   };
 }
 
@@ -387,10 +400,7 @@ async function syncVariantRelations(
   if (variant.attributes.length > 0) {
     await tx.productAttribute.createMany({
       data: variant.attributes.map((attribute, index) => ({
-        productId,
-        kind: attribute.kind,
-        value: attribute.value,
-        sortOrder: index,
+        ...buildProductAttributeCreateData(productId, attribute, index),
       })),
     });
   }
@@ -530,6 +540,8 @@ async function writeFamily(
         sku: variant.sku,
         slug: variant.slug,
         kind: "VARIANT",
+        productTypeId:
+          variant.productTypeId == null ? null : BigInt(variant.productTypeId),
         name: variant.name,
         description: variant.description,
         descriptionSeo: variant.descriptionSeo,
@@ -596,27 +608,124 @@ export async function getProductFormOptionsService(
     throw new ProductServiceError("Accès refusé.", 403);
   }
 
-  const subcategories = await prisma.productSubcategory.findMany({
-    where: {
-      isActive: true,
-      category: {
+  const [subcategories, productTypes] = await Promise.all([
+    prisma.productSubcategory.findMany({
+      where: {
         isActive: true,
-      },
-    },
-    orderBy: [{ category: { sortOrder: "asc" } }, { sortOrder: "asc" }, { name: "asc" }],
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      categoryId: true,
-      category: {
-        select: {
-          name: true,
-          slug: true,
+        category: {
+          isActive: true,
         },
       },
-    },
-  });
+      orderBy: [{ category: { sortOrder: "asc" } }, { sortOrder: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        categoryId: true,
+        category: {
+          select: {
+            name: true,
+            slug: true,
+          },
+        },
+      },
+    }),
+    prisma.productType.findMany({
+      where: {
+        isActive: true,
+      },
+      orderBy: [
+        { group: { sortOrder: "asc" } },
+        { group: { name: "asc" } },
+        { sortOrder: "asc" },
+        { name: "asc" },
+      ],
+      select: {
+        id: true,
+        groupId: true,
+        name: true,
+        slug: true,
+        description: true,
+        sortOrder: true,
+        group: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            sortOrder: true,
+          },
+        },
+        attributes: {
+          orderBy: [
+            { attributeGroup: { sortOrder: "asc" } },
+            { sortOrder: "asc" },
+            { name: "asc" },
+          ],
+          select: {
+            id: true,
+            attributeGroupId: true,
+            name: true,
+            label: true,
+            unit: true,
+            inputType: true,
+            isRequired: true,
+            isFilterable: true,
+            sortOrder: true,
+            attributeGroup: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                sortOrder: true,
+              },
+            },
+          },
+        },
+      },
+    }),
+  ]);
+
+  const groupMap = new Map<string, ProductFormOptionsDto["productTypeGroups"][number]>();
+  for (const productType of productTypes) {
+    const groupKey =
+      productType.group == null ? "ungrouped" : productType.group.id.toString();
+    const group = groupMap.get(groupKey) ?? {
+      id: productType.group == null ? null : Number(productType.group.id),
+      name: productType.group?.name ?? "Autres modèles",
+      slug: productType.group?.slug ?? "autres-modeles",
+      sortOrder: productType.group?.sortOrder ?? 9999,
+      productTypes: [],
+    };
+
+    group.productTypes.push({
+      id: Number(productType.id),
+      groupId: productType.groupId == null ? null : Number(productType.groupId),
+      groupName: productType.group?.name ?? null,
+      groupSlug: productType.group?.slug ?? null,
+      name: productType.name,
+      slug: productType.slug,
+      description: productType.description,
+      sortOrder: productType.sortOrder,
+      attributes: productType.attributes.map((attribute) => ({
+        id: Number(attribute.id),
+        groupId:
+          attribute.attributeGroupId == null
+            ? null
+            : Number(attribute.attributeGroupId),
+        name: attribute.name,
+        label: attribute.label || attribute.name,
+        unit: attribute.unit,
+        inputType: attribute.inputType,
+        isRequired: attribute.isRequired,
+        isFilterable: attribute.isFilterable,
+        groupName: attribute.attributeGroup?.name ?? null,
+        groupSortOrder: attribute.attributeGroup?.sortOrder ?? 0,
+        sortOrder: attribute.sortOrder,
+      })),
+    });
+
+    groupMap.set(groupKey, group);
+  }
 
   return {
     productSubcategories: subcategories.map((subcategory) => ({
@@ -627,6 +736,10 @@ export async function getProductFormOptionsService(
       name: subcategory.name,
       slug: subcategory.slug,
     })),
+    productTypeGroups: [...groupMap.values()].sort(
+      (left, right) =>
+        left.sortOrder - right.sortOrder || left.name.localeCompare(right.name, "fr-FR"),
+    ),
   };
 }
 

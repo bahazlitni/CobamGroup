@@ -52,13 +52,13 @@ export default function AiPanelAttributesInput({
         <div className="mt-3 flex flex-wrap gap-2">
           {aiSuggestion.map((attribute) => (
             <span
-              key={`${attribute.kind}-${attribute.value}`}
+              key={`${attribute.name ?? attribute.kind}-${attribute.value}`}
               className={cn(
                 "inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium",
                 AI_SUGGESTION_TOKEN_CLASS,
               )}
             >
-              {normalizeProductAttributeKind(attribute.kind)}: {attribute.value}
+              {normalizeProductAttributeKind(attribute.name ?? attribute.kind)}: {attribute.value}
             </span>
           ))}
         </div>

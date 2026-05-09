@@ -1,4 +1,4 @@
-import { ProductLifecycle } from "@prisma/client";
+import { ProductLifecycle, ProductTypeAttributeInputType } from "@prisma/client";
 import {
   buildDuplicateAttributeKindMessage,
   findDuplicateAttributeKind,
@@ -72,6 +72,40 @@ function parseOptionalIntegerArray(value: unknown, fieldName: string) {
   });
 }
 
+function parseOptionalPositiveInteger(value: unknown, fieldName: string) {
+  if (value == null || value === "") {
+    return null;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new SingleProductsValidationError(`Identifiant invalide pour ${fieldName}.`);
+  }
+  return parsed;
+}
+
+function parseOptionalInteger(value: unknown, fieldName: string, fallback = 0) {
+  if (value == null || value === "") {
+    return fallback;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed)) {
+    throw new SingleProductsValidationError(`Valeur invalide pour ${fieldName}.`);
+  }
+  return parsed;
+}
+
+function parseOptionalBoolean(value: unknown, fallback = false) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+  if (value == null || value === "") {
+    return fallback;
+  }
+  return String(value).toLowerCase() === "true";
+}
+
 export function parseSingleProductIdParam(value: string) {
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed <= 0) {
@@ -93,17 +127,45 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
       ? (record.datasheet as Record<string, unknown>)
       : null;
 
-  const parsedAttributes = attributes.map((entry) => {
+  const parsedAttributes = attributes.map((entry, index) => {
     if (!entry || typeof entry !== "object") {
       throw new SingleProductsValidationError("Attribut invalide.");
     }
 
     const attributeRecord = entry as Record<string, unknown>;
+    const name = normalizeProductAttributeKind(
+      parseRequiredString(attributeRecord.name ?? attributeRecord.kind, "attribute.name"),
+    );
+    const inputType =
+      attributeRecord.inputType == null || attributeRecord.inputType === ""
+        ? undefined
+        : parseEnumValue(
+            attributeRecord.inputType,
+            Object.values(ProductTypeAttributeInputType),
+            "attribute.inputType",
+          );
+
     return {
-      kind: normalizeProductAttributeKind(
-        parseRequiredString(attributeRecord.kind, "attribute.kind"),
+      id: parseOptionalPositiveInteger(attributeRecord.id, "attribute.id") ?? undefined,
+      attributeDefId: parseOptionalPositiveInteger(
+        attributeRecord.attributeDefId,
+        "attribute.attributeDefId",
       ),
-      value: parseRequiredString(attributeRecord.value, "attribute.value"),
+      attributeGroupId: parseOptionalPositiveInteger(
+        attributeRecord.attributeGroupId,
+        "attribute.attributeGroupId",
+      ),
+      kind: name,
+      name,
+      label: parseOptionalString(attributeRecord.label) ?? name,
+      value: parseOptionalString(attributeRecord.value) ?? "",
+      unit: parseOptionalString(attributeRecord.unit),
+      inputType,
+      isRequired: parseOptionalBoolean(attributeRecord.isRequired),
+      isFilterable: parseOptionalBoolean(attributeRecord.isFilterable),
+      groupName: parseOptionalString(attributeRecord.groupName),
+      groupSortOrder: parseOptionalInteger(attributeRecord.groupSortOrder, "attribute.groupSortOrder"),
+      sortOrder: parseOptionalInteger(attributeRecord.sortOrder, "attribute.sortOrder", index),
     };
   });
 
@@ -116,6 +178,7 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
   }
 
   return {
+    productTypeId: parseOptionalPositiveInteger(record.productTypeId, "productTypeId"),
     sku: parseRequiredString(record.sku, "sku"),
     slug: parseRequiredString(record.slug, "slug"),
     name: parseRequiredString(record.name, "name"),

@@ -26,6 +26,10 @@ import {
 } from "@/components/staff/ui/ai-suggestion";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
+import type {
+  ProductAttributeInputDto,
+  ProductTypeOptionDto,
+} from "@/features/products/types";
 import { canCreateProducts, canManageProducts } from "@/features/products/access";
 import {
   createSingleProductClient,
@@ -43,11 +47,8 @@ import type {
   SingleProductUpsertInput,
 } from "@/features/single-products/types";
 import { slugify } from "@/lib/slugify";
-import { ProductAttributeInputDto } from "@/features/products/types";
 import ProductEssentialEntries from "@/components/staff/products/ProductEssentialEntries";
-import {
-  getArticlePlainText,
-} from "@/features/articles/document";
+import { getArticlePlainText } from "@/features/articles/document";
 import { cn } from "@/lib/utils";
 
 type SimpleProductAiSuggestions = {
@@ -147,6 +148,7 @@ function areNumberArraysEqual(left: number[], right: number[]) {
 
 function createEmptyFormState(): SingleProductUpsertInput {
   return {
+    productTypeId: null,
     sku: "",
     slug: "",
     name: "",
@@ -164,6 +166,7 @@ function createEmptyFormState(): SingleProductUpsertInput {
 
 function mapProductToForm(product: SingleProductDetailDto): SingleProductUpsertInput {
   return {
+    productTypeId: product.productTypeId ?? null,
     sku: product.sku,
     slug: product.slug,
     name: product.name,
@@ -179,7 +182,27 @@ function mapProductToForm(product: SingleProductDetailDto): SingleProductUpsertI
   };
 }
 
+function flattenProductTypes(options: SingleProductFormOptionsDto) {
+  return options.productTypeGroups.flatMap((group) => group.productTypes);
+}
 
+function buildTemplateAttributes(productType: ProductTypeOptionDto): ProductAttributeInputDto[] {
+  return productType.attributes.map((attribute) => ({
+    attributeDefId: attribute.id,
+    attributeGroupId: attribute.groupId,
+    kind: attribute.name,
+    name: attribute.name,
+    label: attribute.label,
+    value: "",
+    unit: attribute.unit,
+    inputType: attribute.inputType,
+    isRequired: attribute.isRequired,
+    isFilterable: attribute.isFilterable,
+    groupName: attribute.groupName,
+    groupSortOrder: attribute.groupSortOrder,
+    sortOrder: attribute.sortOrder,
+  }));
+}
 
 export default function SingleProductEditPage() {
   return (
@@ -195,13 +218,17 @@ function SingleProductEditPageContent() {
   const searchParams = useSearchParams();
   const { user } = useStaffSessionContext();
   const productId = Number(searchParams.get("id") ?? "");
+  const requestedProductTypeId = Number(searchParams.get("type") ?? "");
   const isEdit = Number.isInteger(productId) && productId > 0;
+  const requestedProductTypeIsValid =
+    Number.isInteger(requestedProductTypeId) && requestedProductTypeId > 0;
   const canCreate = user ? canCreateProducts(user) : false;
   const canManage = user ? canManageProducts(user) : false;
   const [form, setForm] = useState<SingleProductUpsertInput>(createEmptyFormState);
   const [initialSnapshot, setInitialSnapshot] = useState("");
   const [options, setOptions] = useState<SingleProductFormOptionsDto>({
     productSubcategories: [],
+    productTypeGroups: [],
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -213,10 +240,20 @@ function SingleProductEditPageContent() {
   const [aiSuggestionError, setAiSuggestionError] = useState<string | null>(null);
 
   const onAttributesChange = (attributes: ProductAttributeInputDto[]) => {
-    setForm((current) => ({...current, attributes }))
-  }
+    setForm((current) => ({ ...current, attributes }));
+  };
 
   const canSave = isEdit ? canManage : canCreate;
+  const selectedProductType = useMemo(
+    () =>
+      form.productTypeId == null
+        ? null
+        : flattenProductTypes(options).find(
+            (productType) => productType.id === form.productTypeId,
+          ) ?? null,
+    [form.productTypeId, options],
+  );
+  const lockAttributes = form.productTypeId != null;
 
   const rejectAiSuggestion = (field: keyof SimpleProductAiSuggestions) => {
     setAiSuggestions((current) => ({
@@ -249,7 +286,7 @@ function SingleProductEditPageContent() {
           tags: aiSuggestions.tags?.length
             ? mergeTags(splitTags(current.tags), aiSuggestions.tags).join(" ")
             : current.tags,
-          attributes: aiSuggestions.attributes?.length
+          attributes: !current.productTypeId && aiSuggestions.attributes?.length
             ? aiSuggestions.attributes
             : current.attributes,
           subcategoryIds: aiSuggestions.subcategoryIds?.length
@@ -284,7 +321,20 @@ function SingleProductEditPageContent() {
           setForm(nextForm);
           setInitialSnapshot(JSON.stringify(nextForm));
         } else {
-          const nextForm = createEmptyFormState();
+          const selectedProductType = requestedProductTypeIsValid
+            ? flattenProductTypes(formOptions).find(
+                (productType) => productType.id === requestedProductTypeId,
+              )
+            : null;
+          const nextForm: SingleProductUpsertInput = {
+            ...createEmptyFormState(),
+            ...(selectedProductType
+              ? {
+                  productTypeId: selectedProductType.id,
+                  attributes: buildTemplateAttributes(selectedProductType),
+                }
+              : {}),
+          };
           setForm(nextForm);
           setInitialSnapshot(JSON.stringify(nextForm));
         }
@@ -306,7 +356,7 @@ function SingleProductEditPageContent() {
     return () => {
       cancelled = true;
     };
-  }, [isEdit, productId]);
+  }, [isEdit, productId, requestedProductTypeId, requestedProductTypeIsValid]);
 
   const isDirty = useMemo(
     () => JSON.stringify(form) !== initialSnapshot,
@@ -388,7 +438,7 @@ function SingleProductEditPageContent() {
         }
       }
 
-      if (nextSuggestions.attributes?.length) {
+      if (!form.productTypeId && nextSuggestions.attributes?.length) {
         if (form.attributes.length === 0) {
           nextForm.attributes = nextSuggestions.attributes;
         } else if (
@@ -700,11 +750,15 @@ function SingleProductEditPageContent() {
         />
       </Panel>
 
-      <Panel allowOverflow pretitle="Attributs" title="Valeurs du produit">
+      <Panel
+        allowOverflow
+        pretitle={selectedProductType ? selectedProductType.name : "Attributs"}
+        title="Valeurs du produit"
+      >
           <AiPanelAttributesInput 
             attributes={form.attributes}
             onAttributesChange={onAttributesChange}
-            aiSuggestion={aiSuggestions.attributes}
+            aiSuggestion={lockAttributes ? null : aiSuggestions.attributes}
             onAcceptAiSuggestion={(attributes) => {
               setForm((current) => ({
                 ...current,
@@ -713,6 +767,9 @@ function SingleProductEditPageContent() {
               rejectAiSuggestion("attributes");
             }}
             onRejectAiSuggestion={() => rejectAiSuggestion("attributes")}
+            lockKinds={lockAttributes}
+            canAddAttributes={!lockAttributes}
+            canRemoveAttributes={!lockAttributes}
           />
       </Panel>
 

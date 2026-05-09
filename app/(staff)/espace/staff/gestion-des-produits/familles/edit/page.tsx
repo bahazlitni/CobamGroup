@@ -230,7 +230,10 @@ function ProductEditPageContent() {
     createEmptyCommonValuesState,
   );
   const [initialSnapshot, setInitialSnapshot] = useState("");
-  const [options, setOptions] = useState<ProductFormOptionsDto>({ productSubcategories: [] });
+  const [options, setOptions] = useState<ProductFormOptionsDto>({
+    productSubcategories: [],
+    productTypeGroups: [],
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 

@@ -88,11 +88,12 @@ const ALL_PRODUCTS_EXPORT_SELECT = {
   ...ALL_PRODUCTS_LIST_SELECT,
   attributes: {
     select: {
-      kind: true,
+      name: true,
+      label: true,
       value: true,
       sortOrder: true,
     },
-    orderBy: [{ sortOrder: "asc" }, { kind: "asc" }],
+    orderBy: [{ groupSortOrder: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
   },
 } satisfies Prisma.ProductSelect;
 
@@ -223,7 +224,10 @@ function mapAllProductsExportRow(record: AllProductsExportRecord): AllProductsEx
   return {
     product: mapAllProductsListItem(record),
     attributes: new Map(
-      record.attributes.map((attribute) => [attribute.kind, attribute.value]),
+      record.attributes.map((attribute) => [
+        attribute.label || attribute.name,
+        attribute.value,
+      ]),
     ),
   };
 }

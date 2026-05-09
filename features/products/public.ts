@@ -101,10 +101,13 @@ const PUBLIC_PRODUCT_SELECT = {
     },
   },
   attributes: {
-    orderBy: [{ sortOrder: "asc" }, { kind: "asc" }],
+    orderBy: [{ groupSortOrder: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
     select: {
-      kind: true,
+      name: true,
+      label: true,
       value: true,
+      unit: true,
+      inputType: true,
       sortOrder: true,
     },
   },
@@ -219,6 +222,69 @@ function normalizeComparableValue(value: string | null | undefined) {
 function buildPublicMediaUrl(mediaId: bigint | number, variant: "original" | "thumbnail" = "original") {
   const query = variant === "thumbnail" ? "?variant=thumbnail" : "";
   return `/api/media/${mediaId.toString()}/file${query}`;
+}
+
+type ProductColorReferenceLookup = Map<
+  string,
+  { key: string; label: string; value: string }
+>;
+
+type ProductFinishReferenceLookup = Map<
+  string,
+  {
+    key: string;
+    label: string;
+    color: string | null;
+    imageMediaId: bigint | null;
+  }
+>;
+
+function indexComparableLookup<T extends { key: string; label: string }>(
+  records: T[],
+) {
+  const lookup = new Map<string, T>();
+
+  for (const record of records) {
+    lookup.set(normalizeComparableValue(record.key), record);
+    lookup.set(normalizeComparableValue(record.label), record);
+  }
+
+  return lookup;
+}
+
+async function loadProductColorReferenceLookup(): Promise<ProductColorReferenceLookup> {
+  const records = await prisma.productColor.findMany({
+    select: {
+      key: true,
+      label: true,
+      value: true,
+    },
+    orderBy: [{ label: "asc" }],
+  });
+
+  return indexComparableLookup(records);
+}
+
+async function loadProductFinishReferenceLookup(): Promise<ProductFinishReferenceLookup> {
+  const records = await prisma.productFinish.findMany({
+    select: {
+      key: true,
+      label: true,
+      color: true,
+      imageMediaId: true,
+    },
+    orderBy: [{ label: "asc" }],
+  });
+  const imageMediaIds = records
+    .map((record) => record.imageMediaId)
+    .filter((mediaId): mediaId is bigint => mediaId != null)
+    .map(Number);
+
+  if (imageMediaIds.length > 0) {
+    await makeMediaPublicMany(imageMediaIds);
+  }
+
+  return indexComparableLookup(records);
 }
 
 function isRenderableMedia(input: {
@@ -357,41 +423,46 @@ function mapIndexSubcategory(record: {
   };
 }
 
-function getAttributePresentation(kind: string) {
-  const canonicalKind = normalizeProductAttributeKind(kind);
-  const resolvedAttribute = resolveProductAttribute(kind);
+function getAttributePresentation(attribute: PublicProductRecord["attributes"][number]) {
+  const canonicalKind = normalizeProductAttributeKind(attribute.name);
+  const resolvedAttribute = resolveProductAttribute(attribute.name);
+  const normalizedName = attribute.name.trim().toLowerCase();
 
   return {
-    attributeId: canonicalKind || kind,
-    kind: canonicalKind || kind,
-    name: formatProductAttributeKind(kind),
-    unit: getProductAttributeUnit(kind),
+    attributeId: canonicalKind || attribute.name,
+    kind: canonicalKind || attribute.name,
+    name:
+      attribute.label ||
+      formatProductAttributeKind(attribute.name) ||
+      attribute.name,
+    unit: attribute.unit ?? getProductAttributeUnit(attribute.name),
     specialType:
-      resolvedAttribute?.key === "FINISH"
+      normalizedName === "finish" || attribute.inputType === "FINISH" || resolvedAttribute?.key === "FINISH"
         ? ("FINISH" as const)
-        : resolvedAttribute?.key === "COLOR"
+        : normalizedName === "color" || attribute.inputType === "COLOR" || resolvedAttribute?.key === "COLOR"
           ? ("COLOR" as const)
           : null,
   };
 }
 
-function formatAttributeValue(kind: string, value: string) {
-  if (normalizeProductAttributeKind(kind) !== "FINISH") {
-    return value;
+function formatAttributeValue(attribute: PublicProductRecord["attributes"][number]) {
+  const normalizedName = attribute.name.trim().toLowerCase();
+  if (normalizedName !== "finish" && attribute.inputType !== "FINISH") {
+    return attribute.value;
   }
 
-  return resolveFinish(value)?.label ?? value;
+  return resolveFinish(attribute.value)?.label ?? attribute.value;
 }
 
 function mapVariantAttributes(product: PublicProductRecord): PublicProductInspectorAttribute[] {
   return product.attributes.map((attribute) => {
-    const presentation = getAttributePresentation(attribute.kind);
+    const presentation = getAttributePresentation(attribute);
 
     return {
       attributeId: presentation.attributeId,
       kind: presentation.kind,
       name: presentation.name,
-      value: formatAttributeValue(attribute.kind, attribute.value),
+      value: formatAttributeValue(attribute),
       unit: presentation.unit,
       specialType: presentation.specialType,
     };
@@ -520,6 +591,7 @@ function mapPackSummary(record: PublicPackRecord, derived: ReturnType<typeof der
 
 function buildColorReferencesFromAttributes(
   attributeGroups: PublicProductInspectorAttribute[][],
+  colorLookup: ProductColorReferenceLookup,
 ): PublicProductColorReference[] {
   const seen = new Map<string, PublicProductColorReference>();
 
@@ -534,9 +606,9 @@ function buildColorReferencesFromAttributes(
         continue;
       }
 
-      const color = COLORS.find(
-        (entry) => normalizeComparableValue(entry.key) === key,
-      );
+      const color =
+        colorLookup.get(key) ??
+        COLORS.find((entry) => normalizeComparableValue(entry.key) === key);
 
       seen.set(key, {
         key: color?.key ?? key,
@@ -553,6 +625,7 @@ function buildColorReferencesFromAttributes(
 
 function buildFinishReferencesFromAttributes(
   attributeGroups: PublicProductInspectorAttribute[][],
+  finishLookup: ProductFinishReferenceLookup,
 ): PublicProductFinishReference[] {
   const seen = new Map<string, PublicProductFinishReference>();
 
@@ -562,7 +635,9 @@ function buildFinishReferencesFromAttributes(
         continue;
       }
 
-      const resolvedFinish = resolveFinish(attribute.value);
+      const resolvedFinish =
+        finishLookup.get(normalizeComparableValue(attribute.value)) ??
+        resolveFinish(attribute.value);
       const key = normalizeComparableValue(resolvedFinish?.key ?? attribute.value);
       if (seen.has(key)) {
         continue;
@@ -572,7 +647,12 @@ function buildFinishReferencesFromAttributes(
         key: resolvedFinish?.key ?? key,
         name: resolvedFinish?.label ?? attribute.value,
         colorHex: resolvedFinish?.color ?? null,
-        imageUrl: resolvedFinish ? resolveFinishURL(resolvedFinish) : null,
+        imageUrl:
+          resolvedFinish && "imageMediaId" in resolvedFinish && resolvedFinish.imageMediaId
+            ? buildPublicMediaUrl(resolvedFinish.imageMediaId, "thumbnail")
+            : resolvedFinish && !("imageMediaId" in resolvedFinish)
+              ? resolveFinishURL(resolvedFinish)
+              : null,
       });
     }
   }
@@ -580,12 +660,24 @@ function buildFinishReferencesFromAttributes(
   return [...seen.values()];
 }
 
-function buildColorReferences(variants: PublicProductInspectorVariant[]) {
-  return buildColorReferencesFromAttributes(variants.map((variant) => variant.attributes));
+function buildColorReferences(
+  variants: PublicProductInspectorVariant[],
+  colorLookup: ProductColorReferenceLookup,
+) {
+  return buildColorReferencesFromAttributes(
+    variants.map((variant) => variant.attributes),
+    colorLookup,
+  );
 }
 
-function buildFinishReferences(variants: PublicProductInspectorVariant[]) {
-  return buildFinishReferencesFromAttributes(variants.map((variant) => variant.attributes));
+function buildFinishReferences(
+  variants: PublicProductInspectorVariant[],
+  finishLookup: ProductFinishReferenceLookup,
+) {
+  return buildFinishReferencesFromAttributes(
+    variants.map((variant) => variant.attributes),
+    finishLookup,
+  );
 }
 
 function mapInspectorVariant(product: PublicProductRecord): PublicProductInspectorVariant {
@@ -601,12 +693,16 @@ function mapInspectorVariant(product: PublicProductRecord): PublicProductInspect
   };
 }
 
-function mapSimpleInspector(record: PublicProductRecord, input: {
+async function mapSimpleInspector(record: PublicProductRecord, input: {
   kind: "PACK" | "SINGLE" | "VARIANT";
   brandNames: string[];
-}): PublicSimpleProductInspector {
+}): Promise<PublicSimpleProductInspector> {
   const media = mapVariantMedia(record);
   const attributes = mapVariantAttributes(record);
+  const [colorLookup, finishLookup] = await Promise.all([
+    loadProductColorReferenceLookup(),
+    loadProductFinishReferenceLookup(),
+  ]);
 
   return {
     id: Number(record.id),
@@ -621,8 +717,8 @@ function mapSimpleInspector(record: PublicProductRecord, input: {
     datasheet: input.kind === "PACK" ? null : mapMediaRecord(record.datasheetMedia),
     subcategories: mapSubcategoryLinks(record.subcategoryLinks),
     attributes,
-    colorReferences: buildColorReferencesFromAttributes([attributes]),
-    finishReferences: buildFinishReferencesFromAttributes([attributes]),
+    colorReferences: buildColorReferencesFromAttributes([attributes], colorLookup),
+    finishReferences: buildFinishReferencesFromAttributes([attributes], finishLookup),
   };
 }
 
@@ -827,7 +923,7 @@ export async function listPublicProductsIndex(input: {
       p.description AS product_description,
       p.description_seo AS product_description_seo,
       (
-        SELECT COALESCE(string_agg(pa.kind || ' ' || pa.value, ' '), '')
+        SELECT COALESCE(string_agg(pa.name || ' ' || pa.value, ' '), '')
         FROM product_attributes pa
         WHERE pa.product_id = p.id
       ) AS attributes_text,
@@ -847,7 +943,7 @@ export async function listPublicProductsIndex(input: {
           fp.description,
           fp.description_seo,
           (
-            SELECT COALESCE(string_agg(fpa.kind || ' ' || fpa.value, ' '), '')
+            SELECT COALESCE(string_agg(fpa.name || ' ' || fpa.value, ' '), '')
             FROM product_attributes fpa
             WHERE fpa.product_id = fp.id
           )
@@ -938,7 +1034,7 @@ export async function listPublicProductsIndex(input: {
       p.description AS product_description,
       p.description_seo AS product_description_seo,
       (
-        SELECT COALESCE(string_agg(pa.kind || ' ' || pa.value, ' '), '')
+        SELECT COALESCE(string_agg(pa.name || ' ' || pa.value, ' '), '')
         FROM product_attributes pa
         WHERE pa.product_id = p.id
       ) AS attributes_text,
@@ -952,7 +1048,7 @@ export async function listPublicProductsIndex(input: {
           cp.description,
           cp.description_seo,
           (
-            SELECT COALESCE(string_agg(cpa.kind || ' ' || cpa.value, ' '), '')
+            SELECT COALESCE(string_agg(cpa.name || ' ' || cpa.value, ' '), '')
             FROM product_attributes cpa
             WHERE cpa.product_id = cp.id
           )
@@ -1191,6 +1287,10 @@ export async function findPublicFamilyBySlug(
 
   const variants = publicVariants.map(mapInspectorVariant);
   const coverMedia = buildFamilyCoverMedia(record, defaultVariant);
+  const [colorLookup, finishLookup] = await Promise.all([
+    loadProductColorReferenceLookup(),
+    loadProductFinishReferenceLookup(),
+  ]);
 
   return {
     id: Number(record.id),
@@ -1204,8 +1304,8 @@ export async function findPublicFamilyBySlug(
     defaultVariantId: Number(defaultVariant.id),
     variants,
     subcategories: buildFamilySubcategories(publicVariants),
-    colorReferences: buildColorReferences(variants),
-    finishReferences: buildFinishReferences(variants),
+    colorReferences: buildColorReferences(variants, colorLookup),
+    finishReferences: buildFinishReferences(variants, finishLookup),
   };
 }
 
@@ -1229,7 +1329,7 @@ export async function findPublicSingleProductBySlug(
 
   const brandName = getBrandName(record.brand);
 
-  return mapSimpleInspector(record, {
+  return await mapSimpleInspector(record, {
     kind: "SINGLE",
     brandNames: brandName ? [brandName] : [],
   });
@@ -1257,7 +1357,7 @@ export async function findPublicProductBySlug(
 
   const brandName = getBrandName(record.brand);
 
-  return mapSimpleInspector(record, {
+  return await mapSimpleInspector(record, {
     kind: record.kind,
     brandNames: brandName ? [brandName] : [],
   });
@@ -1286,7 +1386,7 @@ export async function findPublicPackBySlug(
 
   await makeMediaPublicMany(collectProductMediaIdsForPublishing([record]));
 
-  return mapSimpleInspector(record, {
+  return await mapSimpleInspector(record, {
     kind: "PACK",
     brandNames: derived.brandNames,
   });

@@ -559,7 +559,7 @@ export default function AllProductsPage() {
           />
           {canCreate ? (
             <AnimatedUIButton
-              href="/espace/staff/gestion-des-produits/produits/edit"
+              href="/espace/staff/gestion-des-produits/produits/new"
               variant="secondary"
               icon="plus"
               iconPosition="left"

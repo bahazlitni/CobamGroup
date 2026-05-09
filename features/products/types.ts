@@ -1,6 +1,7 @@
 import type {
   MediaKind,
   ProductLifecycle,
+  ProductTypeAttributeInputType,
 } from "@prisma/client";
 
 export type ProductMediaDto = {
@@ -28,12 +29,25 @@ export type ProductSubcategoryOptionDto = {
 };
 
 export type ProductAttributeInputDto = {
+  id?: number;
+  attributeDefId?: number | null;
+  attributeGroupId?: number | null;
   kind: string;
+  name?: string;
+  label?: string;
   value: string;
+  unit?: string | null;
+  inputType?: ProductTypeAttributeInputType;
+  isRequired?: boolean;
+  isFilterable?: boolean;
+  groupName?: string | null;
+  groupSortOrder?: number;
+  sortOrder?: number;
 };
 
 export type ProductVariantInputDto = {
   id?: number;
+  productTypeId?: number | null;
   sku: string;
   slug: string;
   name: string;
@@ -46,6 +60,40 @@ export type ProductVariantInputDto = {
   datasheet: ProductMediaDto | null;
   media: ProductMediaDto[];
   attributes: ProductAttributeInputDto[];
+};
+
+export type ProductTypeAttributeOptionDto = {
+  id: number;
+  groupId: number | null;
+  name: string;
+  label: string;
+  unit: string | null;
+  inputType: ProductTypeAttributeInputType;
+  isRequired: boolean;
+  isFilterable: boolean;
+  groupName: string | null;
+  groupSortOrder: number;
+  sortOrder: number;
+};
+
+export type ProductTypeOptionDto = {
+  id: number;
+  groupId: number | null;
+  groupName: string | null;
+  groupSlug: string | null;
+  name: string;
+  slug: string;
+  description: string | null;
+  sortOrder: number;
+  attributes: ProductTypeAttributeOptionDto[];
+};
+
+export type ProductTypeGroupOptionDto = {
+  id: number | null;
+  name: string;
+  slug: string;
+  sortOrder: number;
+  productTypes: ProductTypeOptionDto[];
 };
 
 export type ProductFamilyUpsertInput = {
@@ -97,6 +145,7 @@ export type ProductFamilyListResult = {
 
 export type ProductFormOptionsDto = {
   productSubcategories: ProductSubcategoryOptionDto[];
+  productTypeGroups: ProductTypeGroupOptionDto[];
 };
 
 export type PublicProductEntityType = "FAMILY" | "PACK" | "SINGLE" | "VARIANT";

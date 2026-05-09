@@ -11,9 +11,9 @@ export function findDuplicateAttributeKind(
   const seen = new Set<string>();
 
   for (const attribute of attributes) {
-    const normalizedKind = normalizeProductAttributeKind(attribute.kind);
+    const normalizedKind = normalizeProductAttributeKind(attribute.name ?? attribute.kind);
     if (seen.has(normalizedKind)) {
-      return attribute.kind;
+      return attribute.name ?? attribute.kind;
     }
 
     seen.add(normalizedKind);
@@ -29,7 +29,7 @@ export function getAvailableAttributeKinds(
   const usedKinds = new Set(
     attributes
       .filter((_, index) => index !== currentIndex)
-      .map((attribute) => normalizeProductAttributeKind(attribute.kind)),
+      .map((attribute) => normalizeProductAttributeKind(attribute.name ?? attribute.kind)),
   );
 
   return PRODUCT_ATTRIBUTE_KINDS.filter(
