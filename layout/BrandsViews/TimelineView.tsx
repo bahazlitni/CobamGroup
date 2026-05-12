@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
-import type { Brand as PublicBrand } from "@/lib/static_tables/brands";
 import { scrollToIdCenter } from "@/lib/utils";
-import Link from "next/link";
 import BrandImageBlock from "./TimelineBrandImageBlock";
+import type { PublicBrandViewItem } from "./types";
 
-export default function TimelineView({ brands }: { brands: PublicBrand[] }) {
+export default function TimelineView({ brands }: { brands: PublicBrandViewItem[] }) {
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [discovered, setDiscovered] = useState<number[]>([]);
@@ -38,9 +36,7 @@ export default function TimelineView({ brands }: { brands: PublicBrand[] }) {
       });
 
       setActiveIndex((prev) => (prev !== closestIdx ? closestIdx : prev));
-      setDiscovered((prev) =>
-        prev.includes(closestIdx) ? prev : [...prev, closestIdx]
-      );
+      setDiscovered((prev) => (prev.includes(closestIdx) ? prev : [...prev, closestIdx]));
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -62,9 +58,7 @@ export default function TimelineView({ brands }: { brands: PublicBrand[] }) {
     const timeout = setTimeout(() => {
       scrollToIdCenter(hash);
       setActiveIndex(idx);
-      setDiscovered((prev) =>
-        prev.includes(idx) ? prev : [...prev, idx]
-      );
+      setDiscovered((prev) => (prev.includes(idx) ? prev : [...prev, idx]));
     }, 50);
 
     return () => clearTimeout(timeout);
@@ -73,8 +67,8 @@ export default function TimelineView({ brands }: { brands: PublicBrand[] }) {
   return (
     <div className="relative">
       {/* Center line */}
-      <div className="hidden lg:block absolute top-0 bottom-0 left-1/2 -translate-x-1/2">
-        <div className="w-[2px] h-full bg-cobam-quill-grey/50" />
+      <div className="absolute top-0 bottom-0 left-1/2 hidden -translate-x-1/2 lg:block">
+        <div className="bg-cobam-quill-grey/50 h-full w-[2px]" />
       </div>
 
       <div className="flex flex-col gap-12 sm:gap-16">
@@ -107,12 +101,12 @@ export default function TimelineView({ brands }: { brands: PublicBrand[] }) {
               className="relative"
             >
               {/* Dot */}
-              <div className="hidden lg:block absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 z-10">
+              <div className="absolute top-1/2 left-1/2 z-10 hidden -translate-x-1/2 -translate-y-1/2 lg:block">
                 <div
-                  className={`w-3 h-3 rounded-full border-[2px] transition-colors duration-300 ${
+                  className={`h-3 w-3 rounded-full border-[2px] transition-colors duration-300 ${
                     isActive
                       ? "bg-cobam-water-blue border-cobam-water-blue"
-                      : "bg-white border-cobam-quill-grey/80"
+                      : "border-cobam-quill-grey/80 bg-white"
                   }`}
                 />
               </div>
@@ -128,10 +122,7 @@ export default function TimelineView({ brands }: { brands: PublicBrand[] }) {
                   animate={{
                     scale: isActive ? 1 : isDiscovered ? 0.965 : 0.94,
                     opacity: isDiscovered ? (isActive ? 1 : 0.72) : 0,
-                    filter:
-                      isActive || !isDiscovered
-                        ? "grayscale(0%)"
-                        : "grayscale(100%)",
+                    filter: isActive || !isDiscovered ? "grayscale(0%)" : "grayscale(100%)",
                   }}
                   transition={{ duration: 0.45, ease: "easeOut" }}
                   className="w-full lg:w-1/2"
@@ -150,9 +141,7 @@ export default function TimelineView({ brands }: { brands: PublicBrand[] }) {
                 >
                   <div
                     className={`max-w-md ${
-                      isEven
-                        ? "lg:ml-auto text-left"
-                        : "lg:mr-auto text-left lg:text-right"
+                      isEven ? "text-left lg:ml-auto" : "text-left lg:mr-auto lg:text-right"
                     }`}
                   >
                     <motion.p
@@ -162,7 +151,7 @@ export default function TimelineView({ brands }: { brands: PublicBrand[] }) {
                         y: isDiscovered ? 0 : 12,
                       }}
                       transition={{ duration: 0.35, delay: 0.04 }}
-                      className="text-xs font-bold tracking-[0.3em] uppercase text-cobam-carbon-grey mb-3"
+                      className="text-cobam-carbon-grey mb-3 text-xs font-bold tracking-[0.3em] uppercase"
                     >
                       Partenaire officiel
                     </motion.p>
@@ -174,7 +163,7 @@ export default function TimelineView({ brands }: { brands: PublicBrand[] }) {
                         y: isDiscovered ? 0 : 16,
                       }}
                       transition={{ duration: 0.4, delay: 0.1 }}
-                      className="text-2xl sm:text-3xl font-bold text-cobam-dark-blue mb-3"
+                      className="text-cobam-dark-blue mb-3 text-2xl font-bold sm:text-3xl"
                       style={{ fontFamily: "var(--font-playfair), serif" }}
                     >
                       {brand.name}
@@ -187,7 +176,7 @@ export default function TimelineView({ brands }: { brands: PublicBrand[] }) {
                         y: isDiscovered ? 0 : 18,
                       }}
                       transition={{ duration: 0.45, delay: 0.16 }}
-                      className="text-sm sm:text-base text-cobam-carbon-grey mb-5"
+                      className="text-cobam-carbon-grey mb-5 text-sm sm:text-base"
                     >
                       {brand.description}
                     </motion.p>
@@ -200,9 +189,7 @@ export default function TimelineView({ brands }: { brands: PublicBrand[] }) {
                       }}
                       transition={{ duration: 0.45, delay: 0.22 }}
                       className={`flex items-center gap-3 ${
-                        isEven
-                          ? "justify-start"
-                          : "justify-start lg:justify-end"
+                        isEven ? "justify-start" : "justify-start lg:justify-end"
                       }`}
                     >
                       {/* CTA area intentionally left empty (same as original) */}

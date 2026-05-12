@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import PageHeader from "@/components/ui/custom/PageHeader";
+import { listPublicPartnerOrganizations } from "@/features/organizations/public";
 import BrandsViews from "@/layout/BrandsViews";
-import { PARTNER_BRANDS } from "@/lib/static_tables/brands";
 
 export const metadata: Metadata = {
   title: "Partenaires",
@@ -15,8 +15,10 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function PartnersPage() {
+  const partners = await listPublicPartnerOrganizations();
+
   return (
-    <main className="min-h-screen bg-cobam-light-bg text-cobam-dark-blue">
+    <main className="bg-cobam-light-bg text-cobam-dark-blue min-h-screen">
       <PageHeader
         title="Des marques d'exception, au coeur de chaque projet."
         subtitle="Nos Partenaires"
@@ -25,7 +27,7 @@ export default async function PartnersPage() {
 
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-10">
-          <BrandsViews brands={PARTNER_BRANDS} />
+          <BrandsViews brands={partners} />
         </div>
       </section>
     </main>

@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
-import type { Brand as PublicBrand } from "@/lib/static_tables/brands";
 import { scrollToIdCenter } from "@/lib/utils";
 import GridViewBrandImageBlock from "./GridViewBrandImageBlock";
+import type { PublicBrandViewItem } from "./types";
 
-export default function GridView({ brands }: { brands: PublicBrand[] }) {
+export default function GridView({ brands }: { brands: PublicBrandViewItem[] }) {
   // On mount, if there is a hash (#slug), center that card
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -36,24 +35,22 @@ export default function GridView({ brands }: { brands: PublicBrand[] }) {
           className="group block h-full"
           id={brand.slug}
         >
-          <div className="relative flex h-full flex-col overflow-hidden rounded-lg border border-cobam-quill-grey/50 bg-white shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl">
+          <div className="border-cobam-quill-grey/50 relative flex h-full flex-col overflow-hidden rounded-lg border bg-white shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl">
             {/* Logo area */}
             <GridViewBrandImageBlock brand={brand} />
 
             {/* Content */}
-            <div className="relative z-10 flex flex-1 flex-col px-5 pb-5 pt-4">
+            <div className="relative z-10 flex flex-1 flex-col px-5 pt-4 pb-5">
               <div className="mb-3">
                 <h3
-                  className="text-[1.4rem] font-bold leading-tight text-cobam-dark-blue"
+                  className="text-cobam-dark-blue text-[1.4rem] leading-tight font-bold"
                   style={{ fontFamily: "var(--font-playfair), serif" }}
                 >
                   {brand.name}
                 </h3>
               </div>
 
-              <p className="mb-5 text-sm leading-6 text-cobam-carbon-grey">
-                {brand.description}
-              </p>
+              <p className="text-cobam-carbon-grey mb-5 text-sm leading-6">{brand.description}</p>
             </div>
           </div>
         </motion.div>

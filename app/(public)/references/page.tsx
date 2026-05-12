@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import PageHeader from "@/components/ui/custom/PageHeader";
+import { listPublicReferenceOrganizations } from "@/features/organizations/public";
 import BrandsViews from "@/layout/BrandsViews";
-import { REFERENCE_BRANDS } from "@/lib/static_tables/brands";
 
 export const metadata: Metadata = {
   title: "References",
@@ -15,8 +15,10 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ReferencesPage() {
+  const references = await listPublicReferenceOrganizations();
+
   return (
-    <main className="min-h-screen bg-cobam-light-bg text-cobam-dark-blue">
+    <main className="bg-cobam-light-bg text-cobam-dark-blue min-h-screen">
       <PageHeader
         title="Des realisations et collaborations qui parlent pour nous."
         subtitle="Nos References"
@@ -25,7 +27,7 @@ export default async function ReferencesPage() {
 
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-10">
-          <BrandsViews brands={REFERENCE_BRANDS} />
+          <BrandsViews brands={references} />
         </div>
       </section>
     </main>
