@@ -85,7 +85,7 @@ function getActiveBlockValue(editor: Editor | null) {
     return "paragraph";
   }
 
-  for (const level of [1, 2, 3, 4, 5, 6] as const) {
+  for (const level of [2, 3, 4, 5, 6] as const) {
     if (editor.isActive("heading", { level })) {
       return `h${level}`;
     }
@@ -109,8 +109,8 @@ function applyBlockType(editor: Editor | null, nextValue: string) {
   if (nextValue.startsWith("h")) {
     const level = Number(nextValue.slice(1));
 
-    if (Number.isInteger(level) && level >= 1 && level <= 6) {
-      chain.toggleHeading({ level: level as 1 | 2 | 3 | 4 | 5 | 6 }).run();
+    if (Number.isInteger(level) && level >= 2 && level <= 6) {
+      chain.toggleHeading({ level: level as 2 | 3 | 4 | 5 | 6 }).run();
     }
   }
 }
@@ -226,12 +226,11 @@ export default function ArticleRichTextToolbar({
         >
           <SelectTrigger className="h-9 min-w-40 rounded-xl border-slate-300 bg-white">
             <div className="flex items-center gap-2">
-              <SelectValue placeholder="Titre rapide" />
+            <SelectValue placeholder="Titre rapide" />
             </div>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="paragraph">Paragraphe</SelectItem>
-            <SelectItem value="h1">Titre 1</SelectItem>
             <SelectItem value="h2">Titre 2</SelectItem>
             <SelectItem value="h3">Titre 3</SelectItem>
             <SelectItem value="h4">Titre 4</SelectItem>

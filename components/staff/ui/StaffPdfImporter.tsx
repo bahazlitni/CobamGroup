@@ -16,6 +16,7 @@ type StaffPdfImporterProps = {
   value: ProductMediaDto | null;
   onChange: (value: ProductMediaDto | null) => void;
   emptyLabel?: string;
+  role?: ProductMediaDto["role"];
 };
 
 function isPdfMedia(media: ProductMediaDto | null) {
@@ -42,6 +43,7 @@ export default function StaffPdfImporter({
   value,
   onChange,
   emptyLabel = "Aucun PDF selectionne.",
+  role = "TECHNICAL",
 }: StaffPdfImporterProps) {
   const [open, setOpen] = useState(false);
   const media = isPdfMedia(value) ? value : null;
@@ -129,7 +131,7 @@ export default function StaffPdfImporter({
           mediaKind="DOCUMENT"
           documentExtensions={["pdf"]}
           onSelect={(selectedMedia) => {
-            onChange(selectedMedia);
+            onChange({ ...selectedMedia, role });
             setOpen(false);
           }}
         />

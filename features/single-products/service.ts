@@ -8,10 +8,16 @@ import {
   buildProductAttributeCreateData,
   mapProductAttributeRecord,
 } from "@/features/products/attribute-records";
-import { assertProductDatasheetMedia } from "@/features/products/datasheet";
+import { resolveProductBrandOrganizationId } from "@/features/organizations/product-brand";
 import { canAccessProducts, canCreateProducts, canManageProducts } from "@/features/products/access";
 import { getProductFormOptionsService } from "@/features/products/service";
 import type { ProductMediaDto } from "@/features/products/types";
+import {
+  productBrandLabel,
+  productLifecycleFromVisibility,
+  richTextDescriptionToString,
+  stringToRichTextDescription,
+} from "@/features/products/model-b-compat";
 import { prisma } from "@/lib/server/db/prisma";
 import { formatProductBrandValue } from "@/lib/static_tables/brands";
 import type {
@@ -48,24 +54,41 @@ const SINGLE_PRODUCT_SELECT = {
   sku: true,
   slug: true,
   name: true,
-  description: true,
+  displayName: true,
+  richTextDescription: true,
+  shortDescription: true,
+  titleSeo: true,
   descriptionSeo: true,
-  brand: true,
-  lifecycle: true,
   tags: true,
+  guaranteeMonths: true,
+  brand: { select: { displayName: true, name: true } },
+  visibleEcommerce: true,
+  visibleVitrine: true,
+  isFeatured: true,
+  isPromoted: true,
+  isNew: true,
+  stockAvailable: true,
+  stockAlertThreshold: true,
+  stockUnit: true,
+  stockAvailability: true,
+  stockVisibility: true,
+  basePriceTtcTnd: true,
+  currentPriceTtcTnd: true,
+  vatRate: true,
+  priceVisibility: true,
   createdAt: true,
   updatedAt: true,
-  datasheetMedia: {
-    select: STAFF_MEDIA_SELECT,
-  },
-  subcategoryLinks: {
+  subcategories: {
     select: {
       subcategoryId: true,
     },
   },
-  mediaLinks: {
+  media: {
     orderBy: [{ sortOrder: "asc" }, { mediaId: "asc" }],
     select: {
+      role: true,
+      name: true,
+      altText: true,
       media: {
         select: STAFF_MEDIA_SELECT,
       },
@@ -102,14 +125,20 @@ function buildMediaUrl(mediaId: bigint | number, variant: "original" | "thumbnai
 
 function mapMedia(
   media: Prisma.MediaGetPayload<{ select: typeof STAFF_MEDIA_SELECT }>,
+  link?: {
+    role: ProductMediaDto["role"];
+    name: string | null;
+    altText: string | null;
+  },
 ): ProductMediaDto {
   return {
     id: Number(media.id),
+    role: link?.role ?? "GALLERY",
     kind: media.kind,
-    title: media.title,
+    title: link?.name ?? media.title,
     originalFilename: media.originalFilename,
     mimeType: media.mimeType,
-    altText: media.altText,
+    altText: link?.altText ?? media.altText,
     widthPx: media.widthPx,
     heightPx: media.heightPx,
     durationSeconds: media.durationSeconds?.toString() ?? null,
@@ -120,20 +149,42 @@ function mapMedia(
 }
 
 function mapSingleProductDetail(record: SingleProductRecord): SingleProductDetailDto {
+  const galleryLinks = record.media.filter((link) => link.role === "GALLERY");
+  const technicalLink =
+    record.media.find((link) => link.role === "TECHNICAL") ?? null;
+
   return {
     id: Number(record.id),
     productTypeId: record.productTypeId == null ? null : Number(record.productTypeId),
     sku: record.sku,
     slug: record.slug,
     name: record.name,
-    description: record.description,
+    displayName: record.displayName,
+    description: richTextDescriptionToString(record.richTextDescription),
+    shortDescription: record.shortDescription,
+    titleSeo: record.titleSeo,
     descriptionSeo: record.descriptionSeo,
-    brand: formatProductBrandValue(record.brand),
-    lifecycle: record.lifecycle ?? "DRAFT",
+    guaranteeMonths: record.guaranteeMonths ?? 0,
+    brand: formatProductBrandValue(productBrandLabel(record.brand)),
+    lifecycle: productLifecycleFromVisibility(record),
+    visibleEcommerce: record.visibleEcommerce,
+    visibleVitrine: record.visibleVitrine,
+    isFeatured: record.isFeatured,
+    isPromoted: record.isPromoted,
+    isNew: record.isNew,
+    stockAvailable: record.stockAvailable.toString(),
+    stockAlertThreshold: record.stockAlertThreshold.toString(),
+    stockUnit: record.stockUnit,
+    stockAvailability: record.stockAvailability,
+    stockVisibility: record.stockVisibility,
+    basePriceTtcTnd: record.basePriceTtcTnd?.toString() ?? null,
+    currentPriceTtcTnd: record.currentPriceTtcTnd?.toString() ?? null,
+    vatRate: record.vatRate.toString(),
+    priceVisibility: record.priceVisibility,
     tags: record.tags,
-    subcategoryIds: record.subcategoryLinks.map((link) => Number(link.subcategoryId)),
-    datasheet: record.datasheetMedia ? mapMedia(record.datasheetMedia) : null,
-    media: record.mediaLinks.map((link) => mapMedia(link.media)),
+    subcategoryIds: record.subcategories.map((link) => Number(link.subcategoryId)),
+    datasheet: technicalLink ? mapMedia(technicalLink.media, technicalLink) : null,
+    media: galleryLinks.map((link) => mapMedia(link.media, link)),
     attributes: record.attributes.map(mapProductAttributeRecord),
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString(),
@@ -207,19 +258,44 @@ async function syncSingleProductRelations(
     });
   }
 
-  await tx.productMediaLink.deleteMany({
+  await tx.productMedia.deleteMany({
     where: {
       productId,
+      role: {
+        in: ["GALLERY", "TECHNICAL"],
+      },
     },
   });
 
-  if (input.media.length > 0) {
-    await tx.productMediaLink.createMany({
-      data: input.media.map((media, index) => ({
+  const technicalMediaId = input.datasheet?.id ?? null;
+  const productMediaLinks = [
+    ...input.media
+      .filter((media) => media.id !== technicalMediaId)
+      .map((media, index) => ({
         productId,
         mediaId: BigInt(media.id),
+        role: "GALLERY" as const,
+        name: media.title,
+        altText: media.altText,
         sortOrder: index,
       })),
+    ...(input.datasheet
+      ? [
+          {
+            productId,
+            mediaId: BigInt(input.datasheet.id),
+            role: "TECHNICAL" as const,
+            name: input.datasheet.title ?? "Fiche technique",
+            altText: input.datasheet.altText,
+            sortOrder: 0,
+          },
+        ]
+      : []),
+  ];
+
+  if (productMediaLinks.length > 0) {
+    await tx.productMedia.createMany({
+      data: productMediaLinks,
     });
   }
 
@@ -249,13 +325,7 @@ async function writeSingleProduct(productId: number | null, input: SingleProduct
   }
 
   return prisma.$transaction(async (tx) => {
-    try {
-      await assertProductDatasheetMedia(tx, input.datasheet?.id ?? null);
-    } catch (error: unknown) {
-      throw new SingleProductsServiceError(
-        error instanceof Error ? error.message : "Fiche technique invalide.",
-      );
-    }
+    const brandId = await resolveProductBrandOrganizationId(tx, input.brand);
 
     const product =
       productId == null
@@ -263,17 +333,32 @@ async function writeSingleProduct(productId: number | null, input: SingleProduct
             data: {
               sku: input.sku,
               slug: input.slug,
-              kind: "SINGLE",
+              kind: "STANDARD",
               productTypeId:
                 input.productTypeId == null ? null : BigInt(input.productTypeId),
               name: input.name,
-              description: input.description,
+              displayName: input.displayName,
+              richTextDescription: stringToRichTextDescription(input.description),
+              shortDescription: input.shortDescription,
+              titleSeo: input.titleSeo,
               descriptionSeo: input.descriptionSeo,
-              brand: input.brand,
-              lifecycle: input.lifecycle,
               tags: input.tags,
-              datasheetMediaId:
-                input.datasheet?.id == null ? null : BigInt(input.datasheet.id),
+              guaranteeMonths: input.guaranteeMonths,
+              brandId,
+              visibleEcommerce: input.visibleEcommerce,
+              visibleVitrine: input.visibleVitrine,
+              isFeatured: input.isFeatured,
+              isPromoted: input.isPromoted,
+              isNew: input.isNew,
+              stockAvailable: input.stockAvailable,
+              stockAlertThreshold: input.stockAlertThreshold,
+              stockUnit: input.stockUnit,
+              stockAvailability: input.stockAvailability,
+              stockVisibility: input.stockVisibility,
+              basePriceTtcTnd: input.basePriceTtcTnd,
+              currentPriceTtcTnd: input.currentPriceTtcTnd,
+              vatRate: input.vatRate,
+              priceVisibility: input.priceVisibility,
             },
             select: {
               id: true,
@@ -289,13 +374,28 @@ async function writeSingleProduct(productId: number | null, input: SingleProduct
               productTypeId:
                 input.productTypeId == null ? null : BigInt(input.productTypeId),
               name: input.name,
-              description: input.description,
+              displayName: input.displayName,
+              richTextDescription: stringToRichTextDescription(input.description),
+              shortDescription: input.shortDescription,
+              titleSeo: input.titleSeo,
               descriptionSeo: input.descriptionSeo,
-              brand: input.brand,
-              lifecycle: input.lifecycle,
               tags: input.tags,
-              datasheetMediaId:
-                input.datasheet?.id == null ? null : BigInt(input.datasheet.id),
+              guaranteeMonths: input.guaranteeMonths,
+              brandId,
+              visibleEcommerce: input.visibleEcommerce,
+              visibleVitrine: input.visibleVitrine,
+              isFeatured: input.isFeatured,
+              isPromoted: input.isPromoted,
+              isNew: input.isNew,
+              stockAvailable: input.stockAvailable,
+              stockAlertThreshold: input.stockAlertThreshold,
+              stockUnit: input.stockUnit,
+              stockAvailability: input.stockAvailability,
+              stockVisibility: input.stockVisibility,
+              basePriceTtcTnd: input.basePriceTtcTnd,
+              currentPriceTtcTnd: input.currentPriceTtcTnd,
+              vatRate: input.vatRate,
+              priceVisibility: input.priceVisibility,
             },
             select: {
               id: true,
@@ -307,7 +407,7 @@ async function writeSingleProduct(productId: number | null, input: SingleProduct
     return tx.product.findFirstOrThrow({
       where: {
         id: product.id,
-        kind: "SINGLE",
+        kind: { in: ["STANDARD", "SINGLE"] },
       },
       select: SINGLE_PRODUCT_SELECT,
     });
@@ -331,7 +431,7 @@ export async function getSingleProductByIdService(
   const product = await prisma.product.findFirst({
     where: {
       id: BigInt(productId),
-      kind: "SINGLE",
+      kind: { in: ["STANDARD", "SINGLE"] },
     },
     select: SINGLE_PRODUCT_SELECT,
   });

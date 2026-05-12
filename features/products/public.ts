@@ -15,6 +15,10 @@ import {
   resolveFinishURL,
 } from "@/lib/static_tables/finishes";
 import { rankPublicProductSearchRows } from "./search";
+import {
+  productBrandLabel,
+  richTextDescriptionToString,
+} from "./model-b-compat";
 import type {
   PublicProductColorReference,
   PublicProductFinishReference,
@@ -66,15 +70,13 @@ const PUBLIC_PRODUCT_SELECT = {
   slug: true,
   kind: true,
   name: true,
-  description: true,
+  shortDescription: true,
+  richTextDescription: true,
   descriptionSeo: true,
-  brand: true,
-  lifecycle: true,
-  tags: true,
-  datasheetMedia: {
-    select: MEDIA_SELECT,
-  },
-  subcategoryLinks: {
+  brand: { select: { displayName: true, name: true } },
+  visibleEcommerce: true,
+  visibleVitrine: true,
+  subcategories: {
     select: {
       subcategory: {
         select: {
@@ -92,9 +94,12 @@ const PUBLIC_PRODUCT_SELECT = {
       },
     },
   },
-  mediaLinks: {
+  media: {
     orderBy: [{ sortOrder: "asc" }, { mediaId: "asc" }],
     select: {
+      role: true,
+      name: true,
+      altText: true,
       media: {
         select: MEDIA_SELECT,
       },
@@ -119,11 +124,12 @@ const PACK_COMPONENT_SELECT = {
   slug: true,
   kind: true,
   name: true,
-  description: true,
+  shortDescription: true,
+  richTextDescription: true,
   descriptionSeo: true,
-  brand: true,
-  lifecycle: true,
-  tags: true,
+  brand: { select: { displayName: true, name: true } },
+  visibleEcommerce: true,
+  visibleVitrine: true,
 } satisfies Prisma.ProductSelect;
 
 const PUBLIC_PACK_SELECT = {
@@ -297,6 +303,10 @@ function isRenderableMedia(input: {
 
 function mapMediaRecord(
   media: { id: bigint; kind: "IMAGE" | "VIDEO" | "DOCUMENT"; title: string | null; altText: string | null; mimeType: string | null; isActive: boolean; deletedAt: Date | null } | null,
+  link?: {
+    name: string | null;
+    altText: string | null;
+  },
 ): PublicProductInspectorMedia | null {
   if (!media || !isRenderableMedia(media)) {
     return null;
@@ -307,8 +317,8 @@ function mapMediaRecord(
     kind: media.kind,
     url: buildPublicMediaUrl(media.id, "original"),
     thumbnailUrl: media.kind === "IMAGE" ? buildPublicMediaUrl(media.id, "thumbnail") : null,
-    altText: media.altText,
-    title: media.title,
+    altText: link?.altText ?? media.altText,
+    title: link?.name ?? media.title,
     mimeType: media.mimeType,
   };
 }
@@ -321,11 +331,7 @@ function collectMediaIdsForPublishing(record: PublicFamilyRecord) {
   }
 
   for (const member of record.members) {
-    if (member.product.datasheetMedia && isRenderableMedia(member.product.datasheetMedia)) {
-      ids.add(Number(member.product.datasheetMedia.id));
-    }
-
-    for (const link of member.product.mediaLinks) {
+    for (const link of member.product.media) {
       if (isRenderableMedia(link.media)) {
         ids.add(Number(link.media.id));
       }
@@ -336,16 +342,12 @@ function collectMediaIdsForPublishing(record: PublicFamilyRecord) {
 }
 
 function collectProductMediaIdsForPublishing(
-  records: Array<Pick<PublicProductRecord, "mediaLinks" | "datasheetMedia">>,
+  records: Array<Pick<PublicProductRecord, "media">>,
 ) {
   const ids = new Set<number>();
 
   for (const record of records) {
-    if (record.datasheetMedia && isRenderableMedia(record.datasheetMedia)) {
-      ids.add(Number(record.datasheetMedia.id));
-    }
-
-    for (const link of record.mediaLinks) {
+    for (const link of record.media) {
       if (isRenderableMedia(link.media)) {
         ids.add(Number(link.media.id));
       }
@@ -356,15 +358,27 @@ function collectProductMediaIdsForPublishing(
 }
 
 function isPublicProduct(product: PublicProductRecord) {
-  return product.kind === "VARIANT" && product.lifecycle === "ACTIVE";
+  return product.kind === "VARIANT" && product.visibleEcommerce;
 }
 
 function isPublicSingleProduct(product: PublicProductRecord) {
-  return product.kind === "SINGLE" && product.lifecycle === "ACTIVE";
+  return (
+    (product.kind === "STANDARD" || product.kind === "SINGLE") &&
+    product.visibleEcommerce
+  );
 }
 
-function getBrandName(brand: string | null | undefined) {
-  return formatProductBrandValue(brand);
+function getBrandName(
+  brand: { displayName: string; name: string } | null | undefined,
+) {
+  return formatProductBrandValue(productBrandLabel(brand));
+}
+
+function getProductDescription(record: {
+  shortDescription: string | null;
+  richTextDescription: Prisma.JsonValue | null;
+}) {
+  return record.shortDescription ?? richTextDescriptionToString(record.richTextDescription);
 }
 
 function parseRichTextPreview(value: string | null | undefined) {
@@ -373,7 +387,7 @@ function parseRichTextPreview(value: string | null | undefined) {
 }
 
 function mapSubcategoryLinks(
-  links: PublicProductRecord["subcategoryLinks"],
+  links: PublicProductRecord["subcategories"],
 ): PublicProductSubcategoryLink[] {
   return links.map((link) => ({
     id: Number(link.subcategory.id),
@@ -470,13 +484,19 @@ function mapVariantAttributes(product: PublicProductRecord): PublicProductInspec
 }
 
 function mapVariantMedia(product: PublicProductRecord) {
-  return product.mediaLinks
-    .map((link) => mapMediaRecord(link.media))
+  return product.media
+    .filter((link) => link.role === "GALLERY")
+    .map((link) => mapMediaRecord(link.media, link))
     .filter((media): media is PublicProductInspectorMedia => media != null);
 }
 
-function buildProductCoverMedia(product: Pick<PublicProductRecord, "mediaLinks">) {
+function buildProductCoverMedia(product: Pick<PublicProductRecord, "media">) {
   return mapVariantMedia(product as PublicProductRecord)[0] ?? null;
+}
+
+function mapTechnicalMedia(product: PublicProductRecord) {
+  const link = product.media.find((entry) => entry.role === "TECHNICAL") ?? null;
+  return link ? mapMediaRecord(link.media, link) : null;
 }
 
 function derivePack(record: PublicPackRecord) {
@@ -490,7 +510,7 @@ function derivePack(record: PublicPackRecord) {
   ];
   const lifecycle =
     record.packLinesAsPack.length > 0 &&
-    record.packLinesAsPack.every((line) => line.product.lifecycle === "ACTIVE")
+    record.packLinesAsPack.every((line) => line.product.visibleEcommerce)
       ? "ACTIVE"
       : "DRAFT";
 
@@ -544,7 +564,9 @@ function mapFamilySummary(record: PublicFamilyRecord, defaultVariant: PublicProd
     name: record.name,
     slug: record.slug,
     subtitle: record.subtitle,
-    description: parseRichTextPreview(record.description) ?? parseRichTextPreview(defaultVariant?.description ?? null),
+    description:
+      parseRichTextPreview(record.description) ??
+      (defaultVariant ? getProductDescription(defaultVariant) : null),
     brandName: getBrandName(defaultVariant?.brand ?? null),
     imageUrl: coverMedia?.url ?? null,
     imageThumbnailUrl: coverMedia?.thumbnailUrl ?? null,
@@ -564,7 +586,7 @@ function mapProductSummary(
     name: record.name,
     slug: record.slug,
     subtitle: null,
-    description: parseRichTextPreview(record.description),
+    description: getProductDescription(record),
     brandName: getBrandName(record.brand),
     imageUrl: coverMedia?.kind === "IMAGE" ? coverMedia.url : null,
     imageThumbnailUrl: coverMedia?.kind === "IMAGE" ? coverMedia.thumbnailUrl : null,
@@ -581,7 +603,7 @@ function mapPackSummary(record: PublicPackRecord, derived: ReturnType<typeof der
     name: record.name,
     slug: record.slug,
     subtitle: null,
-    description: parseRichTextPreview(record.description),
+    description: getProductDescription(record),
     brandName: derived.brandNames.length > 0 ? derived.brandNames.join(" · ") : null,
     imageUrl: coverMedia?.kind === "IMAGE" ? coverMedia.url : null,
     imageThumbnailUrl: coverMedia?.kind === "IMAGE" ? coverMedia.thumbnailUrl : null,
@@ -686,8 +708,8 @@ function mapInspectorVariant(product: PublicProductRecord): PublicProductInspect
     sku: product.sku,
     slug: product.slug,
     name: product.name,
-    description: product.description,
-    datasheet: mapMediaRecord(product.datasheetMedia),
+    description: getProductDescription(product),
+    datasheet: mapTechnicalMedia(product),
     media: mapVariantMedia(product),
     attributes: mapVariantAttributes(product),
   };
@@ -710,12 +732,12 @@ async function mapSimpleInspector(record: PublicProductRecord, input: {
     sku: record.sku,
     slug: record.slug,
     name: record.name,
-    description: record.description,
+    description: getProductDescription(record),
     descriptionSeo: record.descriptionSeo,
     brandNames: input.brandNames,
     media,
-    datasheet: input.kind === "PACK" ? null : mapMediaRecord(record.datasheetMedia),
-    subcategories: mapSubcategoryLinks(record.subcategoryLinks),
+    datasheet: mapTechnicalMedia(record),
+    subcategories: mapSubcategoryLinks(record.subcategories),
     attributes,
     colorReferences: buildColorReferencesFromAttributes([attributes], colorLookup),
     finishReferences: buildFinishReferencesFromAttributes([attributes], finishLookup),
@@ -727,7 +749,7 @@ function buildFamilySubcategories(publicVariants: PublicProductRecord[]) {
   const subcategories = new Map<number, PublicProductSubcategoryLink>();
 
   for (const variant of publicVariants) {
-    for (const link of variant.subcategoryLinks) {
+    for (const link of variant.subcategories) {
       subcategories.set(Number(link.subcategory.id), {
         id: Number(link.subcategory.id),
         name: link.subcategory.name,
@@ -875,7 +897,7 @@ function buildSqlFromAst(node: AdvancedSearchAst): import("@prisma/client").Pris
     else if (op === '3') sqlPattern = `%${val}%`;
     else return Prisma.empty;
 
-    if (key === 'brand') return Prisma.sql`"p"."brand" ILIKE ${sqlPattern}`;
+    if (key === 'brand') return Prisma.sql`COALESCE("p_brand"."display_name", "p_brand"."name", '') ILIKE ${sqlPattern}`;
     if (key === 'sku') return Prisma.sql`"p"."sku" ILIKE ${sqlPattern}`;
     if (key === 'name') return Prisma.sql`"p"."name" ILIKE ${sqlPattern}`;
     return Prisma.empty;
@@ -918,9 +940,9 @@ export async function listPublicProductsIndex(input: {
       f.slug AS product_slug,
       p.sku AS product_sku,
       p.name AS product_name,
-      p.brand AS product_brand,
+      COALESCE(p_brand.display_name, p_brand.name) AS product_brand,
       p.tags AS product_tags,
-      p.description AS product_description,
+      COALESCE(p.short_description, p."richTextDescription"::text) AS product_description,
       p.description_seo AS product_description_seo,
       (
         SELECT COALESCE(string_agg(pa.name || ' ' || pa.value, ' '), '')
@@ -938,9 +960,9 @@ export async function listPublicProductsIndex(input: {
           fp.sku,
           fp.slug,
           fp.name,
-          fp.brand,
           fp.tags,
-          fp.description,
+          COALESCE(fp_brand.display_name, fp_brand.name),
+          COALESCE(fp.short_description, fp."richTextDescription"::text),
           fp.description_seo,
           (
             SELECT COALESCE(string_agg(fpa.name || ' ' || fpa.value, ' '), '')
@@ -950,6 +972,7 @@ export async function listPublicProductsIndex(input: {
         ), ' '), '')
         FROM product_family_members fm2
         JOIN products fp ON fp.id = fm2.product_id
+        LEFT JOIN organizations fp_brand ON fp_brand.id = fp.brand_id
         WHERE fm2.family_id = f.id
       ) AS family_members_text,
       c.id AS category_id,
@@ -970,10 +993,11 @@ export async function listPublicProductsIndex(input: {
     FROM product_families f
     JOIN product_family_members m ON m.family_id = f.id
     JOIN products p ON p.id = m.product_id
+    LEFT JOIN organizations p_brand ON p_brand.id = p.brand_id
     JOIN product_subcategory_links l ON l.product_id = p.id
     JOIN product_subcategories s ON s.id = l.subcategory_id AND s.is_active = true
     JOIN product_types c ON c.id = s.category_id AND c.is_active = true
-    WHERE p.kind = 'VARIANT' AND p.lifecycle = 'ACTIVE'
+    WHERE p.kind = 'VARIANT' AND p.visible_ecommerce = true
     ${advancedSearchCondition}
     ${input.categorySlug ? Prisma.sql`AND "c".slug = ${input.categorySlug}` : Prisma.empty}
     ${input.subcategorySlug ? Prisma.sql`AND "s".slug = ${input.subcategorySlug}` : Prisma.empty}
@@ -1020,7 +1044,7 @@ export async function listPublicProductsIndex(input: {
   const productQuery = Prisma.sql`
     SELECT DISTINCT ON (p.id)
       CASE
-        WHEN p.kind = 'SINGLE' THEN 'SINGLE'::text
+        WHEN p.kind IN ('STANDARD', 'SINGLE') THEN 'SINGLE'::text
         WHEN p.kind = 'VARIANT' THEN 'VARIANT'::text
         ELSE 'PACK'::text
       END AS entity_type,
@@ -1029,9 +1053,9 @@ export async function listPublicProductsIndex(input: {
       p.slug AS product_slug,
       p.sku AS product_sku,
       p.name AS product_name,
-      p.brand AS product_brand,
+      COALESCE(p_brand.display_name, p_brand.name) AS product_brand,
       p.tags AS product_tags,
-      p.description AS product_description,
+      COALESCE(p.short_description, p."richTextDescription"::text) AS product_description,
       p.description_seo AS product_description_seo,
       (
         SELECT COALESCE(string_agg(pa.name || ' ' || pa.value, ' '), '')
@@ -1043,9 +1067,8 @@ export async function listPublicProductsIndex(input: {
           cp.sku,
           cp.slug,
           cp.name,
-          cp.brand,
-          cp.tags,
-          cp.description,
+          COALESCE(cp_brand.display_name, cp_brand.name),
+          COALESCE(cp.short_description, cp."richTextDescription"::text),
           cp.description_seo,
           (
             SELECT COALESCE(string_agg(cpa.name || ' ' || cpa.value, ' '), '')
@@ -1055,6 +1078,7 @@ export async function listPublicProductsIndex(input: {
         ), ' '), '')
         FROM product_pack_lines ppl
         JOIN products cp ON cp.id = ppl.product_id
+        LEFT JOIN organizations cp_brand ON cp_brand.id = cp.brand_id
         WHERE ppl.pack_product_id = p.id
       ) AS pack_components_text,
       NULL::text AS family_name,
@@ -1079,15 +1103,16 @@ export async function listPublicProductsIndex(input: {
       s.description_seo AS subcategory_description_seo,
       s.sort_order AS subcategory_sort
     FROM products p
+    LEFT JOIN organizations p_brand ON p_brand.id = p.brand_id
     ${includeFamilies ? Prisma.sql`LEFT JOIN product_family_members fm ON fm.product_id = p.id` : Prisma.empty}
     JOIN product_subcategory_links l ON l.product_id = p.id
     JOIN product_subcategories s ON s.id = l.subcategory_id AND s.is_active = true
     JOIN product_types c ON c.id = s.category_id AND c.is_active = true
     WHERE ${
       includeFamilies
-        ? Prisma.sql`(p.kind IN ('SINGLE', 'PACK') OR (p.kind = 'VARIANT' AND fm.product_id IS NULL))`
-        : Prisma.sql`p.kind IN ('SINGLE', 'PACK', 'VARIANT')`
-    } AND p.lifecycle = 'ACTIVE'
+        ? Prisma.sql`(p.kind IN ('STANDARD', 'SINGLE', 'PACK') OR (p.kind = 'VARIANT' AND fm.product_id IS NULL))`
+        : Prisma.sql`p.kind IN ('STANDARD', 'SINGLE', 'PACK', 'VARIANT')`
+    } AND p.visible_ecommerce = true
     AND (
       p.kind <> 'PACK'
       OR (
@@ -1102,7 +1127,7 @@ export async function listPublicProductsIndex(input: {
           JOIN products public_component ON public_component.id = public_ppl.product_id
           WHERE public_ppl.pack_product_id = p.id
             AND (
-              public_component.lifecycle IS DISTINCT FROM 'ACTIVE'
+              public_component.visible_ecommerce IS DISTINCT FROM true
             )
         )
       )
@@ -1314,9 +1339,9 @@ export async function findPublicSingleProductBySlug(
 ): Promise<PublicSimpleProductInspector | null> {
   const record = await prisma.product.findFirst({
     where: {
-      slug: productSlug,
-      kind: "SINGLE",
-      lifecycle: "ACTIVE",
+    slug: productSlug,
+      kind: { in: ["STANDARD", "SINGLE"] },
+      visibleEcommerce: true,
     },
     select: PUBLIC_PRODUCT_SELECT,
   });
@@ -1342,14 +1367,17 @@ export async function findPublicProductBySlug(
     where: {
       slug: productSlug,
       kind: {
-        in: ["SINGLE", "VARIANT"],
+        in: ["STANDARD", "SINGLE", "VARIANT"],
       },
-      lifecycle: "ACTIVE",
+      visibleEcommerce: true,
     },
     select: PUBLIC_PRODUCT_SELECT,
   });
 
-  if (!record || (record.kind !== "SINGLE" && record.kind !== "VARIANT")) {
+  if (
+    !record ||
+    (record.kind !== "STANDARD" && record.kind !== "SINGLE" && record.kind !== "VARIANT")
+  ) {
     return null;
   }
 
@@ -1358,7 +1386,7 @@ export async function findPublicProductBySlug(
   const brandName = getBrandName(record.brand);
 
   return await mapSimpleInspector(record, {
-    kind: record.kind,
+    kind: record.kind === "VARIANT" ? "VARIANT" : "SINGLE",
     brandNames: brandName ? [brandName] : [],
   });
 }

@@ -343,10 +343,31 @@ export function formatProductBrandValue(value: string | null | undefined) {
   return resolveProductBrand(value)?.label ?? value;
 }
 
-export function getProductBrandSuggestions(query: string): string[] {
+export function getProductBrandSuggestions(
+  query: string,
+  extraLabels: string[] = [],
+): string[] {
   if (!query) return [];
   const lowerQuery = normalizeBrandKey(query);
-  return PRODUCT_BRANDS
+  const seen = new Set<string>();
+  const suggestions = PRODUCT_BRANDS
     .filter((brand) => normalizeBrandKey(brand.label).startsWith(lowerQuery))
     .map((brand) => brand.label);
+
+  for (const suggestion of suggestions) {
+    seen.add(normalizeBrandKey(suggestion));
+  }
+
+  for (const label of extraLabels) {
+    const normalizedLabel = normalizeBrandKey(label);
+
+    if (!normalizedLabel || !normalizedLabel.startsWith(lowerQuery) || seen.has(normalizedLabel)) {
+      continue;
+    }
+
+    suggestions.push(label);
+    seen.add(normalizedLabel);
+  }
+
+  return suggestions;
 }

@@ -1,11 +1,11 @@
-import type { ProductTypeAttributeInputType } from "@prisma/client";
+import type { ProductTypeAttributeInputType, StockUnit } from "@prisma/client";
+import type { ProductSubcategoryOptionDto } from "@/features/products/types";
 
 export type ProductTaxonomyGroupDto = {
   id: number;
   name: string;
   slug: string;
   sortOrder: number;
-  isActive: boolean;
 };
 
 export type ProductTaxonomyAttributeGroupDto = {
@@ -38,7 +38,11 @@ export type ProductTaxonomyTypeDto = {
   slug: string;
   description: string | null;
   sortOrder: number;
-  isActive: boolean;
+  presetTags: string;
+  presetSubcategoryIds: number[];
+  presetStockUnit: StockUnit | null;
+  presetVatRate: string | null;
+  presetGuaranteeMonths: number | null;
   attributeGroups: ProductTaxonomyAttributeGroupDto[];
   attributes: ProductTaxonomyAttributeDto[];
 };
@@ -46,13 +50,13 @@ export type ProductTaxonomyTypeDto = {
 export type ProductTypesAdminDto = {
   groups: ProductTaxonomyGroupDto[];
   productTypes: ProductTaxonomyTypeDto[];
+  productSubcategories?: ProductSubcategoryOptionDto[];
 };
 
 export type ProductTaxonomyGroupInput = {
   name: string;
   slug: string;
-  sortOrder: number;
-  isActive: boolean;
+  sortOrder?: number;
 };
 
 export type ProductTaxonomyTypeInput = {
@@ -60,8 +64,12 @@ export type ProductTaxonomyTypeInput = {
   name: string;
   slug: string;
   description: string | null;
-  sortOrder: number;
-  isActive: boolean;
+  sortOrder?: number;
+  presetTags?: string;
+  presetSubcategoryIds?: number[];
+  presetStockUnit?: StockUnit | null;
+  presetVatRate?: string | null;
+  presetGuaranteeMonths?: number | null;
 };
 
 export type ProductTaxonomyAttributeGroupInput = {
@@ -111,8 +119,4 @@ export type ProductFinishInput = {
   imageMediaId: number | null;
 };
 
-export type ProductTaxonomyEntity =
-  | "group"
-  | "productType"
-  | "attributeGroup"
-  | "attribute";
+export type ProductTaxonomyEntity = "group" | "productType" | "attributeGroup" | "attribute";

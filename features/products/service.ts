@@ -2,16 +2,16 @@ import { Prisma } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
 import { prisma } from "@/lib/server/db/prisma";
 import { canAccessProducts, canCreateProducts, canManageProducts } from "./access";
-import {
-  buildDuplicateAttributeKindMessage,
-  findDuplicateAttributeKind,
-} from "./attribute-kinds";
-import {
-  buildProductAttributeCreateData,
-  mapProductAttributeRecord,
-} from "./attribute-records";
-import { assertProductDatasheetMedia } from "./datasheet";
+import { buildDuplicateAttributeKindMessage, findDuplicateAttributeKind } from "./attribute-kinds";
+import { buildProductAttributeCreateData, mapProductAttributeRecord } from "./attribute-records";
+import { resolveProductBrandOrganizationId } from "@/features/organizations/product-brand";
 import { formatProductBrandValue } from "@/lib/static_tables/brands";
+import {
+  productBrandLabel,
+  productLifecycleFromVisibility,
+  richTextDescriptionToString,
+  stringToRichTextDescription,
+} from "./model-b-compat";
 import type {
   ProductFamilyDetailDto,
   ProductFamilyListItemDto,
@@ -50,15 +50,29 @@ const STAFF_PRODUCT_SELECT = {
   sku: true,
   slug: true,
   name: true,
-  description: true,
+  displayName: true,
+  richTextDescription: true,
+  shortDescription: true,
+  titleSeo: true,
   descriptionSeo: true,
-  brand: true,
-  lifecycle: true,
   tags: true,
-  datasheetMedia: {
-    select: STAFF_MEDIA_SELECT,
-  },
-  subcategoryLinks: {
+  guaranteeMonths: true,
+  brand: { select: { displayName: true, name: true } },
+  visibleEcommerce: true,
+  visibleVitrine: true,
+  isFeatured: true,
+  isPromoted: true,
+  isNew: true,
+  stockAvailable: true,
+  stockAlertThreshold: true,
+  stockUnit: true,
+  stockAvailability: true,
+  stockVisibility: true,
+  basePriceTtcTnd: true,
+  currentPriceTtcTnd: true,
+  vatRate: true,
+  priceVisibility: true,
+  subcategories: {
     select: {
       subcategoryId: true,
       subcategory: {
@@ -77,9 +91,12 @@ const STAFF_PRODUCT_SELECT = {
       },
     },
   },
-  mediaLinks: {
+  media: {
     orderBy: [{ sortOrder: "asc" }, { mediaId: "asc" }],
     select: {
+      role: true,
+      name: true,
+      altText: true,
       media: {
         select: STAFF_MEDIA_SELECT,
       },
@@ -145,9 +162,10 @@ const STAFF_FAMILY_LIST_SELECT = {
     select: {
       id: true,
       sku: true,
-      brand: true,
-      lifecycle: true,
-      subcategoryLinks: {
+      brand: { select: { displayName: true, name: true } },
+      visibleEcommerce: true,
+      visibleVitrine: true,
+      subcategories: {
         select: {
           subcategory: {
             select: {
@@ -187,14 +205,22 @@ function buildMediaUrl(mediaId: bigint | number, variant: "original" | "thumbnai
   return `/api/media/${mediaId.toString()}/file${query}`;
 }
 
-function mapMedia(media: Prisma.MediaGetPayload<{ select: typeof STAFF_MEDIA_SELECT }>): ProductMediaDto {
+function mapMedia(
+  media: Prisma.MediaGetPayload<{ select: typeof STAFF_MEDIA_SELECT }>,
+  link?: {
+    role: ProductMediaDto["role"];
+    name: string | null;
+    altText: string | null;
+  },
+): ProductMediaDto {
   return {
     id: Number(media.id),
+    role: link?.role ?? "GALLERY",
     kind: media.kind,
-    title: media.title,
+    title: link?.name ?? media.title,
     originalFilename: media.originalFilename,
     mimeType: media.mimeType,
-    altText: media.altText,
+    altText: link?.altText ?? media.altText,
     widthPx: media.widthPx,
     heightPx: media.heightPx,
     durationSeconds: media.durationSeconds?.toString() ?? null,
@@ -204,33 +230,53 @@ function mapMedia(media: Prisma.MediaGetPayload<{ select: typeof STAFF_MEDIA_SEL
   };
 }
 
-function mapVariant(record: StaffFamilyDetailRecord["members"][number]["product"]): ProductVariantInputDto {
+function mapVariant(
+  record: StaffFamilyDetailRecord["members"][number]["product"],
+): ProductVariantInputDto {
+  const galleryLinks = record.media.filter((link) => link.role === "GALLERY");
+  const technicalLink = record.media.find((link) => link.role === "TECHNICAL") ?? null;
+
   return {
     id: Number(record.id),
     productTypeId: record.productTypeId == null ? null : Number(record.productTypeId),
     sku: record.sku,
     slug: record.slug,
     name: record.name,
-    description: record.description,
+    displayName: record.displayName,
+    description: richTextDescriptionToString(record.richTextDescription),
+    shortDescription: record.shortDescription,
+    titleSeo: record.titleSeo,
     descriptionSeo: record.descriptionSeo,
-    brand: formatProductBrandValue(record.brand),
-    lifecycle: record.lifecycle ?? "DRAFT",
+    guaranteeMonths: record.guaranteeMonths ?? 0,
+    brand: formatProductBrandValue(productBrandLabel(record.brand)),
+    lifecycle: productLifecycleFromVisibility(record),
+    visibleEcommerce: record.visibleEcommerce,
+    visibleVitrine: record.visibleVitrine,
+    isFeatured: record.isFeatured,
+    isPromoted: record.isPromoted,
+    isNew: record.isNew,
+    stockAvailable: record.stockAvailable.toString(),
+    stockAlertThreshold: record.stockAlertThreshold.toString(),
+    stockUnit: record.stockUnit,
+    stockAvailability: record.stockAvailability,
+    stockVisibility: record.stockVisibility,
+    basePriceTtcTnd: record.basePriceTtcTnd?.toString() ?? null,
+    currentPriceTtcTnd: record.currentPriceTtcTnd?.toString() ?? null,
+    vatRate: record.vatRate.toString(),
+    priceVisibility: record.priceVisibility,
     tags: record.tags,
-    subcategoryIds: record.subcategoryLinks.map((link) => Number(link.subcategoryId)),
-    datasheet: record.datasheetMedia ? mapMedia(record.datasheetMedia) : null,
-    media: record.mediaLinks.map((link) => mapMedia(link.media)),
+    subcategoryIds: record.subcategories.map((link) => Number(link.subcategoryId)),
+    datasheet: technicalLink ? mapMedia(technicalLink.media, technicalLink) : null,
+    media: galleryLinks.map((link) => mapMedia(link.media, link)),
     attributes: record.attributes.map(mapProductAttributeRecord),
   };
 }
 
 function mapFamilyDetail(record: StaffFamilyDetailRecord): ProductFamilyDetailDto {
-  const defaultProductId =
-    record.defaultProductId == null ? null : Number(record.defaultProductId);
+  const defaultProductId = record.defaultProductId == null ? null : Number(record.defaultProductId);
   const defaultVariantIndex = Math.max(
     0,
-    record.members.findIndex(
-      (member) => Number(member.product.id) === defaultProductId,
-    ),
+    record.members.findIndex((member) => Number(member.product.id) === defaultProductId),
   );
 
   return {
@@ -256,15 +302,13 @@ function mapFamilyListItem(record: StaffFamilyListRecord): ProductFamilyListItem
     subtitle: record.subtitle,
     description: record.description,
     mainImageUrl:
-      record.mainImageMediaId == null
-        ? null
-        : buildMediaUrl(record.mainImageMediaId, "thumbnail"),
+      record.mainImageMediaId == null ? null : buildMediaUrl(record.mainImageMediaId, "thumbnail"),
     variantCount: record.members.length,
     defaultVariantSku: record.defaultProduct?.sku ?? null,
-    brand: formatProductBrandValue(record.defaultProduct?.brand ?? null),
-    lifecycle: record.defaultProduct?.lifecycle ?? null,
+    brand: formatProductBrandValue(productBrandLabel(record.defaultProduct?.brand)),
+    lifecycle: record.defaultProduct ? productLifecycleFromVisibility(record.defaultProduct) : null,
     subcategories:
-      record.defaultProduct?.subcategoryLinks.map(({ subcategory }) => ({
+      record.defaultProduct?.subcategories.map(({ subcategory }) => ({
         id: Number(subcategory.id),
         categoryId: Number(subcategory.category.id),
         categoryName: subcategory.category.name,
@@ -305,10 +349,7 @@ async function assertVariantUniqueConstraints(
 
   const existing = await prisma.product.findMany({
     where: {
-      OR: [
-        { sku: { in: [...seenSkus] } },
-        { slug: { in: [...seenSlugs] } },
-      ],
+      OR: [{ sku: { in: [...seenSkus] } }, { slug: { in: [...seenSlugs] } }],
     },
     select: {
       id: true,
@@ -375,19 +416,44 @@ async function syncVariantRelations(
     });
   }
 
-  await tx.productMediaLink.deleteMany({
+  await tx.productMedia.deleteMany({
     where: {
       productId,
+      role: {
+        in: ["GALLERY", "TECHNICAL"],
+      },
     },
   });
 
-  if (variant.media.length > 0) {
-    await tx.productMediaLink.createMany({
-      data: variant.media.map((media, index) => ({
+  const technicalMediaId = variant.datasheet?.id ?? null;
+  const productMediaLinks = [
+    ...variant.media
+      .filter((media) => media.id !== technicalMediaId)
+      .map((media, index) => ({
         productId,
         mediaId: BigInt(media.id),
+        role: "GALLERY" as const,
+        name: media.title,
+        altText: media.altText,
         sortOrder: index,
       })),
+    ...(variant.datasheet
+      ? [
+          {
+            productId,
+            mediaId: BigInt(variant.datasheet.id),
+            role: "TECHNICAL" as const,
+            name: variant.datasheet.title ?? "Fiche technique",
+            altText: variant.datasheet.altText,
+            sortOrder: 0,
+          },
+        ]
+      : []),
+  ];
+
+  if (productMediaLinks.length > 0) {
+    await tx.productMedia.createMany({
+      data: productMediaLinks,
     });
   }
 
@@ -406,54 +472,39 @@ async function syncVariantRelations(
   }
 }
 
-async function writeFamily(
-  familyId: number | null,
-  input: ProductFamilyUpsertInput,
-) {
+async function writeFamily(familyId: number | null, input: ProductFamilyUpsertInput) {
   for (const variant of input.variants) {
     const duplicateAttributeKind = findDuplicateAttributeKind(variant.attributes);
 
     if (duplicateAttributeKind) {
       throw new ProductServiceError(
-        buildDuplicateAttributeKindMessage(
-          duplicateAttributeKind,
-          `La variante "${variant.name}"`,
-        ),
+        buildDuplicateAttributeKindMessage(duplicateAttributeKind, `La variante "${variant.name}"`),
       );
     }
   }
 
   return prisma.$transaction(async (tx) => {
-    try {
-      for (const variant of input.variants) {
-        await assertProductDatasheetMedia(tx, variant.datasheet?.id ?? null);
-      }
-    } catch (error: unknown) {
-      throw new ProductServiceError(
-        error instanceof Error ? error.message : "Fiche technique invalide.",
-      );
-    }
-
-    const existingFamily = familyId == null
-      ? null
-      : await tx.productFamily.findUnique({
-          where: { id: BigInt(familyId) },
-          select: {
-            id: true,
-            members: {
-              select: {
-                productId: true,
-                product: {
-                  select: {
-                    id: true,
-                    sku: true,
-                    slug: true,
+    const existingFamily =
+      familyId == null
+        ? null
+        : await tx.productFamily.findUnique({
+            where: { id: BigInt(familyId) },
+            select: {
+              id: true,
+              members: {
+                select: {
+                  productId: true,
+                  product: {
+                    select: {
+                      id: true,
+                      sku: true,
+                      slug: true,
+                    },
                   },
                 },
               },
             },
-          },
-        });
+          });
 
     if (familyId != null && !existingFamily) {
       throw new ProductServiceError("Famille introuvable.", 404);
@@ -536,20 +587,35 @@ async function writeFamily(
     const createdOrUpdatedIds: bigint[] = [];
 
     for (const [index, variant] of input.variants.entries()) {
+      const brandId = await resolveProductBrandOrganizationId(tx, variant.brand);
       const productData: Prisma.ProductUncheckedCreateInput = {
         sku: variant.sku,
         slug: variant.slug,
         kind: "VARIANT",
-        productTypeId:
-          variant.productTypeId == null ? null : BigInt(variant.productTypeId),
+        productTypeId: variant.productTypeId == null ? null : BigInt(variant.productTypeId),
         name: variant.name,
-        description: variant.description,
+        displayName: variant.displayName,
+        richTextDescription: stringToRichTextDescription(variant.description),
+        shortDescription: variant.shortDescription,
+        titleSeo: variant.titleSeo,
         descriptionSeo: variant.descriptionSeo,
-        brand: variant.brand,
-        lifecycle: variant.lifecycle,
         tags: variant.tags,
-        datasheetMediaId:
-          variant.datasheet?.id == null ? null : BigInt(variant.datasheet.id),
+        guaranteeMonths: variant.guaranteeMonths,
+        brandId,
+        visibleEcommerce: variant.visibleEcommerce,
+        visibleVitrine: variant.visibleVitrine,
+        isFeatured: variant.isFeatured,
+        isPromoted: variant.isPromoted,
+        isNew: variant.isNew,
+        stockAvailable: variant.stockAvailable,
+        stockAlertThreshold: variant.stockAlertThreshold,
+        stockUnit: variant.stockUnit,
+        stockAvailability: variant.stockAvailability,
+        stockVisibility: variant.stockVisibility,
+        basePriceTtcTnd: variant.basePriceTtcTnd,
+        currentPriceTtcTnd: variant.currentPriceTtcTnd,
+        vatRate: variant.vatRate,
+        priceVisibility: variant.priceVisibility,
       };
 
       const product =
@@ -608,7 +674,7 @@ export async function getProductFormOptionsService(
     throw new ProductServiceError("Accès refusé.", 403);
   }
 
-  const [subcategories, productTypes] = await Promise.all([
+  const [subcategories, productTypes, productBrands] = await Promise.all([
     prisma.productSubcategory.findMany({
       where: {
         isActive: true,
@@ -631,9 +697,6 @@ export async function getProductFormOptionsService(
       },
     }),
     prisma.productType.findMany({
-      where: {
-        isActive: true,
-      },
       orderBy: [
         { group: { sortOrder: "asc" } },
         { group: { name: "asc" } },
@@ -647,6 +710,15 @@ export async function getProductFormOptionsService(
         slug: true,
         description: true,
         sortOrder: true,
+        presetTags: true,
+        presetStockUnit: true,
+        presetVatRate: true,
+        presetGuaranteeMonths: true,
+        subcategoryPresets: {
+          select: {
+            subcategoryId: true,
+          },
+        },
         group: {
           select: {
             id: true,
@@ -683,12 +755,20 @@ export async function getProductFormOptionsService(
         },
       },
     }),
+    prisma.organization.findMany({
+      where: {
+        isProductBrand: true,
+      },
+      orderBy: [{ displayName: "asc" }, { name: "asc" }],
+      select: {
+        displayName: true,
+      },
+    }),
   ]);
 
   const groupMap = new Map<string, ProductFormOptionsDto["productTypeGroups"][number]>();
   for (const productType of productTypes) {
-    const groupKey =
-      productType.group == null ? "ungrouped" : productType.group.id.toString();
+    const groupKey = productType.group == null ? "ungrouped" : productType.group.id.toString();
     const group = groupMap.get(groupKey) ?? {
       id: productType.group == null ? null : Number(productType.group.id),
       name: productType.group?.name ?? "Autres modèles",
@@ -706,12 +786,16 @@ export async function getProductFormOptionsService(
       slug: productType.slug,
       description: productType.description,
       sortOrder: productType.sortOrder,
+      presetTags: productType.presetTags,
+      presetSubcategoryIds: productType.subcategoryPresets.map((preset) =>
+        Number(preset.subcategoryId),
+      ),
+      presetStockUnit: productType.presetStockUnit,
+      presetVatRate: productType.presetVatRate?.toString() ?? null,
+      presetGuaranteeMonths: productType.presetGuaranteeMonths,
       attributes: productType.attributes.map((attribute) => ({
         id: Number(attribute.id),
-        groupId:
-          attribute.attributeGroupId == null
-            ? null
-            : Number(attribute.attributeGroupId),
+        groupId: attribute.attributeGroupId == null ? null : Number(attribute.attributeGroupId),
         name: attribute.name,
         label: attribute.label || attribute.name,
         unit: attribute.unit,
@@ -740,6 +824,7 @@ export async function getProductFormOptionsService(
       (left, right) =>
         left.sortOrder - right.sortOrder || left.name.localeCompare(right.name, "fr-FR"),
     ),
+    productBrandOptions: productBrands.map((brand) => brand.displayName),
   };
 }
 
@@ -775,7 +860,7 @@ export async function listProductsService(
       }
     : {};
 
-  const [items, total] = await Promise.all([
+  const [items, total, productBrands] = await Promise.all([
     prisma.productFamily.findMany({
       where,
       orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
@@ -784,10 +869,20 @@ export async function listProductsService(
       select: STAFF_FAMILY_LIST_SELECT,
     }),
     prisma.productFamily.count({ where }),
+    prisma.organization.findMany({
+      where: {
+        isProductBrand: true,
+      },
+      orderBy: [{ displayName: "asc" }, { name: "asc" }],
+      select: {
+        displayName: true,
+      },
+    }),
   ]);
 
   return {
     items: items.map(mapFamilyListItem),
+    productBrandOptions: productBrands.map((brand) => brand.displayName),
     total,
     page: query.page,
     pageSize: query.pageSize,
@@ -811,10 +906,7 @@ export async function getProductByIdService(session: StaffSession, familyId: num
   return mapFamilyDetail(family);
 }
 
-export async function createProductService(
-  session: StaffSession,
-  input: ProductFamilyUpsertInput,
-) {
+export async function createProductService(session: StaffSession, input: ProductFamilyUpsertInput) {
   if (!canCreateProducts(session)) {
     throw new ProductServiceError("Accès refusé.", 403);
   }

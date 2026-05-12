@@ -1,4 +1,5 @@
-import { ProductLifecycle } from "@prisma/client";
+import type { ProductLifecycle } from "@prisma/client";
+import { isProductLifecycle } from "@/features/products/lifecycle";
 import {
   ALL_PRODUCTS_EXPORT_FORMATS,
   ALL_PRODUCTS_EXPORT_MODES,
@@ -105,7 +106,7 @@ export function parseAllProductLifecycleInput(input: unknown): ProductLifecycle 
 
   const lifecycle = String((input as { lifecycle: unknown }).lifecycle);
 
-  if (lifecycle !== ProductLifecycle.ACTIVE && lifecycle !== ProductLifecycle.DRAFT) {
+  if (!isProductLifecycle(lifecycle)) {
     throw new AllProductsValidationError("Cycle de vie invalide.", 400);
   }
 

@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { ProductTypeAttributeInputType } from "@prisma/client";
-import { Layers3, Shapes, Tags } from "lucide-react";
+import { ProductTypeAttributeInputType, type StockUnit } from "@prisma/client";
+import { GripVertical, Layers3, Shapes, Tags } from "lucide-react";
 import { toast } from "sonner";
 import Loading from "@/components/staff/Loading";
+import ProductSubcategoriesField from "@/components/staff/products/ProductSubcategoriesField";
 import Panel from "@/components/staff/ui/Panel";
 import PanelField from "@/components/staff/ui/PanelField";
 import PanelInput from "@/components/staff/ui/PanelInput";
-import { StaffNotice, StaffPageHeader, StaffSelect } from "@/components/staff/ui";
+import { StaffNotice, StaffPageHeader, StaffSelect, StaffTagInput } from "@/components/staff/ui";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +18,8 @@ import {
   deleteProductTaxonomyEntityClient,
   getProductTypesAdminClient,
   ProductTaxonomyClientError,
+  reorderProductTypeGroupsClient,
+  reorderProductTypesClient,
   updateProductTaxonomyEntityClient,
 } from "@/features/product-taxonomy/client";
 import type {
@@ -26,18 +29,19 @@ import type {
   ProductTaxonomyTypeDto,
   ProductTypesAdminDto,
 } from "@/features/product-taxonomy/types";
+import { STOCK_UNIT_VALUES } from "@/features/products/product-edit-fields";
+import formatEnumLabel from "@/lib/formatEnumLabel";
 import { slugify } from "@/lib/slugify";
 import { cn } from "@/lib/utils";
 
-const ATTRIBUTE_INPUT_TYPES = Object.values(ProductTypeAttributeInputType).map(
-  (value) => ({ value, label: value }),
-);
+const ATTRIBUTE_INPUT_TYPES = Object.values(ProductTypeAttributeInputType).map((value) => ({
+  value,
+  label: value,
+}));
 
 type GroupFormState = {
   name: string;
   slug: string;
-  sortOrder: string;
-  isActive: boolean;
 };
 
 type ProductTypeFormState = {
@@ -45,8 +49,11 @@ type ProductTypeFormState = {
   name: string;
   slug: string;
   description: string;
-  sortOrder: string;
-  isActive: boolean;
+  presetTags: string;
+  presetSubcategoryIds: string[];
+  presetStockUnit: string;
+  presetVatRate: string;
+  presetGuaranteeMonths: string;
 };
 
 type AttributeGroupFormState = {
@@ -70,8 +77,6 @@ function emptyGroupForm(): GroupFormState {
   return {
     name: "",
     slug: "",
-    sortOrder: "0",
-    isActive: true,
   };
 }
 
@@ -81,8 +86,11 @@ function emptyProductTypeForm(): ProductTypeFormState {
     name: "",
     slug: "",
     description: "",
-    sortOrder: "0",
-    isActive: true,
+    presetTags: "",
+    presetSubcategoryIds: [],
+    presetStockUnit: "",
+    presetVatRate: "",
+    presetGuaranteeMonths: "",
   };
 }
 
@@ -118,68 +126,108 @@ function getErrorMessage(error: unknown, fallback: string) {
     : fallback;
 }
 
-function StatusPill({ active }: { active: boolean }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex rounded-full px-2 py-1 text-xs font-semibold",
-        active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500",
-      )}
-    >
-      {active ? "Actif" : "Inactif"}
-    </span>
-  );
+type DropPosition = "before" | "after";
+type DropTarget = { id: number; position: DropPosition } | null;
+
+function splitTags(value: string) {
+  return value.split(" ").filter((tag) => tag.trim() !== "");
+}
+
+function moveItemById<T extends { id: number }>(
+  items: T[],
+  draggedId: number,
+  targetId: number,
+  position: DropPosition,
+) {
+  const draggedIndex = items.findIndex((item) => item.id === draggedId);
+  const targetIndex = items.findIndex((item) => item.id === targetId);
+
+  if (draggedIndex === -1 || targetIndex === -1 || draggedIndex === targetIndex) {
+    return items;
+  }
+
+  const nextItems = [...items];
+  const [draggedItem] = nextItems.splice(draggedIndex, 1);
+  const baseTargetIndex = nextItems.findIndex((item) => item.id === targetId);
+  const insertIndex = position === "after" ? baseTargetIndex + 1 : Math.max(0, baseTargetIndex);
+
+  nextItems.splice(insertIndex, 0, draggedItem);
+  return nextItems;
 }
 
 export default function ProductTypesAdminPage() {
   const [data, setData] = useState<ProductTypesAdminDto>({
     groups: [],
     productTypes: [],
+    productSubcategories: [],
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [savingKey, setSavingKey] = useState<string | null>(null);
-  const [selectedProductTypeId, setSelectedProductTypeId] = useState<number | null>(
-    null,
-  );
+  const [selectedProductTypeId, setSelectedProductTypeId] = useState<number | null>(null);
 
   const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
   const [groupForm, setGroupForm] = useState<GroupFormState>(emptyGroupForm);
-  const [editingProductTypeId, setEditingProductTypeId] = useState<number | null>(
-    null,
-  );
+  const [editingProductTypeId, setEditingProductTypeId] = useState<number | null>(null);
   const [productTypeForm, setProductTypeForm] =
     useState<ProductTypeFormState>(emptyProductTypeForm);
-  const [editingAttributeGroupId, setEditingAttributeGroupId] = useState<
-    number | null
-  >(null);
+  const [editingAttributeGroupId, setEditingAttributeGroupId] = useState<number | null>(null);
   const [attributeGroupForm, setAttributeGroupForm] =
     useState<AttributeGroupFormState>(emptyAttributeGroupForm);
-  const [editingAttributeId, setEditingAttributeId] = useState<number | null>(
-    null,
-  );
-  const [attributeForm, setAttributeForm] =
-    useState<AttributeFormState>(emptyAttributeForm);
+  const [editingAttributeId, setEditingAttributeId] = useState<number | null>(null);
+  const [attributeForm, setAttributeForm] = useState<AttributeFormState>(emptyAttributeForm);
+  const [draggedGroupId, setDraggedGroupId] = useState<number | null>(null);
+  const [groupDropTarget, setGroupDropTarget] = useState<DropTarget>(null);
+  const [draggedProductTypeId, setDraggedProductTypeId] = useState<number | null>(null);
+  const [productTypeDropTarget, setProductTypeDropTarget] = useState<DropTarget>(null);
+  const [isReordering, setIsReordering] = useState(false);
 
   const selectedProductType = useMemo(
     () =>
       selectedProductTypeId == null
         ? null
-        : data.productTypes.find((item) => item.id === selectedProductTypeId) ??
-          null,
+        : (data.productTypes.find((item) => item.id === selectedProductTypeId) ?? null),
     [data.productTypes, selectedProductTypeId],
   );
 
   const groupedProductTypes = useMemo(() => {
-    const groups = new Map<string, ProductTaxonomyTypeDto[]>();
+    const groupOrder = new Map(
+      data.groups.map((group, index) => [group.id, group.sortOrder * 1000 + index]),
+    );
+    const groups = new Map<
+      string,
+      {
+        key: string;
+        name: string;
+        productTypes: ProductTaxonomyTypeDto[];
+      }
+    >();
+    const sortedProductTypes = [...data.productTypes].sort((left, right) => {
+      const leftGroupOrder =
+        left.groupId == null ? 999999 : (groupOrder.get(left.groupId) ?? 999999);
+      const rightGroupOrder =
+        right.groupId == null ? 999999 : (groupOrder.get(right.groupId) ?? 999999);
 
-    for (const productType of data.productTypes) {
-      const key = productType.groupName ?? "Sans groupe";
-      groups.set(key, [...(groups.get(key) ?? []), productType]);
+      return (
+        leftGroupOrder - rightGroupOrder ||
+        left.sortOrder - right.sortOrder ||
+        left.name.localeCompare(right.name, "fr-FR")
+      );
+    });
+
+    for (const productType of sortedProductTypes) {
+      const key = productType.groupId == null ? "ungrouped" : String(productType.groupId);
+      const group = groups.get(key) ?? {
+        key,
+        name: productType.groupName ?? "Sans groupe",
+        productTypes: [],
+      };
+      group.productTypes.push(productType);
+      groups.set(key, group);
     }
 
-    return [...groups.entries()];
-  }, [data.productTypes]);
+    return [...groups.values()];
+  }, [data.groups, data.productTypes]);
 
   const loadData = async () => {
     setError(null);
@@ -213,8 +261,6 @@ export default function ProductTypesAdminPage() {
     setGroupForm({
       name: group.name,
       slug: group.slug,
-      sortOrder: String(group.sortOrder),
-      isActive: group.isActive,
     });
   };
 
@@ -231,8 +277,12 @@ export default function ProductTypesAdminPage() {
       name: productType.name,
       slug: productType.slug,
       description: productType.description ?? "",
-      sortOrder: String(productType.sortOrder),
-      isActive: productType.isActive,
+      presetTags: productType.presetTags,
+      presetSubcategoryIds: productType.presetSubcategoryIds.map(String),
+      presetStockUnit: productType.presetStockUnit ?? "",
+      presetVatRate: productType.presetVatRate ?? "",
+      presetGuaranteeMonths:
+        productType.presetGuaranteeMonths == null ? "" : String(productType.presetGuaranteeMonths),
     });
   };
 
@@ -259,9 +309,7 @@ export default function ProductTypesAdminPage() {
     setEditingAttributeId(attribute.id);
     setAttributeForm({
       attributeGroupId:
-        attribute.attributeGroupId == null
-          ? ""
-          : String(attribute.attributeGroupId),
+        attribute.attributeGroupId == null ? "" : String(attribute.attributeGroupId),
       name: attribute.name,
       label: attribute.label,
       unit: attribute.unit ?? "",
@@ -276,9 +324,11 @@ export default function ProductTypesAdminPage() {
     event.preventDefault();
     setSavingKey("group");
     try {
+      const existingGroup = data.groups.find((group) => group.id === editingGroupId);
       const payload = {
-        ...groupForm,
-        sortOrder: numberFromForm(groupForm.sortOrder),
+        name: groupForm.name,
+        slug: groupForm.slug,
+        sortOrder: existingGroup?.sortOrder ?? data.groups.length,
       };
 
       if (editingGroupId == null) {
@@ -301,32 +351,41 @@ export default function ProductTypesAdminPage() {
     event.preventDefault();
     setSavingKey("productType");
     try {
+      const existingProductType = data.productTypes.find(
+        (productType) => productType.id === editingProductTypeId,
+      );
+      const newGroupId = productTypeForm.groupId ? Number(productTypeForm.groupId) : null;
+      const groupProductTypes = data.productTypes.filter(
+        (productType) => productType.groupId === newGroupId,
+      );
       const payload = {
-        groupId: productTypeForm.groupId ? Number(productTypeForm.groupId) : null,
+        groupId: newGroupId,
         name: productTypeForm.name,
         slug: productTypeForm.slug,
         description: productTypeForm.description || null,
-        sortOrder: numberFromForm(productTypeForm.sortOrder),
-        isActive: productTypeForm.isActive,
+        sortOrder: existingProductType?.sortOrder ?? groupProductTypes.length,
+        presetTags: productTypeForm.presetTags,
+        presetSubcategoryIds: productTypeForm.presetSubcategoryIds.map(Number),
+        presetStockUnit: productTypeForm.presetStockUnit
+          ? (productTypeForm.presetStockUnit as StockUnit)
+          : null,
+        presetVatRate: productTypeForm.presetVatRate || null,
+        presetGuaranteeMonths: productTypeForm.presetGuaranteeMonths
+          ? numberFromForm(productTypeForm.presetGuaranteeMonths)
+          : null,
       };
 
       if (editingProductTypeId == null) {
         await createProductTaxonomyEntityClient("productType", payload);
       } else {
-        await updateProductTaxonomyEntityClient(
-          "productType",
-          editingProductTypeId,
-          payload,
-        );
+        await updateProductTaxonomyEntityClient("productType", editingProductTypeId, payload);
       }
 
       toast.success("Type produit enregistré.");
       resetProductTypeForm();
       await loadData();
     } catch (saveError: unknown) {
-      toast.error(
-        getErrorMessage(saveError, "Impossible d'enregistrer le type produit."),
-      );
+      toast.error(getErrorMessage(saveError, "Impossible d'enregistrer le type produit."));
     } finally {
       setSavingKey(null);
     }
@@ -351,23 +410,14 @@ export default function ProductTypesAdminPage() {
       if (editingAttributeGroupId == null) {
         await createProductTaxonomyEntityClient("attributeGroup", payload);
       } else {
-        await updateProductTaxonomyEntityClient(
-          "attributeGroup",
-          editingAttributeGroupId,
-          payload,
-        );
+        await updateProductTaxonomyEntityClient("attributeGroup", editingAttributeGroupId, payload);
       }
 
       toast.success("Groupe d'attributs enregistré.");
       resetAttributeGroupForm();
       await loadData();
     } catch (saveError: unknown) {
-      toast.error(
-        getErrorMessage(
-          saveError,
-          "Impossible d'enregistrer le groupe d'attributs.",
-        ),
-      );
+      toast.error(getErrorMessage(saveError, "Impossible d'enregistrer le groupe d'attributs."));
     } finally {
       setSavingKey(null);
     }
@@ -399,20 +449,14 @@ export default function ProductTypesAdminPage() {
       if (editingAttributeId == null) {
         await createProductTaxonomyEntityClient("attribute", payload);
       } else {
-        await updateProductTaxonomyEntityClient(
-          "attribute",
-          editingAttributeId,
-          payload,
-        );
+        await updateProductTaxonomyEntityClient("attribute", editingAttributeId, payload);
       }
 
       toast.success("Attribut enregistré.");
       resetAttributeForm();
       await loadData();
     } catch (saveError: unknown) {
-      toast.error(
-        getErrorMessage(saveError, "Impossible d'enregistrer l'attribut."),
-      );
+      toast.error(getErrorMessage(saveError, "Impossible d'enregistrer l'attribut."));
     } finally {
       setSavingKey(null);
     }
@@ -433,21 +477,112 @@ export default function ProductTypesAdminPage() {
       toast.success("Suppression effectuée.");
       await loadData();
     } catch (deleteError: unknown) {
-      toast.error(
-        getErrorMessage(deleteError, "Impossible de supprimer cette ressource."),
-      );
+      toast.error(getErrorMessage(deleteError, "Impossible de supprimer cette ressource."));
     } finally {
       setSavingKey(null);
     }
   };
 
+  const handleGroupDrop = async (targetGroupId: number) => {
+    if (!draggedGroupId || !groupDropTarget) {
+      return;
+    }
+
+    const nextGroups = moveItemById(
+      data.groups,
+      draggedGroupId,
+      targetGroupId,
+      groupDropTarget.position,
+    );
+
+    if (
+      nextGroups.map((group) => group.id).join("|") ===
+      data.groups.map((group) => group.id).join("|")
+    ) {
+      setDraggedGroupId(null);
+      setGroupDropTarget(null);
+      return;
+    }
+
+    setData((current) => ({
+      ...current,
+      groups: nextGroups.map((group, index) => ({ ...group, sortOrder: index })),
+    }));
+    setDraggedGroupId(null);
+    setGroupDropTarget(null);
+    setIsReordering(true);
+
+    try {
+      const nextData = await reorderProductTypeGroupsClient(nextGroups.map((group) => group.id));
+      setData(nextData);
+      toast.success("Ordre des groupes mis a jour.");
+    } catch (reorderError: unknown) {
+      await loadData();
+      toast.error(getErrorMessage(reorderError, "Impossible de reordonner les groupes."));
+    } finally {
+      setIsReordering(false);
+    }
+  };
+
+  const handleProductTypeDrop = async (
+    targetProductTypeId: number,
+    productTypes: ProductTaxonomyTypeDto[],
+  ) => {
+    if (!draggedProductTypeId || !productTypeDropTarget) {
+      return;
+    }
+
+    const nextProductTypes = moveItemById(
+      productTypes,
+      draggedProductTypeId,
+      targetProductTypeId,
+      productTypeDropTarget.position,
+    );
+
+    if (
+      nextProductTypes.map((item) => item.id).join("|") ===
+      productTypes.map((item) => item.id).join("|")
+    ) {
+      setDraggedProductTypeId(null);
+      setProductTypeDropTarget(null);
+      return;
+    }
+
+    const nextOrderById = new Map(
+      nextProductTypes.map((productType, index) => [productType.id, index]),
+    );
+    setData((current) => ({
+      ...current,
+      productTypes: current.productTypes.map((productType) =>
+        nextOrderById.has(productType.id)
+          ? {
+              ...productType,
+              sortOrder: nextOrderById.get(productType.id) ?? productType.sortOrder,
+            }
+          : productType,
+      ),
+    }));
+    setDraggedProductTypeId(null);
+    setProductTypeDropTarget(null);
+    setIsReordering(true);
+
+    try {
+      const nextData = await reorderProductTypesClient(
+        nextProductTypes.map((productType) => productType.id),
+      );
+      setData(nextData);
+      toast.success("Ordre des types produit mis a jour.");
+    } catch (reorderError: unknown) {
+      await loadData();
+      toast.error(getErrorMessage(reorderError, "Impossible de reordonner les types produit."));
+    } finally {
+      setIsReordering(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <StaffPageHeader
-        eyebrow="Catalogue"
-        title="Types produit"
-        icon={Shapes}
-      />
+      <StaffPageHeader eyebrow="Catalogue" title="Types produit" icon={Shapes} />
 
       {isLoading ? (
         <div className="rounded-lg border border-dashed border-slate-300 px-4 py-8">
@@ -465,7 +600,7 @@ export default function ProductTypesAdminPage() {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.85fr)]">
           <div className="space-y-6">
             <Panel pretitle="Groupes" title="Groupes de types produit">
-              <form onSubmit={saveGroup} className="grid gap-4 lg:grid-cols-4">
+              <form onSubmit={saveGroup} className="grid gap-4 lg:grid-cols-[1fr_1fr_auto]">
                 <PanelField id="product-type-group-name" label="Nom">
                   <PanelInput
                     id="product-type-group-name"
@@ -497,38 +632,8 @@ export default function ProductTypesAdminPage() {
                     }
                   />
                 </PanelField>
-                <PanelField id="product-type-group-sort" label="Ordre">
-                  <PanelInput
-                    id="product-type-group-sort"
-                    fullWidth
-                    type="number"
-                    value={groupForm.sortOrder}
-                    onChange={(event) =>
-                      setGroupForm((current) => ({
-                        ...current,
-                        sortOrder: event.target.value,
-                      }))
-                    }
-                  />
-                </PanelField>
                 <div className="flex items-end gap-3">
-                  <label className="flex h-10 items-center gap-2 text-sm font-medium text-slate-600">
-                    <Checkbox
-                      checked={groupForm.isActive}
-                      onCheckedChange={(checked) =>
-                        setGroupForm((current) => ({
-                          ...current,
-                          isActive: checked === true,
-                        }))
-                      }
-                    />
-                    Actif
-                  </label>
-                  <AnimatedUIButton
-                    type="submit"
-                    icon="save"
-                    loading={savingKey === "group"}
-                  >
+                  <AnimatedUIButton type="submit" icon="save" loading={savingKey === "group"}>
                     {editingGroupId == null ? "Ajouter" : "Enregistrer"}
                   </AnimatedUIButton>
                   {editingGroupId != null ? (
@@ -543,21 +648,47 @@ export default function ProductTypesAdminPage() {
               </form>
 
               <div className="grid gap-2">
-                {data.groups.map((group) => (
+                {data.groups.map((group, index) => (
                   <div
                     key={group.id}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-slate-200 px-3 py-2"
+                    draggable={!isReordering}
+                    onDragStart={(event) => {
+                      setDraggedGroupId(group.id);
+                      event.dataTransfer.effectAllowed = "move";
+                    }}
+                    onDragEnd={() => {
+                      setDraggedGroupId(null);
+                      setGroupDropTarget(null);
+                    }}
+                    onDragOver={(event) => {
+                      event.preventDefault();
+                      const bounds = event.currentTarget.getBoundingClientRect();
+                      const position =
+                        event.clientY - bounds.top > bounds.height / 2 ? "after" : "before";
+                      setGroupDropTarget({ id: group.id, position });
+                    }}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      void handleGroupDrop(group.id);
+                    }}
+                    className={cn(
+                      "flex flex-wrap items-center justify-between gap-3 rounded-md border px-3 py-2",
+                      groupDropTarget?.id === group.id
+                        ? "border-cobam-water-blue bg-cobam-water-blue/5"
+                        : "border-slate-200",
+                      draggedGroupId === group.id ? "opacity-60" : "",
+                    )}
                   >
                     <div>
-                      <p className="font-semibold text-cobam-dark-blue">
-                        {group.name}
+                      <p className="text-cobam-dark-blue flex items-center gap-2 font-semibold">
+                        <GripVertical className="h-4 w-4 text-slate-400" />
+                        <span>{group.name}</span>
                       </p>
                       <p className="text-xs text-slate-500">
-                        {group.slug} · ordre {group.sortOrder}
+                        {group.slug} · #{index + 1}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <StatusPill active={group.isActive} />
                       <AnimatedUIButton
                         type="button"
                         size="sm"
@@ -630,20 +761,6 @@ export default function ProductTypesAdminPage() {
                     }
                   />
                 </PanelField>
-                <PanelField id="product-type-sort" label="Ordre">
-                  <PanelInput
-                    id="product-type-sort"
-                    fullWidth
-                    type="number"
-                    value={productTypeForm.sortOrder}
-                    onChange={(event) =>
-                      setProductTypeForm((current) => ({
-                        ...current,
-                        sortOrder: event.target.value,
-                      }))
-                    }
-                  />
-                </PanelField>
                 <PanelField
                   id="product-type-description"
                   label="Description"
@@ -661,24 +778,85 @@ export default function ProductTypesAdminPage() {
                     className="rounded-md border-slate-300 bg-white"
                   />
                 </PanelField>
+                <PanelField
+                  id="product-type-preset-tags"
+                  label="Tags preconfigures"
+                  className="lg:col-span-2"
+                >
+                  <StaffTagInput
+                    id="product-type-preset-tags"
+                    value={splitTags(productTypeForm.presetTags)}
+                    onChange={(tags) =>
+                      setProductTypeForm((current) => ({
+                        ...current,
+                        presetTags: tags.join(" "),
+                      }))
+                    }
+                  />
+                </PanelField>
+                <ProductSubcategoriesField
+                  id="product-type-preset-subcategories"
+                  label="Sous-categories preconfigurees"
+                  className="lg:col-span-2"
+                  value={productTypeForm.presetSubcategoryIds}
+                  options={data.productSubcategories ?? []}
+                  onChange={(value) =>
+                    setProductTypeForm((current) => ({
+                      ...current,
+                      presetSubcategoryIds: value,
+                    }))
+                  }
+                />
+                <PanelField id="product-type-preset-stock-unit" label="Unité stock">
+                  <StaffSelect
+                    id="product-type-preset-stock-unit"
+                    fullWidth
+                    value={productTypeForm.presetStockUnit}
+                    emptyLabel="Ne pas preconfigurer"
+                    options={STOCK_UNIT_VALUES.map((value) => ({
+                      value,
+                      label: formatEnumLabel(value),
+                    }))}
+                    onValueChange={(value) =>
+                      setProductTypeForm((current) => ({
+                        ...current,
+                        presetStockUnit: value,
+                      }))
+                    }
+                  />
+                </PanelField>
+                <PanelField id="product-type-preset-vat-rate" label="TVA">
+                  <PanelInput
+                    id="product-type-preset-vat-rate"
+                    fullWidth
+                    inputMode="decimal"
+                    placeholder="19.000"
+                    value={productTypeForm.presetVatRate}
+                    onChange={(event) =>
+                      setProductTypeForm((current) => ({
+                        ...current,
+                        presetVatRate: event.target.value,
+                      }))
+                    }
+                  />
+                </PanelField>
+                <PanelField id="product-type-preset-guarantee" label="Garantie (mois)">
+                  <PanelInput
+                    id="product-type-preset-guarantee"
+                    fullWidth
+                    type="number"
+                    min={0}
+                    value={productTypeForm.presetGuaranteeMonths}
+                    onChange={(event) =>
+                      setProductTypeForm((current) => ({
+                        ...current,
+                        presetGuaranteeMonths: event.target.value,
+                      }))
+                    }
+                  />
+                </PanelField>
                 <div className="flex flex-wrap items-center gap-3 lg:col-span-2">
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-600">
-                    <Checkbox
-                      checked={productTypeForm.isActive}
-                      onCheckedChange={(checked) =>
-                        setProductTypeForm((current) => ({
-                          ...current,
-                          isActive: checked === true,
-                        }))
-                      }
-                    />
-                    Actif
-                  </label>
-                  <AnimatedUIButton
-                    type="submit"
-                    icon="save"
-                    loading={savingKey === "productType"}
-                  >
+                  <AnimatedUIButton type="submit" icon="save" loading={savingKey === "productType"}>
                     {editingProductTypeId == null ? "Ajouter" : "Enregistrer"}
                   </AnimatedUIButton>
                   {editingProductTypeId != null ? (
@@ -693,19 +871,42 @@ export default function ProductTypesAdminPage() {
               </form>
 
               <div className="space-y-4">
-                {groupedProductTypes.map(([groupName, productTypes]) => (
-                  <section key={groupName} className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                {groupedProductTypes.map(({ key, name: groupName, productTypes }) => (
+                  <section key={key} className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.16em] text-slate-400 uppercase">
                       <Layers3 className="h-4 w-4" />
                       {groupName}
                     </div>
                     <div className="grid gap-2">
-                      {productTypes.map((productType) => (
+                      {productTypes.map((productType, index) => (
                         <div
                           key={productType.id}
                           role="button"
                           tabIndex={0}
+                          draggable={!isReordering}
                           onClick={() => setSelectedProductTypeId(productType.id)}
+                          onDragStart={(event) => {
+                            setDraggedProductTypeId(productType.id);
+                            event.dataTransfer.effectAllowed = "move";
+                          }}
+                          onDragEnd={() => {
+                            setDraggedProductTypeId(null);
+                            setProductTypeDropTarget(null);
+                          }}
+                          onDragOver={(event) => {
+                            event.preventDefault();
+                            const bounds = event.currentTarget.getBoundingClientRect();
+                            const position =
+                              event.clientY - bounds.top > bounds.height / 2 ? "after" : "before";
+                            setProductTypeDropTarget({
+                              id: productType.id,
+                              position,
+                            });
+                          }}
+                          onDrop={(event) => {
+                            event.preventDefault();
+                            void handleProductTypeDrop(productType.id, productTypes);
+                          }}
                           onKeyDown={(event) => {
                             if (event.key === "Enter" || event.key === " ") {
                               event.preventDefault();
@@ -717,19 +918,23 @@ export default function ProductTypesAdminPage() {
                             selectedProductTypeId === productType.id
                               ? "border-cobam-water-blue bg-cobam-water-blue/5"
                               : "border-slate-200 bg-white hover:border-slate-300",
+                            productTypeDropTarget?.id === productType.id
+                              ? "ring-cobam-water-blue/40 ring-2"
+                              : "",
+                            draggedProductTypeId === productType.id ? "opacity-60" : "",
                           )}
                         >
                           <span className="flex flex-wrap items-center justify-between gap-2">
-                            <span>
-                              <span className="font-semibold text-cobam-dark-blue">
+                            <span className="flex min-w-0 items-center gap-2">
+                              <GripVertical className="h-4 w-4 shrink-0 text-slate-400" />
+                              <span className="text-cobam-dark-blue font-semibold">
                                 {productType.name}
                               </span>
                               <span className="ml-2 text-xs text-slate-400">
-                                {productType.slug}
+                                {productType.slug} · #{index + 1}
                               </span>
                             </span>
                             <span className="flex items-center gap-2">
-                              <StatusPill active={productType.isActive} />
                               <span className="text-xs text-slate-500">
                                 {productType.attributes.length} attributs
                               </span>
@@ -756,11 +961,7 @@ export default function ProductTypesAdminPage() {
                               icon="trash"
                               onClick={(event) => {
                                 event.stopPropagation();
-                                void deleteEntity(
-                                  "productType",
-                                  productType.id,
-                                  productType.name,
-                                );
+                                void deleteEntity("productType", productType.id, productType.name);
                               }}
                             >
                               Supprimer
@@ -794,8 +995,7 @@ export default function ProductTypesAdminPage() {
                           ...current,
                           name,
                           slug:
-                            current.slug === "" ||
-                            current.slug === slugify(current.name)
+                            current.slug === "" || current.slug === slugify(current.name)
                               ? slugify(name)
                               : current.slug,
                         }));
@@ -855,12 +1055,8 @@ export default function ProductTypesAdminPage() {
                       className="flex items-center justify-between gap-2 rounded-md border border-slate-200 px-3 py-2"
                     >
                       <span>
-                        <span className="font-semibold text-cobam-dark-blue">
-                          {group.name}
-                        </span>
-                        <span className="ml-2 text-xs text-slate-400">
-                          {group.slug}
-                        </span>
+                        <span className="text-cobam-dark-blue font-semibold">{group.name}</span>
+                        <span className="ml-2 text-xs text-slate-400">{group.slug}</span>
                       </span>
                       <span className="flex gap-2">
                         <AnimatedUIButton
@@ -876,9 +1072,7 @@ export default function ProductTypesAdminPage() {
                           variant="ghost"
                           color="red"
                           icon="trash"
-                          onClick={() =>
-                            void deleteEntity("attributeGroup", group.id, group.name)
-                          }
+                          onClick={() => void deleteEntity("attributeGroup", group.id, group.name)}
                         />
                       </span>
                     </div>
@@ -997,11 +1191,7 @@ export default function ProductTypesAdminPage() {
                       />
                       Filtrable
                     </label>
-                    <AnimatedUIButton
-                      type="submit"
-                      icon="save"
-                      loading={savingKey === "attribute"}
-                    >
+                    <AnimatedUIButton type="submit" icon="save" loading={savingKey === "attribute"}>
                       {editingAttributeId == null ? "Ajouter" : "Enregistrer"}
                     </AnimatedUIButton>
                     {editingAttributeId != null ? (
@@ -1023,12 +1213,10 @@ export default function ProductTypesAdminPage() {
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span>
-                          <span className="font-semibold text-cobam-dark-blue">
+                          <span className="text-cobam-dark-blue font-semibold">
                             {attribute.label}
                           </span>
-                          <span className="ml-2 text-xs text-slate-400">
-                            {attribute.name}
-                          </span>
+                          <span className="ml-2 text-xs text-slate-400">{attribute.name}</span>
                         </span>
                         <span className="flex items-center gap-2 text-xs text-slate-500">
                           <Tags className="h-3.5 w-3.5" />
@@ -1057,11 +1245,7 @@ export default function ProductTypesAdminPage() {
                             color="red"
                             icon="trash"
                             onClick={() =>
-                              void deleteEntity(
-                                "attribute",
-                                attribute.id,
-                                attribute.label,
-                              )
+                              void deleteEntity("attribute", attribute.id, attribute.label)
                             }
                           />
                         </span>

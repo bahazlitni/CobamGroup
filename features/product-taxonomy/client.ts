@@ -28,7 +28,7 @@ export class ProductTaxonomyClientError extends Error {
 
 async function parseJsonSafe<T>(res: Response): Promise<T | null> {
   try {
-    return await res.json() as T;
+    return (await res.json()) as T;
   } catch {
     return null;
   }
@@ -42,10 +42,7 @@ async function unwrapResponse<T>(res: Response, fallback: string): Promise<T> {
   const data = await parseJsonSafe<ApiOk<T> | ApiFail>(res);
 
   if (!res.ok || !data?.ok) {
-    throw new ProductTaxonomyClientError(
-      getErrorMessage(data) || fallback,
-      res.status,
-    );
+    throw new ProductTaxonomyClientError(getErrorMessage(data) || fallback, res.status);
   }
 
   return data;
@@ -57,10 +54,7 @@ export async function getProductTypesAdminClient(): Promise<ProductTypesAdminDto
     auth: true,
   });
 
-  return unwrapResponse<ProductTypesAdminDto>(
-    res,
-    "Impossible de charger les types produit.",
-  );
+  return unwrapResponse<ProductTypesAdminDto>(res, "Impossible de charger les types produit.");
 }
 
 type TaxonomyMutationInput =
@@ -80,10 +74,7 @@ export async function createProductTaxonomyEntityClient(
     body: JSON.stringify({ entity, data }),
   });
 
-  await unwrapResponse<{ item: unknown }>(
-    res,
-    "Impossible de créer cette ressource.",
-  );
+  await unwrapResponse<{ item: unknown }>(res, "Impossible de créer cette ressource.");
 }
 
 export async function updateProductTaxonomyEntityClient(
@@ -98,16 +89,10 @@ export async function updateProductTaxonomyEntityClient(
     body: JSON.stringify({ entity, id, data }),
   });
 
-  await unwrapResponse<{ item: unknown }>(
-    res,
-    "Impossible de mettre à jour cette ressource.",
-  );
+  await unwrapResponse<{ item: unknown }>(res, "Impossible de mettre à jour cette ressource.");
 }
 
-export async function deleteProductTaxonomyEntityClient(
-  entity: ProductTaxonomyEntity,
-  id: number,
-) {
+export async function deleteProductTaxonomyEntityClient(entity: ProductTaxonomyEntity, id: number) {
   const search = new URLSearchParams({
     entity,
     id: String(id),
@@ -117,10 +102,31 @@ export async function deleteProductTaxonomyEntityClient(
     auth: true,
   });
 
-  await unwrapResponse<Record<string, never>>(
-    res,
-    "Impossible de supprimer cette ressource.",
-  );
+  await unwrapResponse<Record<string, never>>(res, "Impossible de supprimer cette ressource.");
+}
+
+export async function reorderProductTypeGroupsClient(
+  order: number[],
+): Promise<ProductTypesAdminDto> {
+  const res = await staffApiFetch("/api/staff/product-types", {
+    method: "PATCH",
+    auth: true,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "reorderGroups", order }),
+  });
+
+  return unwrapResponse<ProductTypesAdminDto>(res, "Impossible de reordonner les groupes.");
+}
+
+export async function reorderProductTypesClient(order: number[]): Promise<ProductTypesAdminDto> {
+  const res = await staffApiFetch("/api/staff/product-types", {
+    method: "PATCH",
+    auth: true,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "reorderProductTypes", order }),
+  });
+
+  return unwrapResponse<ProductTypesAdminDto>(res, "Impossible de reordonner les types produit.");
 }
 
 export async function listProductColorsClient(): Promise<ProductColorDto[]> {
@@ -144,16 +150,10 @@ export async function createProductColorClient(input: ProductColorInput) {
     body: JSON.stringify(input),
   });
 
-  await unwrapResponse<{ item: ProductColorDto }>(
-    res,
-    "Impossible de créer la couleur.",
-  );
+  await unwrapResponse<{ item: ProductColorDto }>(res, "Impossible de créer la couleur.");
 }
 
-export async function updateProductColorClient(
-  id: number,
-  input: ProductColorInput,
-) {
+export async function updateProductColorClient(id: number, input: ProductColorInput) {
   const res = await staffApiFetch("/api/staff/product-colors", {
     method: "PUT",
     auth: true,
@@ -161,10 +161,7 @@ export async function updateProductColorClient(
     body: JSON.stringify({ id, data: input }),
   });
 
-  await unwrapResponse<{ item: ProductColorDto }>(
-    res,
-    "Impossible de mettre à jour la couleur.",
-  );
+  await unwrapResponse<{ item: ProductColorDto }>(res, "Impossible de mettre à jour la couleur.");
 }
 
 export async function deleteProductColorClient(id: number) {
@@ -173,10 +170,7 @@ export async function deleteProductColorClient(id: number) {
     auth: true,
   });
 
-  await unwrapResponse<Record<string, never>>(
-    res,
-    "Impossible de supprimer la couleur.",
-  );
+  await unwrapResponse<Record<string, never>>(res, "Impossible de supprimer la couleur.");
 }
 
 export async function listProductFinishesClient(): Promise<ProductFinishDto[]> {
@@ -200,16 +194,10 @@ export async function createProductFinishClient(input: ProductFinishInput) {
     body: JSON.stringify(input),
   });
 
-  await unwrapResponse<{ item: ProductFinishDto }>(
-    res,
-    "Impossible de créer la finition.",
-  );
+  await unwrapResponse<{ item: ProductFinishDto }>(res, "Impossible de créer la finition.");
 }
 
-export async function updateProductFinishClient(
-  id: number,
-  input: ProductFinishInput,
-) {
+export async function updateProductFinishClient(id: number, input: ProductFinishInput) {
   const res = await staffApiFetch("/api/staff/product-finishes", {
     method: "PUT",
     auth: true,
@@ -217,10 +205,7 @@ export async function updateProductFinishClient(
     body: JSON.stringify({ id, data: input }),
   });
 
-  await unwrapResponse<{ item: ProductFinishDto }>(
-    res,
-    "Impossible de mettre à jour la finition.",
-  );
+  await unwrapResponse<{ item: ProductFinishDto }>(res, "Impossible de mettre à jour la finition.");
 }
 
 export async function deleteProductFinishClient(id: number) {
@@ -229,8 +214,5 @@ export async function deleteProductFinishClient(id: number) {
     auth: true,
   });
 
-  await unwrapResponse<Record<string, never>>(
-    res,
-    "Impossible de supprimer la finition.",
-  );
+  await unwrapResponse<Record<string, never>>(res, "Impossible de supprimer la finition.");
 }

@@ -1,8 +1,9 @@
-import { Prisma, ProductLifecycle } from "@prisma/client";
+import { Prisma, type ProductLifecycle } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
 import { prisma } from "@/lib/server/db/prisma";
 import { canManageProducts } from "@/features/products/access";
 import { ProductServiceError, deleteProductService } from "@/features/products/service";
+import { visibilityFromProductLifecycle } from "@/features/products/model-b-compat";
 
 export type FamilyBulkUpdateInput = {
   sku?: string | null;
@@ -38,12 +39,16 @@ export async function updateProductFamiliesBulkService(
   }
   if (input.name != null) {
     data.name = input.name;
+    data.displayName = input.name;
   }
   if (input.brand !== undefined) {
-    data.brand = input.brand;
+    throw new ProductServiceError(
+      "La modification groupée de marque doit passer par la fiche produit.",
+      400,
+    );
   }
   if (input.lifecycle !== undefined) {
-    data.lifecycle = input.lifecycle;
+    Object.assign(data, visibilityFromProductLifecycle(input.lifecycle));
   }
 
   if (Object.keys(data).length === 0) {

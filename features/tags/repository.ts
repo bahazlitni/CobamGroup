@@ -28,6 +28,11 @@ async function collectDerivedTags(): Promise<TagRecord[]> {
       },
     }),
     prisma.product.findMany({
+      where: {
+        tags: {
+          not: "",
+        },
+      },
       select: {
         tags: true,
         updatedAt: true,
@@ -110,14 +115,18 @@ export async function findTagByName(name: string) {
 }
 
 export async function createTag(_input: TagCreateInput) {
+  void _input;
   throw new Error("DIRECT_TAG_MANAGEMENT_DISABLED");
 }
 
 export async function updateTag(_tagId: number, _input: TagUpdateInput) {
+  void _tagId;
+  void _input;
   throw new Error("DIRECT_TAG_MANAGEMENT_DISABLED");
 }
 
 export async function deleteTag(_tagId: number) {
+  void _tagId;
   throw new Error("DIRECT_TAG_MANAGEMENT_DISABLED");
 }
 

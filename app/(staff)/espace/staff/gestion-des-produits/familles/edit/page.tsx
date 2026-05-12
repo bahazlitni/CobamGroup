@@ -2,7 +2,8 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ProductLifecycle } from "@prisma/client";
+import type { ProductLifecycle } from "@prisma/client";
+import { PRODUCT_LIFECYCLE_VALUES } from "@/features/products/lifecycle";
 import { ExternalLink, Package, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Loading from "@/components/staff/Loading";
@@ -15,7 +16,6 @@ import PanelField from "@/components/staff/ui/PanelField";
 import PanelInput from "@/components/staff/ui/PanelInput";
 import { normalizeProductAttributeKind } from "@/lib/static_tables/attributes";
 import {
-  PanelAutoCompleteInput,
   PanelAttributeKindsInput,
   DescriptionSEOTextArea,
   StaffImageImporter,
@@ -44,9 +44,9 @@ import type {
   ProductFormOptionsDto,
   ProductVariantInputDto,
 } from "@/features/products/types";
-import { getProductBrandSuggestions } from "@/lib/static_tables/brands";
 import { slugify } from "@/lib/slugify";
 import formatEnumLabel from "@/lib/formatEnumLabel";
+import { createDefaultProductEditFields } from "@/features/products/product-edit-fields";
 
 type VariantEditorState = ProductVariantInputDto & { formKey: string };
 type FamilyEditorState = Omit<ProductFamilyUpsertInput, "variants"> & {
@@ -62,6 +62,7 @@ type FamilyCommonValuesState = {
 function createEmptyVariant(index: number): VariantEditorState {
   return {
     formKey: `variant-${Date.now()}-${index}`,
+    ...createDefaultProductEditFields(),
     sku: "",
     slug: "",
     name: "",
@@ -233,6 +234,7 @@ function ProductEditPageContent() {
   const [options, setOptions] = useState<ProductFormOptionsDto>({
     productSubcategories: [],
     productTypeGroups: [],
+    productBrandOptions: [],
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -533,15 +535,20 @@ function ProductEditPageContent() {
         >
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <PanelField id="family-common-brand" label="Marque">
-              <PanelAutoCompleteInput
+              <StaffSelect
                 id="family-common-brand"
                 fullWidth
-                value={commonValues.brand}
-                suggestions={getProductBrandSuggestions(commonValues.brand)}
+                value={commonValues.brand || null}
+                placeholder="Selectionner une marque"
+                emptyLabel="Aucune marque"
+                options={options.productBrandOptions.map((brand) => ({
+                  value: brand,
+                  label: brand,
+                }))}
                 onValueChange={(value) =>
                   setCommonValues((current) => ({
                     ...current,
-                    brand: value ?? "",
+                    brand: value || "",
                   }))
                 }
               />
@@ -558,7 +565,7 @@ function ProductEditPageContent() {
                     lifecycle: value as ProductLifecycle,
                   }))
                 }
-                options={Object.values(ProductLifecycle).map((value) => ({
+                options={PRODUCT_LIFECYCLE_VALUES.map((value) => ({
                   value,
                   label: formatEnumLabel(value),
                 }))}

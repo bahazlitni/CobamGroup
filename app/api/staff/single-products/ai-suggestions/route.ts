@@ -417,6 +417,7 @@ function buildProductSuggestionPrompt(input: SingleProductAiSuggestionRequest) {
     "\n- descriptionText must contain the full French description as readable plain text.\n" +
     "\n- descriptionRichText must be a valid TipTap/ProseMirror JSON document with root type \"doc\".\n" +
     "- Use only these rich text nodes/marks: paragraph, heading, bulletList, orderedList, listItem, text, bold, italic, underline.\n" +
+    "- Do not use heading level 1; heading level 2 is the highest allowed heading.\n" +
     "- descriptionSeo must be concise, professional, in French, and at most 160 characters.\n" +
     "- tags must be useful French SEO tokens, without duplicates.\n" +
     "- Every tag will later be joined using spaces in the database, so each tag item must be a single token without spaces.\n" +

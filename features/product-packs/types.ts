@@ -22,7 +22,7 @@ export type ProductPackSelectableProductDto = {
   sku: string;
   slug: string;
   name: string;
-  kind: "SINGLE" | "VARIANT";
+  kind: "STANDARD" | "SINGLE" | "VARIANT";
 };
 
 export type ProductPackFormOptionsDto = {
@@ -45,6 +45,7 @@ export type ProductPackListItemDto = {
 
 export type ProductPackListResult = {
   items: ProductPackListItemDto[];
+  productBrandOptions: string[];
   total: number;
   page: number;
   pageSize: number;

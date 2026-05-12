@@ -299,7 +299,7 @@ export async function deleteProductCategory(categoryId: number) {
 export async function countProductFamiliesForCategory(categoryId: number) {
   return prisma.product.count({
     where: {
-      subcategoryLinks: {
+      subcategories: {
         some: {
           subcategory: {
             categoryId: BigInt(categoryId),

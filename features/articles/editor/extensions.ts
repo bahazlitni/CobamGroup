@@ -48,7 +48,7 @@ export function createArticleEditorExtensions(
   const extensions: AnyExtension[] = [
     StarterKit.configure({
       heading: {
-        levels: [1, 2, 3, 4, 5, 6],
+        levels: [2, 3, 4, 5, 6],
       },
     }),
     Underline,

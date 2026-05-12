@@ -92,7 +92,6 @@ export interface BlockPickerItem {
 }
 
 export const BLOCK_PICKER_ITEMS: BlockPickerItem[] = [
-  { type: "h1", label: "Heading 1", description: "Top-level title", icon: "H1", group: "text" },
   { type: "h2", label: "Heading 2", description: "Section title", icon: "H2", group: "text" },
   { type: "h3", label: "Heading 3", description: "Subsection title", icon: "H3", group: "text" },
   { type: "h4", label: "Heading 4", description: "Minor heading", icon: "H4", group: "text" },

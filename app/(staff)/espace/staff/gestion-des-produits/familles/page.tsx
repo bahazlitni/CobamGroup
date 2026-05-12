@@ -7,9 +7,8 @@ import { StaffBadge, StaffFilterBar, StaffPageHeader } from "@/components/staff/
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { Checkbox } from "@/components/ui/checkbox";
 import PanelField from "@/components/staff/ui/PanelField";
-import { PanelAutoCompleteInput, StaffSelect } from "@/components/staff/ui";
+import { StaffSelect } from "@/components/staff/ui";
 import formatEnumLabel from "@/lib/formatEnumLabel";
-import { getProductBrandSuggestions } from "@/lib/static_tables/brands";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +26,8 @@ import {
   updateProductFamiliesBulkClient,
 } from "@/features/products/client";
 import type { ProductFamilyListItemDto } from "@/features/products/types";
-import { ProductLifecycle } from "@prisma/client";
+import type { ProductLifecycle } from "@prisma/client";
+import { PRODUCT_LIFECYCLE_VALUES } from "@/features/products/lifecycle";
 
 const PAGE_SIZE = 20;
 const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
@@ -36,6 +36,7 @@ export default function ProductsListPage() {
   const { user } = useStaffSessionContext();
   const canCreate = user ? canCreateProducts(user) : false;
   const [items, setItems] = useState<ProductFamilyListItemDto[]>([]);
+  const [productBrandOptions, setProductBrandOptions] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<(typeof PAGE_SIZE_OPTIONS)[number]>(PAGE_SIZE);
   const [total, setTotal] = useState(0);
@@ -81,6 +82,7 @@ export default function ProductsListPage() {
         }
 
         setItems(result.items);
+        setProductBrandOptions(result.productBrandOptions);
         setTotal(result.total);
       } catch (err: unknown) {
         if (cancelled) {
@@ -518,13 +520,17 @@ export default function ProductsListPage() {
           <div className="px-6 pb-4">
             <div className="grid gap-6 md:grid-cols-2">
               <PanelField id="family-common-brand" label={labelNode("brand", "Marque")}>
-                <PanelAutoCompleteInput
+                <StaffSelect
                   id="family-common-brand"
                   fullWidth
-                  value={bulkForm.brand ?? ""}
+                  value={bulkForm.brand ?? null}
                   placeholder={bulkForm.mixed.brand ? "Mixed" : undefined}
+                  emptyLabel="Aucune marque"
                   disabled={isDisabled("brand")}
-                  suggestions={getProductBrandSuggestions(bulkForm.brand ?? "")}
+                  options={productBrandOptions.map((brand) => ({
+                    value: brand,
+                    label: brand,
+                  }))}
                   onValueChange={(value) =>
                     setBulkForm((current) => ({
                       ...current,
@@ -551,7 +557,7 @@ export default function ProductsListPage() {
                       touched: { ...current.touched, lifecycle: true },
                     }))
                   }
-                  options={Object.values(ProductLifecycle).map((value) => ({
+                  options={PRODUCT_LIFECYCLE_VALUES.map((value) => ({
                     value,
                     label: formatEnumLabel(value),
                   }))}

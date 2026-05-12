@@ -2,7 +2,6 @@
 
 "use client";
 
-import { useRef } from "react";
 import type { HeadingBlockData } from "../block-types";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +35,7 @@ export function HeadingBlock({ data, onChange }: HeadingBlockProps) {
     <div className="px-2 py-1">
       {/* Level switcher */}
       <div className="flex gap-0.5 mb-1 opacity-0 group-hover/block:opacity-100 focus-within:opacity-100 transition-opacity">
-        {(["h1", "h2", "h3", "h4", "h5", "h6"] as const).map((level) => (
+        {(["h2", "h3", "h4", "h5", "h6"] as const).map((level) => (
           <button
             key={level}
             type="button"

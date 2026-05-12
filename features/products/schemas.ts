@@ -1,4 +1,4 @@
-import { ProductLifecycle, ProductTypeAttributeInputType } from "@prisma/client";
+import { ProductTypeAttributeInputType } from "@prisma/client";
 import {
   buildDuplicateAttributeKindMessage,
   findDuplicateAttributeKind,
@@ -8,6 +8,13 @@ import {
 } from "@/lib/static_tables/attributes";
 import { normalizeProductBrandValue as normalizeProductBrandString } from "@/lib/static_tables/brands";
 import { DESCRIPTION_SEO_MAX_LENGTH } from "@/lib/seo-description";
+import { PRODUCT_LIFECYCLE_VALUES } from "@/features/products/lifecycle";
+import {
+  PRODUCT_AVAILABILITY_VALUES,
+  PRODUCT_INVENTORY_VISIBILITY_VALUES,
+  PRODUCT_PRICING_VISIBILITY_VALUES,
+  STOCK_UNIT_VALUES,
+} from "@/features/products/product-edit-fields";
 import type { ProductFamilyUpsertInput, ProductVariantInputDto } from "./types";
 
 export class ProductValidationError extends Error {
@@ -75,6 +82,63 @@ function parseOptionalIntegerArray(value: unknown, fieldName: string) {
     }
     return parsed;
   });
+}
+
+function parseOptionalLimitedString(
+  value: unknown,
+  fieldName: string,
+  maxLength: number,
+) {
+  const normalized = parseOptionalString(value);
+  if (normalized && normalized.length > maxLength) {
+    throw new ProductValidationError(
+      `${fieldName} ne doit pas depasser ${maxLength} caracteres.`,
+    );
+  }
+  return normalized;
+}
+
+function parseRequiredLimitedString(
+  value: unknown,
+  fieldName: string,
+  maxLength: number,
+) {
+  const normalized = parseRequiredString(value, fieldName);
+  if (normalized.length > maxLength) {
+    throw new ProductValidationError(
+      `${fieldName} ne doit pas depasser ${maxLength} caracteres.`,
+    );
+  }
+  return normalized;
+}
+
+function parseNonNegativeInteger(value: unknown, fieldName: string, fallback = 0) {
+  if (value == null || value === "") {
+    return fallback;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw new ProductValidationError(`Valeur invalide pour ${fieldName}.`);
+  }
+  return parsed;
+}
+
+function parseDecimalString(
+  value: unknown,
+  fieldName: string,
+  fallback: string | null,
+) {
+  if (value == null || value === "") {
+    return fallback;
+  }
+
+  const normalized = String(value).trim().replace(",", ".");
+  const parsed = Number(normalized);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new ProductValidationError(`Valeur invalide pour ${fieldName}.`);
+  }
+  return normalized;
 }
 
 function parseOptionalPositiveInteger(value: unknown, fieldName: string) {
@@ -184,6 +248,14 @@ function parseVariant(input: unknown): ProductVariantInputDto {
     );
   }
 
+  const name = parseRequiredString(record.name, "variant.name");
+  const lifecycle = parseEnumValue(
+    record.lifecycle ?? "DRAFT",
+    PRODUCT_LIFECYCLE_VALUES,
+    "variant.lifecycle",
+  );
+  const defaultVisible = lifecycle !== "DRAFT";
+
   return {
     id:
       record.id == null
@@ -198,20 +270,77 @@ function parseVariant(input: unknown): ProductVariantInputDto {
     productTypeId: parseOptionalPositiveInteger(record.productTypeId, "variant.productTypeId"),
     sku: parseRequiredString(record.sku, "variant.sku"),
     slug: parseRequiredString(record.slug, "variant.slug"),
-    name: parseRequiredString(record.name, "variant.name"),
+    name,
+    displayName: parseRequiredLimitedString(
+      record.displayName ?? name,
+      "variant.displayName",
+      255,
+    ),
     description: parseOptionalString(record.description),
+    shortDescription: parseOptionalLimitedString(
+      record.shortDescription,
+      "variant.shortDescription",
+      500,
+    ),
+    titleSeo: parseOptionalLimitedString(record.titleSeo, "variant.titleSeo", 60),
     descriptionSeo: parseOptionalDescriptionSeo(
       record.descriptionSeo,
       "variant.descriptionSeo",
+    ),
+    guaranteeMonths: parseNonNegativeInteger(
+      record.guaranteeMonths,
+      "variant.guaranteeMonths",
     ),
     brand:
       record.brand == null || record.brand === ""
         ? null
         : normalizeProductBrandString(String(record.brand)),
-    lifecycle: parseEnumValue(
-      record.lifecycle,
-      Object.values(ProductLifecycle),
-      "variant.lifecycle",
+    lifecycle,
+    visibleEcommerce: parseOptionalBoolean(record.visibleEcommerce, defaultVisible),
+    visibleVitrine: parseOptionalBoolean(record.visibleVitrine, defaultVisible),
+    isFeatured: parseOptionalBoolean(record.isFeatured),
+    isPromoted: parseOptionalBoolean(record.isPromoted),
+    isNew: parseOptionalBoolean(record.isNew),
+    stockAvailable: parseDecimalString(
+      record.stockAvailable,
+      "variant.stockAvailable",
+      "0",
+    ) ?? "0",
+    stockAlertThreshold: parseDecimalString(
+      record.stockAlertThreshold,
+      "variant.stockAlertThreshold",
+      "0",
+    ) ?? "0",
+    stockUnit: parseEnumValue(
+      record.stockUnit ?? "PIECE",
+      STOCK_UNIT_VALUES,
+      "variant.stockUnit",
+    ),
+    stockAvailability: parseEnumValue(
+      record.stockAvailability ?? "IN_STOCK",
+      PRODUCT_AVAILABILITY_VALUES,
+      "variant.stockAvailability",
+    ),
+    stockVisibility: parseEnumValue(
+      record.stockVisibility ?? "AUTO",
+      PRODUCT_INVENTORY_VISIBILITY_VALUES,
+      "variant.stockVisibility",
+    ),
+    basePriceTtcTnd: parseDecimalString(
+      record.basePriceTtcTnd,
+      "variant.basePriceTtcTnd",
+      null,
+    ),
+    currentPriceTtcTnd: parseDecimalString(
+      record.currentPriceTtcTnd,
+      "variant.currentPriceTtcTnd",
+      null,
+    ),
+    vatRate: parseDecimalString(record.vatRate, "variant.vatRate", "19.000") ?? "19.000",
+    priceVisibility: parseEnumValue(
+      record.priceVisibility ?? "AUTO",
+      PRODUCT_PRICING_VISIBILITY_VALUES,
+      "variant.priceVisibility",
     ),
     tags: parseOptionalString(record.tags) ?? "",
     subcategoryIds: parseOptionalIntegerArray(
@@ -231,6 +360,7 @@ function parseVariant(input: unknown): ProductVariantInputDto {
 
             return {
               id: parsedId,
+              role: "TECHNICAL",
               kind:
                 "kind" in datasheet
                   ? (String(datasheet.kind) as ProductVariantInputDto["media"][number]["kind"])
@@ -263,6 +393,7 @@ function parseVariant(input: unknown): ProductVariantInputDto {
 
         return {
           id: parsedId,
+          role: "GALLERY",
           kind: "kind" in mediaRecord ? String(mediaRecord.kind) as ProductVariantInputDto["media"][number]["kind"] : "IMAGE",
           title: parseOptionalString(mediaRecord.title),
           originalFilename: parseOptionalString(mediaRecord.originalFilename),

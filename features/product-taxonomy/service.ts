@@ -1,4 +1,4 @@
-import { ProductTypeAttributeInputType } from "@prisma/client";
+import { ProductTypeAttributeInputType, StockUnit, type Prisma } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
 import { canAccessProducts, canManageProducts } from "@/features/products/access";
 import { prisma } from "@/lib/server/db/prisma";
@@ -87,6 +87,18 @@ function integerValue(value: unknown, fieldName: string, fallback = 0) {
   return parsed;
 }
 
+function nullableNonNegativeIntegerValue(value: unknown, fieldName: string) {
+  if (value == null || value === "") {
+    return null;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw new ProductTaxonomyServiceError(`${fieldName} est invalide.`);
+  }
+  return parsed;
+}
+
 function positiveIntegerValue(value: unknown, fieldName: string) {
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed <= 0) {
@@ -103,6 +115,19 @@ function nullablePositiveIntegerValue(value: unknown, fieldName: string) {
   return positiveIntegerValue(value, fieldName);
 }
 
+function positiveIntegerArrayValue(value: unknown, fieldName: string) {
+  if (value == null) {
+    return [];
+  }
+
+  if (!Array.isArray(value)) {
+    throw new ProductTaxonomyServiceError(`${fieldName} est invalide.`);
+  }
+
+  const ids = value.map((entry) => positiveIntegerValue(entry, fieldName));
+  return [...new Set(ids)];
+}
+
 function booleanValue(value: unknown, fallback = false) {
   if (typeof value === "boolean") {
     return value;
@@ -115,12 +140,40 @@ function booleanValue(value: unknown, fallback = false) {
   return String(value).toLowerCase() === "true";
 }
 
+function decimalStringValue(value: unknown, fieldName: string) {
+  if (value == null || value === "") {
+    return null;
+  }
+
+  const normalized = String(value).trim().replace(",", ".");
+  if (!normalized) {
+    return null;
+  }
+
+  const parsed = Number(normalized);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new ProductTaxonomyServiceError(`${fieldName} est invalide.`);
+  }
+
+  return normalized;
+}
+
+function stockUnitValue(value: unknown) {
+  if (value == null || value === "") {
+    return null;
+  }
+
+  if (typeof value === "string" && Object.values(StockUnit).includes(value as StockUnit)) {
+    return value as StockUnit;
+  }
+
+  throw new ProductTaxonomyServiceError("L'Unité de stock est invalide.");
+}
+
 function inputTypeValue(value: unknown) {
   if (
     typeof value === "string" &&
-    Object.values(ProductTypeAttributeInputType).includes(
-      value as ProductTypeAttributeInputType,
-    )
+    Object.values(ProductTypeAttributeInputType).includes(value as ProductTypeAttributeInputType)
   ) {
     return value as ProductTypeAttributeInputType;
   }
@@ -145,19 +198,31 @@ export function parseProductTaxonomyId(value: unknown) {
   return positiveIntegerValue(value, "Identifiant");
 }
 
+export function parseProductTaxonomyOrder(value: unknown) {
+  if (!Array.isArray(value)) {
+    throw new ProductTaxonomyServiceError("L'ordre est invalide.");
+  }
+
+  const ids = value.map((entry) => positiveIntegerValue(entry, "L'ordre"));
+  if (new Set(ids).size !== ids.length) {
+    throw new ProductTaxonomyServiceError("L'ordre contient des doublons.");
+  }
+
+  return ids;
+}
+
 export function parseGroupInput(value: unknown): ProductTaxonomyGroupInput {
-  const record = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const record = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 
   return {
     name: requiredString(record.name, "Le nom"),
     slug: requiredString(record.slug, "Le slug"),
     sortOrder: integerValue(record.sortOrder, "L'ordre"),
-    isActive: booleanValue(record.isActive, true),
   };
 }
 
 export function parseProductTypeInput(value: unknown): ProductTaxonomyTypeInput {
-  const record = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const record = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 
   return {
     groupId: nullablePositiveIntegerValue(record.groupId, "Le groupe"),
@@ -165,14 +230,22 @@ export function parseProductTypeInput(value: unknown): ProductTaxonomyTypeInput 
     slug: requiredString(record.slug, "Le slug"),
     description: optionalString(record.description),
     sortOrder: integerValue(record.sortOrder, "L'ordre"),
-    isActive: booleanValue(record.isActive, true),
+    presetTags: optionalString(record.presetTags) ?? "",
+    presetSubcategoryIds: positiveIntegerArrayValue(
+      record.presetSubcategoryIds,
+      "Les sous-categories",
+    ),
+    presetStockUnit: stockUnitValue(record.presetStockUnit),
+    presetVatRate: decimalStringValue(record.presetVatRate, "La TVA"),
+    presetGuaranteeMonths: nullableNonNegativeIntegerValue(
+      record.presetGuaranteeMonths,
+      "La garantie",
+    ),
   };
 }
 
-export function parseAttributeGroupInput(
-  value: unknown,
-): ProductTaxonomyAttributeGroupInput {
-  const record = value && typeof value === "object" ? value as Record<string, unknown> : {};
+export function parseAttributeGroupInput(value: unknown): ProductTaxonomyAttributeGroupInput {
+  const record = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 
   return {
     productTypeId: positiveIntegerValue(record.productTypeId, "Le type produit"),
@@ -183,7 +256,7 @@ export function parseAttributeGroupInput(
 }
 
 export function parseAttributeInput(value: unknown): ProductTaxonomyAttributeInput {
-  const record = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const record = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 
   return {
     productTypeId: positiveIntegerValue(record.productTypeId, "Le type produit"),
@@ -202,7 +275,7 @@ export function parseAttributeInput(value: unknown): ProductTaxonomyAttributeInp
 }
 
 export function parseColorInput(value: unknown): ProductColorInput {
-  const record = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const record = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 
   return {
     key: requiredString(record.key, "La clé"),
@@ -212,16 +285,13 @@ export function parseColorInput(value: unknown): ProductColorInput {
 }
 
 export function parseFinishInput(value: unknown): ProductFinishInput {
-  const record = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const record = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 
   return {
     key: requiredString(record.key, "La clé"),
     label: requiredString(record.label, "Le libellé"),
     color: optionalString(record.color),
-    imageMediaId: nullablePositiveIntegerValue(
-      record.imageMediaId,
-      "L'image média",
-    ),
+    imageMediaId: nullablePositiveIntegerValue(record.imageMediaId, "L'image média"),
   };
 }
 
@@ -230,14 +300,12 @@ function mapGroup(record: {
   name: string;
   slug: string;
   sortOrder: number;
-  isActive: boolean;
 }): ProductTaxonomyGroupDto {
   return {
     id: Number(record.id),
     name: record.name,
     slug: record.slug,
     sortOrder: record.sortOrder,
-    isActive: record.isActive,
   };
 }
 
@@ -250,8 +318,7 @@ function mapAttributeGroup(record: {
 }): ProductTaxonomyAttributeGroupDto {
   return {
     id: Number(record.id),
-    productTypeId:
-      record.productTypeId == null ? null : Number(record.productTypeId),
+    productTypeId: record.productTypeId == null ? null : Number(record.productTypeId),
     name: record.name,
     slug: record.slug,
     sortOrder: record.sortOrder,
@@ -274,8 +341,7 @@ function mapAttribute(record: {
   return {
     id: Number(record.id),
     productTypeId: Number(record.productTypeId),
-    attributeGroupId:
-      record.attributeGroupId == null ? null : Number(record.attributeGroupId),
+    attributeGroupId: record.attributeGroupId == null ? null : Number(record.attributeGroupId),
     attributeGroupName: record.attributeGroup?.name ?? null,
     name: record.name,
     label: record.label,
@@ -294,8 +360,12 @@ function mapProductType(record: {
   slug: string;
   description: string | null;
   sortOrder: number;
-  isActive: boolean;
+  presetTags: string;
+  presetStockUnit: StockUnit | null;
+  presetVatRate: { toString(): string } | null;
+  presetGuaranteeMonths: number | null;
   group: { name: string } | null;
+  subcategoryPresets: Array<{ subcategoryId: bigint }>;
   attributeGroups: Array<Parameters<typeof mapAttributeGroup>[0]>;
   attributes: Array<Parameters<typeof mapAttribute>[0]>;
 }): ProductTaxonomyTypeDto {
@@ -307,7 +377,11 @@ function mapProductType(record: {
     slug: record.slug,
     description: record.description,
     sortOrder: record.sortOrder,
-    isActive: record.isActive,
+    presetTags: record.presetTags,
+    presetSubcategoryIds: record.subcategoryPresets.map((preset) => Number(preset.subcategoryId)),
+    presetStockUnit: record.presetStockUnit,
+    presetVatRate: record.presetVatRate?.toString() ?? null,
+    presetGuaranteeMonths: record.presetGuaranteeMonths,
     attributeGroups: record.attributeGroups.map(mapAttributeGroup),
     attributes: record.attributes.map(mapAttribute),
   };
@@ -348,7 +422,7 @@ export async function listProductTypesAdminService(
 ): Promise<ProductTypesAdminDto> {
   assertCanRead(session);
 
-  const [groups, productTypes] = await Promise.all([
+  const [groups, productTypes, productSubcategories] = await Promise.all([
     prisma.productTypeGroup.findMany({
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     }),
@@ -363,6 +437,11 @@ export async function listProductTypesAdminService(
         group: {
           select: {
             name: true,
+          },
+        },
+        subcategoryPresets: {
+          select: {
+            subcategoryId: true,
           },
         },
         attributeGroups: {
@@ -384,11 +463,40 @@ export async function listProductTypesAdminService(
         },
       },
     }),
+    prisma.productSubcategory.findMany({
+      where: {
+        isActive: true,
+        category: {
+          isActive: true,
+        },
+      },
+      orderBy: [{ category: { sortOrder: "asc" } }, { sortOrder: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        categoryId: true,
+        name: true,
+        slug: true,
+        category: {
+          select: {
+            name: true,
+            slug: true,
+          },
+        },
+      },
+    }),
   ]);
 
   return {
     groups: groups.map(mapGroup),
     productTypes: productTypes.map(mapProductType),
+    productSubcategories: productSubcategories.map((subcategory) => ({
+      id: Number(subcategory.id),
+      categoryId: Number(subcategory.categoryId),
+      categoryName: subcategory.category.name,
+      categorySlug: subcategory.category.slug,
+      name: subcategory.name,
+      slug: subcategory.slug,
+    })),
   };
 }
 
@@ -425,25 +533,70 @@ export async function deleteTaxonomyGroupService(session: StaffSession, id: numb
   await prisma.productTypeGroup.delete({ where: { id: BigInt(id) } });
 }
 
+const productTypeInclude = {
+  group: { select: { name: true } },
+  subcategoryPresets: { select: { subcategoryId: true } },
+  attributeGroups: true,
+  attributes: { include: { attributeGroup: { select: { name: true } } } },
+} satisfies Prisma.ProductTypeInclude;
+
+function getProductTypeData(input: ProductTaxonomyTypeInput) {
+  return {
+    groupId: input.groupId == null ? null : BigInt(input.groupId),
+    name: input.name,
+    slug: input.slug,
+    description: input.description,
+    sortOrder: input.sortOrder ?? 0,
+    presetTags: input.presetTags ?? "",
+    presetStockUnit: input.presetStockUnit ?? null,
+    presetVatRate: input.presetVatRate ?? null,
+    presetGuaranteeMonths: input.presetGuaranteeMonths ?? null,
+  };
+}
+
+async function syncProductTypeSubcategoryPresets(
+  tx: Prisma.TransactionClient,
+  productTypeId: bigint,
+  subcategoryIds: number[] = [],
+) {
+  await tx.productTypeSubcategoryPreset.deleteMany({
+    where: { productTypeId },
+  });
+
+  if (subcategoryIds.length === 0) {
+    return;
+  }
+
+  await tx.productTypeSubcategoryPreset.createMany({
+    data: subcategoryIds.map((subcategoryId) => ({
+      productTypeId,
+      subcategoryId: BigInt(subcategoryId),
+    })),
+    skipDuplicates: true,
+  });
+}
+
 export async function createTaxonomyProductTypeService(
   session: StaffSession,
   input: ProductTaxonomyTypeInput,
 ) {
   assertCanWrite(session);
 
-  return mapProductType(
-    await prisma.productType.create({
-      data: {
-        ...input,
-        groupId: input.groupId == null ? null : BigInt(input.groupId),
-      },
-      include: {
-        group: { select: { name: true } },
-        attributeGroups: true,
-        attributes: { include: { attributeGroup: { select: { name: true } } } },
-      },
-    }),
-  );
+  const productType = await prisma.$transaction(async (tx) => {
+    const created = await tx.productType.create({
+      data: getProductTypeData(input),
+      select: { id: true },
+    });
+
+    await syncProductTypeSubcategoryPresets(tx, created.id, input.presetSubcategoryIds);
+
+    return tx.productType.findUniqueOrThrow({
+      where: { id: created.id },
+      include: productTypeInclude,
+    });
+  });
+
+  return mapProductType(productType);
 }
 
 export async function updateTaxonomyProductTypeService(
@@ -453,28 +606,62 @@ export async function updateTaxonomyProductTypeService(
 ) {
   assertCanWrite(session);
 
-  return mapProductType(
-    await prisma.productType.update({
+  const productType = await prisma.$transaction(async (tx) => {
+    await tx.productType.update({
       where: { id: BigInt(id) },
-      data: {
-        ...input,
-        groupId: input.groupId == null ? null : BigInt(input.groupId),
-      },
-      include: {
-        group: { select: { name: true } },
-        attributeGroups: true,
-        attributes: { include: { attributeGroup: { select: { name: true } } } },
-      },
-    }),
-  );
+      data: getProductTypeData(input),
+    });
+
+    await syncProductTypeSubcategoryPresets(tx, BigInt(id), input.presetSubcategoryIds);
+
+    return tx.productType.findUniqueOrThrow({
+      where: { id: BigInt(id) },
+      include: productTypeInclude,
+    });
+  });
+
+  return mapProductType(productType);
 }
 
-export async function deleteTaxonomyProductTypeService(
-  session: StaffSession,
-  id: number,
-) {
+export async function deleteTaxonomyProductTypeService(session: StaffSession, id: number) {
   assertCanWrite(session);
   await prisma.productType.delete({ where: { id: BigInt(id) } });
+}
+
+export async function reorderTaxonomyGroupsService(
+  session: StaffSession,
+  orderedIds: number[],
+): Promise<ProductTypesAdminDto> {
+  assertCanWrite(session);
+
+  await prisma.$transaction(
+    orderedIds.map((id, index) =>
+      prisma.productTypeGroup.update({
+        where: { id: BigInt(id) },
+        data: { sortOrder: index },
+      }),
+    ),
+  );
+
+  return listProductTypesAdminService(session);
+}
+
+export async function reorderTaxonomyProductTypesService(
+  session: StaffSession,
+  orderedIds: number[],
+): Promise<ProductTypesAdminDto> {
+  assertCanWrite(session);
+
+  await prisma.$transaction(
+    orderedIds.map((id, index) =>
+      prisma.productType.update({
+        where: { id: BigInt(id) },
+        data: { sortOrder: index },
+      }),
+    ),
+  );
+
+  return listProductTypesAdminService(session);
 }
 
 export async function createTaxonomyAttributeGroupService(
@@ -511,10 +698,7 @@ export async function updateTaxonomyAttributeGroupService(
   );
 }
 
-export async function deleteTaxonomyAttributeGroupService(
-  session: StaffSession,
-  id: number,
-) {
+export async function deleteTaxonomyAttributeGroupService(session: StaffSession, id: number) {
   assertCanWrite(session);
   await prisma.productAttributeGroup.delete({ where: { id: BigInt(id) } });
 }
@@ -530,8 +714,7 @@ export async function createTaxonomyAttributeService(
       data: {
         ...input,
         productTypeId: BigInt(input.productTypeId),
-        attributeGroupId:
-          input.attributeGroupId == null ? null : BigInt(input.attributeGroupId),
+        attributeGroupId: input.attributeGroupId == null ? null : BigInt(input.attributeGroupId),
       },
       include: {
         attributeGroup: {
@@ -557,8 +740,7 @@ export async function updateTaxonomyAttributeService(
       data: {
         ...input,
         productTypeId: BigInt(input.productTypeId),
-        attributeGroupId:
-          input.attributeGroupId == null ? null : BigInt(input.attributeGroupId),
+        attributeGroupId: input.attributeGroupId == null ? null : BigInt(input.attributeGroupId),
       },
       include: {
         attributeGroup: {
@@ -571,10 +753,7 @@ export async function updateTaxonomyAttributeService(
   );
 }
 
-export async function deleteTaxonomyAttributeService(
-  session: StaffSession,
-  id: number,
-) {
+export async function deleteTaxonomyAttributeService(session: StaffSession, id: number) {
   assertCanWrite(session);
   await prisma.productTypeAttribute.delete({ where: { id: BigInt(id) } });
 }
@@ -589,10 +768,7 @@ export async function listProductColorsService(session: StaffSession) {
   ).map(mapColor);
 }
 
-export async function createProductColorService(
-  session: StaffSession,
-  input: ProductColorInput,
-) {
+export async function createProductColorService(session: StaffSession, input: ProductColorInput) {
   assertCanWrite(session);
 
   return mapColor(await prisma.productColor.create({ data: input }));
@@ -628,10 +804,7 @@ export async function listProductFinishesService(session: StaffSession) {
   ).map(mapFinish);
 }
 
-export async function createProductFinishService(
-  session: StaffSession,
-  input: ProductFinishInput,
-) {
+export async function createProductFinishService(session: StaffSession, input: ProductFinishInput) {
   assertCanWrite(session);
   await assertFinishImageMedia(input.imageMediaId);
 
@@ -641,8 +814,7 @@ export async function createProductFinishService(
         key: input.key,
         label: input.label,
         color: input.color,
-        imageMediaId:
-          input.imageMediaId == null ? null : BigInt(input.imageMediaId),
+        imageMediaId: input.imageMediaId == null ? null : BigInt(input.imageMediaId),
       },
     }),
   );
@@ -663,8 +835,7 @@ export async function updateProductFinishService(
         key: input.key,
         label: input.label,
         color: input.color,
-        imageMediaId:
-          input.imageMediaId == null ? null : BigInt(input.imageMediaId),
+        imageMediaId: input.imageMediaId == null ? null : BigInt(input.imageMediaId),
       },
     }),
   );

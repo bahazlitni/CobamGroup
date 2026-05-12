@@ -1,11 +1,15 @@
 import type {
   MediaKind,
+  ProductMediaRole,
   ProductLifecycle,
   ProductTypeAttributeInputType,
+  StockUnit,
 } from "@prisma/client";
+import type { ProductEditFieldsDto } from "./product-edit-fields";
 
 export type ProductMediaDto = {
   id: number;
+  role: ProductMediaRole;
   kind: MediaKind;
   title: string | null;
   originalFilename: string | null;
@@ -45,7 +49,7 @@ export type ProductAttributeInputDto = {
   sortOrder?: number;
 };
 
-export type ProductVariantInputDto = {
+export type ProductVariantInputDto = ProductEditFieldsDto & {
   id?: number;
   productTypeId?: number | null;
   sku: string;
@@ -85,6 +89,11 @@ export type ProductTypeOptionDto = {
   slug: string;
   description: string | null;
   sortOrder: number;
+  presetTags: string;
+  presetSubcategoryIds: number[];
+  presetStockUnit: StockUnit | null;
+  presetVatRate: string | null;
+  presetGuaranteeMonths: number | null;
   attributes: ProductTypeAttributeOptionDto[];
 };
 
@@ -138,6 +147,7 @@ export type ProductFamilyDetailDto = {
 
 export type ProductFamilyListResult = {
   items: ProductFamilyListItemDto[];
+  productBrandOptions: string[];
   total: number;
   page: number;
   pageSize: number;
@@ -146,6 +156,7 @@ export type ProductFamilyListResult = {
 export type ProductFormOptionsDto = {
   productSubcategories: ProductSubcategoryOptionDto[];
   productTypeGroups: ProductTypeGroupOptionDto[];
+  productBrandOptions: string[];
 };
 
 export type PublicProductEntityType = "FAMILY" | "PACK" | "SINGLE" | "VARIANT";

@@ -78,14 +78,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     prisma.product.findMany({
       where: {
         kind: {
-          in: [ProductKind.SINGLE, ProductKind.VARIANT],
+          in: [ProductKind.STANDARD, ProductKind.SINGLE, ProductKind.VARIANT],
         },
-        lifecycle: "ACTIVE",
+        visibleEcommerce: true,
       },
       select: {
         slug: true,
         updatedAt: true,
-        subcategoryLinks: {
+        subcategories: {
           orderBy: {
             subcategoryId: "asc",
           },
@@ -110,7 +110,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           some: {
             product: {
               kind: ProductKind.VARIANT,
-              lifecycle: "ACTIVE",
+              visibleEcommerce: true,
             },
           },
         },
@@ -123,7 +123,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           select: {
             product: {
               select: {
-                subcategoryLinks: {
+                subcategories: {
                   orderBy: {
                     subcategoryId: "asc",
                   },
@@ -149,12 +149,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     prisma.product.findMany({
       where: {
         kind: ProductKind.PACK,
-        lifecycle: "ACTIVE",
+        visibleEcommerce: true,
       },
       select: {
         slug: true,
         updatedAt: true,
-        subcategoryLinks: {
+        subcategories: {
           orderBy: {
             subcategoryId: "asc",
           },
@@ -175,7 +175,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           select: {
             product: {
               select: {
-                lifecycle: true,
+                visibleEcommerce: true,
               },
             },
           },
@@ -206,7 +206,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ),
     ),
     ...products.flatMap((product) =>
-      product.subcategoryLinks.map((link) =>
+      product.subcategories.map((link) =>
         mapUrl(
           `/produits/${link.subcategory.category.slug}/${link.subcategory.slug}/${product.slug}`,
           product.updatedAt,
@@ -215,7 +215,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ),
     ...families.flatMap((family) =>
       family.members.flatMap((member) =>
-        member.product.subcategoryLinks.map((link) =>
+        member.product.subcategories.map((link) =>
           mapUrl(
             `/produits/${link.subcategory.category.slug}/${link.subcategory.slug}/famille/${family.slug}`,
             family.updatedAt,
@@ -228,11 +228,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         (pack) =>
           pack.packLinesAsPack.length > 0 &&
           pack.packLinesAsPack.every(
-            (line) => line.product.lifecycle === "ACTIVE",
+            (line) => line.product.visibleEcommerce,
           ),
       )
       .flatMap((pack) =>
-        pack.subcategoryLinks.map((link) =>
+        pack.subcategories.map((link) =>
           mapUrl(
             `/produits/${link.subcategory.category.slug}/${link.subcategory.slug}/${pack.slug}`,
             pack.updatedAt,

@@ -8,6 +8,7 @@ export function mapMediaListItemToProductMedia(
 ): ProductMediaDto {
   return {
     id: media.id,
+    role: "GALLERY",
     kind: media.kind,
     title: media.title,
     originalFilename: media.originalFilename,

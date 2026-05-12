@@ -68,6 +68,7 @@ const COLUMN_WIDTHS = [
 
 function getAction(item: AllProductsListItemDto) {
   switch (item.kind) {
+    case "STANDARD":
     case "SINGLE":
       return `/espace/staff/gestion-des-produits/produits/edit?id=${item.id}`;
     case "VARIANT":
@@ -109,6 +110,7 @@ export default function AllProductsPage() {
     ? canPublishProducts(user) || canUnpublishProducts(user)
     : false;
   const [items, setItems] = useState<AllProductsListItemDto[]>([]);
+  const [productBrandOptions, setProductBrandOptions] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<(typeof PAGE_SIZE_OPTIONS)[number]>(20);
   const [searchDraft, setSearchDraft] = useState("");
@@ -178,6 +180,7 @@ export default function AllProductsPage() {
         }
 
         setItems(result.items);
+        setProductBrandOptions(result.productBrandOptions);
         setTotal(result.total);
       } catch (err: unknown) {
         if (cancelled) {
@@ -796,6 +799,7 @@ export default function AllProductsPage() {
               sku={bulkForm.sku}
               name={bulkForm.name}
               brand={bulkForm.brand}
+              brandOptions={productBrandOptions}
               lifecycle={bulkForm.lifecycle}
               skuPlaceholder={bulkForm.mixed.sku ? "Mixed" : undefined}
               namePlaceholder={bulkForm.mixed.name ? "Mixed" : undefined}

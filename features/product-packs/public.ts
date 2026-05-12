@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/server/db/prisma";
 import { makeMediaPublicMany } from "@/features/media/repository";
+import { richTextDescriptionToString } from "@/features/products/model-b-compat";
 
 export type PublicProductPackSummary = {
   id: number;
@@ -16,9 +17,13 @@ const PACK_SELECT = {
   id: true,
   slug: true,
   name: true,
-  description: true,
-  lifecycle: true,
-  mediaLinks: {
+  shortDescription: true,
+  richTextDescription: true,
+  visibleEcommerce: true,
+  media: {
+    where: {
+      role: "GALLERY",
+    },
     orderBy: [{ sortOrder: "asc" }, { mediaId: "asc" }],
     take: 1,
     select: {
@@ -32,7 +37,7 @@ const PACK_SELECT = {
       },
     },
   },
-  subcategoryLinks: {
+  subcategories: {
     orderBy: {
       subcategoryId: "asc",
     },
@@ -64,7 +69,7 @@ export async function listPublicCollections(): Promise<PublicProductPackSummary[
   const packs = await prisma.product.findMany({
     where: {
       kind: "PACK",
-      lifecycle: "ACTIVE",
+      visibleEcommerce: true,
     },
     orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
     take: 6,
@@ -72,24 +77,25 @@ export async function listPublicCollections(): Promise<PublicProductPackSummary[
   });
 
   const mediaIds = packs.flatMap((p) => 
-    p.mediaLinks.flatMap(l => (l.media.isActive && l.media.deletedAt == null) ? [Number(l.media.id)] : [])
+    p.media.flatMap(l => (l.media.isActive && l.media.deletedAt == null) ? [Number(l.media.id)] : [])
   );
 
   await makeMediaPublicMany(mediaIds);
 
   return packs.map((p) => {
-    const firstMedia = p.mediaLinks[0]?.media;
+    const firstMedia = p.media[0]?.media;
     const hasImage = firstMedia && firstMedia.isActive && firstMedia.deletedAt == null && firstMedia.kind === "IMAGE";
     
     return {
       id: Number(p.id),
       slug: p.slug,
       name: p.name,
-      description: p.description,
+      description:
+        p.shortDescription ?? richTextDescriptionToString(p.richTextDescription),
       imageUrl: hasImage ? buildPublicMediaUrl(firstMedia.id, "original") : null,
       imageThumbnailUrl: hasImage ? buildPublicMediaUrl(firstMedia.id, "thumbnail") : null,
-      href: p.subcategoryLinks[0]
-        ? `/produits/${p.subcategoryLinks[0].subcategory.category.slug}/${p.subcategoryLinks[0].subcategory.slug}/${p.slug}`
+      href: p.subcategories[0]
+        ? `/produits/${p.subcategories[0].subcategory.category.slug}/${p.subcategories[0].subcategory.slug}/${p.slug}`
         : `/produits`,
     };
   });

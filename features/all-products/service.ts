@@ -1,9 +1,15 @@
-import { Prisma, ProductLifecycle } from "@prisma/client";
+import { Prisma, type ProductLifecycle } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
 import { canAccessProducts, canToggleProductLifecycle } from "@/features/products/access";
 import formatEnumLabel from "@/lib/formatEnumLabel";
 import { prisma } from "@/lib/server/db/prisma";
 import { formatProductBrandValue } from "@/lib/static_tables/brands";
+import {
+  productBrandLabel,
+  productLifecycleFromVisibility,
+  richTextDescriptionToString,
+  visibilityFromProductLifecycle,
+} from "@/features/products/model-b-compat";
 import type {
   AllProductsExportFormat,
   AllProductsExportMode,
@@ -26,12 +32,13 @@ const ALL_PRODUCTS_LIST_SELECT = {
   sku: true,
   slug: true,
   name: true,
-  description: true,
-  brand: true,
-  datasheetMediaId: true,
-  lifecycle: true,
+  richTextDescription: true,
+  shortDescription: true,
+  brand: { select: { displayName: true, name: true } },
+  visibleEcommerce: true,
+  visibleVitrine: true,
   updatedAt: true,
-  mediaLinks: {
+  media: {
     select: {
       media: {
         select: {
@@ -40,7 +47,7 @@ const ALL_PRODUCTS_LIST_SELECT = {
       },
     },
   },
-  subcategoryLinks: {
+  subcategories: {
     select: {
       subcategory: {
         select: {
@@ -72,8 +79,9 @@ const ALL_PRODUCTS_LIST_SELECT = {
       quantity: true,
       product: {
         select: {
-          brand: true,
-          lifecycle: true,
+          brand: { select: { displayName: true, name: true } },
+          visibleEcommerce: true,
+          visibleVitrine: true,
         },
       },
     },
@@ -103,13 +111,13 @@ type AllProductsExportRecord = Prisma.ProductGetPayload<{
 
 function formatAllProductBrand(record: AllProductsListRecord) {
   if (record.kind !== "PACK") {
-    return formatProductBrandValue(record.brand);
+    return formatProductBrandValue(productBrandLabel(record.brand));
   }
 
   const brandLabels = [
     ...new Set(
       record.packLinesAsPack.flatMap((line) => {
-        const label = formatProductBrandValue(line.product.brand);
+        const label = formatProductBrandValue(productBrandLabel(line.product.brand));
         return label ? [label] : [];
       }),
     ),
@@ -119,7 +127,7 @@ function formatAllProductBrand(record: AllProductsListRecord) {
 }
 
 function mapAllProductsListItem(record: AllProductsListRecord): AllProductsListItemDto {
-  const derivedLifecycle = record.lifecycle ?? "DRAFT";
+  const derivedLifecycle = productLifecycleFromVisibility(record);
 
   return {
     id: Number(record.id),
@@ -127,11 +135,13 @@ function mapAllProductsListItem(record: AllProductsListRecord): AllProductsListI
     sku: record.sku,
     slug: record.slug,
     name: record.name,
-    description: record.description,
+    description:
+      record.shortDescription ??
+      richTextDescriptionToString(record.richTextDescription),
     brand: formatAllProductBrand(record),
-    hasImage: record.mediaLinks.some((link) => link.media.kind === "IMAGE"),
-    hasDatasheet: record.kind === "PACK" ? false : record.datasheetMediaId != null,
-    subcategories: record.subcategoryLinks.map(({ subcategory }) => ({
+    hasImage: record.media.some((link) => link.media.kind === "IMAGE"),
+    hasDatasheet: false,
+    subcategories: record.subcategories.map(({ subcategory }) => ({
       id: Number(subcategory.id),
       name: subcategory.name,
       slug: subcategory.slug,
@@ -715,7 +725,8 @@ export async function listAllProductsService(
           { sku: { contains: query.q, mode: "insensitive" } },
           { slug: { contains: query.q, mode: "insensitive" } },
           { name: { contains: query.q, mode: "insensitive" } },
-          { description: { contains: query.q, mode: "insensitive" } },
+          { displayName: { contains: query.q, mode: "insensitive" } },
+          { shortDescription: { contains: query.q, mode: "insensitive" } },
           {
             familyMembership: {
               is: {
@@ -735,10 +746,13 @@ export async function listAllProductsService(
     : {};
 
   if (query.kind) {
-    where.kind = query.kind as Prisma.ProductWhereInput["kind"];
+    where.kind =
+      query.kind === "SINGLE"
+        ? { in: ["STANDARD", "SINGLE"] }
+        : (query.kind as Prisma.ProductWhereInput["kind"]);
   }
 
-  const [items, total] = await Promise.all([
+  const [items, total, productBrands] = await Promise.all([
     prisma.product.findMany({
       where,
       orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
@@ -747,10 +761,20 @@ export async function listAllProductsService(
       select: ALL_PRODUCTS_LIST_SELECT,
     }),
     prisma.product.count({ where }),
+    prisma.organization.findMany({
+      where: {
+        isProductBrand: true,
+      },
+      orderBy: [{ displayName: "asc" }, { name: "asc" }],
+      select: {
+        displayName: true,
+      },
+    }),
   ]);
 
   return {
     items: items.map(mapAllProductsListItem),
+    productBrandOptions: productBrands.map((brand) => brand.displayName),
     total,
     page: query.page,
     pageSize: query.pageSize,
@@ -777,7 +801,7 @@ export async function updateAllProductLifecycleService(
 
   const updated = await prisma.product.update({
     where: { id: BigInt(productId) },
-    data: { lifecycle },
+    data: visibilityFromProductLifecycle(lifecycle),
     select: ALL_PRODUCTS_LIST_SELECT,
   });
 
@@ -818,12 +842,16 @@ export async function updateAllProductsBulkService(
   }
   if (input.name != null) {
     data.name = input.name;
+    data.displayName = input.name;
   }
   if (input.brand !== undefined) {
-    data.brand = input.brand;
+    throw new AllProductsServiceError(
+      "La modification groupée de marque doit passer par la fiche produit.",
+      400,
+    );
   }
   if (input.lifecycle !== undefined) {
-    data.lifecycle = input.lifecycle;
+    Object.assign(data, visibilityFromProductLifecycle(input.lifecycle));
   }
 
   if (Object.keys(data).length === 0) {

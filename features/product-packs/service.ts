@@ -1,9 +1,16 @@
-import { Prisma, ProductLifecycle } from "@prisma/client";
+import { Prisma, type ProductLifecycle } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
 import { prisma } from "@/lib/server/db/prisma";
 import { canAccessProducts, canCreateProducts, canManageProducts } from "@/features/products/access";
 import type { ProductMediaDto } from "@/features/products/types";
 import { formatProductBrandValue } from "@/lib/static_tables/brands";
+import {
+  productBrandLabel,
+  productLifecycleFromVisibility,
+  richTextDescriptionToString,
+  stringToRichTextDescription,
+  visibilityFromProductLifecycle,
+} from "@/features/products/model-b-compat";
 import type {
   ProductPackDetailDto,
   ProductPackFormOptionsDto,
@@ -40,8 +47,9 @@ const PACK_COMPONENT_SELECT = {
   slug: true,
   kind: true,
   name: true,
-  brand: true,
-  lifecycle: true,
+  brand: { select: { displayName: true, name: true } },
+  visibleEcommerce: true,
+  visibleVitrine: true,
 } satisfies Prisma.ProductSelect;
 
 const PACK_DETAIL_SELECT = {
@@ -49,12 +57,14 @@ const PACK_DETAIL_SELECT = {
   sku: true,
   slug: true,
   name: true,
-  description: true,
+  displayName: true,
+  richTextDescription: true,
   descriptionSeo: true,
-  lifecycle: true,
+  visibleEcommerce: true,
+  visibleVitrine: true,
   createdAt: true,
   updatedAt: true,
-  subcategoryLinks: {
+  subcategories: {
     select: {
       subcategoryId: true,
       subcategory: {
@@ -73,9 +83,15 @@ const PACK_DETAIL_SELECT = {
       },
     },
   },
-  mediaLinks: {
+  media: {
+    where: {
+      role: "GALLERY",
+    },
     orderBy: [{ sortOrder: "asc" }, { mediaId: "asc" }],
     select: {
+      role: true,
+      name: true,
+      altText: true,
       media: {
         select: MEDIA_SELECT,
       },
@@ -102,14 +118,22 @@ function buildMediaUrl(mediaId: bigint | number, variant: "original" | "thumbnai
   return `/api/media/${mediaId.toString()}/file${query}`;
 }
 
-function mapMedia(media: Prisma.MediaGetPayload<{ select: typeof MEDIA_SELECT }>): ProductMediaDto {
+function mapMedia(
+  media: Prisma.MediaGetPayload<{ select: typeof MEDIA_SELECT }>,
+  link?: {
+    role: ProductMediaDto["role"];
+    name: string | null;
+    altText: string | null;
+  },
+): ProductMediaDto {
   return {
     id: Number(media.id),
+    role: link?.role ?? "GALLERY",
     kind: media.kind,
-    title: media.title,
+    title: link?.name ?? media.title,
     originalFilename: media.originalFilename,
     mimeType: media.mimeType,
-    altText: media.altText,
+    altText: link?.altText ?? media.altText,
     widthPx: media.widthPx,
     heightPx: media.heightPx,
     durationSeconds: media.durationSeconds?.toString() ?? null,
@@ -123,13 +147,13 @@ function derivePack(record: PackDetailRecord) {
   const brands = [
     ...new Set(
       record.packLinesAsPack.flatMap((line) => {
-        const brand = formatProductBrandValue(line.product.brand);
+        const brand = formatProductBrandValue(productBrandLabel(line.product.brand));
         return brand ? [brand] : [];
       }),
     ),
   ];
   const lifecycle: ProductPackDetailDto["derived"]["lifecycle"] =
-    record.lifecycle ?? "DRAFT";
+    productLifecycleFromVisibility(record);
 
   return {
     brands,
@@ -143,10 +167,10 @@ function mapPackDetail(record: PackDetailRecord): ProductPackDetailDto {
     sku: record.sku,
     slug: record.slug,
     name: record.name,
-    description: record.description,
+    description: richTextDescriptionToString(record.richTextDescription),
     descriptionSeo: record.descriptionSeo,
-    subcategoryIds: record.subcategoryLinks.map((link) => Number(link.subcategoryId)),
-    media: record.mediaLinks.map((link) => mapMedia(link.media)),
+    subcategoryIds: record.subcategories.map((link) => Number(link.subcategoryId)),
+      media: record.media.map((link) => mapMedia(link.media, link)),
     lines: record.packLinesAsPack.map((line) => ({
       productId: Number(line.productId),
       quantity: line.quantity,
@@ -164,11 +188,11 @@ function mapPackListItem(record: PackDetailRecord): ProductPackListItemDto {
     sku: record.sku,
     slug: record.slug,
     name: record.name,
-    description: record.description,
+    description: richTextDescriptionToString(record.richTextDescription),
     lineCount: record.packLinesAsPack.length,
     brands: derived.brands,
     lifecycle: derived.lifecycle,
-    subcategories: record.subcategoryLinks.map(({ subcategory }) => ({
+    subcategories: record.subcategories.map(({ subcategory }) => ({
       id: Number(subcategory.id),
       categoryId: Number(subcategory.category.id),
       categoryName: subcategory.category.name,
@@ -245,8 +269,10 @@ async function writePack(packId: number | null, input: ProductPackUpsertInput) {
               slug: input.slug,
               kind: "PACK",
               name: input.name,
-              description: input.description,
+              displayName: input.name,
+              richTextDescription: stringToRichTextDescription(input.description),
               descriptionSeo: input.descriptionSeo,
+              ...visibilityFromProductLifecycle("ACTIVE"),
             },
             select: { id: true },
           })
@@ -256,7 +282,8 @@ async function writePack(packId: number | null, input: ProductPackUpsertInput) {
               sku: input.sku,
               slug: input.slug,
               name: input.name,
-              description: input.description,
+              displayName: input.name,
+              richTextDescription: stringToRichTextDescription(input.description),
               descriptionSeo: input.descriptionSeo,
             },
             select: { id: true },
@@ -275,15 +302,21 @@ async function writePack(packId: number | null, input: ProductPackUpsertInput) {
       });
     }
 
-    await tx.productMediaLink.deleteMany({
-      where: { productId: pack.id },
+    await tx.productMedia.deleteMany({
+      where: {
+        productId: pack.id,
+        role: "GALLERY",
+      },
     });
 
     if (input.media.length > 0) {
-      await tx.productMediaLink.createMany({
+      await tx.productMedia.createMany({
         data: input.media.map((media, index) => ({
           productId: pack.id,
           mediaId: BigInt(media.id),
+          role: "GALLERY",
+          name: media.title,
+          altText: media.altText,
           sortOrder: index,
         })),
       });
@@ -325,13 +358,13 @@ export async function listProductPacksService(
             { sku: { contains: query.q, mode: "insensitive" } },
             { slug: { contains: query.q, mode: "insensitive" } },
             { name: { contains: query.q, mode: "insensitive" } },
-            { description: { contains: query.q, mode: "insensitive" } },
+            { shortDescription: { contains: query.q, mode: "insensitive" } },
           ],
         }
       : {}),
   };
 
-  const [items, total] = await Promise.all([
+  const [items, total, productBrands] = await Promise.all([
     prisma.product.findMany({
       where,
       orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
@@ -340,10 +373,20 @@ export async function listProductPacksService(
       select: PACK_DETAIL_SELECT,
     }),
     prisma.product.count({ where }),
+    prisma.organization.findMany({
+      where: {
+        isProductBrand: true,
+      },
+      orderBy: [{ displayName: "asc" }, { name: "asc" }],
+      select: {
+        displayName: true,
+      },
+    }),
   ]);
 
   return {
     items: items.map(mapPackListItem),
+    productBrandOptions: productBrands.map((brand) => brand.displayName),
     total,
     page: query.page,
     pageSize: query.pageSize,
@@ -382,7 +425,7 @@ export async function getProductPackFormOptionsService(
     prisma.product.findMany({
       where: {
         kind: {
-          in: ["SINGLE", "VARIANT"],
+          in: ["STANDARD", "SINGLE", "VARIANT"],
         },
       },
       orderBy: [{ name: "asc" }, { sku: "asc" }],
@@ -408,8 +451,11 @@ export async function getProductPackFormOptionsService(
     availableProducts: products
       .filter(
         (product): product is typeof product & {
-          kind: "SINGLE" | "VARIANT";
-        } => product.kind === "SINGLE" || product.kind === "VARIANT",
+          kind: "STANDARD" | "SINGLE" | "VARIANT";
+        } =>
+          product.kind === "STANDARD" ||
+          product.kind === "SINGLE" ||
+          product.kind === "VARIANT",
       )
       .map((product) => ({
         id: Number(product.id),
@@ -512,12 +558,16 @@ export async function updateProductPacksBulkService(
   }
   if (input.name != null) {
     data.name = input.name;
+    data.displayName = input.name;
   }
   if (input.brand !== undefined) {
-    data.brand = input.brand;
+    throw new ProductPackServiceError(
+      "La marque d'un pack est derivee de ses produits.",
+      400,
+    );
   }
   if (input.lifecycle !== undefined) {
-    data.lifecycle = input.lifecycle;
+    Object.assign(data, visibilityFromProductLifecycle(input.lifecycle));
   }
 
   if (Object.keys(data).length === 0) {

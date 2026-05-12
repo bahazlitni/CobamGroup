@@ -156,9 +156,12 @@ export function getVariantMedia(
 }
 
 export function buildColorOptions(product: UnifiedInspectorProduct) {
-  const references = new Map(
-    product.colorReferences.map((reference) => [reference.key, reference]),
-  );
+  const references = new Map<string, PublicProductColorReference>();
+  for (const reference of product.colorReferences) {
+    references.set(reference.key, reference);
+    references.set(normalizeComparableValue(reference.key), reference);
+    references.set(normalizeComparableValue(reference.label), reference);
+  }
   const options = new Map<string, DerivedColorOption>();
 
   for (const variant of product.variants) {
@@ -198,9 +201,7 @@ function getVariantFinishReference(
   const normalizedKey = normalizeLooseValue(resolvedKey);
 
   return (
-    finishReferences.find(
-      (reference) => normalizeLooseValue(reference.key) === normalizedKey,
-    ) ?? {
+    finishReferences.find((reference) => normalizeLooseValue(reference.key) === normalizedKey) ?? {
       key: resolvedKey,
       name: resolved?.label ?? attribute.value,
       colorHex: resolved?.color ?? null,
@@ -319,17 +320,11 @@ export function findVariantBySpecialValues(
       const colorValue = getVariantSpecialValue(variant, "COLOR");
       const finishKey = getVariantFinishKey(variant, finishReferences);
 
-      if (
-        filters.colorKey &&
-        colorValue?.key !== normalizeLooseValue(filters.colorKey)
-      ) {
+      if (filters.colorKey && colorValue?.key !== normalizeLooseValue(filters.colorKey)) {
         return false;
       }
 
-      if (
-        filters.finishKey &&
-        finishKey !== normalizeLooseValue(filters.finishKey)
-      ) {
+      if (filters.finishKey && finishKey !== normalizeLooseValue(filters.finishKey)) {
         return false;
       }
 
@@ -377,9 +372,8 @@ export function buildSpecialOptions(input: {
         key,
         label: resolved?.label ?? attribute.value,
         reference:
-          input.finishReferences.find(
-            (reference) => normalizeLooseValue(reference.key) === key,
-          ) ?? null,
+          input.finishReferences.find((reference) => normalizeLooseValue(reference.key) === key) ??
+          null,
       };
     });
 

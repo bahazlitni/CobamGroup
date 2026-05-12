@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Promotions",
   description:
-    "Consultez les promotions, offres et opportunites speciales proposees par COBAM GROUP.",
+    "Consultez les promotions, offres et opportUnités speciales proposees par COBAM GROUP.",
   alternates: {
     canonical: "/promotions",
   },

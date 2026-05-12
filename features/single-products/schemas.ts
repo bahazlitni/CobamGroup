@@ -1,4 +1,4 @@
-import { ProductLifecycle, ProductTypeAttributeInputType } from "@prisma/client";
+import { ProductTypeAttributeInputType } from "@prisma/client";
 import {
   buildDuplicateAttributeKindMessage,
   findDuplicateAttributeKind,
@@ -8,6 +8,13 @@ import {
 } from "@/lib/static_tables/attributes";
 import { normalizeProductBrandValue as normalizeProductBrandString } from "@/lib/static_tables/brands";
 import { DESCRIPTION_SEO_MAX_LENGTH } from "@/lib/seo-description";
+import { PRODUCT_LIFECYCLE_VALUES } from "@/features/products/lifecycle";
+import {
+  PRODUCT_AVAILABILITY_VALUES,
+  PRODUCT_INVENTORY_VISIBILITY_VALUES,
+  PRODUCT_PRICING_VISIBILITY_VALUES,
+  STOCK_UNIT_VALUES,
+} from "@/features/products/product-edit-fields";
 import type { SingleProductUpsertInput } from "./types";
 
 export class SingleProductsValidationError extends Error {
@@ -70,6 +77,63 @@ function parseOptionalIntegerArray(value: unknown, fieldName: string) {
     }
     return parsed;
   });
+}
+
+function parseOptionalLimitedString(
+  value: unknown,
+  fieldName: string,
+  maxLength: number,
+) {
+  const normalized = parseOptionalString(value);
+  if (normalized && normalized.length > maxLength) {
+    throw new SingleProductsValidationError(
+      `${fieldName} ne doit pas depasser ${maxLength} caracteres.`,
+    );
+  }
+  return normalized;
+}
+
+function parseRequiredLimitedString(
+  value: unknown,
+  fieldName: string,
+  maxLength: number,
+) {
+  const normalized = parseRequiredString(value, fieldName);
+  if (normalized.length > maxLength) {
+    throw new SingleProductsValidationError(
+      `${fieldName} ne doit pas depasser ${maxLength} caracteres.`,
+    );
+  }
+  return normalized;
+}
+
+function parseNonNegativeInteger(value: unknown, fieldName: string, fallback = 0) {
+  if (value == null || value === "") {
+    return fallback;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw new SingleProductsValidationError(`Valeur invalide pour ${fieldName}.`);
+  }
+  return parsed;
+}
+
+function parseDecimalString(
+  value: unknown,
+  fieldName: string,
+  fallback: string | null,
+) {
+  if (value == null || value === "") {
+    return fallback;
+  }
+
+  const normalized = String(value).trim().replace(",", ".");
+  const parsed = Number(normalized);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new SingleProductsValidationError(`Valeur invalide pour ${fieldName}.`);
+  }
+  return normalized;
 }
 
 function parseOptionalPositiveInteger(value: unknown, fieldName: string) {
@@ -177,18 +241,65 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
     );
   }
 
+  const name = parseRequiredString(record.name, "name");
+  const lifecycle = parseEnumValue(
+    record.lifecycle ?? "DRAFT",
+    PRODUCT_LIFECYCLE_VALUES,
+    "lifecycle",
+  );
+  const defaultVisible = lifecycle !== "DRAFT";
+
   return {
     productTypeId: parseOptionalPositiveInteger(record.productTypeId, "productTypeId"),
     sku: parseRequiredString(record.sku, "sku"),
     slug: parseRequiredString(record.slug, "slug"),
-    name: parseRequiredString(record.name, "name"),
+    name,
+    displayName: parseRequiredLimitedString(record.displayName ?? name, "displayName", 255),
     description: parseOptionalString(record.description),
+    shortDescription: parseOptionalLimitedString(
+      record.shortDescription,
+      "shortDescription",
+      500,
+    ),
+    titleSeo: parseOptionalLimitedString(record.titleSeo, "titleSeo", 60),
     descriptionSeo: parseOptionalDescriptionSeo(record.descriptionSeo, "descriptionSeo"),
+    guaranteeMonths: parseNonNegativeInteger(record.guaranteeMonths, "guaranteeMonths"),
     brand:
       record.brand == null || record.brand === ""
         ? null
         : normalizeProductBrandString(String(record.brand)),
-    lifecycle: parseEnumValue(record.lifecycle, Object.values(ProductLifecycle), "lifecycle"),
+    lifecycle,
+    visibleEcommerce: parseOptionalBoolean(record.visibleEcommerce, defaultVisible),
+    visibleVitrine: parseOptionalBoolean(record.visibleVitrine, defaultVisible),
+    isFeatured: parseOptionalBoolean(record.isFeatured),
+    isPromoted: parseOptionalBoolean(record.isPromoted),
+    isNew: parseOptionalBoolean(record.isNew),
+    stockAvailable: parseDecimalString(record.stockAvailable, "stockAvailable", "0") ?? "0",
+    stockAlertThreshold:
+      parseDecimalString(record.stockAlertThreshold, "stockAlertThreshold", "0") ?? "0",
+    stockUnit: parseEnumValue(record.stockUnit ?? "PIECE", STOCK_UNIT_VALUES, "stockUnit"),
+    stockAvailability: parseEnumValue(
+      record.stockAvailability ?? "IN_STOCK",
+      PRODUCT_AVAILABILITY_VALUES,
+      "stockAvailability",
+    ),
+    stockVisibility: parseEnumValue(
+      record.stockVisibility ?? "AUTO",
+      PRODUCT_INVENTORY_VISIBILITY_VALUES,
+      "stockVisibility",
+    ),
+    basePriceTtcTnd: parseDecimalString(record.basePriceTtcTnd, "basePriceTtcTnd", null),
+    currentPriceTtcTnd: parseDecimalString(
+      record.currentPriceTtcTnd,
+      "currentPriceTtcTnd",
+      null,
+    ),
+    vatRate: parseDecimalString(record.vatRate, "vatRate", "19.000") ?? "19.000",
+    priceVisibility: parseEnumValue(
+      record.priceVisibility ?? "AUTO",
+      PRODUCT_PRICING_VISIBILITY_VALUES,
+      "priceVisibility",
+    ),
     tags: parseOptionalString(record.tags) ?? "",
     subcategoryIds: parseOptionalIntegerArray(
       Array.isArray(record.subcategoryIds) ? record.subcategoryIds : [],
@@ -207,6 +318,7 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
 
             return {
               id: parsedId,
+              role: "TECHNICAL",
               kind:
                 "kind" in datasheet
                   ? (String(datasheet.kind) as SingleProductUpsertInput["media"][number]["kind"])
@@ -238,6 +350,7 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
 
       return {
         id: parsedId,
+        role: "GALLERY",
         kind:
           "kind" in mediaRecord
             ? (String(mediaRecord.kind) as SingleProductUpsertInput["media"][number]["kind"])

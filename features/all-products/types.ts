@@ -69,6 +69,7 @@ export type AllProductsListItemDto = {
 
 export type AllProductsListResult = {
   items: AllProductsListItemDto[];
+  productBrandOptions: string[];
   total: number;
   page: number;
   pageSize: number;

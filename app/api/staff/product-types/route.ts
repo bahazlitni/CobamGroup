@@ -13,10 +13,13 @@ import {
   parseAttributeGroupInput,
   parseAttributeInput,
   parseGroupInput,
+  parseProductTaxonomyOrder,
   parseProductTaxonomyEntity,
   parseProductTaxonomyId,
   parseProductTypeInput,
   ProductTaxonomyServiceError,
+  reorderTaxonomyGroupsService,
+  reorderTaxonomyProductTypesService,
   updateTaxonomyAttributeGroupService,
   updateTaxonomyAttributeService,
   updateTaxonomyGroupService,
@@ -25,17 +28,11 @@ import {
 
 function jsonError(error: unknown, fallback: string) {
   if (error instanceof AuthError || error instanceof ProductTaxonomyServiceError) {
-    return NextResponse.json(
-      { ok: false, message: error.message },
-      { status: error.status },
-    );
+    return NextResponse.json({ ok: false, message: error.message }, { status: error.status });
   }
 
   console.error(fallback, error);
-  return NextResponse.json(
-    { ok: false, message: "Internal server error" },
-    { status: 500 },
-  );
+  return NextResponse.json({ ok: false, message: "Internal server error" }, { status: 500 });
 }
 
 export async function GET(req: Request) {
@@ -56,10 +53,7 @@ export async function POST(req: Request) {
     const entity = parseProductTaxonomyEntity(body.entity);
 
     if (entity === "group") {
-      const item = await createTaxonomyGroupService(
-        session,
-        parseGroupInput(body.data),
-      );
+      const item = await createTaxonomyGroupService(session, parseGroupInput(body.data));
       return NextResponse.json({ ok: true, item }, { status: 201 });
     }
 
@@ -79,10 +73,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, item }, { status: 201 });
     }
 
-    const item = await createTaxonomyAttributeService(
-      session,
-      parseAttributeInput(body.data),
-    );
+    const item = await createTaxonomyAttributeService(session, parseAttributeInput(body.data));
     return NextResponse.json({ ok: true, item }, { status: 201 });
   } catch (error: unknown) {
     return jsonError(error, "PRODUCT_TYPES_ADMIN_CREATE_ERROR:");
@@ -97,11 +88,7 @@ export async function PUT(req: Request) {
     const id = parseProductTaxonomyId(body.id);
 
     if (entity === "group") {
-      const item = await updateTaxonomyGroupService(
-        session,
-        id,
-        parseGroupInput(body.data),
-      );
+      const item = await updateTaxonomyGroupService(session, id, parseGroupInput(body.data));
       return NextResponse.json({ ok: true, item });
     }
 
@@ -123,14 +110,32 @@ export async function PUT(req: Request) {
       return NextResponse.json({ ok: true, item });
     }
 
-    const item = await updateTaxonomyAttributeService(
-      session,
-      id,
-      parseAttributeInput(body.data),
-    );
+    const item = await updateTaxonomyAttributeService(session, id, parseAttributeInput(body.data));
     return NextResponse.json({ ok: true, item });
   } catch (error: unknown) {
     return jsonError(error, "PRODUCT_TYPES_ADMIN_UPDATE_ERROR:");
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const session = await requireStaffSession(req);
+    const body = await req.json();
+    const order = parseProductTaxonomyOrder(body.order);
+
+    if (body.action === "reorderGroups") {
+      const data = await reorderTaxonomyGroupsService(session, order);
+      return NextResponse.json({ ok: true, ...data });
+    }
+
+    if (body.action === "reorderProductTypes") {
+      const data = await reorderTaxonomyProductTypesService(session, order);
+      return NextResponse.json({ ok: true, ...data });
+    }
+
+    return NextResponse.json({ ok: false, message: "Action invalide." }, { status: 400 });
+  } catch (error: unknown) {
+    return jsonError(error, "PRODUCT_TYPES_ADMIN_REORDER_ERROR:");
   }
 }
 

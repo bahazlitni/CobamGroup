@@ -69,7 +69,9 @@ function getLifecycleLabel(value: ProductPackDetailDto["derived"]["lifecycle"]) 
 }
 
 function formatKindLabel(product: ProductPackSelectableProductDto) {
-  return product.kind === "SINGLE" ? "Produit simple" : "Variante";
+  return product.kind === "STANDARD" || product.kind === "SINGLE"
+    ? "Produit simple"
+    : "Variante";
 }
 
 function moveItem<T>(items: T[], fromIndex: number, toIndex: number) {

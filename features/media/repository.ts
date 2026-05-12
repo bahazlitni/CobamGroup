@@ -297,7 +297,7 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
         mainImageMediaId: true,
       },
     }),
-    prisma.productMediaLink.findMany({
+    prisma.productMedia.findMany({
       where: {
         mediaId: {
           in: mediaIds,
@@ -926,7 +926,7 @@ export async function detachMediaReferencesAndDeleteMediaRecord(mediaId: number)
         mainImageMediaId: null,
       },
     });
-    const productVariantLinks = await tx.productMediaLink.deleteMany({
+    const productVariantLinks = await tx.productMedia.deleteMany({
       where: {
         mediaId: mediaIdValue,
       },

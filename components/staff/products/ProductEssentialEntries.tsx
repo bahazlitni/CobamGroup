@@ -1,10 +1,10 @@
-import { PanelAutoCompleteInput, StaffSelect } from "@/components/staff/ui";
+import { StaffSelect } from "@/components/staff/ui";
 import PanelField from "@/components/staff/ui/PanelField";
 import PanelInput from "@/components/staff/ui/PanelInput";
 import { Checkbox } from "@/components/ui/checkbox";
 import formatEnumLabel from "@/lib/formatEnumLabel";
-import { getProductBrandSuggestions } from "@/lib/static_tables/brands";
-import { ProductLifecycle } from "@prisma/client";
+import type { ProductLifecycle } from "@prisma/client";
+import { PRODUCT_LIFECYCLE_VALUES } from "@/features/products/lifecycle";
 
 interface ProductEssentialEntriesProps {
   sku: string;
@@ -15,8 +15,10 @@ interface ProductEssentialEntriesProps {
   namePlaceholder?: string;
   brandPlaceholder?: string;
   lifecyclePlaceholder?: string;
+  brandOptions?: string[];
   disableSku?: boolean;
   disableName?: boolean;
+  showLifecycle?: boolean;
   showFieldChecks?: boolean;
   fieldChecks?: Partial<
     Record<
@@ -37,6 +39,12 @@ interface ProductEssentialEntriesProps {
 
 export default function ProductEssentialEntries(form: ProductEssentialEntriesProps) {
   const showChecks = Boolean(form.showFieldChecks && form.onFieldCheckChange);
+  const brandOptions = [...new Set(form.brandOptions ?? [])]
+    .filter((brand) => brand.trim() !== "")
+    .map((brand) => ({
+      value: brand,
+      label: brand,
+    }));
   const isChecked = (field: string) =>
     form.fieldChecks?.[field as keyof typeof form.fieldChecks] ?? false;
   const labelNode = (field: string, label: string) => (
@@ -81,33 +89,36 @@ export default function ProductEssentialEntries(form: ProductEssentialEntriesPro
       </PanelField>
 
       <PanelField id="product-brand" label={labelNode("brand", "Marque")}>
-        <PanelAutoCompleteInput
+        <StaffSelect
           id="product-brand"
           fullWidth
-          value={form.brand ?? ""}
+          value={form.brand ?? null}
           placeholder={form.brandPlaceholder}
+          emptyLabel="Aucune marque"
           disabled={isDisabled("brand")}
-          suggestions={getProductBrandSuggestions(form.brand ?? "")}
+          options={brandOptions}
           onValueChange={(value) => form.onBrandChanged(value || null)}
         />
       </PanelField>
 
-      <PanelField id="product-lifecycle" label={labelNode("lifecycle", "Cycle de vie")}>
-        <StaffSelect
-          id="product-lifecycle"
-          fullWidth
-          value={form.lifecycle ?? ""}
-          placeholder={form.lifecyclePlaceholder}
-          disabled={isDisabled("lifecycle")}
-          onValueChange={(value: string) =>
-            form.onLifecycleChanged(value ? (value as ProductLifecycle) : null)
-          }
-          options={Object.values(ProductLifecycle).map((value) => ({
-            value,
-            label: formatEnumLabel(value),
-          }))}
-        />
-      </PanelField>
+      {form.showLifecycle === false ? null : (
+        <PanelField id="product-lifecycle" label={labelNode("lifecycle", "Cycle de vie")}>
+          <StaffSelect
+            id="product-lifecycle"
+            fullWidth
+            value={form.lifecycle ?? ""}
+            placeholder={form.lifecyclePlaceholder}
+            disabled={isDisabled("lifecycle")}
+            onValueChange={(value: string) =>
+              form.onLifecycleChanged(value ? (value as ProductLifecycle) : null)
+            }
+            options={PRODUCT_LIFECYCLE_VALUES.map((value) => ({
+              value,
+              label: formatEnumLabel(value),
+            }))}
+          />
+        </PanelField>
+      )}
     </div>
   );
 }

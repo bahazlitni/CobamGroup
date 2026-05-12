@@ -90,6 +90,7 @@ export function parseProductPackCreateInput(input: unknown): ProductPackUpsertIn
       }
       return {
         id: parsedId,
+        role: "GALLERY",
         kind: "kind" in mediaRecord ? String(mediaRecord.kind) as "IMAGE" | "VIDEO" | "DOCUMENT" : "IMAGE",
         title: parseOptionalString(mediaRecord.title),
         originalFilename: parseOptionalString(mediaRecord.originalFilename),

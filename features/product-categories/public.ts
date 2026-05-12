@@ -417,9 +417,9 @@ export async function listPublicProductSubcategoryCardsByCategorySlug(
           productLinks: {
             where: {
               product: {
-                lifecycle: "ACTIVE",
+                visibleEcommerce: true,
                 kind: {
-                  in: ["SINGLE", "VARIANT", "PACK"],
+                  in: ["STANDARD", "SINGLE", "VARIANT", "PACK"],
                 },
               },
             },
