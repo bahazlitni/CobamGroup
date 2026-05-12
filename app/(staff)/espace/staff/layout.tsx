@@ -25,6 +25,7 @@ import {
   Palette,
   Shield,
   Shapes,
+  Tags,
   User,
   Users,
 } from "lucide-react";
@@ -180,9 +181,14 @@ const STAFF_TABS: Record<string, StaffTabGroup> = {
         label: "Marques",
         icon: Building2,
       },
+      attributs: {
+        key: "attributs",
+        label: "Attributs",
+        icon: Tags,
+      },
       "types-produits": {
         key: "types-produits",
-        label: "Types produit",
+        label: "Modèles de produits",
         icon: Shapes,
       },
       couleurs: {
@@ -273,6 +279,7 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
           ? canAccessProductCategories(user)
           : false,
         marques: user ? canAccessProducts(user) : false,
+        attributs: user ? canAccessProducts(user) : false,
         "types-produits": user ? canAccessProducts(user) : false,
         couleurs: user ? canAccessProducts(user) : false,
         finitions: user ? canAccessProducts(user) : false,

@@ -15,6 +15,7 @@ const EMPTY_SELECT_VALUE = "__staff_empty__";
 export type StaffSelectOption = {
   value: string;
   label: string;
+  description?: string;
   disabled?: boolean;
 };
 

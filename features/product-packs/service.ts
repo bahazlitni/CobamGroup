@@ -7,7 +7,6 @@ import {
   canManageProducts,
 } from "@/features/products/access";
 import type { ProductMediaDto } from "@/features/products/types";
-import { formatProductBrandValue } from "@/lib/static_tables/brands";
 import {
   productBrandLabel,
   productLifecycleFromVisibility,
@@ -151,7 +150,7 @@ function derivePack(record: PackDetailRecord) {
   const brands = [
     ...new Set(
       record.packLinesAsPack.flatMap((line) => {
-        const brand = formatProductBrandValue(productBrandLabel(line.product.brand));
+        const brand = productBrandLabel(line.product.brand);
         return brand ? [brand] : [];
       }),
     ),

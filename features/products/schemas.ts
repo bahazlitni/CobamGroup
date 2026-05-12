@@ -1,12 +1,6 @@
 import { ProductTypeAttributeInputType } from "@prisma/client";
-import {
-  buildDuplicateAttributeKindMessage,
-  findDuplicateAttributeKind,
-} from "./attribute-kinds";
-import {
-  normalizeProductAttributeKind,
-} from "@/lib/static_tables/attributes";
-import { normalizeProductBrandValue as normalizeProductBrandString } from "@/lib/static_tables/brands";
+import { buildDuplicateAttributeKindMessage, findDuplicateAttributeKind } from "./attribute-kinds";
+import { normalizeProductAttributeKind } from "@/features/products/attribute-definitions";
 import { DESCRIPTION_SEO_MAX_LENGTH } from "@/lib/seo-description";
 import { PRODUCT_LIFECYCLE_VALUES } from "@/features/products/lifecycle";
 import {
@@ -84,30 +78,18 @@ function parseOptionalIntegerArray(value: unknown, fieldName: string) {
   });
 }
 
-function parseOptionalLimitedString(
-  value: unknown,
-  fieldName: string,
-  maxLength: number,
-) {
+function parseOptionalLimitedString(value: unknown, fieldName: string, maxLength: number) {
   const normalized = parseOptionalString(value);
   if (normalized && normalized.length > maxLength) {
-    throw new ProductValidationError(
-      `${fieldName} ne doit pas depasser ${maxLength} caracteres.`,
-    );
+    throw new ProductValidationError(`${fieldName} ne doit pas depasser ${maxLength} caracteres.`);
   }
   return normalized;
 }
 
-function parseRequiredLimitedString(
-  value: unknown,
-  fieldName: string,
-  maxLength: number,
-) {
+function parseRequiredLimitedString(value: unknown, fieldName: string, maxLength: number) {
   const normalized = parseRequiredString(value, fieldName);
   if (normalized.length > maxLength) {
-    throw new ProductValidationError(
-      `${fieldName} ne doit pas depasser ${maxLength} caracteres.`,
-    );
+    throw new ProductValidationError(`${fieldName} ne doit pas depasser ${maxLength} caracteres.`);
   }
   return normalized;
 }
@@ -124,11 +106,7 @@ function parseNonNegativeInteger(value: unknown, fieldName: string, fallback = 0
   return parsed;
 }
 
-function parseDecimalString(
-  value: unknown,
-  fieldName: string,
-  fallback: string | null,
-) {
+function parseDecimalString(value: unknown, fieldName: string, fallback: string | null) {
   if (value == null || value === "") {
     return fallback;
   }
@@ -195,10 +173,7 @@ function parseVariant(input: unknown): ProductVariantInputDto {
 
     const attributeRecord = entry as Record<string, unknown>;
     const name = normalizeProductAttributeKind(
-      parseRequiredString(
-        attributeRecord.name ?? attributeRecord.kind,
-        "variant.attribute.name",
-      ),
+      parseRequiredString(attributeRecord.name ?? attributeRecord.kind, "variant.attribute.name"),
     );
     const inputType =
       attributeRecord.inputType == null || attributeRecord.inputType === ""
@@ -271,11 +246,7 @@ function parseVariant(input: unknown): ProductVariantInputDto {
     sku: parseRequiredString(record.sku, "variant.sku"),
     slug: parseRequiredString(record.slug, "variant.slug"),
     name,
-    displayName: parseRequiredLimitedString(
-      record.displayName ?? name,
-      "variant.displayName",
-      255,
-    ),
+    displayName: parseRequiredLimitedString(record.displayName ?? name, "variant.displayName", 255),
     description: parseOptionalString(record.description),
     shortDescription: parseOptionalLimitedString(
       record.shortDescription,
@@ -283,39 +254,19 @@ function parseVariant(input: unknown): ProductVariantInputDto {
       500,
     ),
     titleSeo: parseOptionalLimitedString(record.titleSeo, "variant.titleSeo", 60),
-    descriptionSeo: parseOptionalDescriptionSeo(
-      record.descriptionSeo,
-      "variant.descriptionSeo",
-    ),
-    guaranteeMonths: parseNonNegativeInteger(
-      record.guaranteeMonths,
-      "variant.guaranteeMonths",
-    ),
-    brand:
-      record.brand == null || record.brand === ""
-        ? null
-        : normalizeProductBrandString(String(record.brand)),
+    descriptionSeo: parseOptionalDescriptionSeo(record.descriptionSeo, "variant.descriptionSeo"),
+    guaranteeMonths: parseNonNegativeInteger(record.guaranteeMonths, "variant.guaranteeMonths"),
+    brand: parseOptionalString(record.brand),
     lifecycle,
     visibleEcommerce: parseOptionalBoolean(record.visibleEcommerce, defaultVisible),
     visibleVitrine: parseOptionalBoolean(record.visibleVitrine, defaultVisible),
     isFeatured: parseOptionalBoolean(record.isFeatured),
     isPromoted: parseOptionalBoolean(record.isPromoted),
     isNew: parseOptionalBoolean(record.isNew),
-    stockAvailable: parseDecimalString(
-      record.stockAvailable,
-      "variant.stockAvailable",
-      "0",
-    ) ?? "0",
-    stockAlertThreshold: parseDecimalString(
-      record.stockAlertThreshold,
-      "variant.stockAlertThreshold",
-      "0",
-    ) ?? "0",
-    stockUnit: parseEnumValue(
-      record.stockUnit ?? "PIECE",
-      STOCK_UNIT_VALUES,
-      "variant.stockUnit",
-    ),
+    stockAvailable: parseDecimalString(record.stockAvailable, "variant.stockAvailable", "0") ?? "0",
+    stockAlertThreshold:
+      parseDecimalString(record.stockAlertThreshold, "variant.stockAlertThreshold", "0") ?? "0",
+    stockUnit: parseEnumValue(record.stockUnit ?? "PIECE", STOCK_UNIT_VALUES, "variant.stockUnit"),
     stockAvailability: parseEnumValue(
       record.stockAvailability ?? "IN_STOCK",
       PRODUCT_AVAILABILITY_VALUES,
@@ -326,11 +277,7 @@ function parseVariant(input: unknown): ProductVariantInputDto {
       PRODUCT_INVENTORY_VISIBILITY_VALUES,
       "variant.stockVisibility",
     ),
-    basePriceTtcTnd: parseDecimalString(
-      record.basePriceTtcTnd,
-      "variant.basePriceTtcTnd",
-      null,
-    ),
+    basePriceTtcTnd: parseDecimalString(record.basePriceTtcTnd, "variant.basePriceTtcTnd", null),
     currentPriceTtcTnd: parseDecimalString(
       record.currentPriceTtcTnd,
       "variant.currentPriceTtcTnd",
@@ -353,9 +300,7 @@ function parseVariant(input: unknown): ProductVariantInputDto {
         : (() => {
             const parsedId = Number(datasheet.id);
             if (!Number.isInteger(parsedId) || parsedId <= 0) {
-              throw new ProductValidationError(
-                "Identifiant de fiche technique invalide.",
-              );
+              throw new ProductValidationError("Identifiant de fiche technique invalide.");
             }
 
             return {
@@ -379,37 +324,38 @@ function parseVariant(input: unknown): ProductVariantInputDto {
                 typeof datasheet.thumbnailUrl === "string" ? datasheet.thumbnailUrl : null,
             };
           })(),
-    media: media
-      .map((entry) => {
-        if (!entry || typeof entry !== "object") {
-          throw new ProductValidationError("Media de variante invalide.");
-        }
+    media: media.map((entry) => {
+      if (!entry || typeof entry !== "object") {
+        throw new ProductValidationError("Media de variante invalide.");
+      }
 
-        const mediaRecord = entry as Record<string, unknown>;
-        const parsedId = Number(mediaRecord.id);
-        if (!Number.isInteger(parsedId) || parsedId <= 0) {
-          throw new ProductValidationError("Identifiant de média invalide.");
-        }
+      const mediaRecord = entry as Record<string, unknown>;
+      const parsedId = Number(mediaRecord.id);
+      if (!Number.isInteger(parsedId) || parsedId <= 0) {
+        throw new ProductValidationError("Identifiant de média invalide.");
+      }
 
-        return {
-          id: parsedId,
-          role: "GALLERY",
-          kind: "kind" in mediaRecord ? String(mediaRecord.kind) as ProductVariantInputDto["media"][number]["kind"] : "IMAGE",
-          title: parseOptionalString(mediaRecord.title),
-          originalFilename: parseOptionalString(mediaRecord.originalFilename),
-          mimeType: parseOptionalString(mediaRecord.mimeType),
-          altText: parseOptionalString(mediaRecord.altText),
-          widthPx: mediaRecord.widthPx == null ? null : Number(mediaRecord.widthPx),
-          heightPx: mediaRecord.heightPx == null ? null : Number(mediaRecord.heightPx),
-          durationSeconds: mediaRecord.durationSeconds == null ? null : String(mediaRecord.durationSeconds),
-          sizeBytes: mediaRecord.sizeBytes == null ? null : String(mediaRecord.sizeBytes),
-          url: typeof mediaRecord.url === "string" ? mediaRecord.url : "",
-          thumbnailUrl:
-            typeof mediaRecord.thumbnailUrl === "string"
-              ? mediaRecord.thumbnailUrl
-              : null,
-        };
-      }),
+      return {
+        id: parsedId,
+        role: "GALLERY",
+        kind:
+          "kind" in mediaRecord
+            ? (String(mediaRecord.kind) as ProductVariantInputDto["media"][number]["kind"])
+            : "IMAGE",
+        title: parseOptionalString(mediaRecord.title),
+        originalFilename: parseOptionalString(mediaRecord.originalFilename),
+        mimeType: parseOptionalString(mediaRecord.mimeType),
+        altText: parseOptionalString(mediaRecord.altText),
+        widthPx: mediaRecord.widthPx == null ? null : Number(mediaRecord.widthPx),
+        heightPx: mediaRecord.heightPx == null ? null : Number(mediaRecord.heightPx),
+        durationSeconds:
+          mediaRecord.durationSeconds == null ? null : String(mediaRecord.durationSeconds),
+        sizeBytes: mediaRecord.sizeBytes == null ? null : String(mediaRecord.sizeBytes),
+        url: typeof mediaRecord.url === "string" ? mediaRecord.url : "",
+        thumbnailUrl:
+          typeof mediaRecord.thumbnailUrl === "string" ? mediaRecord.thumbnailUrl : null,
+      };
+    }),
     attributes: parsedAttributes,
   };
 }

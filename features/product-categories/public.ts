@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { makeMediaPublicMany } from "@/features/media/repository";
 import { prisma } from "@/lib/server/db/prisma";
-import { resolveColorHex } from "@/lib/static_tables/colors";
+import { resolveColorHex } from "@/lib/color-values";
 import type {
   PublicMegaMenuProductCategory,
   PublicProductCategoryPageData,

@@ -1,6 +1,4 @@
 import { getArticlePlainText } from "@/features/articles/document";
-import { PRODUCT_ATTRIBUTES } from "@/lib/static_tables/attributes";
-import { PRODUCT_BRANDS } from "@/lib/static_tables/brands";
 
 const STOP_WORDS = new Set([
   "a",
@@ -112,11 +110,15 @@ function unique<T>(values: T[]) {
   return [...new Set(values)];
 }
 
-function buildKnownKeywords(): RecognizedKeyword[] {
-  const brandKeywords: RecognizedKeyword[] = PRODUCT_BRANDS.map((brand) => ({
-    key: brand.value,
+function buildKnownKeywords(rows: readonly PublicSearchCandidate[]): RecognizedKeyword[] {
+  const brandKeywords: RecognizedKeyword[] = unique(
+    rows
+      .map((row) => row.product_brand)
+      .filter((brand): brand is string => Boolean(brand?.trim())),
+  ).map((brand) => ({
+    key: brand,
     type: "brand",
-    aliases: unique([brand.value, brand.label, brand.slug, brand.name].map(normalizePublicSearchText)),
+    aliases: unique([brand].map(normalizePublicSearchText)),
   }));
 
   const productKeywords: RecognizedKeyword[] = PRODUCT_KEYWORD_ALIASES.map((aliases) => ({
@@ -125,20 +127,8 @@ function buildKnownKeywords(): RecognizedKeyword[] {
     aliases: unique(aliases.map(normalizePublicSearchText)),
   }));
 
-  const attributeKeywords: RecognizedKeyword[] = PRODUCT_ATTRIBUTES.map((attribute) => ({
-    key: attribute.key,
-    type: "attribute",
-    aliases: unique(
-      [attribute.key, attribute.label, attribute.unit]
-        .filter((value): value is string => Boolean(value))
-        .map(normalizePublicSearchText),
-    ),
-  }));
-
-  return [...brandKeywords, ...productKeywords, ...attributeKeywords];
+  return [...brandKeywords, ...productKeywords];
 }
-
-const KNOWN_KEYWORDS = buildKnownKeywords();
 
 function trigrams(value: string) {
   const padded = `  ${value} `;
@@ -260,10 +250,14 @@ function bestFieldScore(fields: SearchField[], term: string) {
   return fields.reduce((best, field) => Math.max(best, scoreField(field, term)), 0);
 }
 
-function detectKeywords(normalizedQuery: string, tokens: string[]) {
+function detectKeywords(
+  normalizedQuery: string,
+  tokens: string[],
+  knownKeywords: readonly RecognizedKeyword[],
+) {
   const detected: RecognizedKeyword[] = [];
 
-  for (const keyword of KNOWN_KEYWORDS) {
+  for (const keyword of knownKeywords) {
     const matched = keyword.aliases.some((alias) => {
       if (!alias) {
         return false;
@@ -336,7 +330,11 @@ function createFields(row: PublicSearchCandidate) {
   };
 }
 
-function scoreCandidate(row: PublicSearchCandidate, query: string) {
+function scoreCandidate(
+  row: PublicSearchCandidate,
+  query: string,
+  knownKeywords: readonly RecognizedKeyword[],
+) {
   const normalizedQuery = normalizePublicSearchText(query);
   const tokens = tokenize(normalizedQuery);
 
@@ -344,7 +342,7 @@ function scoreCandidate(row: PublicSearchCandidate, query: string) {
     return 0;
   }
 
-  const detectedKeywords = detectKeywords(normalizedQuery, tokens);
+  const detectedKeywords = detectKeywords(normalizedQuery, tokens, knownKeywords);
   const detectedBrands = detectedKeywords.filter((keyword) => keyword.type === "brand");
   const detectedTerms = detectedKeywords.filter((keyword) => keyword.type !== "brand");
   const { strictFields, broadFields } = createFields(row);
@@ -399,9 +397,11 @@ export function rankPublicProductSearchRows<T extends PublicSearchCandidate>(
   rows: T[],
   query: string,
 ) {
+  const knownKeywords = buildKnownKeywords(rows);
+
   return rows
     .map((row, index) => {
-      const score = scoreCandidate(row, query);
+      const score = scoreCandidate(row, query, knownKeywords);
       return score == null ? null : { row, score, index };
     })
     .filter((entry): entry is { row: T; score: number; index: number } => entry != null)

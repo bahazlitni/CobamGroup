@@ -82,7 +82,9 @@ export default function ProductsListPage() {
         }
 
         setItems(result.items);
-        setProductBrandOptions(result.productBrandOptions);
+        setProductBrandOptions(
+          Array.isArray(result.productBrandOptions) ? result.productBrandOptions : [],
+        );
         setTotal(result.total);
       } catch (err: unknown) {
         if (cancelled) {
@@ -134,15 +136,12 @@ export default function ProductsListPage() {
   }, [items]);
 
   useEffect(() => {
-    setSelectedIds((current) =>
-      current.filter((id) => items.some((item) => item.id === id)),
-    );
+    setSelectedIds((current) => current.filter((id) => items.some((item) => item.id === id)));
   }, [items]);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const allSelected = items.length > 0 && selectedIds.length === items.length;
-  const isIndeterminate =
-    selectedIds.length > 0 && selectedIds.length < items.length;
+  const isIndeterminate = selectedIds.length > 0 && selectedIds.length < items.length;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -294,10 +293,7 @@ export default function ProductsListPage() {
     }
   };
 
-  const handleBulkFieldToggle = (
-    field: keyof typeof bulkForm.enabled,
-    checked: boolean,
-  ) => {
+  const handleBulkFieldToggle = (field: keyof typeof bulkForm.enabled, checked: boolean) => {
     setBulkForm((current) => {
       const next = { ...current };
       next.enabled = { ...current.enabled, [field]: checked };
@@ -321,10 +317,7 @@ export default function ProductsListPage() {
     });
   };
 
-  const allFieldKeys: Array<keyof typeof bulkForm.enabled> = [
-    "brand",
-    "lifecycle",
-  ];
+  const allFieldKeys: Array<keyof typeof bulkForm.enabled> = ["brand", "lifecycle"];
   const allFieldsChecked = allFieldKeys.every((field) => bulkForm.enabled[field]);
   const someFieldsChecked = allFieldKeys.some((field) => bulkForm.enabled[field]);
 
@@ -346,7 +339,7 @@ export default function ProductsListPage() {
       <StaffPageHeader eyebrow="Produits" title="Familles" icon={Package}>
         {canCreate ? (
           <AnimatedUIButton
-            href="/espace/staff/gestion-des-produits/familles/edit"
+            href="/espace/staff/gestion-des-produits/familles/new"
             variant="secondary"
             icon="plus"
             iconPosition="left"
@@ -365,10 +358,8 @@ export default function ProductsListPage() {
       </form>
 
       {selectedIds.length > 0 ? (
-        <div className="fixed bottom-6 right-6 z-30 flex w-[min(560px,calc(100vw-3rem))] flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-lg">
-          <p className="text-sm text-slate-600">
-            {selectedIds.length} famille(s) selectionnee(s)
-          </p>
+        <div className="fixed right-6 bottom-6 z-30 flex w-[min(560px,calc(100vw-3rem))] flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-lg">
+          <p className="text-sm text-slate-600">{selectedIds.length} famille(s) selectionnee(s)</p>
           <div className="flex flex-wrap gap-2">
             <AnimatedUIButton
               type="button"
@@ -453,7 +444,7 @@ export default function ProductsListPage() {
             </td>
             <td className="px-4 py-3 align-top">
               <div className="space-y-1">
-                <p className="font-semibold text-cobam-dark-blue">{family.name}</p>
+                <p className="text-cobam-dark-blue font-semibold">{family.name}</p>
                 <p className="text-xs text-slate-500">{family.slug}</p>
                 {family.subtitle ? (
                   <p className="text-xs text-slate-500">{family.subtitle}</p>
@@ -477,10 +468,8 @@ export default function ProductsListPage() {
                 ? family.subcategories.map((subcategory) => subcategory.name).join(", ")
                 : "-"}
             </td>
-            <td className="px-4 py-3 align-top text-sm text-slate-600">
-              {family.variantCount}
-            </td>
-            <td className="px-4 py-3 align-top text-right">
+            <td className="px-4 py-3 align-top text-sm text-slate-600">{family.variantCount}</td>
+            <td className="px-4 py-3 text-right align-top">
               <AnimatedUIButton
                 href={`/espace/staff/gestion-des-produits/familles/edit?id=${family.id}`}
                 variant="ghost"
@@ -501,7 +490,8 @@ export default function ProductsListPage() {
               <div>
                 <DialogTitle>Modifier les familles</DialogTitle>
                 <DialogDescription>
-                  Ces valeurs communes seront appliquees a toutes les variantes des familles selectionnees.
+                  Ces valeurs communes seront appliquees a toutes les variantes des familles
+                  selectionnees.
                 </DialogDescription>
               </div>
               <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500">
@@ -542,7 +532,10 @@ export default function ProductsListPage() {
                 />
               </PanelField>
 
-              <PanelField id="family-common-lifecycle" label={labelNode("lifecycle", "Cycle de vie")}>
+              <PanelField
+                id="family-common-lifecycle"
+                label={labelNode("lifecycle", "Cycle de vie")}
+              >
                 <StaffSelect
                   id="family-common-lifecycle"
                   fullWidth

@@ -3,6 +3,8 @@ import type { StaffSession } from "@/features/auth/types";
 import { canAccessProducts, canManageProducts } from "@/features/products/access";
 import { prisma } from "@/lib/server/db/prisma";
 import type {
+  ProductAttributeDefinitionDto,
+  ProductAttributeDefinitionInput,
   ProductColorDto,
   ProductColorInput,
   ProductFinishDto,
@@ -140,6 +142,22 @@ function booleanValue(value: unknown, fallback = false) {
   return String(value).toLowerCase() === "true";
 }
 
+function stringArrayValue(value: unknown) {
+  if (value == null) {
+    return [];
+  }
+
+  if (!Array.isArray(value)) {
+    throw new ProductTaxonomyServiceError("Les options sont invalides.");
+  }
+
+  const items = value
+    .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
+    .filter(Boolean);
+
+  return [...new Set(items)];
+}
+
 function decimalStringValue(value: unknown, fieldName: string) {
   if (value == null || value === "") {
     return null;
@@ -180,6 +198,8 @@ function inputTypeValue(value: unknown) {
 
   return ProductTypeAttributeInputType.TEXT;
 }
+
+type SpecialTemplateAttributeType = Extract<ProductTypeAttributeInputType, "COLOR" | "FINISH">;
 
 export function parseProductTaxonomyEntity(value: unknown): ProductTaxonomyEntity {
   if (
@@ -230,6 +250,8 @@ export function parseProductTypeInput(value: unknown): ProductTaxonomyTypeInput 
     slug: requiredString(record.slug, "Le slug"),
     description: optionalString(record.description),
     sortOrder: integerValue(record.sortOrder, "L'ordre"),
+    hasColor: booleanValue(record.hasColor),
+    hasFinish: booleanValue(record.hasFinish),
     presetTags: optionalString(record.presetTags) ?? "",
     presetSubcategoryIds: positiveIntegerArrayValue(
       record.presetSubcategoryIds,
@@ -248,7 +270,7 @@ export function parseAttributeGroupInput(value: unknown): ProductTaxonomyAttribu
   const record = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 
   return {
-    productTypeId: positiveIntegerValue(record.productTypeId, "Le type produit"),
+    productTypeId: positiveIntegerValue(record.productTypeId, "Le modèle produit"),
     name: requiredString(record.name, "Le nom"),
     slug: requiredString(record.slug, "Le slug"),
     sortOrder: integerValue(record.sortOrder, "L'ordre"),
@@ -259,15 +281,16 @@ export function parseAttributeInput(value: unknown): ProductTaxonomyAttributeInp
   const record = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 
   return {
-    productTypeId: positiveIntegerValue(record.productTypeId, "Le type produit"),
+    productTypeId: positiveIntegerValue(record.productTypeId, "Le modèle produit"),
     attributeGroupId: nullablePositiveIntegerValue(
       record.attributeGroupId,
       "Le groupe d'attributs",
     ),
-    name: requiredString(record.name, "Le nom technique"),
-    label: requiredString(record.label, "Le libellé"),
-    unit: optionalString(record.unit),
-    inputType: inputTypeValue(record.inputType),
+    attributeDefinitionId: positiveIntegerValue(
+      record.attributeDefinitionId ?? record.attributeDefId,
+      "La definition d'attribut",
+    ),
+    label: optionalString(record.label) ?? "",
     isRequired: booleanValue(record.isRequired),
     isFilterable: booleanValue(record.isFilterable),
     sortOrder: integerValue(record.sortOrder, "L'ordre"),
@@ -292,6 +315,20 @@ export function parseFinishInput(value: unknown): ProductFinishInput {
     label: requiredString(record.label, "Le libellé"),
     color: optionalString(record.color),
     imageMediaId: nullablePositiveIntegerValue(record.imageMediaId, "L'image média"),
+  };
+}
+
+export function parseAttributeDefinitionInput(value: unknown): ProductAttributeDefinitionInput {
+  const record = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+  const inputType = inputTypeValue(record.inputType);
+  const selectOptions = inputType === "SELECT" ? stringArrayValue(record.selectOptions) : [];
+
+  return {
+    key: requiredString(record.key, "La clé"),
+    label: requiredString(record.label, "Le libellé"),
+    unit: optionalString(record.unit),
+    inputType,
+    selectOptions,
   };
 }
 
@@ -329,27 +366,56 @@ function mapAttribute(record: {
   id: bigint;
   productTypeId: bigint;
   attributeGroupId: bigint | null;
-  name: string;
+  attributeDefinitionId: bigint;
   label: string;
-  unit: string | null;
-  inputType: ProductTypeAttributeInputType;
   isRequired: boolean;
   isFilterable: boolean;
   sortOrder: number;
   attributeGroup: { name: string } | null;
+  attributeDefinition: {
+    key: string;
+    label: string;
+    unit: string | null;
+    inputType: ProductTypeAttributeInputType;
+    selectOptions: string[];
+  };
 }): ProductTaxonomyAttributeDto {
+  const definitionLabel = record.attributeDefinition.label;
+
   return {
     id: Number(record.id),
     productTypeId: Number(record.productTypeId),
     attributeGroupId: record.attributeGroupId == null ? null : Number(record.attributeGroupId),
     attributeGroupName: record.attributeGroup?.name ?? null,
-    name: record.name,
-    label: record.label,
-    unit: record.unit,
-    inputType: record.inputType,
+    attributeDefinitionId: Number(record.attributeDefinitionId),
+    definitionLabel,
+    name: record.attributeDefinition.key,
+    label: record.label || definitionLabel,
+    labelOverride: record.label,
+    unit: record.attributeDefinition.unit,
+    inputType: record.attributeDefinition.inputType,
+    selectOptions: record.attributeDefinition.selectOptions,
     isRequired: record.isRequired,
     isFilterable: record.isFilterable,
     sortOrder: record.sortOrder,
+  };
+}
+
+function mapAttributeDefinition(record: {
+  id: bigint;
+  key: string;
+  label: string;
+  unit: string | null;
+  inputType: ProductTypeAttributeInputType;
+  selectOptions: string[];
+}): ProductAttributeDefinitionDto {
+  return {
+    id: Number(record.id),
+    key: record.key,
+    label: record.label,
+    unit: record.unit,
+    inputType: record.inputType,
+    selectOptions: record.selectOptions,
   };
 }
 
@@ -360,6 +426,8 @@ function mapProductType(record: {
   slug: string;
   description: string | null;
   sortOrder: number;
+  hasColor: boolean;
+  hasFinish: boolean;
   presetTags: string;
   presetStockUnit: StockUnit | null;
   presetVatRate: { toString(): string } | null;
@@ -377,6 +445,8 @@ function mapProductType(record: {
     slug: record.slug,
     description: record.description,
     sortOrder: record.sortOrder,
+    hasColor: record.hasColor,
+    hasFinish: record.hasFinish,
     presetTags: record.presetTags,
     presetSubcategoryIds: record.subcategoryPresets.map((preset) => Number(preset.subcategoryId)),
     presetStockUnit: record.presetStockUnit,
@@ -417,12 +487,66 @@ function mapFinish(record: {
   };
 }
 
+const PROTECTED_ATTRIBUTE_DEFINITION_INPUT_TYPES = {
+  color: ProductTypeAttributeInputType.COLOR,
+  finish: ProductTypeAttributeInputType.FINISH,
+} as const;
+
+function normalizeAttributeDefinitionKey(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function getProtectedAttributeDefinitionInputType(key: string) {
+  return PROTECTED_ATTRIBUTE_DEFINITION_INPUT_TYPES[
+    normalizeAttributeDefinitionKey(key) as keyof typeof PROTECTED_ATTRIBUTE_DEFINITION_INPUT_TYPES
+  ];
+}
+
+function isProtectedAttributeDefinitionKey(key: string) {
+  return getProtectedAttributeDefinitionInputType(key) != null;
+}
+
+async function assertProtectedAttributeDefinitionRules(
+  input: ProductAttributeDefinitionInput,
+  id: number | null = null,
+) {
+  const protectedInputType = getProtectedAttributeDefinitionInputType(input.key);
+  if (protectedInputType != null && input.inputType !== protectedInputType) {
+    throw new ProductTaxonomyServiceError(
+      "Les attributs Couleur et Finition doivent conserver leur type.",
+    );
+  }
+
+  if (id == null) {
+    return;
+  }
+
+  const existing = await prisma.productAttributeDefinition.findUnique({
+    where: { id: BigInt(id) },
+    select: { key: true },
+  });
+
+  if (!existing || !isProtectedAttributeDefinitionKey(existing.key)) {
+    return;
+  }
+
+  const existingProtectedInputType = getProtectedAttributeDefinitionInputType(existing.key);
+  if (
+    normalizeAttributeDefinitionKey(input.key) !== normalizeAttributeDefinitionKey(existing.key) ||
+    input.inputType !== existingProtectedInputType
+  ) {
+    throw new ProductTaxonomyServiceError(
+      "Les attributs Couleur et Finition doivent conserver leur cle et leur type.",
+    );
+  }
+}
+
 export async function listProductTypesAdminService(
   session: StaffSession,
 ): Promise<ProductTypesAdminDto> {
   assertCanRead(session);
 
-  const [groups, productTypes, productSubcategories] = await Promise.all([
+  const [groups, productTypes, attributeDefinitions, productSubcategories] = await Promise.all([
     prisma.productTypeGroup.findMany({
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     }),
@@ -451,7 +575,7 @@ export async function listProductTypesAdminService(
           orderBy: [
             { attributeGroup: { sortOrder: "asc" } },
             { sortOrder: "asc" },
-            { name: "asc" },
+            { attributeDefinition: { label: "asc" } },
           ],
           include: {
             attributeGroup: {
@@ -459,9 +583,13 @@ export async function listProductTypesAdminService(
                 name: true,
               },
             },
+            attributeDefinition: true,
           },
         },
       },
+    }),
+    prisma.productAttributeDefinition.findMany({
+      orderBy: [{ label: "asc" }, { key: "asc" }],
     }),
     prisma.productSubcategory.findMany({
       where: {
@@ -489,6 +617,7 @@ export async function listProductTypesAdminService(
   return {
     groups: groups.map(mapGroup),
     productTypes: productTypes.map(mapProductType),
+    attributeDefinitions: attributeDefinitions.map(mapAttributeDefinition),
     productSubcategories: productSubcategories.map((subcategory) => ({
       id: Number(subcategory.id),
       categoryId: Number(subcategory.categoryId),
@@ -537,7 +666,12 @@ const productTypeInclude = {
   group: { select: { name: true } },
   subcategoryPresets: { select: { subcategoryId: true } },
   attributeGroups: true,
-  attributes: { include: { attributeGroup: { select: { name: true } } } },
+  attributes: {
+    include: {
+      attributeGroup: { select: { name: true } },
+      attributeDefinition: true,
+    },
+  },
 } satisfies Prisma.ProductTypeInclude;
 
 function getProductTypeData(input: ProductTaxonomyTypeInput) {
@@ -547,6 +681,8 @@ function getProductTypeData(input: ProductTaxonomyTypeInput) {
     slug: input.slug,
     description: input.description,
     sortOrder: input.sortOrder ?? 0,
+    hasColor: input.hasColor ?? false,
+    hasFinish: input.hasFinish ?? false,
     presetTags: input.presetTags ?? "",
     presetStockUnit: input.presetStockUnit ?? null,
     presetVatRate: input.presetVatRate ?? null,
@@ -576,6 +712,92 @@ async function syncProductTypeSubcategoryPresets(
   });
 }
 
+const SPECIAL_TEMPLATE_ATTRIBUTE_DEFINITIONS: Record<
+  SpecialTemplateAttributeType,
+  { key: string; label: string }
+> = {
+  [ProductTypeAttributeInputType.COLOR]: { key: "color", label: "Couleur" },
+  [ProductTypeAttributeInputType.FINISH]: { key: "finish", label: "Finition" },
+};
+
+async function ensureSpecialAttributeDefinition(
+  tx: Prisma.TransactionClient,
+  inputType: SpecialTemplateAttributeType,
+) {
+  const definition = SPECIAL_TEMPLATE_ATTRIBUTE_DEFINITIONS[inputType];
+
+  return tx.productAttributeDefinition.upsert({
+    where: { key: definition.key },
+    update: { inputType },
+    create: {
+      key: definition.key,
+      label: definition.label,
+      inputType,
+    },
+    select: { id: true },
+  });
+}
+
+async function syncProductTypeSpecialAttributes(
+  tx: Prisma.TransactionClient,
+  productTypeId: bigint,
+  input: Pick<ProductTaxonomyTypeInput, "hasColor" | "hasFinish">,
+) {
+  const desiredAttributes: Array<{
+    inputType: SpecialTemplateAttributeType;
+    enabled: boolean;
+  }> = [
+    {
+      inputType: ProductTypeAttributeInputType.COLOR,
+      enabled: input.hasColor ?? false,
+    },
+    {
+      inputType: ProductTypeAttributeInputType.FINISH,
+      enabled: input.hasFinish ?? false,
+    },
+  ];
+
+  let maxSortOrder =
+    (
+      await tx.productTypeAttribute.aggregate({
+        where: { productTypeId },
+        _max: { sortOrder: true },
+      })
+    )._max.sortOrder ?? -1;
+
+  for (const desiredAttribute of desiredAttributes) {
+    const definition = await ensureSpecialAttributeDefinition(tx, desiredAttribute.inputType);
+
+    if (!desiredAttribute.enabled) {
+      await tx.productTypeAttribute.deleteMany({
+        where: {
+          productTypeId,
+          attributeDefinitionId: definition.id,
+        },
+      });
+      continue;
+    }
+
+    await tx.productTypeAttribute.upsert({
+      where: {
+        productTypeId_attributeDefinitionId: {
+          productTypeId,
+          attributeDefinitionId: definition.id,
+        },
+      },
+      update: {},
+      create: {
+        productTypeId,
+        attributeDefinitionId: definition.id,
+        label: "",
+        isRequired: false,
+        isFilterable: true,
+        sortOrder: ++maxSortOrder,
+      },
+    });
+  }
+}
+
 export async function createTaxonomyProductTypeService(
   session: StaffSession,
   input: ProductTaxonomyTypeInput,
@@ -589,6 +811,7 @@ export async function createTaxonomyProductTypeService(
     });
 
     await syncProductTypeSubcategoryPresets(tx, created.id, input.presetSubcategoryIds);
+    await syncProductTypeSpecialAttributes(tx, created.id, input);
 
     return tx.productType.findUniqueOrThrow({
       where: { id: created.id },
@@ -613,6 +836,7 @@ export async function updateTaxonomyProductTypeService(
     });
 
     await syncProductTypeSubcategoryPresets(tx, BigInt(id), input.presetSubcategoryIds);
+    await syncProductTypeSpecialAttributes(tx, BigInt(id), input);
 
     return tx.productType.findUniqueOrThrow({
       where: { id: BigInt(id) },
@@ -703,18 +927,111 @@ export async function deleteTaxonomyAttributeGroupService(session: StaffSession,
   await prisma.productAttributeGroup.delete({ where: { id: BigInt(id) } });
 }
 
+function managedSpecialAttributeMessage(inputType: ProductTypeAttributeInputType) {
+  return inputType === ProductTypeAttributeInputType.COLOR
+    ? "La couleur est geree par l'option \"A une couleur\" du modele."
+    : "La finition est geree par l'option \"A une finition\" du modele.";
+}
+
+async function assertCanCreateTemplateAttribute(input: ProductTaxonomyAttributeInput) {
+  const definition = await prisma.productAttributeDefinition.findUnique({
+    where: { id: BigInt(input.attributeDefinitionId) },
+    select: { inputType: true, key: true },
+  });
+
+  if (definition && isProtectedAttributeDefinitionKey(definition.key)) {
+    throw new ProductTaxonomyServiceError(managedSpecialAttributeMessage(definition.inputType));
+  }
+}
+
+async function assertCanUpdateTemplateAttribute(id: number, input: ProductTaxonomyAttributeInput) {
+  const [existingAttribute, nextDefinition] = await Promise.all([
+    prisma.productTypeAttribute.findUnique({
+      where: { id: BigInt(id) },
+      select: {
+        attributeDefinitionId: true,
+        attributeDefinition: {
+          select: { inputType: true, key: true },
+        },
+      },
+    }),
+    prisma.productAttributeDefinition.findUnique({
+      where: { id: BigInt(input.attributeDefinitionId) },
+      select: { inputType: true, key: true },
+    }),
+  ]);
+
+  if (!existingAttribute || !nextDefinition) {
+    return;
+  }
+
+  const existingDefinition = existingAttribute.attributeDefinition;
+  const nextDefinitionKey = nextDefinition.key;
+
+  if (
+    isProtectedAttributeDefinitionKey(existingDefinition.key) &&
+    existingAttribute.attributeDefinitionId !== BigInt(input.attributeDefinitionId)
+  ) {
+    throw new ProductTaxonomyServiceError(
+      managedSpecialAttributeMessage(existingDefinition.inputType),
+    );
+  }
+
+  if (
+    isProtectedAttributeDefinitionKey(nextDefinitionKey) &&
+    existingAttribute.attributeDefinitionId !== BigInt(input.attributeDefinitionId)
+  ) {
+    throw new ProductTaxonomyServiceError(managedSpecialAttributeMessage(nextDefinition.inputType));
+  }
+}
+
+async function assertCanDeleteTemplateAttribute(id: number) {
+  const attribute = await prisma.productTypeAttribute.findUnique({
+    where: { id: BigInt(id) },
+    select: {
+      attributeDefinition: {
+        select: { inputType: true, key: true },
+      },
+      productType: {
+        select: {
+          hasColor: true,
+          hasFinish: true,
+        },
+      },
+    },
+  });
+
+  if (!attribute) {
+    return;
+  }
+
+  const inputType = attribute.attributeDefinition.inputType;
+  const key = normalizeAttributeDefinitionKey(attribute.attributeDefinition.key);
+  if (
+    (key === "color" && attribute.productType.hasColor) ||
+    (key === "finish" && attribute.productType.hasFinish)
+  ) {
+    throw new ProductTaxonomyServiceError(managedSpecialAttributeMessage(inputType));
+  }
+}
+
 export async function createTaxonomyAttributeService(
   session: StaffSession,
   input: ProductTaxonomyAttributeInput,
 ) {
   assertCanWrite(session);
+  await assertCanCreateTemplateAttribute(input);
 
   return mapAttribute(
     await prisma.productTypeAttribute.create({
       data: {
-        ...input,
         productTypeId: BigInt(input.productTypeId),
         attributeGroupId: input.attributeGroupId == null ? null : BigInt(input.attributeGroupId),
+        attributeDefinitionId: BigInt(input.attributeDefinitionId),
+        label: input.label,
+        isRequired: input.isRequired,
+        isFilterable: input.isFilterable,
+        sortOrder: input.sortOrder,
       },
       include: {
         attributeGroup: {
@@ -722,6 +1039,7 @@ export async function createTaxonomyAttributeService(
             name: true,
           },
         },
+        attributeDefinition: true,
       },
     }),
   );
@@ -733,14 +1051,19 @@ export async function updateTaxonomyAttributeService(
   input: ProductTaxonomyAttributeInput,
 ) {
   assertCanWrite(session);
+  await assertCanUpdateTemplateAttribute(id, input);
 
   return mapAttribute(
     await prisma.productTypeAttribute.update({
       where: { id: BigInt(id) },
       data: {
-        ...input,
         productTypeId: BigInt(input.productTypeId),
         attributeGroupId: input.attributeGroupId == null ? null : BigInt(input.attributeGroupId),
+        attributeDefinitionId: BigInt(input.attributeDefinitionId),
+        label: input.label,
+        isRequired: input.isRequired,
+        isFilterable: input.isFilterable,
+        sortOrder: input.sortOrder,
       },
       include: {
         attributeGroup: {
@@ -748,6 +1071,7 @@ export async function updateTaxonomyAttributeService(
             name: true,
           },
         },
+        attributeDefinition: true,
       },
     }),
   );
@@ -755,7 +1079,64 @@ export async function updateTaxonomyAttributeService(
 
 export async function deleteTaxonomyAttributeService(session: StaffSession, id: number) {
   assertCanWrite(session);
+  await assertCanDeleteTemplateAttribute(id);
   await prisma.productTypeAttribute.delete({ where: { id: BigInt(id) } });
+}
+
+export async function listProductAttributeDefinitionsService(session: StaffSession) {
+  assertCanRead(session);
+
+  return (
+    await prisma.productAttributeDefinition.findMany({
+      orderBy: [{ label: "asc" }, { key: "asc" }],
+    })
+  ).map(mapAttributeDefinition);
+}
+
+export async function createProductAttributeDefinitionService(
+  session: StaffSession,
+  input: ProductAttributeDefinitionInput,
+) {
+  assertCanWrite(session);
+  await assertProtectedAttributeDefinitionRules(input);
+
+  return mapAttributeDefinition(
+    await prisma.productAttributeDefinition.create({
+      data: input,
+    }),
+  );
+}
+
+export async function updateProductAttributeDefinitionService(
+  session: StaffSession,
+  id: number,
+  input: ProductAttributeDefinitionInput,
+) {
+  assertCanWrite(session);
+  await assertProtectedAttributeDefinitionRules(input, id);
+
+  return mapAttributeDefinition(
+    await prisma.productAttributeDefinition.update({
+      where: { id: BigInt(id) },
+      data: input,
+    }),
+  );
+}
+
+export async function deleteProductAttributeDefinitionService(session: StaffSession, id: number) {
+  assertCanWrite(session);
+  const attributeDefinition = await prisma.productAttributeDefinition.findUnique({
+    where: { id: BigInt(id) },
+    select: { key: true },
+  });
+
+  if (attributeDefinition && isProtectedAttributeDefinitionKey(attributeDefinition.key)) {
+    throw new ProductTaxonomyServiceError(
+      "Les attributs Couleur et Finition ne peuvent pas etre supprimes.",
+    );
+  }
+
+  await prisma.productAttributeDefinition.delete({ where: { id: BigInt(id) } });
 }
 
 export async function listProductColorsService(session: StaffSession) {

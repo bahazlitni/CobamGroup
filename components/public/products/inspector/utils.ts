@@ -9,7 +9,6 @@ import {
   PublicProductSubcategoryLink,
   PublicSimpleProductInspector,
 } from "@/features/products/types";
-import { resolveFinish } from "@/lib/static_tables/finishes";
 
 export type DerivedColorOption = {
   key: string;
@@ -196,15 +195,17 @@ function getVariantFinishReference(
     return null;
   }
 
-  const resolved = resolveFinish(attribute.value);
-  const resolvedKey = resolved?.key ?? attribute.value;
-  const normalizedKey = normalizeLooseValue(resolvedKey);
+  const normalizedValue = normalizeLooseValue(attribute.value);
 
   return (
-    finishReferences.find((reference) => normalizeLooseValue(reference.key) === normalizedKey) ?? {
-      key: resolvedKey,
-      name: resolved?.label ?? attribute.value,
-      colorHex: resolved?.color ?? null,
+    finishReferences.find(
+      (reference) =>
+        normalizeLooseValue(reference.key) === normalizedValue ||
+        normalizeLooseValue(reference.name) === normalizedValue,
+    ) ?? {
+      key: normalizedValue,
+      name: attribute.value,
+      colorHex: null,
       imageUrl: null,
     }
   );
@@ -366,13 +367,16 @@ export function buildSpecialOptions(input: {
   const finishes = input.attributes
     .filter((attribute) => attribute.specialType === "FINISH")
     .map((attribute) => {
-      const resolved = resolveFinish(attribute.value);
-      const key = normalizeLooseValue(resolved?.key ?? attribute.value);
+      const key = normalizeLooseValue(attribute.value);
       return {
         key,
-        label: resolved?.label ?? attribute.value,
+        label: attribute.value,
         reference:
-          input.finishReferences.find((reference) => normalizeLooseValue(reference.key) === key) ??
+          input.finishReferences.find(
+            (reference) =>
+              normalizeLooseValue(reference.key) === key ||
+              normalizeLooseValue(reference.name) === key,
+          ) ??
           null,
       };
     });

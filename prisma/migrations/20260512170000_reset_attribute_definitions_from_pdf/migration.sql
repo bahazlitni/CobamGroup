@@ -1,0 +1,157 @@
+-- Reset product templates and rebuild attribute definitions from attributes.pdf.
+-- Product attributes keep their values; their definition links are restored when
+-- the stored attribute name matches one of the new definition keys.
+
+DELETE FROM "product_type_templates";
+
+ALTER SEQUENCE IF EXISTS "product_type_templates_id_seq" RESTART WITH 1;
+ALTER SEQUENCE IF EXISTS "product_type_attributes_id_seq" RESTART WITH 1;
+ALTER SEQUENCE IF EXISTS "product_attribute_groups_id_seq" RESTART WITH 1;
+
+UPDATE "product_attributes"
+SET "attribute_def_id" = NULL;
+
+DROP INDEX IF EXISTS "product_attribute_definitions_single_color_type_idx";
+DROP INDEX IF EXISTS "product_attribute_definitions_single_finish_type_idx";
+
+DELETE FROM "product_attribute_definitions";
+ALTER SEQUENCE IF EXISTS "product_attribute_definitions_id_seq" RESTART WITH 1;
+
+INSERT INTO "product_attribute_definitions" (
+  "key",
+  "label",
+  "unit",
+  "input_type",
+  "select_options",
+  "updated_at"
+)
+VALUES
+  ('collection', 'Collection / série', NULL, 'TEXT', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('model_reference', 'Référence modèle', NULL, 'TEXT', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('manufacturer_ref', 'Référence fabricant', NULL, 'TEXT', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('color', 'Couleur', NULL, 'COLOR', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('finish', 'Finition', NULL, 'FINISH', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('surface_finish', 'Finition de surface', NULL, 'FINISH', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('material', 'Matière', NULL, 'SELECT', ARRAY['Céramique', 'Porcelaine', 'Grès cérame', 'Inox', 'Granite', 'Résine', 'Acrylique', 'PVC', 'Laiton', 'Aluminium', 'Verre', 'Bois', 'MDF', 'Pierre', 'Marbre', 'Composite', 'Béton']::TEXT[], CURRENT_TIMESTAMP),
+  ('style', 'Style', NULL, 'SELECT', ARRAY['Moderne', 'Classique', 'Minimaliste', 'Industriel', 'Rustique', 'Contemporain', 'Design']::TEXT[], CURRENT_TIMESTAMP),
+  ('shape', 'Forme', NULL, 'SELECT', ARRAY['Rond', 'Carré', 'Rectangulaire', 'Ovale', 'Angle', 'Asymétrique']::TEXT[], CURRENT_TIMESTAMP),
+  ('room', 'Pièce / usage', NULL, 'SELECT', ARRAY['Salle de bain', 'Cuisine', 'WC', 'Douche', 'Extérieur', 'Jardin', 'Intérieur']::TEXT[], CURRENT_TIMESTAMP),
+  ('application_use', 'Usage', NULL, 'SELECT', ARRAY['Sol', 'Mur', 'Sol et mur', 'Douche', 'WC', 'Lavabo', 'Évier', 'Bain', 'Extérieur', 'Jardin', 'Évacuation', 'Alimentation eau']::TEXT[], CURRENT_TIMESTAMP),
+  ('installation_type', 'Type de pose', NULL, 'SELECT', ARRAY['À poser', 'Suspendu', 'À encastrer', 'Mural', 'Au sol', 'Sur plan', 'Sous plan', 'À coller', 'À visser', 'À clipser', 'Autoportant']::TEXT[], CURRENT_TIMESTAMP),
+  ('mounting_type', 'Fixation', NULL, 'SELECT', ARRAY['Mural', 'Plafond', 'À poser', 'À visser', 'À coller', 'À encastrer', 'Sur meuble', 'Sur plan']::TEXT[], CURRENT_TIMESTAMP),
+  ('included_items', 'Éléments inclus', NULL, 'TEXT', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('compatibility_notes', 'Compatibilité', NULL, 'TEXT', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('set_pieces', 'Nombre de pièces', 'pcs', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('width_cm', 'Largeur', 'cm', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('height_cm', 'Hauteur', 'cm', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('depth_cm', 'Profondeur', 'cm', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('length_cm', 'Longueur', 'cm', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('thickness_mm', 'Épaisseur', 'mm', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('diameter_mm', 'Diamètre', 'mm', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('size_label', 'Format affiché', NULL, 'TEXT', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('dimensions_text', 'Dimensions', NULL, 'TEXT', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('weight_kg', 'Poids', 'kg', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('capacity_l', 'Capacité', 'L', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('tile_type', 'Type de revêtement', NULL, 'SELECT', ARRAY['Grès cérame', 'Faïence', 'Mosaïque', 'Décor', 'Listel', 'Plinthe', 'Baguette', 'Cabochon', 'Pavé']::TEXT[], CURRENT_TIMESTAMP),
+  ('tile_application', 'Destination carrelage', NULL, 'SELECT', ARRAY['Sol', 'Mur', 'Sol et mur', 'Extérieur', 'Piscine', 'Décor']::TEXT[], CURRENT_TIMESTAMP),
+  ('tile_size_cm', 'Format carrelage', 'cm', 'TEXT', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('look_effect', 'Aspect', NULL, 'SELECT', ARRAY['Marbre', 'Bois', 'Béton', 'Pierre', 'Ciment', 'Métal', 'Uni', 'Décoré', 'Terrazzo', 'Zellige']::TEXT[], CURRENT_TIMESTAMP),
+  ('rectified', 'Rectifié', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('anti_slip', 'Antidérapant', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('frost_resistant', 'Résistant au gel', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('box_coverage_m2', 'Surface par boîte', 'm²', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('pieces_per_box', 'Pièces par boîte', 'pcs', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('sheet_size_cm', 'Format plaque', 'cm', 'TEXT', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('profile_type', 'Type de profilé', NULL, 'SELECT', ARRAY['Profilé droit', 'Profilé angle', 'Profilé coin', 'Baguette', 'Plinthe', 'Listel', 'Nez de marche']::TEXT[], CURRENT_TIMESTAMP),
+  ('packaging_weight_kg', 'Conditionnement', 'kg', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('grout_color', 'Couleur du joint', NULL, 'COLOR', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('ready_to_use', 'Prêt à l’emploi', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('coverage_m2', 'Rendement', 'm²', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('product_use', 'Type de produit', NULL, 'SELECT', ARRAY['Colle', 'Joint', 'Pâte', 'Primaire', 'Nettoyant', 'Croisillon', 'Accessoire de pose']::TEXT[], CURRENT_TIMESTAMP),
+  ('wc_type', 'Type WC', NULL, 'SELECT', ARRAY['Suspendu', 'À poser', 'Monobloc', 'Pack WC', 'Bâti-support', 'Réservoir', 'Plaque de commande']::TEXT[], CURRENT_TIMESTAMP),
+  ('seat_type', 'Type d’abattant', NULL, 'SELECT', ARRAY['Standard', 'Slim', 'Soft-close', 'Thermodur', 'ABS', 'Enfant']::TEXT[], CURRENT_TIMESTAMP),
+  ('soft_close', 'Fermeture amortie', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('slim_seat', 'Design slim', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('rimless', 'Sans bride', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('outlet_type', 'Sortie évacuation', NULL, 'SELECT', ARRAY['Horizontale', 'Verticale', 'Universelle', 'Murale']::TEXT[], CURRENT_TIMESTAMP),
+  ('overflow', 'Trop-plein', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('tap_hole_count', 'Nombre de trous robinet', 'trous', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('basin_count', 'Nombre de vasques', 'vasques', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('seat_included', 'Abattant inclus', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('flush_volume_l', 'Volume de chasse', 'L', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('frame_height_cm', 'Hauteur du bâti', 'cm', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('wall_type', 'Type de mur', NULL, 'SELECT', ARRAY['Mur porteur', 'Cloison légère', 'Universel']::TEXT[], CURRENT_TIMESTAMP),
+  ('activation_type', 'Commande', NULL, 'SELECT', ARRAY['Simple touche', 'Double touche', 'Mécanique', 'Pneumatique', 'Électronique', 'Sans contact']::TEXT[], CURRENT_TIMESTAMP),
+  ('compatible_system', 'Système compatible', NULL, 'TEXT', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('number_of_buttons', 'Nombre de touches', 'touches', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('faucet_category', 'Type de robinetterie', NULL, 'SELECT', ARRAY['Mitigeur lavabo', 'Mitigeur vasque', 'Mitigeur douche', 'Mitigeur bain-douche', 'Mitigeur évier', 'Thermostatique', 'Robinet toilette', 'Corps encastré']::TEXT[], CURRENT_TIMESTAMP),
+  ('handle_type', 'Commande robinet', NULL, 'SELECT', ARRAY['Mitigeur mono-commande', 'Mélangeur 2 poignées', 'Thermostatique', 'Capteur', 'Bouton poussoir']::TEXT[], CURRENT_TIMESTAMP),
+  ('spout_type', 'Type de bec', NULL, 'SELECT', ARRAY['Fixe', 'Orientable', 'Haut', 'Bas', 'Mural', 'Cascade', 'Extractible']::TEXT[], CURRENT_TIMESTAMP),
+  ('spout_height_cm', 'Hauteur du bec', 'cm', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('spout_reach_cm', 'Portée du bec', 'cm', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('thermostatic', 'Thermostatique', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('diverter', 'Inverseur', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('number_of_holes', 'Nombre de trous', 'trous', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('number_of_outlets', 'Nombre de sorties', 'sorties', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('cartridge_diameter_mm', 'Diamètre cartouche', 'mm', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('water_saving', 'Économie d’eau', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('swivel_spout', 'Bec orientable', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('with_shower_kit', 'Kit douche inclus', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('shower_set_type', 'Type d’accessoire douche', NULL, 'SELECT', ARRAY['Colonne', 'Barre', 'Douchette', 'Flexible', 'Tête de douche', 'Bras de douche', 'Support douchette', 'Set complet']::TEXT[], CURRENT_TIMESTAMP),
+  ('spray_modes', 'Nombre de jets', 'jets', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('hose_length_cm', 'Longueur flexible', 'cm', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('with_mixer', 'Mitigeur inclus', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('shower_head_diameter_cm', 'Diamètre pomme haute', 'cm', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('opening_type', 'Type d’ouverture', NULL, 'SELECT', ARRAY['Coulissante', 'Pivotante', 'Battante', 'Pliante', 'Fixe', 'Walk-in']::TEXT[], CURRENT_TIMESTAMP),
+  ('glass_thickness_mm', 'Épaisseur verre', 'mm', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('glass_finish', 'Finition verre', NULL, 'SELECT', ARRAY['Transparent', 'Sérigraphié', 'Fumé', 'Dépoli', 'Miroir']::TEXT[], CURRENT_TIMESTAMP),
+  ('profile_finish', 'Finition profilés', NULL, 'FINISH', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('reversible', 'Réversible', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('tray_included', 'Receveur inclus', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('shower_column_included', 'Colonne douche incluse', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('shower_tray_type', 'Type receveur/caniveau', NULL, 'SELECT', ARRAY['Receveur', 'Caniveau', 'Grille', 'Bonde receveur']::TEXT[], CURRENT_TIMESTAMP),
+  ('drain_position', 'Position bonde', NULL, 'SELECT', ARRAY['Centrale', 'Latérale', 'Angle', 'Murale']::TEXT[], CURRENT_TIMESTAMP),
+  ('bathtub_type', 'Type de baignoire', NULL, 'SELECT', ARRAY['Droite', 'Îlot', 'Angle', 'Balnéo', 'Acrylique', 'Hydromassage', 'Autoportante']::TEXT[], CURRENT_TIMESTAMP),
+  ('hydromassage', 'Hydromassage', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('jet_count', 'Nombre de jets', 'jets', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('support_included', 'Support inclus', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('panel_included', 'Jupe / tablier inclus', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('faucet_included', 'Robinetterie incluse', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('headrest_included', 'Repose-tête inclus', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('sink_material', 'Matière évier', NULL, 'SELECT', ARRAY['Granite', 'Inox', 'Céramique', 'Résine', 'Composite']::TEXT[], CURRENT_TIMESTAMP),
+  ('bowls_count', 'Nombre de bacs', 'bacs', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('drainer_side', 'Égouttoir', NULL, 'SELECT', ARRAY['Sans égouttoir', 'Gauche', 'Droite', 'Réversible']::TEXT[], CURRENT_TIMESTAMP),
+  ('predrilled_holes', 'Trous prépercés', 'trous', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('furniture_type', 'Type de meuble', NULL, 'SELECT', ARRAY['Meuble sous-vasque', 'Colonne', 'Armoire', 'Élément bas', 'Tablette', 'Plan vasque', 'Miroir']::TEXT[], CURRENT_TIMESTAMP),
+  ('drawers_count', 'Nombre de tiroirs', 'tiroirs', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('doors_count', 'Nombre de portes', 'portes', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('basin_included', 'Vasque incluse', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('mirror_included', 'Miroir inclus', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('lighting_included', 'Éclairage inclus', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('soft_close_drawers', 'Fermeture douce', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('mirror_type', 'Type de miroir', NULL, 'SELECT', ARRAY['Simple', 'LED', 'Armoire miroir', 'Avec tablette', 'Grossissant']::TEXT[], CURRENT_TIMESTAMP),
+  ('light_type', 'Type d’éclairage', NULL, 'SELECT', ARRAY['LED', 'Applique', 'Borne', 'Spot', 'Plafonnier', 'Mural']::TEXT[], CURRENT_TIMESTAMP),
+  ('power_w', 'Puissance', 'W', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('ip_rating', 'Indice IP', NULL, 'TEXT', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('color_temperature_k', 'Température couleur', 'K', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('accessory_type', 'Type d’accessoire', NULL, 'SELECT', ARRAY['Porte-serviette', 'Porte-papier', 'Porte-savon', 'Porte-verre', 'Brosse WC', 'Patère', 'Distributeur', 'Bonde', 'Siphon', 'Vidage', 'Jupe', 'Repose-tête']::TEXT[], CURRENT_TIMESTAMP),
+  ('connection_size', 'Dimension raccord', NULL, 'TEXT', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('connection_type', 'Type de raccord', NULL, 'SELECT', ARRAY['Mâle', 'Femelle', 'Mâle/Femelle', 'À coller', 'À visser', 'À compression', 'Flexible']::TEXT[], CURRENT_TIMESTAMP),
+  ('pipe_diameter_mm', 'Diamètre tuyau', 'mm', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('angle_degrees', 'Angle', '°', 'NUMBER', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('thread_size', 'Filetage', NULL, 'TEXT', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('fitting_type', 'Type de raccord', NULL, 'SELECT', ARRAY['Coude', 'Té', 'Réduction', 'Bouchon', 'Manchon', 'Raccord droit', 'Clapet', 'Collier', 'Flexible']::TEXT[], CURRENT_TIMESTAMP),
+  ('door_type', 'Type de porte', NULL, 'SELECT', ARRAY['Intérieure', 'Extérieure', 'Châssis', 'Coulissante', 'Battante']::TEXT[], CURRENT_TIMESTAMP),
+  ('opening_direction', 'Sens d’ouverture', NULL, 'SELECT', ARRAY['Gauche', 'Droite', 'Réversible', 'Coulissant']::TEXT[], CURRENT_TIMESTAMP),
+  ('frame_included', 'Châssis inclus', NULL, 'BOOLEAN', ARRAY[]::TEXT[], CURRENT_TIMESTAMP),
+  ('building_material_type', 'Type de matériau', NULL, 'SELECT', ARRAY['Brique', 'Grillage', 'Balustrade', 'Borne', 'Banquette', 'Pierre', 'Fer']::TEXT[], CURRENT_TIMESTAMP);
+
+UPDATE "product_attributes" product_attribute
+SET
+  "attribute_def_id" = definition."id",
+  "name" = definition."key",
+  "label" = COALESCE(NULLIF(product_attribute."label", ''), definition."label"),
+  "unit" = definition."unit",
+  "input_type" = definition."input_type"
+FROM "product_attribute_definitions" definition
+WHERE lower(product_attribute."name") = lower(definition."key");

@@ -3,10 +3,7 @@ import {
   buildDuplicateAttributeKindMessage,
   findDuplicateAttributeKind,
 } from "@/features/products/attribute-kinds";
-import {
-  normalizeProductAttributeKind,
-} from "@/lib/static_tables/attributes";
-import { normalizeProductBrandValue as normalizeProductBrandString } from "@/lib/static_tables/brands";
+import { normalizeProductAttributeKind } from "@/features/products/attribute-definitions";
 import { DESCRIPTION_SEO_MAX_LENGTH } from "@/lib/seo-description";
 import { PRODUCT_LIFECYCLE_VALUES } from "@/features/products/lifecycle";
 import {
@@ -79,11 +76,7 @@ function parseOptionalIntegerArray(value: unknown, fieldName: string) {
   });
 }
 
-function parseOptionalLimitedString(
-  value: unknown,
-  fieldName: string,
-  maxLength: number,
-) {
+function parseOptionalLimitedString(value: unknown, fieldName: string, maxLength: number) {
   const normalized = parseOptionalString(value);
   if (normalized && normalized.length > maxLength) {
     throw new SingleProductsValidationError(
@@ -93,11 +86,7 @@ function parseOptionalLimitedString(
   return normalized;
 }
 
-function parseRequiredLimitedString(
-  value: unknown,
-  fieldName: string,
-  maxLength: number,
-) {
+function parseRequiredLimitedString(value: unknown, fieldName: string, maxLength: number) {
   const normalized = parseRequiredString(value, fieldName);
   if (normalized.length > maxLength) {
     throw new SingleProductsValidationError(
@@ -119,11 +108,7 @@ function parseNonNegativeInteger(value: unknown, fieldName: string, fallback = 0
   return parsed;
 }
 
-function parseDecimalString(
-  value: unknown,
-  fieldName: string,
-  fallback: string | null,
-) {
+function parseDecimalString(value: unknown, fieldName: string, fallback: string | null) {
   if (value == null || value === "") {
     return fallback;
   }
@@ -228,7 +213,10 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
       isRequired: parseOptionalBoolean(attributeRecord.isRequired),
       isFilterable: parseOptionalBoolean(attributeRecord.isFilterable),
       groupName: parseOptionalString(attributeRecord.groupName),
-      groupSortOrder: parseOptionalInteger(attributeRecord.groupSortOrder, "attribute.groupSortOrder"),
+      groupSortOrder: parseOptionalInteger(
+        attributeRecord.groupSortOrder,
+        "attribute.groupSortOrder",
+      ),
       sortOrder: parseOptionalInteger(attributeRecord.sortOrder, "attribute.sortOrder", index),
     };
   });
@@ -256,18 +244,11 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
     name,
     displayName: parseRequiredLimitedString(record.displayName ?? name, "displayName", 255),
     description: parseOptionalString(record.description),
-    shortDescription: parseOptionalLimitedString(
-      record.shortDescription,
-      "shortDescription",
-      500,
-    ),
+    shortDescription: parseOptionalLimitedString(record.shortDescription, "shortDescription", 500),
     titleSeo: parseOptionalLimitedString(record.titleSeo, "titleSeo", 60),
     descriptionSeo: parseOptionalDescriptionSeo(record.descriptionSeo, "descriptionSeo"),
     guaranteeMonths: parseNonNegativeInteger(record.guaranteeMonths, "guaranteeMonths"),
-    brand:
-      record.brand == null || record.brand === ""
-        ? null
-        : normalizeProductBrandString(String(record.brand)),
+    brand: parseOptionalString(record.brand),
     lifecycle,
     visibleEcommerce: parseOptionalBoolean(record.visibleEcommerce, defaultVisible),
     visibleVitrine: parseOptionalBoolean(record.visibleVitrine, defaultVisible),
@@ -289,11 +270,7 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
       "stockVisibility",
     ),
     basePriceTtcTnd: parseDecimalString(record.basePriceTtcTnd, "basePriceTtcTnd", null),
-    currentPriceTtcTnd: parseDecimalString(
-      record.currentPriceTtcTnd,
-      "currentPriceTtcTnd",
-      null,
-    ),
+    currentPriceTtcTnd: parseDecimalString(record.currentPriceTtcTnd, "currentPriceTtcTnd", null),
     vatRate: parseDecimalString(record.vatRate, "vatRate", "19.000") ?? "19.000",
     priceVisibility: parseEnumValue(
       record.priceVisibility ?? "AUTO",
@@ -311,9 +288,7 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
         : (() => {
             const parsedId = Number(datasheet.id);
             if (!Number.isInteger(parsedId) || parsedId <= 0) {
-              throw new SingleProductsValidationError(
-                "Identifiant de fiche technique invalide.",
-              );
+              throw new SingleProductsValidationError("Identifiant de fiche technique invalide.");
             }
 
             return {
@@ -366,9 +341,7 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
         sizeBytes: mediaRecord.sizeBytes == null ? null : String(mediaRecord.sizeBytes),
         url: typeof mediaRecord.url === "string" ? mediaRecord.url : "",
         thumbnailUrl:
-          typeof mediaRecord.thumbnailUrl === "string"
-            ? mediaRecord.thumbnailUrl
-            : null,
+          typeof mediaRecord.thumbnailUrl === "string" ? mediaRecord.thumbnailUrl : null,
       };
     }),
     attributes: parsedAttributes,

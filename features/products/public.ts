@@ -6,11 +6,7 @@ import {
   formatProductAttributeKind,
   getProductAttributeUnit,
   normalizeProductAttributeKind,
-  resolveProductAttribute,
-} from "@/lib/static_tables/attributes";
-import { formatProductBrandValue } from "@/lib/static_tables/brands";
-import { COLORS } from "@/lib/static_tables/colors";
-import { resolveFinish, resolveFinishURL } from "@/lib/static_tables/finishes";
+} from "@/features/products/attribute-definitions";
 import { rankPublicProductSearchRows } from "./search";
 import { productBrandLabel, richTextDescriptionToString } from "./model-b-compat";
 import type {
@@ -360,7 +356,7 @@ function isPublicSingleProduct(product: PublicProductRecord) {
 }
 
 function getBrandName(brand: { name: string } | null | undefined) {
-  return formatProductBrandValue(productBrandLabel(brand));
+  return productBrandLabel(brand);
 }
 
 function getProductDescription(record: {
@@ -428,7 +424,6 @@ function mapIndexSubcategory(record: {
 
 function getAttributePresentation(attribute: PublicProductRecord["attributes"][number]) {
   const canonicalKind = normalizeProductAttributeKind(attribute.name);
-  const resolvedAttribute = resolveProductAttribute(attribute.name);
   const normalizedName = attribute.name.trim().toLowerCase();
 
   return {
@@ -437,25 +432,16 @@ function getAttributePresentation(attribute: PublicProductRecord["attributes"][n
     name: attribute.label || formatProductAttributeKind(attribute.name) || attribute.name,
     unit: attribute.unit ?? getProductAttributeUnit(attribute.name),
     specialType:
-      normalizedName === "finish" ||
-      attribute.inputType === "FINISH" ||
-      resolvedAttribute?.key === "FINISH"
+      normalizedName === "finish" || attribute.inputType === "FINISH"
         ? ("FINISH" as const)
-        : normalizedName === "color" ||
-            attribute.inputType === "COLOR" ||
-            resolvedAttribute?.key === "COLOR"
+        : normalizedName === "color" || attribute.inputType === "COLOR"
           ? ("COLOR" as const)
           : null,
   };
 }
 
 function formatAttributeValue(attribute: PublicProductRecord["attributes"][number]) {
-  const normalizedName = attribute.name.trim().toLowerCase();
-  if (normalizedName !== "finish" && attribute.inputType !== "FINISH") {
-    return attribute.value;
-  }
-
-  return resolveFinish(attribute.value)?.label ?? attribute.value;
+  return attribute.value;
 }
 
 function mapVariantAttributes(product: PublicProductRecord): PublicProductInspectorAttribute[] {
@@ -623,8 +609,7 @@ function buildColorReferencesFromAttributes(
         continue;
       }
 
-      const color =
-        colorLookup.get(key) ?? COLORS.find((entry) => normalizeComparableValue(entry.key) === key);
+      const color = colorLookup.get(key);
 
       seen.set(key, {
         key: color?.key ?? key,
@@ -650,9 +635,7 @@ function buildFinishReferencesFromAttributes(
         continue;
       }
 
-      const resolvedFinish =
-        finishLookup.get(normalizeComparableValue(attribute.value)) ??
-        resolveFinish(attribute.value);
+      const resolvedFinish = finishLookup.get(normalizeComparableValue(attribute.value));
       const key = normalizeComparableValue(resolvedFinish?.key ?? attribute.value);
       if (seen.has(key)) {
         continue;
@@ -663,11 +646,9 @@ function buildFinishReferencesFromAttributes(
         name: resolvedFinish?.label ?? attribute.value,
         colorHex: resolvedFinish?.color ?? null,
         imageUrl:
-          resolvedFinish && "imageMediaId" in resolvedFinish && resolvedFinish.imageMediaId
+          resolvedFinish && resolvedFinish.imageMediaId
             ? buildPublicMediaUrl(resolvedFinish.imageMediaId, "thumbnail")
-            : resolvedFinish && !("imageMediaId" in resolvedFinish)
-              ? resolveFinishURL(resolvedFinish)
-              : null,
+            : null,
       });
     }
   }

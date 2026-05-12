@@ -42,6 +42,7 @@ export type ProductAttributeInputDto = {
   value: string;
   unit?: string | null;
   inputType?: ProductTypeAttributeInputType;
+  selectOptions?: string[];
   isRequired?: boolean;
   isFilterable?: boolean;
   groupName?: string | null;
@@ -68,11 +69,13 @@ export type ProductVariantInputDto = ProductEditFieldsDto & {
 
 export type ProductTypeAttributeOptionDto = {
   id: number;
+  attributeDefinitionId: number;
   groupId: number | null;
   name: string;
   label: string;
   unit: string | null;
   inputType: ProductTypeAttributeInputType;
+  selectOptions: string[];
   isRequired: boolean;
   isFilterable: boolean;
   groupName: string | null;
@@ -89,6 +92,8 @@ export type ProductTypeOptionDto = {
   slug: string;
   description: string | null;
   sortOrder: number;
+  hasColor?: boolean;
+  hasFinish?: boolean;
   presetTags: string;
   presetSubcategoryIds: number[];
   presetStockUnit: StockUnit | null;

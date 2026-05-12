@@ -516,7 +516,7 @@ function ArticleEditPageContent() {
                 onChange={(event) =>
                   editor.setField("focusKeyword", event.target.value)
                 }
-                placeholder="mot-cle-principal"
+                placeholder="mot-clé-principal"
                 disabled={!canEditArticle}
                 fullWidth
               />

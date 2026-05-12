@@ -1,9 +1,18 @@
 import type { ProductAttributeInputDto } from "./types";
 import {
-  PRODUCT_ATTRIBUTE_KINDS,
   enumProductAttributKindToLabel,
   normalizeProductAttributeKind,
-} from "@/lib/static_tables/attributes";
+} from "@/features/products/attribute-definitions";
+
+function isRepeatableSpecialAttribute(attribute: ProductAttributeInputDto) {
+  const normalizedKind = normalizeProductAttributeKind(attribute.name ?? attribute.kind);
+  return (
+    normalizedKind === "color" ||
+    normalizedKind === "finish" ||
+    attribute.inputType === "COLOR" ||
+    attribute.inputType === "FINISH"
+  );
+}
 
 export function findDuplicateAttributeKind(
   attributes: readonly ProductAttributeInputDto[],
@@ -11,7 +20,15 @@ export function findDuplicateAttributeKind(
   const seen = new Set<string>();
 
   for (const attribute of attributes) {
+    if (isRepeatableSpecialAttribute(attribute)) {
+      continue;
+    }
+
     const normalizedKind = normalizeProductAttributeKind(attribute.name ?? attribute.kind);
+    if (!normalizedKind) {
+      continue;
+    }
+
     if (seen.has(normalizedKind)) {
       return attribute.name ?? attribute.kind;
     }
@@ -26,15 +43,9 @@ export function getAvailableAttributeKinds(
   attributes: readonly ProductAttributeInputDto[],
   currentIndex?: number,
 ) {
-  const usedKinds = new Set(
-    attributes
-      .filter((_, index) => index !== currentIndex)
-      .map((attribute) => normalizeProductAttributeKind(attribute.name ?? attribute.kind)),
-  );
-
-  return PRODUCT_ATTRIBUTE_KINDS.filter(
-    (kind) => !usedKinds.has(kind),
-  );
+  void attributes;
+  void currentIndex;
+  return [];
 }
 
 export function getNextAvailableAttributeKind(

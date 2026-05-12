@@ -1,6 +1,4 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { PublicProductFinishReference } from "@/features/products/types";
-import { Finish } from "@/lib/static_tables/finishes";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { DerivedFinishOption } from "./utils";
@@ -75,6 +73,7 @@ export default function FinishesList({onSelect, activeKey, finishes}: FinishesLi
         <div className="flex flex-wrap gap-4">
         {finishes.map((finish: DerivedFinishOption) => (
             <FinishBlob
+              key={finish.key}
               option={finish}
               active={activeKey !== undefined && activeKey === finish.key}
               onClick={() => onSelect?.(finish.key)}

@@ -68,11 +68,11 @@ export default function SeoChecks({
   addCheck("Titre entre 35 et 60 caracteres", titleLength >= 35 && titleLength <= 60, 10);
   addCheck("Meta description entre 120 et 160 caracteres", descLength >= 120 && descLength <= 160, 10);
   addCheck("Contenu d'au moins 600 mots", wordCount >= 600, 15);
-  addCheck("Mot-cle present dans le titre", keywordInTitle, 10);
-  addCheck("Mot-cle present dans la meta description", keywordInDescription, 10);
-  addCheck("Mot-cle present dans le slug", keywordInSlug, 5);
-  addCheck("Mot-cle present dans l'intro", keywordInFirstParagraph, 10);
-  addCheck("Densite du mot-cle entre 1% et 1,5%", keywordDensity >= 1 && keywordDensity <= 1.5, 10);
+  addCheck("Mot-clé present dans le titre", keywordInTitle, 10);
+  addCheck("Mot-clé present dans la meta description", keywordInDescription, 10);
+  addCheck("Mot-clé present dans le slug", keywordInSlug, 5);
+  addCheck("Mot-clé present dans l'intro", keywordInFirstParagraph, 10);
+  addCheck("Densite du mot-clé entre 1% et 1,5%", keywordDensity >= 1 && keywordDensity <= 1.5, 10);
   addCheck("Slug propre et en minuscules", !!slug && slug === slug.toLowerCase() && !/\s/.test(slug), 5);
 
   const maxScore = 85;
@@ -122,7 +122,7 @@ export default function SeoChecks({
             Nombre de mots : <span className="font-semibold">{wordCount}</span>
           </p>
           <p>
-            Occurrences du mot-cle :{" "}
+            Occurrences du mot-clé :{" "}
             <span className="font-semibold">{keywordOccurrences}</span>
           </p>
           <p>

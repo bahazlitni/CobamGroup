@@ -3,7 +3,6 @@ import Link from "next/link";
 import SectionHeader from "@/components/ui/custom/SectionHeader";
 import BrandSlider from "@/components/ui/custom/BrandSlider";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
-import { PRODUCT_BRANDS } from "@/lib/static_tables/brands";
 import { cn } from "@/lib/utils";
 import { PremiumReveal } from "@/components/ui/custom/PremiumReveal";
 import { PremiumImageWrapper } from "@/components/ui/custom/PremiumImageWrapper";
@@ -12,8 +11,8 @@ import ParallaxImage from "@/components/ui/custom/ParallaxImage";
 import ScrollRevealText from "@/components/ui/custom/ScrollRevealText";
 import VelocityMarquee from "@/components/ui/custom/VelocityMarquee";
 import { listPublicArticles } from "@/features/articles/public";
+import { listPublicProductBrandOrganizations } from "@/features/organizations/public";
 import { listPublicMegaMenuProductCategories } from "@/features/product-categories/public";
-import { listPublicCollections } from "@/features/product-packs/public";
 import { ArrowRight } from "lucide-react";
 import ShowroomCard from "@/components/ui/custom/ShowroomCard";
 import { Metadata } from "next";
@@ -36,10 +35,10 @@ const stats = [
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [articles, allCategories, collections] = await Promise.all([
+  const [articles, allCategories, productBrands] = await Promise.all([
     listPublicArticles(),
     listPublicMegaMenuProductCategories(),
-    listPublicCollections(),
+    listPublicProductBrandOrganizations(),
   ]);
 
   // Extract a curated set of Categories for "Les Univers"
@@ -110,7 +109,7 @@ export default async function Home() {
 
 
           <PremiumReveal delay={0.9} direction="up" blur className="mt-20 w-full">
-            <BrandSlider brands={PRODUCT_BRANDS} />
+            <BrandSlider brands={productBrands} />
           </PremiumReveal>
         </div>
       </section>
@@ -121,7 +120,7 @@ export default async function Home() {
       <section id="section-manifesto" className="relative border-b border-cobam-quill-grey/30 bg-cobam-light-bg py-20 sm:py-24">
         <div className="absolute top-1/4 w-full opacity-[0.03] pointer-events-none z-0">
           <VelocityMarquee baseVelocity={1.5} className="text-[12rem] uppercase font-playfair text-[#14202e]">
-            L'architecture des matières — Cobam Group —
+            L&apos;architecture des matières — Cobam Group —
           </VelocityMarquee>
         </div>
         <div className="mx-auto max-w-7xl px-6 md:px-12 relative z-10">
@@ -132,12 +131,12 @@ export default async function Home() {
                   className="text-4xl leading-tight sm:text-5xl lg:text-6xl"
                   style={{ fontFamily: "var(--font-playfair), serif" }}
                 >
-                  Le luxe réside dans <br /> l'exigence du détail.
+                  Le luxe réside dans <br /> l&apos;exigence du détail.
                 </h2>
                 <div className="mt-7 h-[1px] w-16 bg-cobam-water-blue" />
                 <p className="mt-7 max-w-lg text-lg leading-relaxed text-cobam-carbon-grey">
-                  Cobam Group est le partenaire de référence pour l'aménagement et
-                  la décoration d'espaces de prestige en Tunisie. Depuis des
+                  Cobam Group est le partenaire de référence pour l&apos;aménagement et
+                  la décoration d&apos;espaces de prestige en Tunisie. Depuis des
                   décennies, nous sélectionnons des matériaux exceptionnels.
                 </p>
               </PremiumReveal>
@@ -146,7 +145,7 @@ export default async function Home() {
             <div className="lg:w-1/2 lg:pt-16 overflow-x-hidden">
               <PremiumReveal direction="left" delay={0.2} blur>
                 <div className="grid grid-cols-2 gap-x-8 gap-y-16">
-                  {stats.map((stat, i) => (
+                  {stats.map((stat) => (
                     <div key={stat.label} className="border-l border-cobam-quill-grey pl-6 transition-colors hover:border-cobam-water-blue bg-cobam-light-bg/80 backdrop-blur-sm py-4">
                       <p className="text-4xl font-light text-cobam-dark-blue">{stat.value}</p>
                       <p className="mt-2 text-xs uppercase tracking-[0.2em] text-cobam-carbon-grey">
@@ -273,11 +272,11 @@ export default async function Home() {
               <PremiumReveal blur delay={0.2} direction="up">
                 <div className="space-y-10">
                   <p className="text-2xl sm:text-3xl leading-relaxed text-[#14202e] font-normal">
-                    Depuis 1994, Cobam Group orchestre l'excellence architecturale en Tunisie.
+                    Depuis 1994, Cobam Group orchestre l&apos;excellence architecturale en Tunisie.
                   </p>
                   <p className="text-lg leading-relaxed max-w-xl">
                     Notre mission est de transformer chaque espace en un sanctuaire de raffinement.
-                    De la céramique d'avant-garde aux systèmes de confort thermique les plus sophistiqués,
+                    De la céramique d&apos;avant-garde aux systèmes de confort thermique les plus sophistiqués,
                     notre catalogue est une invitation à la perfection technique.
                   </p>
                 </div>
@@ -382,7 +381,7 @@ export default async function Home() {
             ) : (
               <div className="lg:col-span-2 py-20 bg-white/50 border border-dashed border-cobam-quill-grey text-center rounded-sm">
                 <p className="font-playfair text-2xl text-cobam-carbon-grey italic">Coming Soon...</p>
-                <p className="text-xs uppercase tracking-widest mt-2 text-cobam-carbon-grey/60">Le catalogue s'articule, nos récits arrivent.</p>
+                <p className="text-xs uppercase tracking-widest mt-2 text-cobam-carbon-grey/60">Le catalogue s&apos;articule, nos récits arrivent.</p>
               </div>
             )}
           </div>
@@ -400,7 +399,7 @@ export default async function Home() {
           <PremiumReveal blur>
             <h2 className="font-playfair text-4xl sm:text-6xl mb-12">Suivez notre inspiration</h2>
             <div className="flex justify-center gap-8 sm:gap-16 flex-wrap">
-              {COBAM_SOCIAL_LINKS.map((social, idx) => (
+              {COBAM_SOCIAL_LINKS.map((social) => (
                 <Magnetic key={social.label} strength={20}>
                   <a
                     href={social.href}

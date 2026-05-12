@@ -1,5 +1,5 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { resolveColorHex } from "@/lib/static_tables/colors";
+import { resolveColorHex } from "@/lib/color-values";
 import { cn } from "@/lib/utils";
 import { DerivedColorOption } from "./utils";
 

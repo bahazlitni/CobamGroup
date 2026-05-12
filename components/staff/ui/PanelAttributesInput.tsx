@@ -2,20 +2,19 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { PanelAutoCompleteInput, StaffField, StaffSearchSelect, StaffSelect } from ".";
+import { StaffField, StaffSearchSelect, StaffSelect } from ".";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import PanelInput from "./PanelInput";
 import {
-  formatProductAttributeKind,
-  getAttributeNameSuggestions,
-  normalizeProductAttributeKind,
-} from "@/lib/static_tables/attributes";
-import { getSizeNameSuggestions } from "@/lib/static_tables/sizes";
-import {
+  listProductAttributeDefinitionsClient,
   listProductColorsClient,
   listProductFinishesClient,
 } from "@/features/product-taxonomy/client";
-import type { ProductColorDto, ProductFinishDto } from "@/features/product-taxonomy/types";
+import type {
+  ProductAttributeDefinitionDto,
+  ProductColorDto,
+  ProductFinishDto,
+} from "@/features/product-taxonomy/types";
 import type { ProductAttributeInputDto } from "@/features/products/types";
 
 interface AttributeCardProps {
@@ -27,6 +26,9 @@ interface AttributeCardProps {
   canRemove?: boolean;
   colorOptions?: ProductColorDto[];
   finishOptions?: ProductFinishDto[];
+  attributeDefinitions?: ProductAttributeDefinitionDto[];
+  selectedAttributeDefIds?: Set<number>;
+  isLoadingAttributeDefinitions?: boolean;
   isLoadingSpecialOptions?: boolean;
 }
 
@@ -44,20 +46,6 @@ type AttributeGroup = {
 
 function getAttributeName(attribute: ProductAttributeInputDto) {
   return attribute.name ?? attribute.kind;
-}
-
-function getAttributeSuggestions(name: string, value: string): string[] {
-  switch (name.trim().toLowerCase()) {
-    case "size":
-      return getSizeNameSuggestions(value).map(String);
-    default:
-      return [];
-  }
-}
-
-function shouldAutocompleteValue(attribute: ProductAttributeInputDto) {
-  const name = getAttributeName(attribute).trim().toLowerCase();
-  return name === "size";
 }
 
 function isColorAttribute(attribute: ProductAttributeInputDto) {
@@ -114,7 +102,72 @@ function buildFinishImageUrl(finish: ProductFinishDto | null) {
 
 function getDisplayLabel(attribute: ProductAttributeInputDto) {
   const name = getAttributeName(attribute);
-  return attribute.label || formatProductAttributeKind(name) || name;
+  return attribute.label || name;
+}
+
+function describeAttributeDefinition(definition: ProductAttributeDefinitionDto) {
+  return [
+    definition.key,
+    definition.inputType === "TEXT" ? null : definition.inputType,
+    definition.unit ? `Unite: ${definition.unit}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function applyAttributeDefinition(
+  attribute: ProductAttributeInputDto,
+  definition: ProductAttributeDefinitionDto,
+): ProductAttributeInputDto {
+  const isSameDefinition = attribute.attributeDefId === definition.id;
+
+  return {
+    ...attribute,
+    attributeDefId: definition.id,
+    kind: definition.key,
+    name: definition.key,
+    label: definition.label,
+    value: isSameDefinition ? attribute.value : "",
+    unit: definition.unit,
+    inputType: definition.inputType,
+    selectOptions: definition.selectOptions,
+  };
+}
+
+function clearAttributeDefinition(attribute: ProductAttributeInputDto): ProductAttributeInputDto {
+  return {
+    ...attribute,
+    attributeDefId: null,
+    kind: "",
+    name: "",
+    label: "",
+    value: "",
+    unit: null,
+    inputType: "TEXT",
+    selectOptions: [],
+  };
+}
+
+function findAttributeDefinitionForAttribute(
+  attribute: ProductAttributeInputDto,
+  attributeDefinitions: ProductAttributeDefinitionDto[],
+) {
+  if (attribute.attributeDefId != null) {
+    return (
+      attributeDefinitions.find((definition) => definition.id === attribute.attributeDefId) ?? null
+    );
+  }
+
+  const normalizedName = getAttributeName(attribute).trim().toLowerCase();
+  if (!normalizedName) {
+    return null;
+  }
+
+  return (
+    attributeDefinitions.find(
+      (definition) => definition.key.trim().toLowerCase() === normalizedName,
+    ) ?? null
+  );
 }
 
 function getAttributeGroupName(attribute: ProductAttributeInputDto) {
@@ -171,15 +224,7 @@ function AttributeValueInput({
   finishOptions: ProductFinishDto[];
   isLoadingSpecialOptions: boolean;
 }) {
-  const name = getAttributeName(attribute);
   const value = attribute.value ?? "";
-  const suggestions = useMemo(
-    () =>
-      getAttributeSuggestions(name, value.trim())
-        .filter((suggestion) => suggestion !== value)
-        .slice(0, 8),
-    [name, value],
-  );
   const selectedColor = findSelectedColor(colorOptions, value);
   const selectedFinish = findSelectedFinish(finishOptions, value);
 
@@ -209,6 +254,7 @@ function AttributeValueInput({
           options={colorOptions.map((color) => ({
             value: color.label,
             label: color.label,
+            description: color.key,
           }))}
         />
       </div>
@@ -255,6 +301,7 @@ function AttributeValueInput({
           options={finishOptions.map((finish) => ({
             value: finish.label,
             label: finish.label,
+            description: finish.key,
           }))}
         />
       </div>
@@ -281,19 +328,23 @@ function AttributeValueInput({
     );
   }
 
-  if (shouldAutocompleteValue(attribute)) {
+  if (attribute.inputType === "SELECT" && attribute.selectOptions?.length) {
     return (
-      <PanelAutoCompleteInput
+      <StaffSelect
         id={id}
         fullWidth
         value={value}
-        suggestions={suggestions}
+        emptyLabel="Aucune valeur"
         onValueChange={(nextValue) =>
           onChange({
             ...attribute,
             value: nextValue,
           })
         }
+        options={attribute.selectOptions.map((option) => ({
+          value: option,
+          label: option,
+        }))}
       />
     );
   }
@@ -323,9 +374,22 @@ function AttributeCard({
   canRemove = true,
   colorOptions = [],
   finishOptions = [],
+  attributeDefinitions = [],
+  selectedAttributeDefIds = new Set<number>(),
+  isLoadingAttributeDefinitions = false,
   isLoadingSpecialOptions = false,
 }: AttributeCardProps) {
-  const name = getAttributeName(attribute);
+  const attributeDefinitionOptions = useMemo(
+    () =>
+      attributeDefinitions.map((definition) => ({
+        value: String(definition.id),
+        label: definition.label,
+        description: describeAttributeDefinition(definition),
+        disabled:
+          selectedAttributeDefIds.has(definition.id) && definition.id !== attribute.attributeDefId,
+      })),
+    [attribute.attributeDefId, attributeDefinitions, selectedAttributeDefIds],
+  );
 
   return (
     <div className="relative grid gap-4 rounded-lg border border-slate-300 bg-slate-50 p-4 md:grid-cols-[1fr_1fr_1.4fr]">
@@ -338,27 +402,25 @@ function AttributeCard({
             readOnly
           />
         ) : (
-          <PanelAutoCompleteInput
+          <StaffSearchSelect
             id={`attribute-name-${index}`}
-            value={name}
-            suggestions={getAttributeNameSuggestions(name)}
-            emitSuggestionValue
-            onValueChange={(nextName) => {
-              const normalizedKind = normalizeProductAttributeKind(nextName) || nextName;
-              const normalizedName =
-                normalizedKind.toLowerCase() === "color" ||
-                normalizedKind.toLowerCase() === "finish"
-                  ? normalizedKind.toLowerCase()
-                  : normalizedKind;
-              onChange({
-                ...attribute,
-                kind: normalizedName,
-                name: normalizedName,
-                label:
-                  attribute.label || formatProductAttributeKind(normalizedName) || normalizedName,
-              });
-            }}
             fullWidth
+            value={attribute.attributeDefId == null ? "" : String(attribute.attributeDefId)}
+            options={attributeDefinitionOptions}
+            emptyLabel="Choisir un attribut"
+            placeholder="Choisir un attribut"
+            searchPlaceholder="Rechercher un attribut..."
+            noResultsLabel="Aucune definition disponible"
+            disabled={isLoadingAttributeDefinitions}
+            onValueChange={(nextValue) => {
+              const definition =
+                attributeDefinitions.find((item) => String(item.id) === nextValue) ?? null;
+              onChange(
+                definition
+                  ? applyAttributeDefinition(attribute, definition)
+                  : clearAttributeDefinition(attribute),
+              );
+            }}
           />
         )}
       </StaffField>
@@ -513,12 +575,97 @@ export default function PanelAttributesInput({
 }: PanelAttributesInputProps) {
   const [colorOptions, setColorOptions] = useState<ProductColorDto[]>([]);
   const [finishOptions, setFinishOptions] = useState<ProductFinishDto[]>([]);
+  const [attributeDefinitions, setAttributeDefinitions] = useState<ProductAttributeDefinitionDto[]>(
+    [],
+  );
   const [hasLoadedColors, setHasLoadedColors] = useState(false);
   const [hasLoadedFinishes, setHasLoadedFinishes] = useState(false);
+  const [hasLoadedAttributeDefinitions, setHasLoadedAttributeDefinitions] = useState(false);
   const needsColors = useMemo(() => attributes.some(isColorAttribute), [attributes]);
   const needsFinishes = useMemo(() => attributes.some(isFinishAttribute), [attributes]);
+  const needsAttributeDefinitions = !lockKinds;
+  const selectedAttributeDefIds = useMemo(
+    () =>
+      new Set(
+        attributes
+          .map((attribute) => attribute.attributeDefId)
+          .filter((id): id is number => typeof id === "number"),
+      ),
+    [attributes],
+  );
+  const isLoadingAttributeDefinitions =
+    needsAttributeDefinitions && !hasLoadedAttributeDefinitions;
   const isLoadingSpecialOptions =
     (needsColors && !hasLoadedColors) || (needsFinishes && !hasLoadedFinishes);
+
+  useEffect(() => {
+    if (!needsAttributeDefinitions || hasLoadedAttributeDefinitions) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void listProductAttributeDefinitionsClient()
+      .then((items) => {
+        if (!cancelled) {
+          setAttributeDefinitions(items);
+        }
+      })
+      .catch((error: unknown) => {
+        console.error("Unable to load product attribute definitions.", error);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setHasLoadedAttributeDefinitions(true);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hasLoadedAttributeDefinitions, needsAttributeDefinitions]);
+
+  useEffect(() => {
+    if (lockKinds || !hasLoadedAttributeDefinitions || attributeDefinitions.length === 0) {
+      return;
+    }
+
+    let changed = false;
+    const nextAttributes = attributes.map((attribute) => {
+      if (attribute.attributeDefId != null) {
+        return attribute;
+      }
+
+      const definition = findAttributeDefinitionForAttribute(attribute, attributeDefinitions);
+      if (!definition) {
+        return attribute;
+      }
+
+      changed = true;
+      return {
+        ...attribute,
+        attributeDefId: definition.id,
+        kind: definition.key,
+        name: definition.key,
+        label: attribute.label || definition.label,
+        unit: definition.unit,
+        inputType: definition.inputType,
+        selectOptions: attribute.selectOptions?.length
+          ? attribute.selectOptions
+          : definition.selectOptions,
+      };
+    });
+
+    if (changed) {
+      onAttributesChange(nextAttributes);
+    }
+  }, [
+    attributeDefinitions,
+    attributes,
+    hasLoadedAttributeDefinitions,
+    lockKinds,
+    onAttributesChange,
+  ]);
 
   useEffect(() => {
     const shouldLoadColors = needsColors && !hasLoadedColors;
@@ -596,6 +743,9 @@ export default function PanelAttributesInput({
           canRemove={canRemoveAttributes}
           colorOptions={colorOptions}
           finishOptions={finishOptions}
+          attributeDefinitions={attributeDefinitions}
+          selectedAttributeDefIds={selectedAttributeDefIds}
+          isLoadingAttributeDefinitions={isLoadingAttributeDefinitions}
           isLoadingSpecialOptions={isLoadingSpecialOptions}
         />
       ))}
@@ -610,12 +760,15 @@ export default function PanelAttributesInput({
             onAttributesChange([
               ...attributes,
               {
+                attributeDefId: null,
                 kind: "",
                 name: "",
                 label: "",
                 value: "",
+                unit: null,
                 groupName: null,
                 inputType: "TEXT",
+                selectOptions: [],
                 isRequired: false,
                 isFilterable: false,
               },

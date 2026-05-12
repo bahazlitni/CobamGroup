@@ -3,7 +3,6 @@ import type { StaffSession } from "@/features/auth/types";
 import { canAccessProducts, canToggleProductLifecycle } from "@/features/products/access";
 import formatEnumLabel from "@/lib/formatEnumLabel";
 import { prisma } from "@/lib/server/db/prisma";
-import { formatProductBrandValue } from "@/lib/static_tables/brands";
 import {
   productBrandLabel,
   productLifecycleFromVisibility,
@@ -111,13 +110,13 @@ type AllProductsExportRecord = Prisma.ProductGetPayload<{
 
 function formatAllProductBrand(record: AllProductsListRecord) {
   if (record.kind !== "PACK") {
-    return formatProductBrandValue(productBrandLabel(record.brand));
+    return productBrandLabel(record.brand);
   }
 
   const brandLabels = [
     ...new Set(
       record.packLinesAsPack.flatMap((line) => {
-        const label = formatProductBrandValue(productBrandLabel(line.product.brand));
+        const label = productBrandLabel(line.product.brand);
         return label ? [label] : [];
       }),
     ),

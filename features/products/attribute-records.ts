@@ -2,7 +2,7 @@ import { ProductTypeAttributeInputType } from "@prisma/client";
 import {
   formatProductAttributeKind,
   normalizeProductAttributeKind,
-} from "@/lib/static_tables/attributes";
+} from "@/features/products/attribute-definitions";
 import type { ProductAttributeInputDto } from "./types";
 
 type ProductAttributeRecordLike = {
@@ -19,6 +19,9 @@ type ProductAttributeRecordLike = {
   groupName: string | null;
   groupSortOrder: number;
   sortOrder: number;
+  attributeDef?: {
+    selectOptions: string[];
+  } | null;
 };
 
 function normalizeAttributeName(value: string) {
@@ -59,6 +62,7 @@ export function mapProductAttributeRecord(
     value: attribute.value,
     unit: attribute.unit,
     inputType: attribute.inputType,
+    selectOptions: attribute.attributeDef?.selectOptions ?? [],
     isRequired: attribute.isRequired,
     isFilterable: attribute.isFilterable,
     groupName: attribute.groupName,

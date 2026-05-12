@@ -57,7 +57,9 @@ export default function StaffSearchSelect({
     }
 
     return options.filter((option) =>
-      option.label.toLowerCase().includes(normalizedQuery),
+      `${option.label} ${option.description ?? ""}`
+        .toLowerCase()
+        .includes(normalizedQuery),
     );
   }, [options, query]);
 
@@ -148,7 +150,14 @@ export default function StaffSearchSelect({
                     isSelected ? "bg-slate-100 text-cobam-dark-blue" : "",
                   )}
                 >
-                  <span className="truncate">{option.label}</span>
+                  <span className="min-w-0 flex-1 space-y-0.5">
+                    <span className="block truncate">{option.label}</span>
+                    {option.description ? (
+                      <span className="block truncate text-xs text-slate-400">
+                        {option.description}
+                      </span>
+                    ) : null}
+                  </span>
                   {isSelected ? (
                     <Check className="ml-3 h-4 w-4 shrink-0 text-cobam-water-blue" />
                   ) : null}

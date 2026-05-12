@@ -254,7 +254,7 @@ function flattenProductTypes(options: SingleProductFormOptionsDto) {
 
 function buildTemplateAttributes(productType: ProductTypeOptionDto): ProductAttributeInputDto[] {
   return productType.attributes.map((attribute) => ({
-    attributeDefId: attribute.id,
+    attributeDefId: attribute.attributeDefinitionId,
     attributeGroupId: attribute.groupId,
     kind: attribute.name,
     name: attribute.name,
@@ -262,6 +262,7 @@ function buildTemplateAttributes(productType: ProductTypeOptionDto): ProductAttr
     value: "",
     unit: attribute.unit,
     inputType: attribute.inputType,
+    selectOptions: attribute.selectOptions,
     isRequired: attribute.isRequired,
     isFilterable: attribute.isFilterable,
     groupName: attribute.groupName,

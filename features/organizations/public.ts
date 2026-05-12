@@ -83,6 +83,10 @@ export function listPublicPartnerOrganizations() {
   return listPublicOrganizations({ isPartner: true });
 }
 
+export function listPublicProductBrandOrganizations() {
+  return listPublicOrganizations({ isProductBrand: true });
+}
+
 export function listPublicReferenceOrganizations() {
   return listPublicOrganizations({ isReference: true });
 }

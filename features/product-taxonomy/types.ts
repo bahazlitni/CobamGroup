@@ -16,15 +16,36 @@ export type ProductTaxonomyAttributeGroupDto = {
   sortOrder: number;
 };
 
+export type ProductAttributeDefinitionDto = {
+  id: number;
+  key: string;
+  label: string;
+  unit: string | null;
+  inputType: ProductTypeAttributeInputType;
+  selectOptions: string[];
+};
+
+export type ProductAttributeDefinitionInput = {
+  key: string;
+  label: string;
+  unit: string | null;
+  inputType: ProductTypeAttributeInputType;
+  selectOptions: string[];
+};
+
 export type ProductTaxonomyAttributeDto = {
   id: number;
   productTypeId: number;
   attributeGroupId: number | null;
   attributeGroupName: string | null;
+  attributeDefinitionId: number;
+  definitionLabel: string;
   name: string;
   label: string;
+  labelOverride: string;
   unit: string | null;
   inputType: ProductTypeAttributeInputType;
+  selectOptions: string[];
   isRequired: boolean;
   isFilterable: boolean;
   sortOrder: number;
@@ -38,6 +59,8 @@ export type ProductTaxonomyTypeDto = {
   slug: string;
   description: string | null;
   sortOrder: number;
+  hasColor: boolean;
+  hasFinish: boolean;
   presetTags: string;
   presetSubcategoryIds: number[];
   presetStockUnit: StockUnit | null;
@@ -50,6 +73,7 @@ export type ProductTaxonomyTypeDto = {
 export type ProductTypesAdminDto = {
   groups: ProductTaxonomyGroupDto[];
   productTypes: ProductTaxonomyTypeDto[];
+  attributeDefinitions: ProductAttributeDefinitionDto[];
   productSubcategories?: ProductSubcategoryOptionDto[];
 };
 
@@ -65,6 +89,8 @@ export type ProductTaxonomyTypeInput = {
   slug: string;
   description: string | null;
   sortOrder?: number;
+  hasColor?: boolean;
+  hasFinish?: boolean;
   presetTags?: string;
   presetSubcategoryIds?: number[];
   presetStockUnit?: StockUnit | null;
@@ -82,10 +108,8 @@ export type ProductTaxonomyAttributeGroupInput = {
 export type ProductTaxonomyAttributeInput = {
   productTypeId: number;
   attributeGroupId: number | null;
-  name: string;
+  attributeDefinitionId: number;
   label: string;
-  unit: string | null;
-  inputType: ProductTypeAttributeInputType;
   isRequired: boolean;
   isFilterable: boolean;
   sortOrder: number;

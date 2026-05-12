@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { ProductTypeAttributeInputType, type StockUnit } from "@prisma/client";
+import { type StockUnit } from "@prisma/client";
 import { GripVertical, Layers3, Shapes, Tags } from "lucide-react";
 import { toast } from "sonner";
 import Loading from "@/components/staff/Loading";
@@ -9,7 +9,13 @@ import ProductSubcategoriesField from "@/components/staff/products/ProductSubcat
 import Panel from "@/components/staff/ui/Panel";
 import PanelField from "@/components/staff/ui/PanelField";
 import PanelInput from "@/components/staff/ui/PanelInput";
-import { StaffNotice, StaffPageHeader, StaffSelect, StaffTagInput } from "@/components/staff/ui";
+import {
+  StaffNotice,
+  StaffPageHeader,
+  StaffSearchSelect,
+  StaffSelect,
+  StaffTagInput,
+} from "@/components/staff/ui";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,11 +40,6 @@ import formatEnumLabel from "@/lib/formatEnumLabel";
 import { slugify } from "@/lib/slugify";
 import { cn } from "@/lib/utils";
 
-const ATTRIBUTE_INPUT_TYPES = Object.values(ProductTypeAttributeInputType).map((value) => ({
-  value,
-  label: value,
-}));
-
 type GroupFormState = {
   name: string;
   slug: string;
@@ -54,6 +55,8 @@ type ProductTypeFormState = {
   presetStockUnit: string;
   presetVatRate: string;
   presetGuaranteeMonths: string;
+  hasColor: boolean;
+  hasFinish: boolean;
 };
 
 type AttributeGroupFormState = {
@@ -64,10 +67,8 @@ type AttributeGroupFormState = {
 
 type AttributeFormState = {
   attributeGroupId: string;
-  name: string;
+  attributeDefinitionId: string;
   label: string;
-  unit: string;
-  inputType: ProductTypeAttributeInputType;
   isRequired: boolean;
   isFilterable: boolean;
   sortOrder: string;
@@ -91,6 +92,8 @@ function emptyProductTypeForm(): ProductTypeFormState {
     presetStockUnit: "",
     presetVatRate: "",
     presetGuaranteeMonths: "",
+    hasColor: false,
+    hasFinish: false,
   };
 }
 
@@ -105,10 +108,8 @@ function emptyAttributeGroupForm(): AttributeGroupFormState {
 function emptyAttributeForm(): AttributeFormState {
   return {
     attributeGroupId: "",
-    name: "",
+    attributeDefinitionId: "",
     label: "",
-    unit: "",
-    inputType: "TEXT",
     isRequired: false,
     isFilterable: false,
     sortOrder: "0",
@@ -131,6 +132,16 @@ type DropTarget = { id: number; position: DropPosition } | null;
 
 function splitTags(value: string) {
   return value.split(" ").filter((tag) => tag.trim() !== "");
+}
+
+function isSpecialTemplateAttribute(attribute: ProductTaxonomyAttributeDto) {
+  const key = attribute.name.trim().toLowerCase();
+  return key === "color" || key === "finish";
+}
+
+function isAutomaticTemplateAttributeDefinitionKey(key: string) {
+  const normalizedKey = key.trim().toLowerCase();
+  return normalizedKey === "color" || normalizedKey === "finish";
 }
 
 function moveItemById<T extends { id: number }>(
@@ -159,6 +170,7 @@ export default function ProductTypesAdminPage() {
   const [data, setData] = useState<ProductTypesAdminDto>({
     groups: [],
     productTypes: [],
+    attributeDefinitions: [],
     productSubcategories: [],
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -189,6 +201,80 @@ export default function ProductTypesAdminPage() {
         : (data.productTypes.find((item) => item.id === selectedProductTypeId) ?? null),
     [data.productTypes, selectedProductTypeId],
   );
+  const selectedAttributeDefinition = useMemo(
+    () =>
+      attributeForm.attributeDefinitionId
+        ? (data.attributeDefinitions.find(
+            (definition) => String(definition.id) === attributeForm.attributeDefinitionId,
+          ) ?? null)
+        : null,
+    [attributeForm.attributeDefinitionId, data.attributeDefinitions],
+  );
+  const isEditingSpecialAttribute =
+    editingAttributeId != null &&
+    selectedAttributeDefinition != null &&
+    isAutomaticTemplateAttributeDefinitionKey(selectedAttributeDefinition.key);
+  const attributeDefinitionOptions = useMemo(() => {
+    const usedDefinitionIds = new Set(
+      selectedProductType?.attributes
+        .filter((attribute) => attribute.id !== editingAttributeId)
+        .map((attribute) => attribute.attributeDefinitionId) ?? [],
+    );
+
+    return data.attributeDefinitions.map((definition) => ({
+      value: String(definition.id),
+      label: definition.label,
+      description: [
+        definition.key,
+        definition.unit,
+        definition.inputType === "TEXT" ? null : definition.inputType,
+        isAutomaticTemplateAttributeDefinitionKey(definition.key)
+          ? "Gere par les options Couleur/Finition"
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      disabled:
+        usedDefinitionIds.has(definition.id) ||
+        isAutomaticTemplateAttributeDefinitionKey(definition.key),
+    }));
+  }, [data.attributeDefinitions, editingAttributeId, selectedProductType]);
+  const selectedAttributeSections = useMemo(() => {
+    if (!selectedProductType) {
+      return [];
+    }
+
+    const sections: Array<{
+      key: string;
+      id: number | null;
+      name: string;
+      slug: string;
+      attributes: ProductTaxonomyAttributeDto[];
+    }> = selectedProductType.attributeGroups.map((group) => ({
+      key: `group:${group.id}`,
+      id: group.id,
+      name: group.name,
+      slug: group.slug,
+      attributes: selectedProductType.attributes.filter(
+        (attribute) => attribute.attributeGroupId === group.id,
+      ),
+    }));
+    const ungroupedAttributes = selectedProductType.attributes.filter(
+      (attribute) => attribute.attributeGroupId == null,
+    );
+
+    if (ungroupedAttributes.length > 0) {
+      sections.push({
+        key: "ungrouped",
+        id: null,
+        name: "Sans groupe",
+        slug: "",
+        attributes: ungroupedAttributes,
+      });
+    }
+
+    return sections;
+  }, [selectedProductType]);
 
   const groupedProductTypes = useMemo(() => {
     const groupOrder = new Map(
@@ -241,7 +327,7 @@ export default function ProductTypesAdminPage() {
         return nextData.productTypes[0]?.id ?? null;
       });
     } catch (loadError: unknown) {
-      setError(getErrorMessage(loadError, "Impossible de charger les types produit."));
+      setError(getErrorMessage(loadError, "Impossible de charger les modèles de produits."));
     } finally {
       setIsLoading(false);
     }
@@ -283,6 +369,8 @@ export default function ProductTypesAdminPage() {
       presetVatRate: productType.presetVatRate ?? "",
       presetGuaranteeMonths:
         productType.presetGuaranteeMonths == null ? "" : String(productType.presetGuaranteeMonths),
+      hasColor: productType.hasColor,
+      hasFinish: productType.hasFinish,
     });
   };
 
@@ -310,10 +398,8 @@ export default function ProductTypesAdminPage() {
     setAttributeForm({
       attributeGroupId:
         attribute.attributeGroupId == null ? "" : String(attribute.attributeGroupId),
-      name: attribute.name,
-      label: attribute.label,
-      unit: attribute.unit ?? "",
-      inputType: attribute.inputType,
+      attributeDefinitionId: String(attribute.attributeDefinitionId),
+      label: attribute.labelOverride,
       isRequired: attribute.isRequired,
       isFilterable: attribute.isFilterable,
       sortOrder: String(attribute.sortOrder),
@@ -364,6 +450,8 @@ export default function ProductTypesAdminPage() {
         slug: productTypeForm.slug,
         description: productTypeForm.description || null,
         sortOrder: existingProductType?.sortOrder ?? groupProductTypes.length,
+        hasColor: productTypeForm.hasColor,
+        hasFinish: productTypeForm.hasFinish,
         presetTags: productTypeForm.presetTags,
         presetSubcategoryIds: productTypeForm.presetSubcategoryIds.map(Number),
         presetStockUnit: productTypeForm.presetStockUnit
@@ -381,11 +469,11 @@ export default function ProductTypesAdminPage() {
         await updateProductTaxonomyEntityClient("productType", editingProductTypeId, payload);
       }
 
-      toast.success("Type produit enregistré.");
+      toast.success("Modèle de produit enregistré.");
       resetProductTypeForm();
       await loadData();
     } catch (saveError: unknown) {
-      toast.error(getErrorMessage(saveError, "Impossible d'enregistrer le type produit."));
+      toast.error(getErrorMessage(saveError, "Impossible d'enregistrer le modèle de produit."));
     } finally {
       setSavingKey(null);
     }
@@ -404,7 +492,9 @@ export default function ProductTypesAdminPage() {
         productTypeId: selectedProductType.id,
         name: attributeGroupForm.name,
         slug: attributeGroupForm.slug,
-        sortOrder: numberFromForm(attributeGroupForm.sortOrder),
+        sortOrder:
+          selectedProductType.attributeGroups.find((group) => group.id === editingAttributeGroupId)
+            ?.sortOrder ?? selectedProductType.attributeGroups.length,
       };
 
       if (editingAttributeGroupId == null) {
@@ -437,10 +527,8 @@ export default function ProductTypesAdminPage() {
         attributeGroupId: attributeForm.attributeGroupId
           ? Number(attributeForm.attributeGroupId)
           : null,
-        name: attributeForm.name,
+        attributeDefinitionId: Number(attributeForm.attributeDefinitionId),
         label: attributeForm.label,
-        unit: attributeForm.unit || null,
-        inputType: attributeForm.inputType,
         isRequired: attributeForm.isRequired,
         isFilterable: attributeForm.isFilterable,
         sortOrder: numberFromForm(attributeForm.sortOrder),
@@ -571,10 +659,10 @@ export default function ProductTypesAdminPage() {
         nextProductTypes.map((productType) => productType.id),
       );
       setData(nextData);
-      toast.success("Ordre des types produit mis a jour.");
+      toast.success("Ordre des modèles de produits mis a jour.");
     } catch (reorderError: unknown) {
       await loadData();
-      toast.error(getErrorMessage(reorderError, "Impossible de reordonner les types produit."));
+      toast.error(getErrorMessage(reorderError, "Impossible de reordonner les modèles de produits."));
     } finally {
       setIsReordering(false);
     }
@@ -582,7 +670,7 @@ export default function ProductTypesAdminPage() {
 
   return (
     <div className="space-y-6">
-      <StaffPageHeader eyebrow="Catalogue" title="Types produit" icon={Shapes} />
+      <StaffPageHeader eyebrow="Catalogue" title="Modèles de produits" icon={Shapes} />
 
       {isLoading ? (
         <div className="rounded-lg border border-dashed border-slate-300 px-4 py-8">
@@ -599,7 +687,7 @@ export default function ProductTypesAdminPage() {
       {!isLoading && !error ? (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.85fr)]">
           <div className="space-y-6">
-            <Panel pretitle="Groupes" title="Groupes de types produit">
+            <Panel pretitle="Groupes" title="Groupes de modèles de produits">
               <form onSubmit={saveGroup} className="grid gap-4 lg:grid-cols-[1fr_1fr_auto]">
                 <PanelField id="product-type-group-name" label="Nom">
                   <PanelInput
@@ -710,7 +798,7 @@ export default function ProductTypesAdminPage() {
               </div>
             </Panel>
 
-            <Panel pretitle="Modèles" title="Types produit">
+            <Panel pretitle="Modèles" title="Modèles de produits">
               <form onSubmit={saveProductType} className="grid gap-4 lg:grid-cols-2">
                 <PanelField id="product-type-name" label="Nom">
                   <PanelInput
@@ -780,7 +868,7 @@ export default function ProductTypesAdminPage() {
                 </PanelField>
                 <PanelField
                   id="product-type-preset-tags"
-                  label="Tags preconfigures"
+                  label="Tags préconfigurés"
                   className="lg:col-span-2"
                 >
                   <StaffTagInput
@@ -796,7 +884,7 @@ export default function ProductTypesAdminPage() {
                 </PanelField>
                 <ProductSubcategoriesField
                   id="product-type-preset-subcategories"
-                  label="Sous-categories preconfigurees"
+                  label="Sous-categories préconfigurées"
                   className="lg:col-span-2"
                   value={productTypeForm.presetSubcategoryIds}
                   options={data.productSubcategories ?? []}
@@ -812,7 +900,7 @@ export default function ProductTypesAdminPage() {
                     id="product-type-preset-stock-unit"
                     fullWidth
                     value={productTypeForm.presetStockUnit}
-                    emptyLabel="Ne pas preconfigurer"
+                    emptyLabel="Ne pas préconfigurer"
                     options={STOCK_UNIT_VALUES.map((value) => ({
                       value,
                       label: formatEnumLabel(value),
@@ -855,6 +943,32 @@ export default function ProductTypesAdminPage() {
                     }
                   />
                 </PanelField>
+                <div className="flex flex-wrap gap-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-3 lg:col-span-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                    <Checkbox
+                      checked={productTypeForm.hasColor}
+                      onCheckedChange={(checked) =>
+                        setProductTypeForm((current) => ({
+                          ...current,
+                          hasColor: checked === true,
+                        }))
+                      }
+                    />
+                    A une couleur
+                  </label>
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                    <Checkbox
+                      checked={productTypeForm.hasFinish}
+                      onCheckedChange={(checked) =>
+                        setProductTypeForm((current) => ({
+                          ...current,
+                          hasFinish: checked === true,
+                        }))
+                      }
+                    />
+                    A une finition
+                  </label>
+                </div>
                 <div className="flex flex-wrap items-center gap-3 lg:col-span-2">
                   <AnimatedUIButton type="submit" icon="save" loading={savingKey === "productType"}>
                     {editingProductTypeId == null ? "Ajouter" : "Enregistrer"}
@@ -983,7 +1097,10 @@ export default function ProductTypesAdminPage() {
           >
             {selectedProductType ? (
               <div className="space-y-6">
-                <form onSubmit={saveAttributeGroup} className="grid gap-3 md:grid-cols-3">
+                <form
+                  onSubmit={saveAttributeGroup}
+                  className="grid gap-3 md:grid-cols-[1fr_1fr_auto]"
+                >
                   <PanelField id="attribute-group-name" label="Groupe">
                     <PanelInput
                       id="attribute-group-name"
@@ -1015,21 +1132,7 @@ export default function ProductTypesAdminPage() {
                       }
                     />
                   </PanelField>
-                  <PanelField id="attribute-group-sort" label="Ordre">
-                    <PanelInput
-                      id="attribute-group-sort"
-                      fullWidth
-                      type="number"
-                      value={attributeGroupForm.sortOrder}
-                      onChange={(event) =>
-                        setAttributeGroupForm((current) => ({
-                          ...current,
-                          sortOrder: event.target.value,
-                        }))
-                      }
-                    />
-                  </PanelField>
-                  <div className="flex gap-2 md:col-span-3">
+                  <div className="flex items-end gap-2">
                     <AnimatedUIButton
                       type="submit"
                       icon="save"
@@ -1062,6 +1165,25 @@ export default function ProductTypesAdminPage() {
                         <AnimatedUIButton
                           type="button"
                           size="sm"
+                          variant="outline"
+                          icon="plus"
+                          onClick={() => {
+                            const groupAttributeCount = selectedProductType.attributes.filter(
+                              (attribute) => attribute.attributeGroupId === group.id,
+                            ).length;
+                            setEditingAttributeId(null);
+                            setAttributeForm({
+                              ...emptyAttributeForm(),
+                              attributeGroupId: String(group.id),
+                              sortOrder: String(groupAttributeCount),
+                            });
+                          }}
+                        >
+                          Attribut
+                        </AnimatedUIButton>
+                        <AnimatedUIButton
+                          type="button"
+                          size="sm"
                           variant="ghost"
                           icon="modify"
                           onClick={() => editAttributeGroup(group)}
@@ -1079,17 +1201,25 @@ export default function ProductTypesAdminPage() {
                   ))}
                 </div>
 
-                <form onSubmit={saveAttribute} className="grid gap-3 md:grid-cols-2">
-                  <PanelField id="attribute-name" label="Nom technique">
-                    <PanelInput
-                      id="attribute-name"
+                <form
+                  onSubmit={saveAttribute}
+                  className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 md:grid-cols-2"
+                >
+                  <PanelField id="attribute-definition" label="Definition">
+                    <StaffSearchSelect
+                      id="attribute-definition"
                       fullWidth
-                      value={attributeForm.name}
-                      onChange={(event) =>
+                      value={attributeForm.attributeDefinitionId}
+                      options={attributeDefinitionOptions}
+                      emptyLabel="Choisir une definition"
+                      placeholder="Choisir une definition"
+                      searchPlaceholder="Rechercher une definition..."
+                      noResultsLabel="Aucune definition disponible"
+                      disabled={isEditingSpecialAttribute}
+                      onValueChange={(value) =>
                         setAttributeForm((current) => ({
                           ...current,
-                          name: event.target.value,
-                          label: current.label || event.target.value,
+                          attributeDefinitionId: value,
                         }))
                       }
                     />
@@ -1099,6 +1229,7 @@ export default function ProductTypesAdminPage() {
                       id="attribute-label"
                       fullWidth
                       value={attributeForm.label}
+                      placeholder={selectedAttributeDefinition?.label ?? "Libelle de la definition"}
                       onChange={(event) =>
                         setAttributeForm((current) => ({
                           ...current,
@@ -1125,33 +1256,6 @@ export default function ProductTypesAdminPage() {
                       }
                     />
                   </PanelField>
-                  <PanelField id="attribute-input-type" label="Type de champ">
-                    <StaffSelect
-                      id="attribute-input-type"
-                      fullWidth
-                      value={attributeForm.inputType}
-                      options={ATTRIBUTE_INPUT_TYPES}
-                      onValueChange={(value) =>
-                        setAttributeForm((current) => ({
-                          ...current,
-                          inputType: value as ProductTypeAttributeInputType,
-                        }))
-                      }
-                    />
-                  </PanelField>
-                  <PanelField id="attribute-unit" label="Unité">
-                    <PanelInput
-                      id="attribute-unit"
-                      fullWidth
-                      value={attributeForm.unit}
-                      onChange={(event) =>
-                        setAttributeForm((current) => ({
-                          ...current,
-                          unit: event.target.value,
-                        }))
-                      }
-                    />
-                  </PanelField>
                   <PanelField id="attribute-sort" label="Ordre">
                     <PanelInput
                       id="attribute-sort"
@@ -1166,6 +1270,20 @@ export default function ProductTypesAdminPage() {
                       }
                     />
                   </PanelField>
+                  <div className="grid gap-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 md:col-span-2">
+                    <span>
+                      Clé:{" "}
+                      <strong className="text-cobam-dark-blue">
+                        {selectedAttributeDefinition?.key ?? "-"}
+                      </strong>
+                    </span>
+                    <span>
+                      Type: {selectedAttributeDefinition?.inputType ?? "-"}
+                      {selectedAttributeDefinition?.unit
+                        ? ` · Unite: ${selectedAttributeDefinition.unit}`
+                        : ""}
+                    </span>
+                  </div>
                   <div className="flex flex-wrap items-center gap-3 md:col-span-2">
                     <label className="flex items-center gap-2 text-sm font-medium text-slate-600">
                       <Checkbox
@@ -1206,7 +1324,22 @@ export default function ProductTypesAdminPage() {
                 </form>
 
                 <div className="grid gap-2">
-                  {selectedProductType.attributes.map((attribute) => (
+                  {selectedAttributeSections.flatMap((section) => [
+                    <div
+                      key={`${section.key}:header`}
+                      className="mt-2 flex items-center justify-between rounded-md bg-slate-100 px-3 py-2"
+                    >
+                      <span>
+                        <span className="text-cobam-dark-blue font-semibold">{section.name}</span>
+                        {section.slug ? (
+                          <span className="ml-2 text-xs text-slate-400">{section.slug}</span>
+                        ) : null}
+                      </span>
+                      <span className="text-xs font-medium text-slate-500">
+                        {section.attributes.length} attributs
+                      </span>
+                    </div>,
+                    ...section.attributes.map((attribute) => (
                     <div
                       key={attribute.id}
                       className="rounded-md border border-slate-200 px-3 py-2"
@@ -1229,6 +1362,7 @@ export default function ProductTypesAdminPage() {
                           {attribute.unit ? ` · ${attribute.unit}` : ""}
                           {attribute.isRequired ? " · requis" : ""}
                           {attribute.isFilterable ? " · filtrable" : ""}
+                          {isSpecialTemplateAttribute(attribute) ? " · automatique" : ""}
                         </span>
                         <span className="flex gap-2">
                           <AnimatedUIButton
@@ -1238,25 +1372,28 @@ export default function ProductTypesAdminPage() {
                             icon="modify"
                             onClick={() => editAttribute(attribute)}
                           />
-                          <AnimatedUIButton
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            color="red"
-                            icon="trash"
-                            onClick={() =>
-                              void deleteEntity("attribute", attribute.id, attribute.label)
-                            }
-                          />
+                          {isSpecialTemplateAttribute(attribute) ? null : (
+                            <AnimatedUIButton
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              color="red"
+                              icon="trash"
+                              onClick={() =>
+                                void deleteEntity("attribute", attribute.id, attribute.label)
+                              }
+                            />
+                          )}
                         </span>
                       </div>
                     </div>
-                  ))}
+                    )),
+                  ])}
                 </div>
               </div>
             ) : (
               <div className="rounded-lg border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500">
-                Sélectionnez ou créez un type produit pour configurer ses attributs.
+                Sélectionnez ou créez un modèle de produit pour configurer ses attributs.
               </div>
             )}
           </Panel>

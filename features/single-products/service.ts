@@ -23,7 +23,6 @@ import {
   stringToRichTextDescription,
 } from "@/features/products/model-b-compat";
 import { prisma } from "@/lib/server/db/prisma";
-import { formatProductBrandValue } from "@/lib/static_tables/brands";
 import type {
   SingleProductDetailDto,
   SingleProductFormOptionsDto,
@@ -114,6 +113,11 @@ const SINGLE_PRODUCT_SELECT = {
       groupName: true,
       groupSortOrder: true,
       sortOrder: true,
+      attributeDef: {
+        select: {
+          selectOptions: true,
+        },
+      },
     },
   },
 } satisfies Prisma.ProductSelect;
@@ -168,7 +172,7 @@ function mapSingleProductDetail(record: SingleProductRecord): SingleProductDetai
     titleSeo: record.titleSeo,
     descriptionSeo: record.descriptionSeo,
     guaranteeMonths: record.guaranteeMonths ?? 0,
-    brand: formatProductBrandValue(productBrandLabel(record.brand)),
+    brand: productBrandLabel(record.brand),
     lifecycle: productLifecycleFromVisibility(record),
     visibleEcommerce: record.visibleEcommerce,
     visibleVitrine: record.visibleVitrine,

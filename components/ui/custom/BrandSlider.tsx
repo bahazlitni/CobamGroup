@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import type { Brand as PublicBrand } from "@/lib/static_tables/brands";
+import type { PublicOrganizationBrand } from "@/features/organizations/public";
 import RailCarousel from "./RailCarousel";
 
 interface BrandSliderProps {
-  brands: PublicBrand[];
+  brands: PublicOrganizationBrand[];
   speed?: number;
 }
 
@@ -33,7 +33,7 @@ export default function BrandSlider({
         <Link
           key={brand.slug}
           draggable={false}
-          href={`/produits?search=${encodeURIComponent(`brand:2=${brand.value}`)}`}
+          href={`/produits?search=${encodeURIComponent(brand.name)}`}
           className="transition-all duration-300 opacity-70 hover:opacity-100 select-none group flex h-24 w-32 flex-shrink-0 rounded-xl bg-white"
         >
           {brand.imageUrl ? (

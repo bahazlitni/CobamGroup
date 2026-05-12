@@ -2,6 +2,8 @@
 
 import { staffApiFetch } from "@/lib/api/auth/staff/api-fetch";
 import type {
+  ProductAttributeDefinitionDto,
+  ProductAttributeDefinitionInput,
   ProductColorDto,
   ProductColorInput,
   ProductFinishDto,
@@ -54,7 +56,7 @@ export async function getProductTypesAdminClient(): Promise<ProductTypesAdminDto
     auth: true,
   });
 
-  return unwrapResponse<ProductTypesAdminDto>(res, "Impossible de charger les types produit.");
+  return unwrapResponse<ProductTypesAdminDto>(res, "Impossible de charger les modèles de produits.");
 }
 
 type TaxonomyMutationInput =
@@ -105,6 +107,66 @@ export async function deleteProductTaxonomyEntityClient(entity: ProductTaxonomyE
   await unwrapResponse<Record<string, never>>(res, "Impossible de supprimer cette ressource.");
 }
 
+export async function listProductAttributeDefinitionsClient(): Promise<
+  ProductAttributeDefinitionDto[]
+> {
+  const res = await staffApiFetch("/api/staff/product-attribute-definitions", {
+    method: "GET",
+    auth: true,
+  });
+  const data = await unwrapResponse<{ items: ProductAttributeDefinitionDto[] }>(
+    res,
+    "Impossible de charger les définitions d'attributs.",
+  );
+
+  return data.items;
+}
+
+export async function createProductAttributeDefinitionClient(
+  input: ProductAttributeDefinitionInput,
+) {
+  const res = await staffApiFetch("/api/staff/product-attribute-definitions", {
+    method: "POST",
+    auth: true,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+
+  await unwrapResponse<{ item: ProductAttributeDefinitionDto }>(
+    res,
+    "Impossible de créer la définition d'attribut.",
+  );
+}
+
+export async function updateProductAttributeDefinitionClient(
+  id: number,
+  input: ProductAttributeDefinitionInput,
+) {
+  const res = await staffApiFetch("/api/staff/product-attribute-definitions", {
+    method: "PUT",
+    auth: true,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, data: input }),
+  });
+
+  await unwrapResponse<{ item: ProductAttributeDefinitionDto }>(
+    res,
+    "Impossible de mettre à jour la définition d'attribut.",
+  );
+}
+
+export async function deleteProductAttributeDefinitionClient(id: number) {
+  const res = await staffApiFetch(`/api/staff/product-attribute-definitions?id=${id}`, {
+    method: "DELETE",
+    auth: true,
+  });
+
+  await unwrapResponse<Record<string, never>>(
+    res,
+    "Impossible de supprimer la définition d'attribut.",
+  );
+}
+
 export async function reorderProductTypeGroupsClient(
   order: number[],
 ): Promise<ProductTypesAdminDto> {
@@ -126,7 +188,7 @@ export async function reorderProductTypesClient(order: number[]): Promise<Produc
     body: JSON.stringify({ action: "reorderProductTypes", order }),
   });
 
-  return unwrapResponse<ProductTypesAdminDto>(res, "Impossible de reordonner les types produit.");
+  return unwrapResponse<ProductTypesAdminDto>(res, "Impossible de reordonner les modèles de produits.");
 }
 
 export async function listProductColorsClient(): Promise<ProductColorDto[]> {

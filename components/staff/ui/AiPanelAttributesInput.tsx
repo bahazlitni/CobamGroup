@@ -8,7 +8,7 @@ import {
   AI_SUGGESTION_TOKEN_CLASS,
   handleAiTabAccept,
 } from "./ai-suggestion";
-import { normalizeProductAttributeKind } from "@/lib/static_tables/attributes";
+import { normalizeProductAttributeKind } from "@/features/products/attribute-definitions";
 import { cn } from "@/lib/utils";
 
 export default function AiPanelAttributesInput({

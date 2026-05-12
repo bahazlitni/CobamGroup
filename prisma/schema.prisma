@@ -538,6 +538,8 @@ model ProductType {
   slug                  String     @unique @db.VarChar(255)
   description           String?    @db.Text
   sortOrder             Int        @default(0) @map("sort_order")
+  hasColor              Boolean    @default(false) @map("has_color")
+  hasFinish             Boolean    @default(false) @map("has_finish")
   presetTags            String     @default("") @map("preset_tags") @db.Text
   presetStockUnit       StockUnit? @map("preset_stock_unit")
   presetVatRate         Decimal?   @map("preset_vat_rate") @db.Decimal(5, 3)
@@ -587,27 +589,43 @@ model ProductAttributeGroup {
   @@map("product_attribute_groups")
 }
 
+model ProductAttributeDefinition {
+  id            BigInt                        @id @default(autoincrement())
+  key           String                        @unique @db.VarChar(150)
+  label         String                        @db.VarChar(255)
+  unit          String?                       @db.VarChar(50)
+  inputType     ProductTypeAttributeInputType @default(TEXT) @map("input_type")
+  selectOptions String[]                      @default([]) @map("select_options")
+  createdAt     DateTime                      @default(now()) @map("created_at")
+  updatedAt     DateTime                      @updatedAt @map("updated_at")
+
+  templateAttributes ProductTypeAttribute[]
+  productAttributes  ProductAttribute[]
+
+  @@index([label])
+  @@map("product_attribute_definitions")
+}
+
 model ProductTypeAttribute {
-  id               BigInt                        @id @default(autoincrement())
-  productTypeId    BigInt                        @map("product_type_id")
-  attributeGroupId BigInt?                       @map("attribute_group_id")
-  name             String                        @db.VarChar(150)
-  label            String                        @default("") @db.VarChar(255)
-  unit             String?                       @db.VarChar(50)
-  inputType        ProductTypeAttributeInputType @default(TEXT) @map("input_type")
-  isRequired       Boolean                       @default(false) @map("is_required")
-  isFilterable     Boolean                       @default(false) @map("is_filterable")
-  sortOrder        Int                           @default(0) @map("sort_order")
-  createdAt        DateTime                      @default(now()) @map("created_at")
-  updatedAt        DateTime                      @updatedAt @map("updated_at")
+  id                    BigInt   @id @default(autoincrement())
+  productTypeId         BigInt   @map("product_type_id")
+  attributeGroupId      BigInt?  @map("attribute_group_id")
+  attributeDefinitionId BigInt   @map("attribute_definition_id")
+  label                 String   @default("") @db.VarChar(255)
+  isRequired            Boolean  @default(false) @map("is_required")
+  isFilterable          Boolean  @default(false) @map("is_filterable")
+  sortOrder             Int      @default(0) @map("sort_order")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
 
-  productType       ProductType            @relation(fields: [productTypeId], references: [id], onDelete: Cascade)
-  attributeGroup    ProductAttributeGroup? @relation(fields: [attributeGroupId], references: [id], onDelete: SetNull)
-  productAttributes ProductAttribute[]
+  productType         ProductType                @relation(fields: [productTypeId], references: [id], onDelete: Cascade)
+  attributeGroup      ProductAttributeGroup?     @relation(fields: [attributeGroupId], references: [id], onDelete: SetNull)
+  attributeDefinition ProductAttributeDefinition @relation(fields: [attributeDefinitionId], references: [id], onDelete: Restrict)
 
-  @@unique([productTypeId, name])
+  @@unique([productTypeId, attributeDefinitionId])
   @@index([productTypeId])
   @@index([attributeGroupId])
+  @@index([attributeDefinitionId])
   @@index([sortOrder])
   @@map("product_type_attributes")
 }
@@ -628,9 +646,9 @@ model ProductAttribute {
   groupSortOrder   Int                           @default(0) @map("group_sort_order")
   sortOrder        Int                           @default(0) @map("sort_order")
 
-  product        Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
-  attributeDef   ProductTypeAttribute?  @relation(fields: [attributeDefId], references: [id], onDelete: SetNull)
-  attributeGroup ProductAttributeGroup? @relation(fields: [attributeGroupId], references: [id], onDelete: SetNull)
+  product        Product                     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attributeDef   ProductAttributeDefinition? @relation(fields: [attributeDefId], references: [id], onDelete: SetNull)
+  attributeGroup ProductAttributeGroup?      @relation(fields: [attributeGroupId], references: [id], onDelete: SetNull)
 
   @@index([productId])
   @@index([attributeDefId])

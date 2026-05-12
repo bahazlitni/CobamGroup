@@ -115,7 +115,7 @@ export default function UserBanDialog({
         <form onSubmit={(event) => void handleSubmit(event)} className="space-y-6 px-6 py-6">
           <div className="space-y-4">
             <Label className="text-sm font-semibold text-cobam-dark-blue">
-              Motifs preconfigures
+              Motifs préconfigurés
             </Label>
 
             <div className="grid gap-3 sm:grid-cols-2">

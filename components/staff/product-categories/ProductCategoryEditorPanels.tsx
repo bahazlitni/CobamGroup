@@ -4,7 +4,7 @@ import { Trash2 } from "lucide-react";
 import MediaImageField from "@/components/staff/media/importers/media-image-field";
 import ImagePreview from "@/components/staff/media/importers/ImagePreview";
 import Panel from "@/components/staff/ui/Panel";
-import { DescriptionSEOTextArea, PanelAutoCompleteInput } from "@/components/staff/ui";
+import { ColorHexField, DescriptionSEOTextArea } from "@/components/staff/ui";
 import PanelField from "@/components/staff/ui/PanelField";
 import PanelInput from "@/components/staff/ui/PanelInput";
 import {
@@ -20,7 +20,7 @@ import type {
   ProductCategoryEditorFormState,
   ProductSubcategoryEditorState,
 } from "@/features/product-categories/form";
-import { getColorNameSuggestions, resolveColorHex } from "@/lib/static_tables/colors";
+import { resolveColorHex } from "@/lib/color-values";
 
 type EditableField = keyof ProductCategoryEditorFormState;
 type EditableSubcategoryField = keyof ProductSubcategoryEditorState;
@@ -263,13 +263,12 @@ export default function ProductCategoryEditorPanels({
 
             <PanelField id="category-theme-color" label="Couleur thème">
               <div className="space-y-3">
-                <PanelAutoCompleteInput
+                <ColorHexField
                   id="category-theme-color"
-                  fullWidth
                   value={form.themeColor}
-                  suggestions={getColorNameSuggestions(form.themeColor)}
-                  onValueChange={(value) => onFieldChange("themeColor", value ?? "")}
-                  placeholder="Ex. Bleu canard ou #048B9A"
+                  onChange={(value) => onFieldChange("themeColor", value)}
+                  placeholder="#048B9A"
+                  allowEmpty
                 />
 
                 <div className="flex items-center gap-2 text-xs text-slate-500">

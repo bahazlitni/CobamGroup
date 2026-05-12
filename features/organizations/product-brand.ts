@@ -1,5 +1,4 @@
 import type { Prisma } from "@prisma/client";
-import { formatProductBrandValue } from "@/lib/static_tables/brands";
 import { slugify } from "@/lib/slugify";
 
 export async function resolveProductBrandOrganizationId(
@@ -12,9 +11,8 @@ export async function resolveProductBrandOrganizationId(
     return null;
   }
 
-  const formattedBrand = formatProductBrandValue(rawBrand)?.trim();
   const textCandidates = Array.from(
-    new Set([rawBrand, formattedBrand].filter((value): value is string => Boolean(value))),
+    new Set([rawBrand].filter((value): value is string => Boolean(value))),
   );
   const slugCandidates = Array.from(
     new Set(textCandidates.map((value) => slugify(value)).filter(Boolean)),

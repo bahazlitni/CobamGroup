@@ -3,17 +3,13 @@ import Anthropic from "@anthropic-ai/sdk";
 import { GoogleGenAI, Type } from "@google/genai";
 import { AuthError, requireStaffSession } from "@/features/auth/server/session";
 import { canCreateProducts, canManageProducts } from "@/features/products/access";
-import {
-  normalizeProductAttributeKind,
-  PRODUCT_ATTRIBUTES,
-} from "@/lib/static_tables/attributes";
-import { COLORS } from "@/lib/static_tables/colors";
-import { FINISHES } from "@/lib/static_tables/finishes";
+import { normalizeProductAttributeKind } from "@/features/products/attribute-definitions";
 import {
   type ArticleDocument,
   getArticlePlainText,
   normalizeArticleContent,
 } from "@/features/articles/document";
+import { prisma } from "@/lib/server/db/prisma";
 import type {
   SingleProductAiSuggestionRequest,
   SingleProductAiSuggestionResponse,
@@ -346,19 +342,64 @@ function parseAiSuggestions(
   };
 }
 
-function formatAttributesReference() {
-  return PRODUCT_ATTRIBUTES.map(
+type AiReferenceData = {
+  attributes: Array<{
+    key: string;
+    label: string;
+    unit: string | null;
+  }>;
+  colors: Array<{
+    key: string;
+    label: string;
+  }>;
+  finishes: Array<{
+    key: string;
+    label: string;
+  }>;
+};
+
+async function loadAiReferenceData(): Promise<AiReferenceData> {
+  const [attributes, colors, finishes] = await Promise.all([
+    prisma.productAttributeDefinition.findMany({
+      orderBy: [{ label: "asc" }],
+      select: {
+        key: true,
+        label: true,
+        unit: true,
+      },
+    }),
+    prisma.productColor.findMany({
+      orderBy: [{ label: "asc" }],
+      select: {
+        key: true,
+        label: true,
+      },
+    }),
+    prisma.productFinish.findMany({
+      orderBy: [{ label: "asc" }],
+      select: {
+        key: true,
+        label: true,
+      },
+    }),
+  ]);
+
+  return { attributes, colors, finishes };
+}
+
+function formatAttributesReference(references: AiReferenceData) {
+  return references.attributes.map(
     (attribute) =>
       `- key: ${attribute.key}; label: ${attribute.label}; unit: ${attribute.unit ?? "none"}`,
   ).join("\n");
 }
 
-function formatColorKeysReference() {
-  return COLORS.map((color) => `- ${color.key} (${color.label})`).join("\n");
+function formatColorKeysReference(references: AiReferenceData) {
+  return references.colors.map((color) => `- ${color.key} (${color.label})`).join("\n");
 }
 
-function formatFinishKeysReference() {
-  return FINISHES.map((finish) => `- ${finish.key} (${finish.label})`).join("\n");
+function formatFinishKeysReference(references: AiReferenceData) {
+  return references.finishes.map((finish) => `- ${finish.key} (${finish.label})`).join("\n");
 }
 
 function formatSubcategoriesTree(
@@ -405,7 +446,10 @@ function formatSubcategoriesTree(
     .join("\n");
 }
 
-function buildProductSuggestionPrompt(input: SingleProductAiSuggestionRequest) {
+function buildProductSuggestionPrompt(
+  input: SingleProductAiSuggestionRequest,
+  references: AiReferenceData,
+) {
   return (
     "You are preparing a product enrichment JSON payload for a French catalog editor.\n\n" +
     "Important rules:\n" +
@@ -429,9 +473,9 @@ function buildProductSuggestionPrompt(input: SingleProductAiSuggestionRequest) {
     "- For COLOR values, use only the exact color keys listed below.\n" +
     "- If you are unsure about an attribute or subcategory, leave it out.\n" +
     "- Return at most 12 attributes and at most 12 subcategoryIds.\n\n" +
-    `Allowed attribute keys:\n${formatAttributesReference()}\n\n` +
-    `Allowed finish keys:\n${formatFinishKeysReference()}\n\n` +
-    `Allowed color keys:\n${formatColorKeysReference()}\n\n` +
+    `Allowed attribute keys:\n${formatAttributesReference(references)}\n\n` +
+    `Allowed finish keys:\n${formatFinishKeysReference(references)}\n\n` +
+    `Allowed color keys:\n${formatColorKeysReference(references)}\n\n` +
     `Available categories tree:\n${formatSubcategoriesTree(input.subcategoryOptions)}\n\n` +
     `Current product draft:\n${JSON.stringify(
       {
@@ -457,7 +501,10 @@ const systemInstruction =
   "All natural-language content inside the JSON must be written in French. " +
   "Use a professional, concrete tone suitable for building materials, sanitary equipment, surfaces, finishes, and home improvement products.";
 
-async function generateWithAnthropic(input: SingleProductAiSuggestionRequest) {
+async function generateWithAnthropic(
+  input: SingleProductAiSuggestionRequest,
+  references: AiReferenceData,
+) {
   if (!process.env.ANTHROPIC_API_KEY) {
     throw new SingleProductAiSuggestionError(
       "ANTHROPIC_API_KEY n'est pas configure.",
@@ -482,7 +529,7 @@ async function generateWithAnthropic(input: SingleProductAiSuggestionRequest) {
         content: [
           {
             type: "text",
-            text: buildProductSuggestionPrompt(input),
+            text: buildProductSuggestionPrompt(input, references),
           },
         ],
       },
@@ -504,7 +551,10 @@ async function generateWithAnthropic(input: SingleProductAiSuggestionRequest) {
   );
 }
 
-async function generateWithGemini(input: SingleProductAiSuggestionRequest) {
+async function generateWithGemini(
+  input: SingleProductAiSuggestionRequest,
+  references: AiReferenceData,
+) {
   if (!process.env.GEMINI_API_KEY) {
     throw new SingleProductAiSuggestionError(
       "GEMINI_API_KEY n'est pas configure.",
@@ -515,7 +565,7 @@ async function generateWithGemini(input: SingleProductAiSuggestionRequest) {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const response = await ai.models.generateContent({
     model: process.env.GEMINI_PRODUCT_AI_MODEL ?? "gemini-2.5-flash",
-    contents: buildProductSuggestionPrompt(input),
+    contents: buildProductSuggestionPrompt(input, references),
     config: {
       temperature: 0.2,
       maxOutputTokens: 1200,
@@ -618,7 +668,10 @@ async function generateWithGemini(input: SingleProductAiSuggestionRequest) {
   );
 }
 
-async function generateAiSuggestions(input: SingleProductAiSuggestionRequest) {
+async function generateAiSuggestions(
+  input: SingleProductAiSuggestionRequest,
+  references: AiReferenceData,
+) {
   const provider = (process.env.PRODUCT_AI_PROVIDER ?? "anthropic")
     .trim()
     .toLocaleLowerCase("en-US");
@@ -626,10 +679,10 @@ async function generateAiSuggestions(input: SingleProductAiSuggestionRequest) {
   switch (provider) {
     case "gemini":
     case "google":
-      return generateWithGemini(input);
+      return generateWithGemini(input, references);
     case "anthropic":
     case "claude":
-      return generateWithAnthropic(input);
+      return generateWithAnthropic(input, references);
     default:
       throw new SingleProductAiSuggestionError(
         `Fournisseur IA non supporte: ${provider}.`,
@@ -647,7 +700,8 @@ export async function POST(req: Request) {
     }
 
     const input = parseRequestBody(await req.json());
-    const suggestions = await generateAiSuggestions(input);
+    const references = await loadAiReferenceData();
+    const suggestions = await generateAiSuggestions(input, references);
 
     return NextResponse.json({ ok: true, suggestions }, { status: 200 });
   } catch (error: unknown) {

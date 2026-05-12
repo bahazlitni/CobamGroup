@@ -5,7 +5,6 @@ import { canAccessProducts, canCreateProducts, canManageProducts } from "./acces
 import { buildDuplicateAttributeKindMessage, findDuplicateAttributeKind } from "./attribute-kinds";
 import { buildProductAttributeCreateData, mapProductAttributeRecord } from "./attribute-records";
 import { resolveProductBrandOrganizationId } from "@/features/organizations/product-brand";
-import { formatProductBrandValue } from "@/lib/static_tables/brands";
 import {
   productBrandLabel,
   productLifecycleFromVisibility,
@@ -118,6 +117,11 @@ const STAFF_PRODUCT_SELECT = {
       groupName: true,
       groupSortOrder: true,
       sortOrder: true,
+      attributeDef: {
+        select: {
+          selectOptions: true,
+        },
+      },
     },
   },
   packLinesAsComponent: {
@@ -248,7 +252,7 @@ function mapVariant(
     titleSeo: record.titleSeo,
     descriptionSeo: record.descriptionSeo,
     guaranteeMonths: record.guaranteeMonths ?? 0,
-    brand: formatProductBrandValue(productBrandLabel(record.brand)),
+    brand: productBrandLabel(record.brand),
     lifecycle: productLifecycleFromVisibility(record),
     visibleEcommerce: record.visibleEcommerce,
     visibleVitrine: record.visibleVitrine,
@@ -305,7 +309,7 @@ function mapFamilyListItem(record: StaffFamilyListRecord): ProductFamilyListItem
       record.mainImageMediaId == null ? null : buildMediaUrl(record.mainImageMediaId, "thumbnail"),
     variantCount: record.members.length,
     defaultVariantSku: record.defaultProduct?.sku ?? null,
-    brand: formatProductBrandValue(productBrandLabel(record.defaultProduct?.brand)),
+    brand: productBrandLabel(record.defaultProduct?.brand),
     lifecycle: record.defaultProduct ? productLifecycleFromVisibility(record.defaultProduct) : null,
     subcategories:
       record.defaultProduct?.subcategories.map(({ subcategory }) => ({
@@ -710,6 +714,8 @@ export async function getProductFormOptionsService(
         slug: true,
         description: true,
         sortOrder: true,
+        hasColor: true,
+        hasFinish: true,
         presetTags: true,
         presetStockUnit: true,
         presetVatRate: true,
@@ -731,18 +737,25 @@ export async function getProductFormOptionsService(
           orderBy: [
             { attributeGroup: { sortOrder: "asc" } },
             { sortOrder: "asc" },
-            { name: "asc" },
+            { attributeDefinition: { label: "asc" } },
           ],
           select: {
             id: true,
             attributeGroupId: true,
-            name: true,
+            attributeDefinitionId: true,
             label: true,
-            unit: true,
-            inputType: true,
             isRequired: true,
             isFilterable: true,
             sortOrder: true,
+            attributeDefinition: {
+              select: {
+                key: true,
+                label: true,
+                unit: true,
+                inputType: true,
+                selectOptions: true,
+              },
+            },
             attributeGroup: {
               select: {
                 id: true,
@@ -786,6 +799,8 @@ export async function getProductFormOptionsService(
       slug: productType.slug,
       description: productType.description,
       sortOrder: productType.sortOrder,
+      hasColor: productType.hasColor,
+      hasFinish: productType.hasFinish,
       presetTags: productType.presetTags,
       presetSubcategoryIds: productType.subcategoryPresets.map((preset) =>
         Number(preset.subcategoryId),
@@ -795,11 +810,13 @@ export async function getProductFormOptionsService(
       presetGuaranteeMonths: productType.presetGuaranteeMonths,
       attributes: productType.attributes.map((attribute) => ({
         id: Number(attribute.id),
+        attributeDefinitionId: Number(attribute.attributeDefinitionId),
         groupId: attribute.attributeGroupId == null ? null : Number(attribute.attributeGroupId),
-        name: attribute.name,
-        label: attribute.label || attribute.name,
-        unit: attribute.unit,
-        inputType: attribute.inputType,
+        name: attribute.attributeDefinition.key,
+        label: attribute.label || attribute.attributeDefinition.label,
+        unit: attribute.attributeDefinition.unit,
+        inputType: attribute.attributeDefinition.inputType,
+        selectOptions: attribute.attributeDefinition.selectOptions,
         isRequired: attribute.isRequired,
         isFilterable: attribute.isFilterable,
         groupName: attribute.attributeGroup?.name ?? null,
