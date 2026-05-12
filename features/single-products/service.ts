@@ -159,6 +159,7 @@ function mapMedia(
 function mapSingleProductDetail(record: SingleProductRecord): SingleProductDetailDto {
   const galleryLinks = record.media.filter((link) => link.role === "GALLERY");
   const technicalLink = record.media.find((link) => link.role === "TECHNICAL") ?? null;
+  const certificateLink = record.media.find((link) => link.role === "CERTIFICATE") ?? null;
 
   return {
     id: Number(record.id),
@@ -191,6 +192,7 @@ function mapSingleProductDetail(record: SingleProductRecord): SingleProductDetai
     tags: record.tags,
     subcategoryIds: record.subcategories.map((link) => Number(link.subcategoryId)),
     datasheet: technicalLink ? mapMedia(technicalLink.media, technicalLink) : null,
+    certificate: certificateLink ? mapMedia(certificateLink.media, certificateLink) : null,
     media: galleryLinks.map((link) => mapMedia(link.media, link)),
     attributes: record.attributes.map(mapProductAttributeRecord),
     createdAt: record.createdAt.toISOString(),
@@ -223,26 +225,6 @@ async function assertSingleProductUniqueConstraints(
   }
 }
 
-async function assertSingleProductRemovable(productId: number) {
-  const linked = await prisma.product.findFirst({
-    where: {
-      id: BigInt(productId),
-      packLinesAsComponent: {
-        some: {},
-      },
-    },
-    select: {
-      name: true,
-    },
-  });
-
-  if (linked) {
-    throw new SingleProductsServiceError(
-      `Impossible de supprimer le produit "${linked.name}" car il est utilisé dans un pack.`,
-    );
-  }
-}
-
 async function syncSingleProductRelations(
   tx: Prisma.TransactionClient,
   productId: bigint,
@@ -267,15 +249,16 @@ async function syncSingleProductRelations(
     where: {
       productId,
       role: {
-        in: ["GALLERY", "TECHNICAL"],
+        in: ["GALLERY", "TECHNICAL", "CERTIFICATE"],
       },
     },
   });
 
   const technicalMediaId = input.datasheet?.id ?? null;
+  const certificateMediaId = input.certificate?.id ?? null;
   const productMediaLinks = [
     ...input.media
-      .filter((media) => media.id !== technicalMediaId)
+      .filter((media) => media.id !== technicalMediaId && media.id !== certificateMediaId)
       .map((media, index) => ({
         productId,
         mediaId: BigInt(media.id),
@@ -292,6 +275,18 @@ async function syncSingleProductRelations(
             role: "TECHNICAL" as const,
             name: input.datasheet.title ?? "Fiche technique",
             altText: input.datasheet.altText,
+            sortOrder: 0,
+          },
+        ]
+      : []),
+    ...(input.certificate
+      ? [
+          {
+            productId,
+            mediaId: BigInt(input.certificate.id),
+            role: "CERTIFICATE" as const,
+            name: input.certificate.title ?? "Certificat",
+            altText: input.certificate.altText,
             sortOrder: 0,
           },
         ]
@@ -472,8 +467,6 @@ export async function deleteSingleProductService(session: StaffSession, productI
   if (!canManageProducts(session)) {
     throw new SingleProductsServiceError("Accès refusé.", 403);
   }
-
-  await assertSingleProductRemovable(productId);
 
   await prisma.product.delete({
     where: {

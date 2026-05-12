@@ -4,7 +4,7 @@ import StructuredData from "@/components/seo/StructuredData";
 import PublicProductInspectorView from "@/components/public/products/public-product-inspector";
 import StaticHighway from "@/components/ui/custom/StaticHighway";
 import { findPublicProductSubcategoryBySlugs } from "@/features/product-categories/public";
-import { findPublicProductOrPackBySlug } from "@/features/products/public";
+import { findPublicProductBySlug } from "@/features/products/public";
 import {
   buildBreadcrumbStructuredData,
   buildSimpleProductMetadata,
@@ -21,7 +21,7 @@ export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
   const { category, subcategory, slug } = await params;
-  const product = await findPublicProductOrPackBySlug(slug);
+  const product = await findPublicProductBySlug(slug);
 
   if (!product) {
     return {
@@ -38,7 +38,7 @@ export async function generateMetadata({
 export default async function PublicProductPage({ params }: ProductPageProps) {
   const { category, subcategory, slug } = await params;
   const [product, subcategoryData] = await Promise.all([
-    findPublicProductOrPackBySlug(slug),
+    findPublicProductBySlug(slug),
     findPublicProductSubcategoryBySlugs({
       categorySlug: category,
       subcategorySlug: subcategory,

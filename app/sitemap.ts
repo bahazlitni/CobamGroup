@@ -51,7 +51,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     subcategories,
     products,
     families,
-    packs,
     articles,
   ] = await Promise.all([
     prisma.productCategory.findMany({
@@ -146,42 +145,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         },
       },
     }),
-    prisma.product.findMany({
-      where: {
-        kind: ProductKind.PACK,
-        visibleEcommerce: true,
-      },
-      select: {
-        slug: true,
-        updatedAt: true,
-        subcategories: {
-          orderBy: {
-            subcategoryId: "asc",
-          },
-          select: {
-            subcategory: {
-              select: {
-                slug: true,
-                category: {
-                  select: {
-                    slug: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        packLinesAsPack: {
-          select: {
-            product: {
-              select: {
-                visibleEcommerce: true,
-              },
-            },
-          },
-        },
-      },
-    }),
     listPublicArticles(),
   ]);
 
@@ -223,22 +186,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ),
       ),
     ),
-    ...packs
-      .filter(
-        (pack) =>
-          pack.packLinesAsPack.length > 0 &&
-          pack.packLinesAsPack.every(
-            (line) => line.product.visibleEcommerce,
-          ),
-      )
-      .flatMap((pack) =>
-        pack.subcategories.map((link) =>
-          mapUrl(
-            `/produits/${link.subcategory.category.slug}/${link.subcategory.slug}/${pack.slug}`,
-            pack.updatedAt,
-          ),
-        ),
-      ),
     ...articles.map((article) =>
       mapUrl(`/actualites/${article.slug}`, article.updatedAt),
     ),

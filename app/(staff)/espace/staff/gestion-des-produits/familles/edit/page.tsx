@@ -186,6 +186,7 @@ function createEmptyVariant(index: number): VariantEditorState {
     tags: "",
     subcategoryIds: [],
     datasheet: null,
+    certificate: null,
     media: [],
     attributes: [],
   };
@@ -1494,21 +1495,40 @@ function ProductEditPageContent() {
                   description="Le premier média devient la couverture de la variante."
                 />
 
-                <StaffPdfImporter
-                  label="Fiche technique"
-                  description="Optionnel : associez une fiche technique PDF a cette variante."
-                  dialogTitle="Ajouter une fiche technique"
-                  dialogDescription="Choisissez un PDF existant ou importez-en un nouveau pour cette variante."
-                  value={variant.datasheet}
-                  onChange={(datasheet) =>
-                    setForm((current) =>
-                      updateVariantState(current, variant.formKey, (entry) => ({
-                        ...entry,
-                        datasheet,
-                      })),
-                    )
-                  }
-                />
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <StaffPdfImporter
+                    label="Fiche technique"
+                    description="Optionnel : associez une fiche technique PDF a cette variante."
+                    dialogTitle="Ajouter une fiche technique"
+                    dialogDescription="Choisissez un PDF existant ou importez-en un nouveau pour cette variante."
+                    value={variant.datasheet}
+                    onChange={(datasheet) =>
+                      setForm((current) =>
+                        updateVariantState(current, variant.formKey, (entry) => ({
+                          ...entry,
+                          datasheet,
+                        })),
+                      )
+                    }
+                  />
+
+                  <StaffPdfImporter
+                    label="Certificat"
+                    description="Optionnel : associez un certificat PDF a cette variante."
+                    dialogTitle="Ajouter un certificat"
+                    dialogDescription="Choisissez un PDF existant ou importez-en un nouveau pour cette variante."
+                    value={variant.certificate}
+                    role="CERTIFICATE"
+                    onChange={(certificate) =>
+                      setForm((current) =>
+                        updateVariantState(current, variant.formKey, (entry) => ({
+                          ...entry,
+                          certificate,
+                        })),
+                      )
+                    }
+                  />
+                </div>
 
                 {variant.attributes.length > 0 ? (
                   <div className="space-y-3">

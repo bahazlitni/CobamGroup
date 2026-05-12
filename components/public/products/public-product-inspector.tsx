@@ -7,9 +7,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import Carousel from "./inspector/Carousel";
-import BreadCrumb from "./inspector/BreadCrumb";
 import Title from "./inspector/Title";
-import Property from "./inspector/Property";
 import {
   buildColorOptions,
   buildFinishOptions,
@@ -27,13 +25,10 @@ import {
   SelectorPillProps,
 } from "./inspector/utils";
 import RichDescription from "./inspector/RichDescription";
-import SubcategoriesList from "./inspector/SubcategoriesList";
-import VariantRail from "./inspector/VariantsRail";
 import ColorsList from "./inspector/ColorsList";
 import FinishesList from "./inspector/FinishesList";
 import NormalAttributesList from "./inspector/NormalAttributesList";
 import DatasheetLink from "./inspector/DatasheetLink";
-import ProductDevisDialog from "./inspector/ProductDevisDialog";
 
 function SelectorPill({ label, unit, active, onClick }: SelectorPillProps) {
   return (
@@ -55,7 +50,6 @@ function SelectorPill({ label, unit, active, onClick }: SelectorPillProps) {
 
 export default function PublicProductInspectorView({
   product,
-  breadcrumb,
 }: PublicProductInspectorViewProps) {
   const normalizedProduct = normalizeInspectorProduct(product);
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
@@ -140,31 +134,27 @@ export default function PublicProductInspectorView({
         <Carousel
           key={`${selectedVariant.id}-${selectedMedia.map((media) => media.id).join("-")}`}
           media={selectedMedia}
-          title={selectedVariant.name}
+          title={selectedVariant.displayName}
         />
 
         <div className="space-y-10 lg:pl-10">
           <div className="pb-8 border-b border-cobam-quill-grey/30">
             <div className="space-y-6">
               <div className="space-y-3">
-                <BreadCrumb
-                  categorySlug={breadcrumb?.categorySlug}
-                  categoryName={breadcrumb?.categoryName}
-                  subcategorySlug={breadcrumb?.subcategorySlug}
-                  subcategoryName={breadcrumb?.subcategoryName} 
-                />
                 <div className="space-y-4">
-                  <Title title={selectedVariant.name} />
+                  <Title title={selectedVariant.displayName} />
 
-                  <div className="flex justify-between items-end">
-                    <div className="flex flex-col gap-1">
-                    <Property name="SKU" value={selectedVariant.sku} isCopiable={true} isFemale={false} isPlural={false}/>
-                    <Property name="Marque" value={normalizedProduct.brandName} isCopiable={false} isFemale={true} isPlural={true}/>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {selectedVariant.datasheet && <DatasheetLink url={selectedVariant.datasheet.url} />}
-                      <ProductDevisDialog productName={selectedVariant.name} sku={selectedVariant.sku ?? ""} />
-                    </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    {selectedVariant.datasheet ? (
+                      <DatasheetLink url={selectedVariant.datasheet.url} />
+                    ) : null}
+                    {selectedVariant.certificate ? (
+                      <DatasheetLink
+                        url={selectedVariant.certificate.url}
+                        label="Certificat"
+                        fallbackFilename="certificat.pdf"
+                      />
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -177,7 +167,6 @@ export default function PublicProductInspectorView({
               ) : null}
 
               <RichDescription description={selectedVariant.description}/>
-              <SubcategoriesList subcategories={normalizedProduct.subcategories} />
             </div>
           </div>
 
@@ -221,14 +210,6 @@ export default function PublicProductInspectorView({
           ) : null}
         </div>
       </div>
-
-      {shouldShowVariantRail && 
-        <VariantRail 
-          variants={normalizedProduct.variants}
-          coverMedia={normalizedProduct.coverMedia}
-          selectVariant={selectVariant}
-          selectedVariantId={selectedVariant.id}
-        />}
 
       </div>
     </TooltipProvider>

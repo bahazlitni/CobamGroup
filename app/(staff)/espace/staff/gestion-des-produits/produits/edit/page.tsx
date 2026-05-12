@@ -206,6 +206,7 @@ function createEmptyFormState(): SingleProductUpsertInput {
     tags: "",
     subcategoryIds: [],
     datasheet: null,
+    certificate: null,
     media: [],
     attributes: [],
   };
@@ -243,6 +244,7 @@ function mapProductToForm(product: SingleProductDetailDto): SingleProductUpsertI
     tags: product.tags,
     subcategoryIds: product.subcategoryIds,
     datasheet: product.datasheet,
+    certificate: product.certificate,
     media: product.media,
     attributes: product.attributes,
   };
@@ -1198,20 +1200,37 @@ function SingleProductEditPageContent() {
         />
       </Panel>
 
-      <Panel pretitle="Documentation" title="Fiche technique">
-        <StaffPdfImporter
-          label="Document technique"
-          description="Optionnel : associez une fiche technique PDF a ce produit simple."
-          dialogTitle="Ajouter une fiche technique"
-          dialogDescription="Choisissez un PDF existant ou importez-en un nouveau pour ce produit."
-          value={form.datasheet}
-          onChange={(datasheet) =>
-            setForm((current) => ({
-              ...current,
-              datasheet,
-            }))
-          }
-        />
+      <Panel pretitle="Documentation" title="Documents produit">
+        <div className="grid gap-4 lg:grid-cols-2">
+          <StaffPdfImporter
+            label="Fiche technique"
+            description="Optionnel : associez une fiche technique PDF a ce produit simple."
+            dialogTitle="Ajouter une fiche technique"
+            dialogDescription="Choisissez un PDF existant ou importez-en un nouveau pour ce produit."
+            value={form.datasheet}
+            onChange={(datasheet) =>
+              setForm((current) => ({
+                ...current,
+                datasheet,
+              }))
+            }
+          />
+
+          <StaffPdfImporter
+            label="Certificat"
+            description="Optionnel : associez un certificat PDF a ce produit simple."
+            dialogTitle="Ajouter un certificat"
+            dialogDescription="Choisissez un PDF existant ou importez-en un nouveau pour ce produit."
+            value={form.certificate}
+            role="CERTIFICATE"
+            onChange={(certificate) =>
+              setForm((current) => ({
+                ...current,
+                certificate,
+              }))
+            }
+          />
+        </div>
       </Panel>
 
       <Panel

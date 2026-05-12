@@ -28,7 +28,7 @@ export type DerivedFinishOption = {
 export type SpecialAttributeKind = "COLOR" | "FINISH";
 
 export type UnifiedInspectorProduct = {
-  entityType: "FAMILY" | "SINGLE" | "PACK" | "VARIANT";
+  entityType: "FAMILY" | "SINGLE" | "VARIANT";
   id: number;
   slug: string;
   brandName: string | null;
@@ -119,8 +119,10 @@ export function normalizeInspectorProduct(
         sku: product.sku,
         slug: product.slug,
         name: product.name,
+        displayName: product.displayName,
         description: product.description,
         datasheet: product.datasheet,
+        certificate: product.certificate,
         media: product.media,
         attributes: product.attributes,
       },

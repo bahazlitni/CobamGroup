@@ -73,18 +73,6 @@ const ALL_PRODUCTS_LIST_SELECT = {
       },
     },
   },
-  packLinesAsPack: {
-    select: {
-      quantity: true,
-      product: {
-        select: {
-          brand: { select: { name: true } },
-          visibleEcommerce: true,
-          visibleVitrine: true,
-        },
-      },
-    },
-  },
 } satisfies Prisma.ProductSelect;
 
 type AllProductsListRecord = Prisma.ProductGetPayload<{
@@ -109,20 +97,7 @@ type AllProductsExportRecord = Prisma.ProductGetPayload<{
 }>;
 
 function formatAllProductBrand(record: AllProductsListRecord) {
-  if (record.kind !== "PACK") {
-    return productBrandLabel(record.brand);
-  }
-
-  const brandLabels = [
-    ...new Set(
-      record.packLinesAsPack.flatMap((line) => {
-        const label = productBrandLabel(line.product.brand);
-        return label ? [label] : [];
-      }),
-    ),
-  ];
-
-  return brandLabels.length > 0 ? brandLabels.join(", ") : null;
+  return productBrandLabel(record.brand);
 }
 
 function mapAllProductsListItem(record: AllProductsListRecord): AllProductsListItemDto {
@@ -852,23 +827,6 @@ export async function deleteAllProductsBulkService(session: StaffSession, produc
 
   if (productIds.length === 0) {
     throw new AllProductsServiceError("Aucun produit sélectionné.", 400);
-  }
-
-  const products = await prisma.product.findMany({
-    where: {
-      id: { in: productIds.map((id) => BigInt(id)) },
-    },
-    select: {
-      id: true,
-      packLinesAsComponent: {
-        select: { packProductId: true },
-        take: 1,
-      },
-    },
-  });
-
-  if (products.some((product) => product.packLinesAsComponent.length > 0)) {
-    throw new AllProductsServiceError("Certains produits sont utilises dans des packs.", 400);
   }
 
   await prisma.product.deleteMany({

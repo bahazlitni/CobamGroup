@@ -419,7 +419,7 @@ export async function listPublicProductSubcategoryCardsByCategorySlug(
               product: {
                 visibleEcommerce: true,
                 kind: {
-                  in: ["STANDARD", "SINGLE", "VARIANT", "PACK"],
+                  in: ["STANDARD", "SINGLE", "VARIANT"],
                 },
               },
             },

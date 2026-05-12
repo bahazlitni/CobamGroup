@@ -2,12 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, X, Loader2, ArrowRight, Settings2 } from "lucide-react";
+import { Search, X, Loader2, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { PublicProductIndexItem } from "@/features/products/public";
 
 interface NavbarSearchProps {
@@ -24,7 +22,6 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
   const [searchResults, setSearchResults] = useState<PublicProductIndexItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [targetIndex, setTargetIndex] = useState<number | null>(null);
-  const [searchError, setSearchError] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -60,7 +57,6 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
     setSearchResults([]);
     setIsSearching(false);
     setTargetIndex(null);
-    setSearchError(null);
     searchControllerRef.current?.abort();
     searchControllerRef.current = null;
     if (searchDebounceRef.current) {
@@ -118,14 +114,12 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
     if (!normalized) {
       setSearchResults([]);
       setIsSearching(false);
-      setSearchError(null);
       return;
     }
 
     searchControllerRef.current?.abort();
     searchControllerRef.current = null;
     setIsSearching(true);
-    setSearchError(null);
 
     if (searchDebounceRef.current) {
       window.clearTimeout(searchDebounceRef.current);
@@ -153,10 +147,9 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
           }
 
           setSearchResults(payload.items ?? []);
-        } catch (error: unknown) {
+        } catch {
           if (controller.signal.aborted) return;
           setSearchResults([]);
-          setSearchError(error instanceof Error ? error.message : "Erreur inconnue.");
         } finally {
           if (searchControllerRef.current === controller) {
             searchControllerRef.current = null;
@@ -268,7 +261,7 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
                   style={{ fontFamily: "var(--font-playfair), serif" }}
                 />
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-6">
-                  {/* Note: In a real implementation we would render Settings2 here if isAdvancedSearch was requested, but right now we focus on the majestic styling first without cluttering the clean state */}
+                  {/* Advanced search keeps the clean default state uncluttered. */}
                   {isSearching && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                        <Loader2 className="animate-spin text-cobam-water-blue h-10 w-10" />
@@ -351,7 +344,7 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
 
                           <div className="flex-1 min-w-0 z-10">
                             <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-cobam-water-blue mb-2 block">
-                              {product.product.entityType === "FAMILY" ? "Famille" : product.product.entityType === "PACK" ? "Pack" : product.product.entityType === "VARIANT" ? "Variante" : "Produit"}
+                              {product.product.entityType === "FAMILY" ? "Famille" : product.product.entityType === "VARIANT" ? "Variante" : "Produit"}
                             </span>
                             <h4 className="text-xl font-light text-cobam-dark-blue truncate leading-tight mb-2" style={{ fontFamily: "var(--font-playfair), serif" }}>
                               {product.product.name}
@@ -387,7 +380,7 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
                          <Search size={32} className="text-cobam-carbon-grey/30" />
                       </div>
                       <p className="text-cobam-carbon-grey text-xl font-light">
-                        Aucun résultat pour <span className="text-cobam-dark-blue font-medium italic">"{searchInput}"</span>
+                        Aucun résultat pour <span className="text-cobam-dark-blue font-medium italic">&quot;{searchInput}&quot;</span>
                       </p>
                     </motion.div>
                   ) : null}

@@ -75,8 +75,6 @@ function getAction(item: AllProductsListItemDto) {
       return item.family
         ? `/espace/staff/gestion-des-produits/familles/edit?id=${item.family.id}`
         : null;
-    case "PACK":
-      return `/espace/staff/gestion-des-produits/packs/edit?id=${item.id}`;
     default:
       return null;
   }
@@ -597,7 +595,6 @@ export default function AllProductsPage() {
                 { value: "ALL", label: "Tous les types" },
                 { value: "SINGLE", label: "Simple" },
                 { value: "VARIANT", label: "Variante" },
-                { value: "PACK", label: "Pack" },
               ]}
             />
           </div>

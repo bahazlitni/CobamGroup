@@ -56,7 +56,6 @@ enum UserStatus {
 enum ProductKind {
   STANDARD
   VARIANT
-  PACK
   SINGLE
 }
 
@@ -399,20 +398,18 @@ model Product {
   vatRate            Decimal                  @default(19.000) @map("vat_rate") @db.Decimal(5, 3)
   priceVisibility    ProductPricingVisibility @default(AUTO) @map("price_visibility")
 
-  createdById     BigInt?  @map("created_by_id")
-  lastUpdatedById BigInt?  @map("last_updated_by_id")
+  createdById     String?  @map("created_by_id") @db.VarChar(191)
+  lastUpdatedById String?  @map("last_updated_by_id") @db.VarChar(191)
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
-  familyMembership     ProductFamilyMember?
-  defaultForFamilies   ProductFamily[]          @relation("ProductFamilyDefaultProduct")
-  brand                Organization?            @relation(fields: [brandId], references: [id], onDelete: SetNull)
-  productType          ProductType?             @relation(fields: [productTypeId], references: [id], onDelete: SetNull)
-  subcategories        ProductSubcategoryLink[]
-  media                ProductMedia[]
-  attributes           ProductAttribute[]
-  packLinesAsPack      ProductPackLine[]        @relation("ProductPackLines")
-  packLinesAsComponent ProductPackLine[]        @relation("ProductPackComponents")
+  familyMembership   ProductFamilyMember?
+  defaultForFamilies ProductFamily[]          @relation("ProductFamilyDefaultProduct")
+  brand              Organization?            @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  productType        ProductType?             @relation(fields: [productTypeId], references: [id], onDelete: SetNull)
+  subcategories      ProductSubcategoryLink[]
+  media              ProductMedia[]
+  attributes         ProductAttribute[]
 
   @@index([brandId])
   @@index([productTypeId])
@@ -682,21 +679,6 @@ model ProductFinish {
 
   @@index([imageMediaId])
   @@map("product_finishes")
-}
-
-model ProductPackLine {
-  packProductId BigInt @map("pack_product_id")
-  productId     BigInt @map("product_id")
-  quantity      Int    @default(1)
-  sortOrder     Int    @default(0) @map("sort_order")
-
-  packProduct Product @relation("ProductPackLines", fields: [packProductId], references: [id], onDelete: Cascade)
-  product     Product @relation("ProductPackComponents", fields: [productId], references: [id], onDelete: Restrict)
-
-  @@id([packProductId, productId])
-  @@index([productId])
-  @@index([sortOrder])
-  @@map("product_pack_lines")
 }
 
 model ArticleCategory {

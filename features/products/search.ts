@@ -46,7 +46,6 @@ export type PublicSearchCandidate = {
   product_description: string | null;
   product_description_seo: string | null;
   attributes_text: string | null;
-  pack_components_text: string | null;
   family_name: string | null;
   family_slug: string | null;
   family_subtitle: string | null;
@@ -300,7 +299,6 @@ function createFields(row: PublicSearchCandidate) {
     `${row.subcategory_name} ${row.subcategory_slug} ${row.subcategory_subtitle ?? ""} ${row.subcategory_description ?? ""} ${row.subcategory_description_seo ?? ""}`,
   );
   const attributeText = normalizePublicSearchText(row.attributes_text);
-  const packComponentsText = normalizePublicSearchText(row.pack_components_text);
   const familyText = normalizePublicSearchText(
     `${row.family_name ?? ""} ${row.family_slug ?? ""} ${row.family_subtitle ?? ""} ${stripRichText(row.family_description)} ${row.family_description_seo ?? ""} ${row.family_members_text ?? ""}`,
   );
@@ -315,7 +313,6 @@ function createFields(row: PublicSearchCandidate) {
     { value: categoryText, exact: 260, prefix: 210, includes: 160, fuzzy: 110 },
     { value: attributeText, exact: 220, prefix: 180, includes: 140, fuzzy: 100 },
     { value: familyText, exact: 220, prefix: 180, includes: 140, fuzzy: 100 },
-    { value: packComponentsText, exact: 180, prefix: 150, includes: 120, fuzzy: 80 },
   ];
 
   const broadFields: SearchField[] = [

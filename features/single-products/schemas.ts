@@ -175,6 +175,19 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
     record.datasheet != null && typeof record.datasheet === "object"
       ? (record.datasheet as Record<string, unknown>)
       : null;
+  const certificate =
+    record.certificate != null && typeof record.certificate === "object"
+      ? (record.certificate as Record<string, unknown>)
+      : null;
+  if (
+    datasheet != null &&
+    certificate != null &&
+    Number(datasheet.id) === Number(certificate.id)
+  ) {
+    throw new SingleProductsValidationError(
+      "La fiche technique et le certificat doivent utiliser deux fichiers differents.",
+    );
+  }
 
   const parsedAttributes = attributes.map((entry, index) => {
     if (!entry || typeof entry !== "object") {
@@ -310,6 +323,36 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
               url: typeof datasheet.url === "string" ? datasheet.url : "",
               thumbnailUrl:
                 typeof datasheet.thumbnailUrl === "string" ? datasheet.thumbnailUrl : null,
+            };
+          })(),
+    certificate:
+      certificate == null
+        ? null
+        : (() => {
+            const parsedId = Number(certificate.id);
+            if (!Number.isInteger(parsedId) || parsedId <= 0) {
+              throw new SingleProductsValidationError("Identifiant de certificat invalide.");
+            }
+
+            return {
+              id: parsedId,
+              role: "CERTIFICATE",
+              kind:
+                "kind" in certificate
+                  ? (String(certificate.kind) as SingleProductUpsertInput["media"][number]["kind"])
+                  : "DOCUMENT",
+              title: parseOptionalString(certificate.title),
+              originalFilename: parseOptionalString(certificate.originalFilename),
+              mimeType: parseOptionalString(certificate.mimeType),
+              altText: parseOptionalString(certificate.altText),
+              widthPx: certificate.widthPx == null ? null : Number(certificate.widthPx),
+              heightPx: certificate.heightPx == null ? null : Number(certificate.heightPx),
+              durationSeconds:
+                certificate.durationSeconds == null ? null : String(certificate.durationSeconds),
+              sizeBytes: certificate.sizeBytes == null ? null : String(certificate.sizeBytes),
+              url: typeof certificate.url === "string" ? certificate.url : "",
+              thumbnailUrl:
+                typeof certificate.thumbnailUrl === "string" ? certificate.thumbnailUrl : null,
             };
           })(),
     media: media.map((entry) => {

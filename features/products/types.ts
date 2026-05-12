@@ -63,6 +63,7 @@ export type ProductVariantInputDto = ProductEditFieldsDto & {
   tags: string;
   subcategoryIds: number[];
   datasheet: ProductMediaDto | null;
+  certificate: ProductMediaDto | null;
   media: ProductMediaDto[];
   attributes: ProductAttributeInputDto[];
 };
@@ -164,7 +165,7 @@ export type ProductFormOptionsDto = {
   productBrandOptions: string[];
 };
 
-export type PublicProductEntityType = "FAMILY" | "PACK" | "SINGLE" | "VARIANT";
+export type PublicProductEntityType = "FAMILY" | "SINGLE" | "VARIANT";
 
 export type PublicProductSubcategoryLink = {
   id: number;
@@ -264,8 +265,10 @@ export type PublicProductInspectorVariant = {
   sku: string;
   slug: string;
   name: string;
+  displayName: string;
   description: string | null;
   datasheet: PublicProductInspectorMedia | null;
+  certificate: PublicProductInspectorMedia | null;
   media: PublicProductInspectorMedia[];
   attributes: PublicProductInspectorAttribute[];
 };
@@ -288,15 +291,17 @@ export type PublicProductInspector = {
 
 export type PublicSimpleProductInspector = {
   id: number;
-  kind: "PACK" | "SINGLE" | "VARIANT";
+  kind: "SINGLE" | "VARIANT";
   sku: string;
   slug: string;
   name: string;
+  displayName: string;
   description: string | null;
   descriptionSeo: string | null;
   brandNames: string[];
   media: PublicProductInspectorMedia[];
   datasheet: PublicProductInspectorMedia | null;
+  certificate: PublicProductInspectorMedia | null;
   subcategories: PublicProductSubcategoryLink[];
   attributes: PublicProductInspectorAttribute[];
   colorReferences: PublicProductColorReference[];

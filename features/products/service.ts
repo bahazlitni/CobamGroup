@@ -124,12 +124,6 @@ const STAFF_PRODUCT_SELECT = {
       },
     },
   },
-  packLinesAsComponent: {
-    select: {
-      packProductId: true,
-    },
-    take: 1,
-  },
 } satisfies Prisma.ProductSelect;
 
 const STAFF_FAMILY_DETAIL_SELECT = {
@@ -239,6 +233,7 @@ function mapVariant(
 ): ProductVariantInputDto {
   const galleryLinks = record.media.filter((link) => link.role === "GALLERY");
   const technicalLink = record.media.find((link) => link.role === "TECHNICAL") ?? null;
+  const certificateLink = record.media.find((link) => link.role === "CERTIFICATE") ?? null;
 
   return {
     id: Number(record.id),
@@ -271,6 +266,7 @@ function mapVariant(
     tags: record.tags,
     subcategoryIds: record.subcategories.map((link) => Number(link.subcategoryId)),
     datasheet: technicalLink ? mapMedia(technicalLink.media, technicalLink) : null,
+    certificate: certificateLink ? mapMedia(certificateLink.media, certificateLink) : null,
     media: galleryLinks.map((link) => mapMedia(link.media, link)),
     attributes: record.attributes.map(mapProductAttributeRecord),
   };
@@ -374,32 +370,6 @@ async function assertVariantUniqueConstraints(
   }
 }
 
-async function assertVariantsRemovable(productIds: number[]) {
-  if (productIds.length === 0) {
-    return;
-  }
-
-  const linked = await prisma.product.findFirst({
-    where: {
-      id: {
-        in: productIds.map((id) => BigInt(id)),
-      },
-      packLinesAsComponent: {
-        some: {},
-      },
-    },
-    select: {
-      name: true,
-    },
-  });
-
-  if (linked) {
-    throw new ProductServiceError(
-      `Impossible de supprimer la variante "${linked.name}" car elle est utilisée dans un pack.`,
-    );
-  }
-}
-
 async function syncVariantRelations(
   tx: Prisma.TransactionClient,
   productId: bigint,
@@ -424,15 +394,16 @@ async function syncVariantRelations(
     where: {
       productId,
       role: {
-        in: ["GALLERY", "TECHNICAL"],
+        in: ["GALLERY", "TECHNICAL", "CERTIFICATE"],
       },
     },
   });
 
   const technicalMediaId = variant.datasheet?.id ?? null;
+  const certificateMediaId = variant.certificate?.id ?? null;
   const productMediaLinks = [
     ...variant.media
-      .filter((media) => media.id !== technicalMediaId)
+      .filter((media) => media.id !== technicalMediaId && media.id !== certificateMediaId)
       .map((media, index) => ({
         productId,
         mediaId: BigInt(media.id),
@@ -449,6 +420,18 @@ async function syncVariantRelations(
             role: "TECHNICAL" as const,
             name: variant.datasheet.title ?? "Fiche technique",
             altText: variant.datasheet.altText,
+            sortOrder: 0,
+          },
+        ]
+      : []),
+    ...(variant.certificate
+      ? [
+          {
+            productId,
+            mediaId: BigInt(variant.certificate.id),
+            role: "CERTIFICATE" as const,
+            name: variant.certificate.title ?? "Certificat",
+            altText: variant.certificate.altText,
             sortOrder: 0,
           },
         ]
@@ -566,8 +549,6 @@ async function writeFamily(familyId: number | null, input: ProductFamilyUpsertIn
     const removedProductIds = (existingFamily?.members ?? [])
       .map((member) => Number(member.productId))
       .filter((productId) => !keptProductIds.includes(productId));
-
-    await assertVariantsRemovable(removedProductIds);
 
     if (removedProductIds.length > 0) {
       await tx.productFamilyMember.deleteMany({
@@ -967,7 +948,6 @@ export async function deleteProductService(session: StaffSession, familyId: numb
   }
 
   const productIds = family.members.map((member) => Number(member.productId));
-  await assertVariantsRemovable(productIds);
 
   await prisma.$transaction(async (tx) => {
     await tx.productFamilyMember.deleteMany({

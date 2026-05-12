@@ -227,11 +227,7 @@ export function buildSimpleProductMetadata(
       product.description,
       product.name,
     ),
-    path:
-      options?.path ??
-      (product.kind === "PACK"
-        ? `/produits/packs/${product.slug}`
-        : `/produits/${product.slug}`),
+    path: options?.path ?? `/produits/${product.slug}`,
     imageUrl: product.media.find((media) => media.kind === "IMAGE")?.url ?? null,
   });
 }
@@ -261,7 +257,7 @@ export function buildAllProductsMetadata(search: string | null): Metadata {
         `Resultats de recherche pour ${search} dans le catalogue COBAM GROUP.`,
       )
     : resolveSeoDescription(
-        "Consultez l'ensemble du catalogue COBAM GROUP : produits simples, packs et familles de produits.",
+        "Consultez l'ensemble du catalogue COBAM GROUP : produits simples et familles de produits.",
       );
 
   return buildMetadataBase({
@@ -323,11 +319,7 @@ export function buildSimpleProductStructuredData(
   product: PublicSimpleProductInspector,
   options?: { path?: string },
 ) {
-  const path =
-    options?.path ??
-    (product.kind === "PACK"
-      ? `/produits/packs/${product.slug}`
-      : `/produits/${product.slug}`);
+  const path = options?.path ?? `/produits/${product.slug}`;
   const imageUrls = product.media
     .filter((media) => media.kind === "IMAGE")
     .map((media) => buildAbsoluteUrl(media.url));

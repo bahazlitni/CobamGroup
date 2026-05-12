@@ -27,12 +27,20 @@ function getFilenameFromDisposition(value: string | null) {
   return decodeURIComponent(filenameMatch[1]);
 }
 
-function getFallbackFilename(url: string) {
+function getFallbackFilename(url: string, fallbackFilename: string) {
   const pathname = new URL(url, window.location.origin).pathname;
-  return pathname.split("/").filter(Boolean).pop() ?? "fiche-technique.pdf";
+  return pathname.split("/").filter(Boolean).pop() ?? fallbackFilename;
 }
 
-export default function DatasheetLink({ url }: { url: string }) {
+export default function DatasheetLink({
+  url,
+  label = "Fiche technique",
+  fallbackFilename = "fiche-technique.pdf",
+}: {
+  url: string;
+  label?: string;
+  fallbackFilename?: string;
+}) {
   const [isOpening, setIsOpening] = useState(false);
 
   const handleOpenDatasheet = async () => {
@@ -54,7 +62,7 @@ export default function DatasheetLink({ url }: { url: string }) {
       const objectUrl = URL.createObjectURL(blob);
       const filename =
         getFilenameFromDisposition(response.headers.get("Content-Disposition")) ??
-        getFallbackFilename(url);
+        getFallbackFilename(url, fallbackFilename);
       const anchor = document.createElement("a");
 
       anchor.href = objectUrl;
@@ -93,7 +101,7 @@ export default function DatasheetLink({ url }: { url: string }) {
         icon="download"
         iconPosition="right"
       >
-        Fiche technique
+        {label}
       </AnimatedUIButton>
     </div>
   );

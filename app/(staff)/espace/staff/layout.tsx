@@ -12,7 +12,6 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Boxes,
   Building2,
   ChevronDown,
   FileText,
@@ -166,11 +165,6 @@ const STAFF_TABS: Record<string, StaffTabGroup> = {
         label: "Familles",
         icon: Package,
       },
-      packs: {
-        key: "packs",
-        label: "Packs",
-        icon: Boxes,
-      },
       "categories-produits": {
         key: "categories-produits",
         label: "Catégories produits",
@@ -274,7 +268,6 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
       "gestion-des-produits": {
         produits: user ? canAccessProducts(user) : false,
         familles: user ? canAccessProducts(user) : false,
-        packs: user ? canAccessProducts(user) : false,
         "categories-produits": user
           ? canAccessProductCategories(user)
           : false,
