@@ -525,7 +525,7 @@ export default function AllProductsPage() {
     }
 
     const confirmed = window.confirm(
-      `Supprimer ${selectedIds.length} produit(s) selectionne(s) ?`,
+      `Supprimer ${selectedIds.length} produit(s) sélectionné(s) ?`,
     );
     if (!confirmed) {
       return;
@@ -607,7 +607,7 @@ export default function AllProductsPage() {
       {selectedIds.length > 0 ? (
         <div className="fixed bottom-6 right-6 z-30 flex w-[min(560px,calc(100vw-3rem))] flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-lg">
           <p className="text-sm text-slate-600">
-            {selectedIds.length} produit(s) selectionne(s)
+            {selectedIds.length} produit(s) sélectionné(s)
           </p>
           <div className="flex flex-wrap gap-2">
             {canEdit ? (

@@ -492,7 +492,7 @@ export default function MediaUploadDialog({
                     <span className="font-medium text-slate-700">
                       {folderId
                         ? folderOptions.find((option) => option.id === Number(folderId))
-                            ?.pathLabel ?? "le dossier selectionne"
+                            ?.pathLabel ?? "le dossier sélectionné"
                         : "la racine"}
                     </span>
                     .

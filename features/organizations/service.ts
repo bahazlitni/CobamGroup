@@ -93,7 +93,6 @@ function mapOrganization(record: {
   id: bigint;
   slug: string;
   name: string;
-  displayName: string;
   description: string | null;
   logoMediaId: bigint | null;
   isProductBrand: boolean;
@@ -106,7 +105,6 @@ function mapOrganization(record: {
     id: Number(record.id),
     slug: record.slug,
     name: record.name,
-    displayName: record.displayName,
     description: record.description,
     logoMediaId: record.logoMediaId == null ? null : Number(record.logoMediaId),
     isProductBrand: record.isProductBrand,
@@ -122,12 +120,11 @@ export function parseOrganizationId(value: unknown) {
 }
 
 export function parseOrganizationInput(value: unknown): OrganizationInput {
-  const record = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const record = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 
   return {
     slug: requiredString(record.slug, "Le slug"),
     name: requiredString(record.name, "Le nom"),
-    displayName: requiredString(record.displayName, "Le nom affiche"),
     description: optionalString(record.description),
     logoMediaId: nullablePositiveIntegerValue(record.logoMediaId, "Le logo media"),
     isProductBrand: booleanValue(record.isProductBrand),
@@ -141,15 +138,12 @@ export async function listOrganizationsService(session: StaffSession) {
 
   return (
     await prisma.organization.findMany({
-      orderBy: [{ displayName: "asc" }, { name: "asc" }],
+      orderBy: [{ name: "asc" }],
     })
   ).map(mapOrganization);
 }
 
-export async function createOrganizationService(
-  session: StaffSession,
-  input: OrganizationInput,
-) {
+export async function createOrganizationService(session: StaffSession, input: OrganizationInput) {
   assertCanWrite(session);
   await assertLogoMedia(input.logoMediaId);
 
@@ -158,7 +152,6 @@ export async function createOrganizationService(
       data: {
         slug: input.slug,
         name: input.name,
-        displayName: input.displayName,
         description: input.description,
         logoMediaId: input.logoMediaId == null ? null : BigInt(input.logoMediaId),
         isProductBrand: input.isProductBrand,
@@ -183,7 +176,6 @@ export async function updateOrganizationService(
       data: {
         slug: input.slug,
         name: input.name,
-        displayName: input.displayName,
         description: input.description,
         logoMediaId: input.logoMediaId == null ? null : BigInt(input.logoMediaId),
         isProductBrand: input.isProductBrand,

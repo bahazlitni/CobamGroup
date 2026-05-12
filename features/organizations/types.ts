@@ -2,7 +2,6 @@ export type OrganizationDto = {
   id: number;
   slug: string;
   name: string;
-  displayName: string;
   description: string | null;
   logoMediaId: number | null;
   isProductBrand: boolean;
@@ -15,7 +14,6 @@ export type OrganizationDto = {
 export type OrganizationInput = {
   slug: string;
   name: string;
-  displayName: string;
   description: string | null;
   logoMediaId: number | null;
   isProductBrand: boolean;

@@ -257,7 +257,7 @@ export default function MediaInspectorDialog({
       toast.success(
         nextFolderId == null
           ? "Le media a ete deplace vers la racine."
-          : "Le media a ete deplace dans le dossier selectionne.",
+          : "Le media a ete deplace dans le dossier sélectionné.",
       );
     } catch (error) {
       toast.error(
@@ -581,7 +581,7 @@ export default function MediaInspectorDialog({
         ) : (
           <div className="flex h-[60vh] flex-col items-center justify-center space-y-4 px-6 text-slate-500">
             <Package className="h-12 w-12 opacity-10" />
-            <p className="font-medium">Aucun media selectionne</p>
+            <p className="font-medium">Aucun media sélectionné</p>
           </div>
         )}
       </DialogContent>

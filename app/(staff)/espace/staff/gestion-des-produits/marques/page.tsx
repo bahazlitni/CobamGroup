@@ -27,7 +27,6 @@ import { slugify } from "@/lib/slugify";
 type OrganizationFormState = {
   slug: string;
   name: string;
-  displayName: string;
   description: string;
   logoMediaId: string;
   isProductBrand: boolean;
@@ -39,7 +38,6 @@ function emptyOrganizationForm(): OrganizationFormState {
   return {
     slug: "",
     name: "",
-    displayName: "",
     description: "",
     logoMediaId: "",
     isProductBrand: true,
@@ -58,7 +56,6 @@ function toInput(form: OrganizationFormState): OrganizationInput {
   return {
     slug: form.slug,
     name: form.name,
-    displayName: form.displayName,
     description: form.description.trim() || null,
     logoMediaId: form.logoMediaId ? Number(form.logoMediaId) : null,
     isProductBrand: form.isProductBrand,
@@ -83,23 +80,13 @@ function FlagCheckbox({
       htmlFor={id}
       className="flex items-center gap-3 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700"
     >
-      <Checkbox
-        id={id}
-        checked={checked}
-        onCheckedChange={(value) => onChange(Boolean(value))}
-      />
+      <Checkbox id={id} checked={checked} onCheckedChange={(value) => onChange(Boolean(value))} />
       <span>{label}</span>
     </label>
   );
 }
 
-function FlagPill({
-  children,
-  enabled,
-}: {
-  children: string;
-  enabled: boolean;
-}) {
+function FlagPill({ children, enabled }: { children: string; enabled: boolean }) {
   return (
     <span
       className={cn(
@@ -147,7 +134,6 @@ export default function ProductBrandsAdminPage() {
     setForm({
       slug: item.slug,
       name: item.name,
-      displayName: item.displayName,
       description: item.description ?? "",
       logoMediaId: item.logoMediaId == null ? "" : String(item.logoMediaId),
       isProductBrand: item.isProductBrand,
@@ -184,7 +170,7 @@ export default function ProductBrandsAdminPage() {
   };
 
   const deleteItem = async (item: OrganizationDto) => {
-    if (isSaving || !window.confirm(`Supprimer "${item.displayName}" ?`)) {
+    if (isSaving || !window.confirm(`Supprimer "${item.name}" ?`)) {
       return;
     }
 
@@ -218,45 +204,25 @@ export default function ProductBrandsAdminPage() {
 
       {!isLoading && !error ? (
         <div className="grid gap-6 xl:grid-cols-[460px_minmax(0,1fr)]">
-          <Panel
-            pretitle={editingId == null ? "Nouvelle marque" : "Modification"}
-            title="Details"
-          >
+          <Panel pretitle={editingId == null ? "Nouvelle marque" : "Modification"} title="Details">
             <form onSubmit={saveItem} className="grid gap-4">
-              <PanelField id="organization-display-name" label="Nom affiche">
-                <PanelInput
-                  id="organization-display-name"
-                  fullWidth
-                  value={form.displayName}
-                  disabled={isSaving}
-                  onChange={(event) => {
-                    const displayName = event.target.value;
-                    setForm((current) => ({
-                      ...current,
-                      displayName,
-                      name:
-                        current.name === "" || current.name === current.displayName
-                          ? displayName
-                          : current.name,
-                      slug:
-                        current.slug === "" ||
-                        current.slug === slugify(current.displayName)
-                          ? slugify(displayName)
-                          : current.slug,
-                    }));
-                  }}
-                />
-              </PanelField>
-
-              <PanelField id="organization-name" label="Nom interne">
+              <PanelField id="organization-name" label="Nom">
                 <PanelInput
                   id="organization-name"
                   fullWidth
                   value={form.name}
                   disabled={isSaving}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, name: event.target.value }))
-                  }
+                  onChange={(event) => {
+                    const name = event.target.value;
+                    setForm((current) => ({
+                      ...current,
+                      name,
+                      slug:
+                        current.slug === "" || current.slug === slugify(current.name)
+                          ? slugify(name)
+                          : current.slug,
+                    }));
+                  }}
                 />
               </PanelField>
 
@@ -299,7 +265,7 @@ export default function ProductBrandsAdminPage() {
                     logoMediaId: mediaId == null ? "" : String(mediaId),
                   }))
                 }
-                emptyLabel="Aucun logo selectionne."
+                emptyLabel="Aucun logo sélectionné."
                 previewClassName="h-24 w-24 rounded-lg"
                 previewImageClassName="object-contain bg-white"
               />
@@ -341,12 +307,7 @@ export default function ProductBrandsAdminPage() {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <AnimatedUIButton
-                  type="submit"
-                  icon="save"
-                  loading={isSaving}
-                  disabled={isSaving}
-                >
+                <AnimatedUIButton type="submit" icon="save" loading={isSaving} disabled={isSaving}>
                   {editingId == null ? "Ajouter" : "Enregistrer"}
                 </AnimatedUIButton>
                 {editingId != null ? (
@@ -373,23 +334,19 @@ export default function ProductBrandsAdminPage() {
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <ImagePreview
-                      alt={item.displayName}
+                      alt={item.name}
                       mediaId={item.logoMediaId}
                       className="h-10 w-10 rounded-md"
                       imageClassName="object-contain bg-white"
                     />
                     <div className="min-w-0">
-                      <p className="truncate font-semibold text-cobam-dark-blue">
-                        {item.displayName}
-                      </p>
+                      <p className="text-cobam-dark-blue truncate font-semibold">{item.name}</p>
                       <p className="truncate text-xs text-slate-500">
-                        {item.slug} - {item.name}
+                        {item.slug}
                         {item.logoMediaId ? ` - media #${item.logoMediaId}` : ""}
                       </p>
                       <div className="mt-1 flex flex-wrap gap-1">
-                        <FlagPill enabled={item.isProductBrand}>
-                          Marque produit
-                        </FlagPill>
+                        <FlagPill enabled={item.isProductBrand}>Marque produit</FlagPill>
                         <FlagPill enabled={item.isReference}>Reference</FlagPill>
                         <FlagPill enabled={item.isPartner}>Partenaire</FlagPill>
                       </div>
@@ -401,7 +358,7 @@ export default function ProductBrandsAdminPage() {
                       size="sm"
                       variant="ghost"
                       icon="modify"
-                      aria-label={`Modifier ${item.displayName}`}
+                      aria-label={`Modifier ${item.name}`}
                       onClick={() => editItem(item)}
                       disabled={isSaving}
                     />
@@ -411,7 +368,7 @@ export default function ProductBrandsAdminPage() {
                       variant="ghost"
                       color="red"
                       icon="trash"
-                      aria-label={`Supprimer ${item.displayName}`}
+                      aria-label={`Supprimer ${item.name}`}
                       onClick={() => void deleteItem(item)}
                       disabled={isSaving}
                     />

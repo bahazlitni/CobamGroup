@@ -42,12 +42,12 @@ export default function StaffPdfImporter({
   dialogDescription,
   value,
   onChange,
-  emptyLabel = "Aucun PDF selectionne.",
+  emptyLabel = "Aucun PDF sélectionné.",
   role = "TECHNICAL",
 }: StaffPdfImporterProps) {
   const [open, setOpen] = useState(false);
   const media = isPdfMedia(value) ? value : null;
-  const error = value != null && !isPdfMedia(value) ? "Le media selectionne n'est pas un PDF." : null;
+  const error = value != null && !isPdfMedia(value) ? "Le media sélectionné n'est pas un PDF." : null;
 
   return (
     <>

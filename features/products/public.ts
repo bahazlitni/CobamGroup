@@ -10,15 +10,9 @@ import {
 } from "@/lib/static_tables/attributes";
 import { formatProductBrandValue } from "@/lib/static_tables/brands";
 import { COLORS } from "@/lib/static_tables/colors";
-import {
-  resolveFinish,
-  resolveFinishURL,
-} from "@/lib/static_tables/finishes";
+import { resolveFinish, resolveFinishURL } from "@/lib/static_tables/finishes";
 import { rankPublicProductSearchRows } from "./search";
-import {
-  productBrandLabel,
-  richTextDescriptionToString,
-} from "./model-b-compat";
+import { productBrandLabel, richTextDescriptionToString } from "./model-b-compat";
 import type {
   PublicProductColorReference,
   PublicProductFinishReference,
@@ -73,7 +67,7 @@ const PUBLIC_PRODUCT_SELECT = {
   shortDescription: true,
   richTextDescription: true,
   descriptionSeo: true,
-  brand: { select: { displayName: true, name: true } },
+  brand: { select: { name: true } },
   visibleEcommerce: true,
   visibleVitrine: true,
   subcategories: {
@@ -127,7 +121,7 @@ const PACK_COMPONENT_SELECT = {
   shortDescription: true,
   richTextDescription: true,
   descriptionSeo: true,
-  brand: { select: { displayName: true, name: true } },
+  brand: { select: { name: true } },
   visibleEcommerce: true,
   visibleVitrine: true,
 } satisfies Prisma.ProductSelect;
@@ -225,15 +219,15 @@ function normalizeComparableValue(value: string | null | undefined) {
     .replace(/\s+/g, " ");
 }
 
-function buildPublicMediaUrl(mediaId: bigint | number, variant: "original" | "thumbnail" = "original") {
+function buildPublicMediaUrl(
+  mediaId: bigint | number,
+  variant: "original" | "thumbnail" = "original",
+) {
   const query = variant === "thumbnail" ? "?variant=thumbnail" : "";
   return `/api/media/${mediaId.toString()}/file${query}`;
 }
 
-type ProductColorReferenceLookup = Map<
-  string,
-  { key: string; label: string; value: string }
->;
+type ProductColorReferenceLookup = Map<string, { key: string; label: string; value: string }>;
 
 type ProductFinishReferenceLookup = Map<
   string,
@@ -245,9 +239,7 @@ type ProductFinishReferenceLookup = Map<
   }
 >;
 
-function indexComparableLookup<T extends { key: string; label: string }>(
-  records: T[],
-) {
+function indexComparableLookup<T extends { key: string; label: string }>(records: T[]) {
   const lookup = new Map<string, T>();
 
   for (const record of records) {
@@ -293,16 +285,20 @@ async function loadProductFinishReferenceLookup(): Promise<ProductFinishReferenc
   return indexComparableLookup(records);
 }
 
-function isRenderableMedia(input: {
-  id: bigint;
-  isActive: boolean;
-  deletedAt: Date | null;
-}) {
+function isRenderableMedia(input: { id: bigint; isActive: boolean; deletedAt: Date | null }) {
   return input.isActive && input.deletedAt == null;
 }
 
 function mapMediaRecord(
-  media: { id: bigint; kind: "IMAGE" | "VIDEO" | "DOCUMENT"; title: string | null; altText: string | null; mimeType: string | null; isActive: boolean; deletedAt: Date | null } | null,
+  media: {
+    id: bigint;
+    kind: "IMAGE" | "VIDEO" | "DOCUMENT";
+    title: string | null;
+    altText: string | null;
+    mimeType: string | null;
+    isActive: boolean;
+    deletedAt: Date | null;
+  } | null,
   link?: {
     name: string | null;
     altText: string | null;
@@ -341,9 +337,7 @@ function collectMediaIdsForPublishing(record: PublicFamilyRecord) {
   return [...ids];
 }
 
-function collectProductMediaIdsForPublishing(
-  records: Array<Pick<PublicProductRecord, "media">>,
-) {
+function collectProductMediaIdsForPublishing(records: Array<Pick<PublicProductRecord, "media">>) {
   const ids = new Set<number>();
 
   for (const record of records) {
@@ -362,15 +356,10 @@ function isPublicProduct(product: PublicProductRecord) {
 }
 
 function isPublicSingleProduct(product: PublicProductRecord) {
-  return (
-    (product.kind === "STANDARD" || product.kind === "SINGLE") &&
-    product.visibleEcommerce
-  );
+  return (product.kind === "STANDARD" || product.kind === "SINGLE") && product.visibleEcommerce;
 }
 
-function getBrandName(
-  brand: { displayName: string; name: string } | null | undefined,
-) {
+function getBrandName(brand: { name: string } | null | undefined) {
   return formatProductBrandValue(productBrandLabel(brand));
 }
 
@@ -445,15 +434,16 @@ function getAttributePresentation(attribute: PublicProductRecord["attributes"][n
   return {
     attributeId: canonicalKind || attribute.name,
     kind: canonicalKind || attribute.name,
-    name:
-      attribute.label ||
-      formatProductAttributeKind(attribute.name) ||
-      attribute.name,
+    name: attribute.label || formatProductAttributeKind(attribute.name) || attribute.name,
     unit: attribute.unit ?? getProductAttributeUnit(attribute.name),
     specialType:
-      normalizedName === "finish" || attribute.inputType === "FINISH" || resolvedAttribute?.key === "FINISH"
+      normalizedName === "finish" ||
+      attribute.inputType === "FINISH" ||
+      resolvedAttribute?.key === "FINISH"
         ? ("FINISH" as const)
-        : normalizedName === "color" || attribute.inputType === "COLOR" || resolvedAttribute?.key === "COLOR"
+        : normalizedName === "color" ||
+            attribute.inputType === "COLOR" ||
+            resolvedAttribute?.key === "COLOR"
           ? ("COLOR" as const)
           : null,
   };
@@ -521,11 +511,8 @@ function derivePack(record: PublicPackRecord) {
 }
 
 function pickDefaultPublicVariant(record: PublicFamilyRecord) {
-  const publicVariants = record.members
-    .map((member) => member.product)
-    .filter(isPublicProduct);
-  const defaultProductId =
-    record.defaultProductId == null ? null : Number(record.defaultProductId);
+  const publicVariants = record.members.map((member) => member.product).filter(isPublicProduct);
+  const defaultProductId = record.defaultProductId == null ? null : Number(record.defaultProductId);
 
   if (publicVariants.length === 0) {
     return {
@@ -545,17 +532,22 @@ function pickDefaultPublicVariant(record: PublicFamilyRecord) {
   };
 }
 
-function buildFamilyCoverMedia(record: PublicFamilyRecord, defaultVariant: PublicProductRecord | null) {
+function buildFamilyCoverMedia(
+  record: PublicFamilyRecord,
+  defaultVariant: PublicProductRecord | null,
+) {
   const familyMainImage = mapMediaRecord(record.mainImage);
   if (familyMainImage) {
     return familyMainImage;
   }
 
-  return defaultVariant ? mapVariantMedia(defaultVariant)[0] ?? null : null;
+  return defaultVariant ? (mapVariantMedia(defaultVariant)[0] ?? null) : null;
 }
 
-
-function mapFamilySummary(record: PublicFamilyRecord, defaultVariant: PublicProductRecord | null): PublicProductSummary {
+function mapFamilySummary(
+  record: PublicFamilyRecord,
+  defaultVariant: PublicProductRecord | null,
+): PublicProductSummary {
   const coverMedia = buildFamilyCoverMedia(record, defaultVariant);
 
   return {
@@ -594,7 +586,10 @@ function mapProductSummary(
   };
 }
 
-function mapPackSummary(record: PublicPackRecord, derived: ReturnType<typeof derivePack>): PublicProductSummary {
+function mapPackSummary(
+  record: PublicPackRecord,
+  derived: ReturnType<typeof derivePack>,
+): PublicProductSummary {
   const coverMedia = buildProductCoverMedia(record);
 
   return {
@@ -629,15 +624,13 @@ function buildColorReferencesFromAttributes(
       }
 
       const color =
-        colorLookup.get(key) ??
-        COLORS.find((entry) => normalizeComparableValue(entry.key) === key);
+        colorLookup.get(key) ?? COLORS.find((entry) => normalizeComparableValue(entry.key) === key);
 
       seen.set(key, {
         key: color?.key ?? key,
         label: color?.label ?? attribute.value,
         hexValue:
-          color?.value ??
-          (/^#[0-9a-f]{3,8}$/i.test(attribute.value) ? attribute.value : null),
+          color?.value ?? (/^#[0-9a-f]{3,8}$/i.test(attribute.value) ? attribute.value : null),
       } as PublicProductColorReference);
     }
   }
@@ -715,10 +708,13 @@ function mapInspectorVariant(product: PublicProductRecord): PublicProductInspect
   };
 }
 
-async function mapSimpleInspector(record: PublicProductRecord, input: {
-  kind: "PACK" | "SINGLE" | "VARIANT";
-  brandNames: string[];
-}): Promise<PublicSimpleProductInspector> {
+async function mapSimpleInspector(
+  record: PublicProductRecord,
+  input: {
+    kind: "PACK" | "SINGLE" | "VARIANT";
+    brandNames: string[];
+  },
+): Promise<PublicSimpleProductInspector> {
   const media = mapVariantMedia(record);
   const attributes = mapVariantAttributes(record);
   const [colorLookup, finishLookup] = await Promise.all([
@@ -743,7 +739,6 @@ async function mapSimpleInspector(record: PublicProductRecord, input: {
     finishReferences: buildFinishReferencesFromAttributes([attributes], finishLookup),
   };
 }
-
 
 function buildFamilySubcategories(publicVariants: PublicProductRecord[]) {
   const subcategories = new Map<number, PublicProductSubcategoryLink>();
@@ -805,8 +800,6 @@ function sortIndexItems(items: PublicProductIndexItem[]) {
   });
 }
 
-
-
 type AdvancedSearchAst =
   | string
   | {
@@ -822,14 +815,14 @@ function buildAdvancedSearchAst(q: string): AdvancedSearchAst | null {
   const tokens: string[] = [];
   let remainder = q;
   while (remainder.length > 0) {
-    if (remainder.startsWith('||')) {
-      tokens.push('||');
+    if (remainder.startsWith("||")) {
+      tokens.push("||");
       remainder = remainder.slice(2);
-    } else if (remainder.startsWith('|')) {
-      tokens.push('|');
+    } else if (remainder.startsWith("|")) {
+      tokens.push("|");
       remainder = remainder.slice(1);
-    } else if (remainder.startsWith('&')) {
-      tokens.push('&');
+    } else if (remainder.startsWith("&")) {
+      tokens.push("&");
       remainder = remainder.slice(1);
     } else {
       const match = remainder.match(/^((?:brand|sku|name|date)(?::[123])?=[^&|]*)/i);
@@ -845,11 +838,11 @@ function buildAdvancedSearchAst(q: string): AdvancedSearchAst | null {
   // Ast building
   const step1: AdvancedSearchAst[] = [];
   for (let i = 0; i < tokens.length; i++) {
-    if (tokens[i] === '||') {
+    if (tokens[i] === "||") {
       const left = step1.pop();
       const right = tokens[++i];
       if (!left || !right) return null;
-      step1.push({ type: 'OR_GROUP', left, right });
+      step1.push({ type: "OR_GROUP", left, right });
     } else {
       step1.push(tokens[i]);
     }
@@ -857,11 +850,11 @@ function buildAdvancedSearchAst(q: string): AdvancedSearchAst | null {
 
   const step2: AdvancedSearchAst[] = [];
   for (let i = 0; i < step1.length; i++) {
-    if (step1[i] === '&') {
+    if (step1[i] === "&") {
       const left = step2.pop();
       const right = step1[++i];
       if (!left || !right) return null;
-      step2.push({ type: 'AND', left, right });
+      step2.push({ type: "AND", left, right });
     } else {
       step2.push(step1[i]);
     }
@@ -869,11 +862,11 @@ function buildAdvancedSearchAst(q: string): AdvancedSearchAst | null {
 
   const step3: AdvancedSearchAst[] = [];
   for (let i = 0; i < step2.length; i++) {
-    if (step2[i] === '|') {
+    if (step2[i] === "|") {
       const left = step3.pop();
       const right = step2[++i];
       if (!left || !right) return null;
-      step3.push({ type: 'OR', left, right });
+      step3.push({ type: "OR", left, right });
     } else {
       step3.push(step2[i]);
     }
@@ -884,30 +877,30 @@ function buildAdvancedSearchAst(q: string): AdvancedSearchAst | null {
 }
 
 function buildSqlFromAst(node: AdvancedSearchAst): import("@prisma/client").Prisma.Sql {
-  if (typeof node === 'string') {
+  if (typeof node === "string") {
     const match = node.match(/^((?:brand|sku|name|date))(?::([123]))?=([^&|]*)$/i);
     if (!match) return Prisma.empty;
     const key = match[1].toLowerCase();
-    const op = match[2] || '1';
+    const op = match[2] || "1";
     const val = match[3];
 
     let sqlPattern;
-    if (op === '1') sqlPattern = `${val}%`;
-    else if (op === '2') sqlPattern = val;
-    else if (op === '3') sqlPattern = `%${val}%`;
+    if (op === "1") sqlPattern = `${val}%`;
+    else if (op === "2") sqlPattern = val;
+    else if (op === "3") sqlPattern = `%${val}%`;
     else return Prisma.empty;
 
-    if (key === 'brand') return Prisma.sql`COALESCE("p_brand"."display_name", "p_brand"."name", '') ILIKE ${sqlPattern}`;
-    if (key === 'sku') return Prisma.sql`"p"."sku" ILIKE ${sqlPattern}`;
-    if (key === 'name') return Prisma.sql`"p"."name" ILIKE ${sqlPattern}`;
+    if (key === "brand") return Prisma.sql`COALESCE("p_brand"."name", '') ILIKE ${sqlPattern}`;
+    if (key === "sku") return Prisma.sql`"p"."sku" ILIKE ${sqlPattern}`;
+    if (key === "name") return Prisma.sql`"p"."name" ILIKE ${sqlPattern}`;
     return Prisma.empty;
   }
 
   const left = buildSqlFromAst(node.left);
   const right = buildSqlFromAst(node.right);
 
-  if (node.type === 'AND') return Prisma.sql`(${left} AND ${right})`;
-  if (node.type === 'OR' || node.type === 'OR_GROUP') return Prisma.sql`(${left} OR ${right})`;
+  if (node.type === "AND") return Prisma.sql`(${left} AND ${right})`;
+  if (node.type === "OR" || node.type === "OR_GROUP") return Prisma.sql`(${left} OR ${right})`;
 
   return Prisma.empty;
 }
@@ -940,7 +933,7 @@ export async function listPublicProductsIndex(input: {
       f.slug AS product_slug,
       p.sku AS product_sku,
       p.name AS product_name,
-      COALESCE(p_brand.display_name, p_brand.name) AS product_brand,
+      p_brand.name AS product_brand,
       p.tags AS product_tags,
       COALESCE(p.short_description, p."richTextDescription"::text) AS product_description,
       p.description_seo AS product_description_seo,
@@ -961,7 +954,7 @@ export async function listPublicProductsIndex(input: {
           fp.slug,
           fp.name,
           fp.tags,
-          COALESCE(fp_brand.display_name, fp_brand.name),
+          fp_brand.name,
           COALESCE(fp.short_description, fp."richTextDescription"::text),
           fp.description_seo,
           (
@@ -1053,7 +1046,7 @@ export async function listPublicProductsIndex(input: {
       p.slug AS product_slug,
       p.sku AS product_sku,
       p.name AS product_name,
-      COALESCE(p_brand.display_name, p_brand.name) AS product_brand,
+      p_brand.name AS product_brand,
       p.tags AS product_tags,
       COALESCE(p.short_description, p."richTextDescription"::text) AS product_description,
       p.description_seo AS product_description_seo,
@@ -1067,7 +1060,7 @@ export async function listPublicProductsIndex(input: {
           cp.sku,
           cp.slug,
           cp.name,
-          COALESCE(cp_brand.display_name, cp_brand.name),
+          cp_brand.name,
           COALESCE(cp.short_description, cp."richTextDescription"::text),
           cp.description_seo,
           (
@@ -1185,12 +1178,8 @@ export async function listPublicProductsIndex(input: {
     };
   }
 
-  const familyIds = rows
-    .map((row) => row.family_id)
-    .filter((id): id is bigint => id != null);
-  const productIds = rows
-    .map((row) => row.product_id)
-    .filter((id): id is bigint => id != null);
+  const familyIds = rows.map((row) => row.family_id).filter((id): id is bigint => id != null);
+  const productIds = rows.map((row) => row.product_id).filter((id): id is bigint => id != null);
 
   const [families, products] = await Promise.all([
     familyIds.length
@@ -1339,7 +1328,7 @@ export async function findPublicSingleProductBySlug(
 ): Promise<PublicSimpleProductInspector | null> {
   const record = await prisma.product.findFirst({
     where: {
-    slug: productSlug,
+      slug: productSlug,
       kind: { in: ["STANDARD", "SINGLE"] },
       visibleEcommerce: true,
     },

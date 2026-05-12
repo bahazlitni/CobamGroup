@@ -1,7 +1,11 @@
 import { Prisma, type ProductLifecycle } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
 import { prisma } from "@/lib/server/db/prisma";
-import { canAccessProducts, canCreateProducts, canManageProducts } from "@/features/products/access";
+import {
+  canAccessProducts,
+  canCreateProducts,
+  canManageProducts,
+} from "@/features/products/access";
 import type { ProductMediaDto } from "@/features/products/types";
 import { formatProductBrandValue } from "@/lib/static_tables/brands";
 import {
@@ -47,7 +51,7 @@ const PACK_COMPONENT_SELECT = {
   slug: true,
   kind: true,
   name: true,
-  brand: { select: { displayName: true, name: true } },
+  brand: { select: { name: true } },
   visibleEcommerce: true,
   visibleVitrine: true,
 } satisfies Prisma.ProductSelect;
@@ -170,7 +174,7 @@ function mapPackDetail(record: PackDetailRecord): ProductPackDetailDto {
     description: richTextDescriptionToString(record.richTextDescription),
     descriptionSeo: record.descriptionSeo,
     subcategoryIds: record.subcategories.map((link) => Number(link.subcategoryId)),
-      media: record.media.map((link) => mapMedia(link.media, link)),
+    media: record.media.map((link) => mapMedia(link.media, link)),
     lines: record.packLinesAsPack.map((line) => ({
       productId: Number(line.productId),
       quantity: line.quantity,
@@ -234,7 +238,9 @@ async function assertPackLinesValid(input: ProductPackUpsertInput) {
   const duplicates = new Set<number>();
   for (const line of input.lines) {
     if (duplicates.has(line.productId)) {
-      throw new ProductPackServiceError("Un produit ne peut apparaître qu'une seule fois dans un pack.");
+      throw new ProductPackServiceError(
+        "Un produit ne peut apparaître qu'une seule fois dans un pack.",
+      );
     }
     duplicates.add(line.productId);
   }
@@ -251,8 +257,13 @@ async function assertPackLinesValid(input: ProductPackUpsertInput) {
     },
   });
 
-  if (products.length !== input.lines.length || products.some((product) => product.kind === "PACK")) {
-    throw new ProductPackServiceError("Les lignes d'un pack doivent référencer uniquement des produits simples ou des variantes.");
+  if (
+    products.length !== input.lines.length ||
+    products.some((product) => product.kind === "PACK")
+  ) {
+    throw new ProductPackServiceError(
+      "Les lignes d'un pack doivent référencer uniquement des produits simples ou des variantes.",
+    );
   }
 }
 
@@ -377,16 +388,16 @@ export async function listProductPacksService(
       where: {
         isProductBrand: true,
       },
-      orderBy: [{ displayName: "asc" }, { name: "asc" }],
+      orderBy: [{ name: "asc" }],
       select: {
-        displayName: true,
+        name: true,
       },
     }),
   ]);
 
   return {
     items: items.map(mapPackListItem),
-    productBrandOptions: productBrands.map((brand) => brand.displayName),
+    productBrandOptions: productBrands.map((brand) => brand.name),
     total,
     page: query.page,
     pageSize: query.pageSize,
@@ -450,12 +461,11 @@ export async function getProductPackFormOptionsService(
     })),
     availableProducts: products
       .filter(
-        (product): product is typeof product & {
+        (
+          product,
+        ): product is typeof product & {
           kind: "STANDARD" | "SINGLE" | "VARIANT";
-        } =>
-          product.kind === "STANDARD" ||
-          product.kind === "SINGLE" ||
-          product.kind === "VARIANT",
+        } => product.kind === "STANDARD" || product.kind === "SINGLE" || product.kind === "VARIANT",
       )
       .map((product) => ({
         id: Number(product.id),
@@ -561,10 +571,7 @@ export async function updateProductPacksBulkService(
     data.displayName = input.name;
   }
   if (input.brand !== undefined) {
-    throw new ProductPackServiceError(
-      "La marque d'un pack est derivee de ses produits.",
-      400,
-    );
+    throw new ProductPackServiceError("La marque d'un pack est derivee de ses produits.", 400);
   }
   if (input.lifecycle !== undefined) {
     Object.assign(data, visibilityFromProductLifecycle(input.lifecycle));
@@ -583,10 +590,7 @@ export async function updateProductPacksBulkService(
   });
 }
 
-export async function deleteProductPacksBulkService(
-  session: StaffSession,
-  packIds: number[],
-) {
+export async function deleteProductPacksBulkService(session: StaffSession, packIds: number[]) {
   if (!canManageProducts(session)) {
     throw new ProductPackServiceError("Accès refusé.", 403);
   }

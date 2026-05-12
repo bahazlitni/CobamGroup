@@ -34,7 +34,7 @@ const ALL_PRODUCTS_LIST_SELECT = {
   name: true,
   richTextDescription: true,
   shortDescription: true,
-  brand: { select: { displayName: true, name: true } },
+  brand: { select: { name: true } },
   visibleEcommerce: true,
   visibleVitrine: true,
   updatedAt: true,
@@ -79,7 +79,7 @@ const ALL_PRODUCTS_LIST_SELECT = {
       quantity: true,
       product: {
         select: {
-          brand: { select: { displayName: true, name: true } },
+          brand: { select: { name: true } },
           visibleEcommerce: true,
           visibleVitrine: true,
         },
@@ -135,9 +135,7 @@ function mapAllProductsListItem(record: AllProductsListRecord): AllProductsListI
     sku: record.sku,
     slug: record.slug,
     name: record.name,
-    description:
-      record.shortDescription ??
-      richTextDescriptionToString(record.richTextDescription),
+    description: record.shortDescription ?? richTextDescriptionToString(record.richTextDescription),
     brand: formatAllProductBrand(record),
     hasImage: record.media.some((link) => link.media.kind === "IMAGE"),
     hasDatasheet: false,
@@ -206,7 +204,7 @@ function escapeCsvCell(value: string | number | null | undefined) {
   const normalized = normalizeCsvCellValue(value);
   const mustQuote =
     normalized.includes(CSV_DELIMITER) ||
-    normalized.includes("\"") ||
+    normalized.includes('"') ||
     normalized.includes("\n") ||
     normalized.includes("\r");
 
@@ -214,16 +212,14 @@ function escapeCsvCell(value: string | number | null | undefined) {
     return normalized;
   }
 
-  return `"${normalized.replace(/"/g, "\"\"")}"`;
+  return `"${normalized.replace(/"/g, '""')}"`;
 }
 
 function buildCsv(columns: AllProductsExportColumn[], rows: AllProductsExportRow[]) {
   const csvRows = [
     columns.map((column) => escapeCsvCell(column.header)).join(CSV_DELIMITER),
     ...rows.map((row) =>
-      columns
-        .map((column) => escapeCsvCell(column.value(row)))
-        .join(CSV_DELIMITER),
+      columns.map((column) => escapeCsvCell(column.value(row))).join(CSV_DELIMITER),
     ),
   ];
 
@@ -234,10 +230,7 @@ function mapAllProductsExportRow(record: AllProductsExportRecord): AllProductsEx
   return {
     product: mapAllProductsListItem(record),
     attributes: new Map(
-      record.attributes.map((attribute) => [
-        attribute.label || attribute.name,
-        attribute.value,
-      ]),
+      record.attributes.map((attribute) => [attribute.label || attribute.name, attribute.value]),
     ),
   };
 }
@@ -438,11 +431,7 @@ function buildPdfColumns(
   }));
 }
 
-function addPdfReportHeader(
-  commands: string[],
-  mode: AllProductsExportMode,
-  generatedAt: Date,
-) {
+function addPdfReportHeader(commands: string[], mode: AllProductsExportMode, generatedAt: Date) {
   const modeLabel = mode === "basic" ? "Basic Datasheet" : "Extended Datasheet";
 
   addPdfText(commands, "COBAM GROUP", PDF_MARGIN, 30, {
@@ -507,8 +496,7 @@ function addPdfTableRow(
     18,
     Math.max(...cells.map((lines) => lines.length)) * PDF_TABLE_LINE_HEIGHT + 8,
   );
-  const fillRgb: [number, number, number] =
-    rowIndex % 2 === 0 ? [1, 1, 1] : [0.97, 0.98, 0.99];
+  const fillRgb: [number, number, number] = rowIndex % 2 === 0 ? [1, 1, 1] : [0.97, 0.98, 0.99];
   let x = PDF_MARGIN;
 
   columns.forEach((column, columnIndex) => {
@@ -559,9 +547,7 @@ function createPdfDocument(pageContents: string[]) {
 
   for (const content of pageContents) {
     const contentLength = Buffer.byteLength(content, "latin1");
-    const contentId = addObject(
-      `<< /Length ${contentLength} >>\nstream\n${content}\nendstream`,
-    );
+    const contentId = addObject(`<< /Length ${contentLength} >>\nstream\n${content}\nendstream`);
     const pageId = addObject(
       [
         "<< /Type /Page",
@@ -664,10 +650,7 @@ function buildProductsPdf(
   return createPdfDocument(pageContents);
 }
 
-function buildExportFilename(
-  mode: AllProductsExportMode,
-  format: AllProductsExportFormat,
-) {
+function buildExportFilename(mode: AllProductsExportMode, format: AllProductsExportFormat) {
   const dateStamp = new Date().toISOString().slice(0, 10);
   return `all-products-${mode}-datasheet-${dateStamp}.${format}`;
 }
@@ -682,10 +665,7 @@ export async function exportAllProductsService(
   }
 
   if (mode === "super" && format === "pdf") {
-    throw new AllProductsServiceError(
-      "L'export Super est disponible uniquement en CSV.",
-      400,
-    );
+    throw new AllProductsServiceError("L'export Super est disponible uniquement en CSV.", 400);
   }
 
   const products = await prisma.product.findMany({
@@ -765,16 +745,16 @@ export async function listAllProductsService(
       where: {
         isProductBrand: true,
       },
-      orderBy: [{ displayName: "asc" }, { name: "asc" }],
+      orderBy: [{ name: "asc" }],
       select: {
-        displayName: true,
+        name: true,
       },
     }),
   ]);
 
   return {
     items: items.map(mapAllProductsListItem),
-    productBrandOptions: productBrands.map((brand) => brand.displayName),
+    productBrandOptions: productBrands.map((brand) => brand.name),
     total,
     page: query.page,
     pageSize: query.pageSize,
@@ -825,7 +805,7 @@ export async function updateAllProductsBulkService(
   }
 
   if (productIds.length === 0) {
-    throw new AllProductsServiceError("Aucun produit selectionne.", 400);
+    throw new AllProductsServiceError("Aucun produit sélectionné.", 400);
   }
 
   if ((input.sku || input.name) && productIds.length > 1) {
@@ -866,16 +846,13 @@ export async function updateAllProductsBulkService(
   });
 }
 
-export async function deleteAllProductsBulkService(
-  session: StaffSession,
-  productIds: number[],
-) {
+export async function deleteAllProductsBulkService(session: StaffSession, productIds: number[]) {
   if (!canAccessProducts(session)) {
     throw new AllProductsServiceError("Acces refuse.", 403);
   }
 
   if (productIds.length === 0) {
-    throw new AllProductsServiceError("Aucun produit selectionne.", 400);
+    throw new AllProductsServiceError("Aucun produit sélectionné.", 400);
   }
 
   const products = await prisma.product.findMany({
@@ -892,10 +869,7 @@ export async function deleteAllProductsBulkService(
   });
 
   if (products.some((product) => product.packLinesAsComponent.length > 0)) {
-    throw new AllProductsServiceError(
-      "Certains produits sont utilises dans des packs.",
-      400,
-    );
+    throw new AllProductsServiceError("Certains produits sont utilises dans des packs.", 400);
   }
 
   await prisma.product.deleteMany({

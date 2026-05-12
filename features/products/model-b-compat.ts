@@ -58,9 +58,7 @@ export function productLifecycleFromVisibility(record: {
   return record.visibleEcommerce || record.visibleVitrine ? "ACTIVE" : "DRAFT";
 }
 
-export function visibilityFromProductLifecycle(
-  lifecycle: ProductLifecycle | null | undefined,
-) {
+export function visibilityFromProductLifecycle(lifecycle: ProductLifecycle | null | undefined) {
   const visible = lifecycle !== "DRAFT";
 
   return {
@@ -69,8 +67,6 @@ export function visibilityFromProductLifecycle(
   };
 }
 
-export function productBrandLabel(
-  brand: { displayName: string; name: string } | null | undefined,
-) {
-  return brand?.displayName || brand?.name || null;
+export function productBrandLabel(brand: { name: string } | null | undefined) {
+  return brand?.name || null;
 }

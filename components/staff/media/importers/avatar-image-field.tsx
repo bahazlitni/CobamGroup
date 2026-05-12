@@ -22,7 +22,7 @@ export default function AvatarImageField({
       dialogDescription="Parcourez la mediatheque ou importez une nouvelle image pour ce profil."
       mediaId={mediaId}
       onChange={onChange}
-      emptyLabel="Aucun avatar selectionne."
+      emptyLabel="Aucun avatar sélectionné."
       fallback={fallback}
       noImagePreview
     />

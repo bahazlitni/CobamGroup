@@ -364,7 +364,7 @@ export default function RolesWorkspace() {
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               <StaffBadge size="sm" color="primary">
-                {isCreating ? "Nouveau role" : "Role selectionne"}
+                {isCreating ? "Nouveau role" : "Role sélectionné"}
               </StaffBadge>
               <StaffBadge size="sm" color="info">
                 Priorite #

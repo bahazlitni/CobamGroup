@@ -428,7 +428,6 @@ model Organization {
 
   slug        String  @unique @db.VarChar(255)
   name        String  @db.VarChar(255)
-  displayName String  @map("display_name") @db.VarChar(255)
   description String? @db.Text
 
   logoMediaId BigInt? @map("logo_media_id")

@@ -9,7 +9,11 @@ import {
   mapProductAttributeRecord,
 } from "@/features/products/attribute-records";
 import { resolveProductBrandOrganizationId } from "@/features/organizations/product-brand";
-import { canAccessProducts, canCreateProducts, canManageProducts } from "@/features/products/access";
+import {
+  canAccessProducts,
+  canCreateProducts,
+  canManageProducts,
+} from "@/features/products/access";
 import { getProductFormOptionsService } from "@/features/products/service";
 import type { ProductMediaDto } from "@/features/products/types";
 import {
@@ -61,7 +65,7 @@ const SINGLE_PRODUCT_SELECT = {
   descriptionSeo: true,
   tags: true,
   guaranteeMonths: true,
-  brand: { select: { displayName: true, name: true } },
+  brand: { select: { name: true } },
   visibleEcommerce: true,
   visibleVitrine: true,
   isFeatured: true,
@@ -150,8 +154,7 @@ function mapMedia(
 
 function mapSingleProductDetail(record: SingleProductRecord): SingleProductDetailDto {
   const galleryLinks = record.media.filter((link) => link.role === "GALLERY");
-  const technicalLink =
-    record.media.find((link) => link.role === "TECHNICAL") ?? null;
+  const technicalLink = record.media.find((link) => link.role === "TECHNICAL") ?? null;
 
   return {
     id: Number(record.id),
@@ -212,9 +215,7 @@ async function assertSingleProductUniqueConstraints(
   });
 
   if (existing) {
-    throw new SingleProductsServiceError(
-      "Un produit existe déjà avec ce SKU ou ce slug.",
-    );
+    throw new SingleProductsServiceError("Un produit existe déjà avec ce SKU ou ce slug.");
   }
 }
 
@@ -334,8 +335,7 @@ async function writeSingleProduct(productId: number | null, input: SingleProduct
               sku: input.sku,
               slug: input.slug,
               kind: "STANDARD",
-              productTypeId:
-                input.productTypeId == null ? null : BigInt(input.productTypeId),
+              productTypeId: input.productTypeId == null ? null : BigInt(input.productTypeId),
               name: input.name,
               displayName: input.displayName,
               richTextDescription: stringToRichTextDescription(input.description),
@@ -371,8 +371,7 @@ async function writeSingleProduct(productId: number | null, input: SingleProduct
             data: {
               sku: input.sku,
               slug: input.slug,
-              productTypeId:
-                input.productTypeId == null ? null : BigInt(input.productTypeId),
+              productTypeId: input.productTypeId == null ? null : BigInt(input.productTypeId),
               name: input.name,
               displayName: input.displayName,
               richTextDescription: stringToRichTextDescription(input.description),
@@ -420,10 +419,7 @@ export async function getSingleProductFormOptionsService(
   return getProductFormOptionsService(session);
 }
 
-export async function getSingleProductByIdService(
-  session: StaffSession,
-  productId: number,
-) {
+export async function getSingleProductByIdService(session: StaffSession, productId: number) {
   if (!canAccessProducts(session)) {
     throw new SingleProductsServiceError("Accès refusé.", 403);
   }
@@ -468,10 +464,7 @@ export async function updateSingleProductService(
   return mapSingleProductDetail(product);
 }
 
-export async function deleteSingleProductService(
-  session: StaffSession,
-  productId: number,
-) {
+export async function deleteSingleProductService(session: StaffSession, productId: number) {
   if (!canManageProducts(session)) {
     throw new SingleProductsServiceError("Accès refusé.", 403);
   }

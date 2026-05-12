@@ -26,7 +26,6 @@ export async function resolveProductBrandOrganizationId(
       OR: [
         ...textCandidates.flatMap((value) => [
           { name: { equals: value, mode: "insensitive" as const } },
-          { displayName: { equals: value, mode: "insensitive" as const } },
         ]),
         ...slugCandidates.map((slug) => ({ slug })),
       ],

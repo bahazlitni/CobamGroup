@@ -57,7 +57,7 @@ const STAFF_PRODUCT_SELECT = {
   descriptionSeo: true,
   tags: true,
   guaranteeMonths: true,
-  brand: { select: { displayName: true, name: true } },
+  brand: { select: { name: true } },
   visibleEcommerce: true,
   visibleVitrine: true,
   isFeatured: true,
@@ -162,7 +162,7 @@ const STAFF_FAMILY_LIST_SELECT = {
     select: {
       id: true,
       sku: true,
-      brand: { select: { displayName: true, name: true } },
+      brand: { select: { name: true } },
       visibleEcommerce: true,
       visibleVitrine: true,
       subcategories: {
@@ -759,9 +759,9 @@ export async function getProductFormOptionsService(
       where: {
         isProductBrand: true,
       },
-      orderBy: [{ displayName: "asc" }, { name: "asc" }],
+      orderBy: [{ name: "asc" }],
       select: {
-        displayName: true,
+        name: true,
       },
     }),
   ]);
@@ -824,7 +824,7 @@ export async function getProductFormOptionsService(
       (left, right) =>
         left.sortOrder - right.sortOrder || left.name.localeCompare(right.name, "fr-FR"),
     ),
-    productBrandOptions: productBrands.map((brand) => brand.displayName),
+    productBrandOptions: productBrands.map((brand) => brand.name),
   };
 }
 
@@ -873,16 +873,16 @@ export async function listProductsService(
       where: {
         isProductBrand: true,
       },
-      orderBy: [{ displayName: "asc" }, { name: "asc" }],
+      orderBy: [{ name: "asc" }],
       select: {
-        displayName: true,
+        name: true,
       },
     }),
   ]);
 
   return {
     items: items.map(mapFamilyListItem),
-    productBrandOptions: productBrands.map((brand) => brand.displayName),
+    productBrandOptions: productBrands.map((brand) => brand.name),
     total,
     page: query.page,
     pageSize: query.pageSize,
