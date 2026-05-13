@@ -1,5 +1,6 @@
 import { Prisma, type ProductLifecycle } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
+import { resolveProductBrandOrganizationId } from "@/features/organizations/product-brand";
 import { canAccessProducts, canToggleProductLifecycle } from "@/features/products/access";
 import formatEnumLabel from "@/lib/formatEnumLabel";
 import { prisma } from "@/lib/server/db/prisma";
@@ -34,6 +35,8 @@ const ALL_PRODUCTS_LIST_SELECT = {
   richTextDescription: true,
   shortDescription: true,
   brand: { select: { name: true } },
+  stockAvailable: true,
+  stockUnit: true,
   visibleEcommerce: true,
   visibleVitrine: true,
   updatedAt: true,
@@ -111,6 +114,8 @@ function mapAllProductsListItem(record: AllProductsListRecord): AllProductsListI
     name: record.name,
     description: record.shortDescription ?? richTextDescriptionToString(record.richTextDescription),
     brand: formatAllProductBrand(record),
+    stockAvailable: record.stockAvailable.toString(),
+    stockUnit: record.stockUnit,
     hasImage: record.media.some((link) => link.media.kind === "IMAGE"),
     hasDatasheet: false,
     subcategories: record.subcategories.map(({ subcategory }) => ({
@@ -766,6 +771,7 @@ export type BulkProductUpdateInput = {
   sku?: string | null;
   name?: string | null;
   brand?: string | null;
+  stockAvailable?: string | number | null;
   lifecycle?: ProductLifecycle | null;
 };
 
@@ -789,7 +795,7 @@ export async function updateAllProductsBulkService(
     );
   }
 
-  const data: Prisma.ProductUpdateManyMutationInput = {};
+  const data: Prisma.ProductUncheckedUpdateManyInput = {};
 
   if (input.sku != null) {
     data.sku = input.sku;
@@ -799,10 +805,23 @@ export async function updateAllProductsBulkService(
     data.displayName = input.name;
   }
   if (input.brand !== undefined) {
-    throw new AllProductsServiceError(
-      "La modification groupée de marque doit passer par la fiche produit.",
-      400,
-    );
+    const brandName = input.brand?.trim() ?? "";
+    const brandId = brandName ? await resolveProductBrandOrganizationId(prisma, brandName) : null;
+
+    if (brandName && brandId == null) {
+      throw new AllProductsServiceError("Marque introuvable.", 400);
+    }
+
+    data.brandId = brandId;
+  }
+  if (input.stockAvailable !== undefined) {
+    const stockAvailable = String(input.stockAvailable ?? "").trim();
+
+    if (!stockAvailable || Number.isNaN(Number(stockAvailable))) {
+      throw new AllProductsServiceError("Stock invalide.", 400);
+    }
+
+    data.stockAvailable = stockAvailable;
   }
   if (input.lifecycle !== undefined) {
     Object.assign(data, visibilityFromProductLifecycle(input.lifecycle));

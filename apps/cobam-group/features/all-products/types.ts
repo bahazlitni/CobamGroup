@@ -1,7 +1,4 @@
-import type {
-  ProductKind,
-  ProductLifecycle,
-} from "@prisma/client";
+import type { ProductKind, ProductLifecycle, StockUnit } from "@prisma/client";
 
 export const ALL_PRODUCTS_EXPORT_MODES = ["basic", "extended", "super"] as const;
 
@@ -37,8 +34,7 @@ export const ALL_PRODUCTS_EXPORT_ACTIONS = [
   label: string;
 }[];
 
-export type AllProductsExportAction =
-  (typeof ALL_PRODUCTS_EXPORT_ACTIONS)[number]["value"];
+export type AllProductsExportAction = (typeof ALL_PRODUCTS_EXPORT_ACTIONS)[number]["value"];
 
 export type AllProductsListItemDto = {
   id: number;
@@ -48,6 +44,8 @@ export type AllProductsListItemDto = {
   name: string;
   description: string | null;
   brand: string | null;
+  stockAvailable: string;
+  stockUnit: StockUnit;
   hasImage: boolean;
   hasDatasheet: boolean;
   subcategories: {
@@ -58,13 +56,11 @@ export type AllProductsListItemDto = {
   }[];
   lifecycle: ProductLifecycle | null;
   updatedAt: string;
-  family:
-    | {
-        id: number;
-        name: string;
-        slug: string;
-      }
-    | null;
+  family: {
+    id: number;
+    name: string;
+    slug: string;
+  } | null;
 };
 
 export type AllProductsListResult = {

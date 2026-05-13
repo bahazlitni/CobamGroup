@@ -13,6 +13,7 @@ import {
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { Checkbox } from "@/components/ui/checkbox";
 import ProductEssentialEntries from "@/components/staff/products/ProductEssentialEntries";
+import formatEnumLabel from "@/lib/formatEnumLabel";
 import {
   Dialog,
   DialogContent,
@@ -51,28 +52,20 @@ import {
 } from "@/features/all-products/types";
 import { EditableCell, EditingState, SelectCell } from "@/components/staff/ui/Cells";
 
-
 const PAGE_SIZE = 20;
 const LIST_CACHE_KEY = "all-products";
-const COLUMN_LABELS = ["SKU", "Nom", "Marque", "Cycle", ""];
+const NO_BRAND_VALUE = "__NO_BRAND__";
+const COLUMN_LABELS = ["SKU", "Nom", "Marque", "Stock", "Cycle", ""];
 const EXPORT_MODE_STORAGE_KEY = "all-products-export-mode";
 
 // Explicit column widths so columns never react to content changes.
 // Order matches the columns array passed to PanelTable below:
-// [checkbox, SKU, Nom, Marque, Cycle, Action]
-const COLUMN_WIDTHS = [
-  "40px",
-  "140px",
-  "auto",
-  "140px",
-  "140px",
-  "100px",
-];
+// [checkbox, SKU, Nom, Marque, Stock, Cycle, Action]
+const COLUMN_WIDTHS = ["40px", "140px", "auto", "180px", "130px", "140px", "100px"];
 
 // Shared box class: identical dimensions in idle and editing states.
 // h-8 = 32px. border is always present (transparent when idle) so the
 // 1px border on the input doesn't change the box size when swapping.
-
 
 function getAction(item: AllProductsListItemDto) {
   switch (item.kind) {
@@ -119,29 +112,19 @@ export default function AllProductsPage() {
   const { user } = useStaffSessionContext();
   const canCreate = user ? canCreateProducts(user) : false;
   const canEdit = user ? canManageProducts(user) : false;
-  const canChangeLifecycle = user
-    ? canPublishProducts(user) || canUnpublishProducts(user)
-    : false;
+  const canChangeLifecycle = user ? canPublishProducts(user) || canUnpublishProducts(user) : false;
   const [listCache] = useState(() =>
-    readStaffInfiniteListCache<AllProductsListItemDto, AllProductsListCacheExtra>(
-      LIST_CACHE_KEY,
-    ),
+    readStaffInfiniteListCache<AllProductsListItemDto, AllProductsListCacheExtra>(LIST_CACHE_KEY),
   );
-  const [items, setItems] = useState<AllProductsListItemDto[]>(
-    () => listCache?.items ?? [],
-  );
+  const [items, setItems] = useState<AllProductsListItemDto[]>(() => listCache?.items ?? []);
   const [productBrandOptions, setProductBrandOptions] = useState<string[]>(
     () => listCache?.extra?.productBrandOptions ?? [],
   );
   const [page, setPage] = useState(() => listCache?.page ?? 1);
   const [pageSize] = useState(() => listCache?.pageSize ?? PAGE_SIZE);
-  const [searchDraft, setSearchDraft] = useState(
-    () => listCache?.extra?.searchDraft ?? "",
-  );
+  const [searchDraft, setSearchDraft] = useState(() => listCache?.extra?.searchDraft ?? "");
   const [search, setSearch] = useState(() => listCache?.extra?.search ?? "");
-  const [kindFilter, setKindFilter] = useState<string>(
-    () => listCache?.extra?.kindFilter ?? "ALL",
-  );
+  const [kindFilter, setKindFilter] = useState<string>(() => listCache?.extra?.kindFilter ?? "ALL");
   const [total, setTotal] = useState(() => listCache?.total ?? 0);
   const [isLoading, setIsLoading] = useState(listCache == null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -149,8 +132,7 @@ export default function AllProductsPage() {
     listCache ? listCache.items.length < listCache.total : true,
   );
   const [error, setError] = useState<string | null>(null);
-  const [exportAction, setExportAction] =
-    useState<AllProductsExportAction>("extended-pdf");
+  const [exportAction, setExportAction] = useState<AllProductsExportAction>("extended-pdf");
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const [editing, setEditing] = useState<EditingState>(null);
@@ -209,12 +191,7 @@ export default function AllProductsPage() {
   }, [kindFilter]);
 
   const fetchPage = useCallback(
-    async (options?: {
-      page?: number;
-      search?: string;
-      kindFilter?: string;
-      reset?: boolean;
-    }) => {
+    async (options?: { page?: number; search?: string; kindFilter?: string; reset?: boolean }) => {
       const nextPage = options?.page ?? pageRef.current;
       const reset = options?.reset ?? nextPage === 1;
       const nextSearch = options?.search ?? searchRef.current;
@@ -244,9 +221,7 @@ export default function AllProductsPage() {
           return;
         }
 
-        setItems((current) =>
-          reset ? result.items : mergeUniqueById(current, result.items),
-        );
+        setItems((current) => (reset ? result.items : mergeUniqueById(current, result.items)));
         setProductBrandOptions(
           Array.isArray(result.productBrandOptions) ? result.productBrandOptions : [],
         );
@@ -323,21 +298,18 @@ export default function AllProductsPage() {
       return;
     }
 
-    writeStaffInfiniteListCache<AllProductsListItemDto, AllProductsListCacheExtra>(
-      LIST_CACHE_KEY,
-      {
-        items,
-        total,
-        page,
-        pageSize,
-        extra: {
-          productBrandOptions,
-          searchDraft,
-          search,
-          kindFilter,
-        },
+    writeStaffInfiniteListCache<AllProductsListItemDto, AllProductsListCacheExtra>(LIST_CACHE_KEY, {
+      items,
+      total,
+      page,
+      pageSize,
+      extra: {
+        productBrandOptions,
+        searchDraft,
+        search,
+        kindFilter,
       },
-    );
+    });
   }, [
     isLoading,
     items,
@@ -376,14 +348,11 @@ export default function AllProductsPage() {
   }, [items]);
 
   useEffect(() => {
-    setSelectedIds((current) =>
-      current.filter((id) => items.some((item) => item.id === id)),
-    );
+    setSelectedIds((current) => current.filter((id) => items.some((item) => item.id === id)));
   }, [items]);
 
   const allSelected = items.length > 0 && selectedIds.length === items.length;
-  const isIndeterminate =
-    selectedIds.length > 0 && selectedIds.length < items.length;
+  const isIndeterminate = selectedIds.length > 0 && selectedIds.length < items.length;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -472,54 +441,56 @@ export default function AllProductsPage() {
     setEditing(null);
   }, []);
 
-  const handleInlineSave = useCallback(async (rowId: number, field: string, rawValue: string) => {
-    // Permission guard: lifecycle needs publish/unpublish, everything else needs manage
-    const hasPermission = field === "lifecycle" ? canChangeLifecycle : canEdit;
-    if (!hasPermission) {
-      setEditing(null);
-      return;
-    }
+  const handleInlineSave = useCallback(
+    async (rowId: number, field: string, rawValue: string) => {
+      // Permission guard: lifecycle needs publish/unpublish, everything else needs manage
+      const hasPermission = field === "lifecycle" ? canChangeLifecycle : canEdit;
+      if (!hasPermission) {
+        setEditing(null);
+        return;
+      }
 
-    const item = items.find((i) => i.id === rowId);
-    if (!item) return;
+      const item = items.find((i) => i.id === rowId);
+      if (!item) return;
 
-    const oldValue = String((item as Record<string, unknown>)[field] ?? "");
-    if (rawValue === oldValue) {
-      setEditing(null);
-      return;
-    }
+      const oldValue = String((item as Record<string, unknown>)[field] ?? "");
+      if (rawValue === oldValue) {
+        setEditing(null);
+        return;
+      }
 
-    const data: Record<string, unknown> = { [field]: rawValue };
-    const localValue: unknown = rawValue;
+      const dataValue: unknown = field === "brand" ? rawValue || null : rawValue;
+      const localValue: unknown = dataValue;
+      const data: Record<string, unknown> = { [field]: dataValue };
 
-    // Optimistic update: immediately reflect the change in local state
-    setItems((current) =>
-      current.map((row) =>
-        row.id === rowId ? { ...row, [field]: localValue } : row,
-      ),
-    );
-    setEditing(null);
-    setError(null);
-
-    // Save in background — no loading spinner, no refetch
-    try {
-      await updateAllProductsBulkClient({ ids: [rowId], data });
-    } catch (err: unknown) {
-      // Revert optimistic update on failure
+      // Optimistic update: immediately reflect the change in local state
       setItems((current) =>
-        current.map((row) =>
-          row.id === rowId ? { ...row, [field]: (item as Record<string, unknown>)[field] } : row,
-        ),
+        current.map((row) => (row.id === rowId ? { ...row, [field]: localValue } : row)),
       );
-      setError(
-        err instanceof AllProductsClientError
-          ? err.message
-          : err instanceof Error
+      setEditing(null);
+      setError(null);
+
+      // Save in background — no loading spinner, no refetch
+      try {
+        await updateAllProductsBulkClient({ ids: [rowId], data });
+      } catch (err: unknown) {
+        // Revert optimistic update on failure
+        setItems((current) =>
+          current.map((row) =>
+            row.id === rowId ? { ...row, [field]: (item as Record<string, unknown>)[field] } : row,
+          ),
+        );
+        setError(
+          err instanceof AllProductsClientError
             ? err.message
-            : "Impossible de sauvegarder.",
-      );
-    }
-  }, [items, canEdit, canChangeLifecycle]);
+            : err instanceof Error
+              ? err.message
+              : "Impossible de sauvegarder.",
+        );
+      }
+    },
+    [items, canEdit, canChangeLifecycle],
+  );
 
   const handleCommitEdit = useCallback(() => {
     if (!editing) return;
@@ -544,8 +515,10 @@ export default function AllProductsPage() {
       return { value: mixed ? null : first, mixed };
     };
 
-    const skuMixed = selectedCount > 1 || selectedItems.some((item) => item.sku !== selectedItems[0].sku);
-    const nameMixed = selectedCount > 1 || selectedItems.some((item) => item.name !== selectedItems[0].name);
+    const skuMixed =
+      selectedCount > 1 || selectedItems.some((item) => item.sku !== selectedItems[0].sku);
+    const nameMixed =
+      selectedCount > 1 || selectedItems.some((item) => item.name !== selectedItems[0].name);
 
     const brand = getValue((item) => item.brand ?? null);
     const lifecycle = getValue((item) => item.lifecycle ?? null);
@@ -656,12 +629,7 @@ export default function AllProductsPage() {
     });
   };
 
-  const allFieldKeys: Array<keyof typeof bulkForm.enabled> = [
-    "sku",
-    "name",
-    "brand",
-    "lifecycle",
-  ];
+  const allFieldKeys: Array<keyof typeof bulkForm.enabled> = ["sku", "name", "brand", "lifecycle"];
 
   const allFieldsChecked = allFieldKeys.every((field) => bulkForm.enabled[field]);
   const someFieldsChecked = allFieldKeys.some((field) => bulkForm.enabled[field]);
@@ -671,9 +639,7 @@ export default function AllProductsPage() {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Supprimer ${selectedIds.length} produit(s) sélectionné(s) ?`,
-    );
+    const confirmed = window.confirm(`Supprimer ${selectedIds.length} produit(s) sélectionné(s) ?`);
     if (!confirmed) {
       return;
     }
@@ -720,9 +686,7 @@ export default function AllProductsPage() {
         </div>
       </StaffPageHeader>
 
-      {exportError ? (
-        <p className="text-sm font-medium text-red-600">{exportError}</p>
-      ) : null}
+      {exportError ? <p className="text-sm font-medium text-red-600">{exportError}</p> : null}
 
       <form onSubmit={handleSubmit}>
         <StaffFilterBar
@@ -756,10 +720,8 @@ export default function AllProductsPage() {
       </form>
 
       {selectedIds.length > 0 ? (
-        <div className="fixed bottom-6 right-6 z-30 flex w-[min(560px,calc(100vw-3rem))] flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-lg">
-          <p className="text-sm text-slate-600">
-            {selectedIds.length} produit(s) sélectionné(s)
-          </p>
+        <div className="fixed right-6 bottom-6 z-30 flex w-[min(560px,calc(100vw-3rem))] flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-lg">
+          <p className="text-sm text-slate-600">{selectedIds.length} produit(s) sélectionné(s)</p>
           <div className="flex flex-wrap gap-2">
             {canEdit ? (
               <AnimatedUIButton
@@ -829,12 +791,7 @@ export default function AllProductsPage() {
                 <Checkbox
                   checked={selectedIds.includes(item.id)}
                   onCheckedChange={(checked) => {
-                    handleToggleSelection(
-                      index,
-                      item.id,
-                      Boolean(checked),
-                      shiftKeyRef.current,
-                    );
+                    handleToggleSelection(index, item.id, Boolean(checked), shiftKeyRef.current);
                     shiftKeyRef.current = false;
                   }}
                   onMouseDown={(event) => {
@@ -872,30 +829,63 @@ export default function AllProductsPage() {
                 />
               </td>
               <td className="align-middle">
-                <EditableCell
-                  value={item.brand ?? ""}
-                  rowId={item.id}
-                  field="brand"
-                  editing={editing}
-                  onStartEdit={handleStartEdit}
-                  onChangeEdit={handleChangeEdit}
-                  onCommitEdit={handleCommitEdit}
-                  onCancelEdit={handleCancelEdit}
+                <SelectCell
+                  value={item.brand ?? NO_BRAND_VALUE}
+                  onValueChange={(nextValue: string) =>
+                    void handleInlineSave(
+                      item.id,
+                      "brand",
+                      nextValue === NO_BRAND_VALUE ? "" : nextValue,
+                    )
+                  }
                   saving={false}
                   readOnly={!canEdit}
+                  items={[
+                    { value: NO_BRAND_VALUE, label: "Aucune marque" },
+                    ...productBrandOptions.map((brand) => ({
+                      value: brand,
+                      label: brand,
+                    })),
+                  ]}
+                  placeholder="Marque"
                 />
+              </td>
+              <td className="align-middle">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+                  <EditableCell
+                    value={item.stockAvailable ?? "0"}
+                    rowId={item.id}
+                    field="stockAvailable"
+                    editing={editing}
+                    onStartEdit={handleStartEdit}
+                    onChangeEdit={handleChangeEdit}
+                    onCommitEdit={handleCommitEdit}
+                    onCancelEdit={handleCancelEdit}
+                    saving={false}
+                    readOnly={!canEdit}
+                    type="number"
+                  />
+                  <span className="pr-2 text-xs font-semibold whitespace-nowrap text-slate-400">
+                    {formatEnumLabel(item.stockUnit ?? "PIECE")}
+                  </span>
+                </div>
               </td>
               <td className="align-middle">
                 <SelectCell
                   value={item.lifecycle ?? "DRAFT"}
-                  onValueChange={(nextValue: string) => void handleInlineSave(item.id, "lifecycle", nextValue)}
+                  onValueChange={(nextValue: string) =>
+                    void handleInlineSave(item.id, "lifecycle", nextValue)
+                  }
                   saving={false}
                   readOnly={!canChangeLifecycle}
-                  items={[{label:"Brouillon", value:"DRAFT"}, {label:"Actif", value:"ACTIVE"}]}
+                  items={[
+                    { label: "Brouillon", value: "DRAFT" },
+                    { label: "Actif", value: "ACTIVE" },
+                  ]}
                   placeholder="Cycle de vie"
                 />
               </td>
-              <td className="align-middle text-right">
+              <td className="text-right align-middle">
                 {actionHref ? (
                   <AnimatedUIButton
                     href={actionHref}
