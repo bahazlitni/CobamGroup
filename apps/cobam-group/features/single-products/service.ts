@@ -19,7 +19,7 @@ import type { ProductMediaDto } from "@/features/products/types";
 import {
   productBrandLabel,
   productLifecycleFromVisibility,
-  richTextDescriptionToString,
+  richTextDescriptionToEditorValue,
   stringToRichTextDescription,
 } from "@/features/products/model-b-compat";
 import { prisma } from "@/lib/server/db/prisma";
@@ -168,7 +168,7 @@ function mapSingleProductDetail(record: SingleProductRecord): SingleProductDetai
     slug: record.slug,
     name: record.name,
     displayName: record.displayName,
-    description: richTextDescriptionToString(record.richTextDescription),
+    description: richTextDescriptionToEditorValue(record.richTextDescription),
     shortDescription: record.shortDescription,
     titleSeo: record.titleSeo,
     descriptionSeo: record.descriptionSeo,

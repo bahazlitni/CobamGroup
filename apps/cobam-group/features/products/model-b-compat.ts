@@ -1,84 +1,47 @@
 import { Prisma, type ProductLifecycle } from "@prisma/client";
+import {
+  getArticlePlainText,
+  normalizeArticleContent,
+  parseArticleContent,
+  type ArticleDocument,
+} from "@/features/articles/document";
 
 export type RichTextDescriptionValue = Prisma.JsonValue | null | undefined;
 
 export function stringToRichTextDescription(value: string | null | undefined) {
-  const text = value?.trim();
+  const text = getArticlePlainText(value ?? "").trim();
 
   if (!text) {
     return Prisma.DbNull;
   }
 
-  return {
-    type: "doc",
-    content: [
-      {
-        type: "paragraph",
-        content: [
-          {
-            type: "text",
-            text,
-          },
-        ],
-      },
-    ],
-  } satisfies Prisma.InputJsonObject;
+  return parseArticleContent(value ?? "") as Prisma.InputJsonObject;
 }
 
-function readRichTextNodeText(value: unknown): string {
+function toArticleDocumentInput(value: RichTextDescriptionValue): string | ArticleDocument | null {
   if (typeof value === "string") {
-    const parsed = parseMaybeJsonString(value);
-
-    if (parsed !== value) {
-      return readRichTextNodeText(parsed);
-    }
-
     return value;
   }
 
-  if (!value || typeof value !== "object") {
-    return "";
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as ArticleDocument;
   }
 
-  const record = value as { text?: unknown; content?: unknown };
-
-  if (typeof record.text === "string") {
-    return record.text;
-  }
-
-  if (Array.isArray(record.content)) {
-    return record.content.map(readRichTextNodeText).join("");
-  }
-
-  return "";
-}
-
-function parseMaybeJsonString(value: string, depth = 0): unknown {
-  if (depth >= 3) {
-    return value;
-  }
-
-  const trimmed = value.trim();
-
-  if (!trimmed || !/^[{["]/.test(trimmed)) {
-    return value;
-  }
-
-  try {
-    const parsed = JSON.parse(trimmed) as unknown;
-
-    if (typeof parsed === "string") {
-      return parseMaybeJsonString(parsed, depth + 1);
-    }
-
-    return parsed;
-  } catch {
-    return value;
-  }
+  return null;
 }
 
 export function richTextDescriptionToString(value: RichTextDescriptionValue) {
-  return readRichTextNodeText(value).trim() || null;
+  return getArticlePlainText(toArticleDocumentInput(value)).trim() || null;
+}
+
+export function richTextDescriptionToEditorValue(value: RichTextDescriptionValue) {
+  const input = toArticleDocumentInput(value);
+
+  if (!getArticlePlainText(input).trim()) {
+    return null;
+  }
+
+  return normalizeArticleContent(input);
 }
 
 export function productLifecycleFromVisibility(record: {

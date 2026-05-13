@@ -8,7 +8,7 @@ import { resolveProductBrandOrganizationId } from "@/features/organizations/prod
 import {
   productBrandLabel,
   productLifecycleFromVisibility,
-  richTextDescriptionToString,
+  richTextDescriptionToEditorValue,
   stringToRichTextDescription,
 } from "./model-b-compat";
 import type {
@@ -242,7 +242,7 @@ function mapVariant(
     slug: record.slug,
     name: record.name,
     displayName: record.displayName,
-    description: richTextDescriptionToString(record.richTextDescription),
+    description: richTextDescriptionToEditorValue(record.richTextDescription),
     shortDescription: record.shortDescription,
     titleSeo: record.titleSeo,
     descriptionSeo: record.descriptionSeo,
