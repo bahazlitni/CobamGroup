@@ -306,6 +306,7 @@ DISPLAY_REPLACEMENTS = [
     (r"\bMETALLISE\b", "métallisé"),
     (r"\bENCAS\b", "encastré"),
     (r"\bLAVAB\b", "lavabo"),
+    (r"\bINVERS\b", "inverseur"),
     (r"\bINV\b", "inverseur"),
     (r"\b2FONCT\b", "2 fonctions"),
     (r"\bP/SERVIETTE\b", "porte-serviette"),
@@ -401,7 +402,7 @@ def is_non_product(raw_name: str) -> bool:
     n = norm(raw_name)
     return bool(
         re.search(
-            r"\b(ECHANTILLON|ECHANT|SAMPLE|DEMO|EXPO|AFFICHE|PRESENTOIR|CATALOGUE|TRANSPORT|MAIN D OEUVRE|REMISE|AVOIR)\b",
+            r"\b(ECHANTILLON|ECHANT|SAMPLE|DEMO|EXPO|FACTICE|AFFICHE|PRESENTOIR|CATALOGUE|TRANSPORT|MAIN D OEUVRE|REMISE|AVOIR)\b",
             n,
         )
     )
@@ -1281,12 +1282,12 @@ SELECT *
 FROM jsonb_to_recordset($finishes${sql_json(finishes)}$finishes$::jsonb)
   AS "x"("key" TEXT, "label" TEXT, "hex_color" TEXT);
 
-INSERT INTO "product_finishes" ("key", "label", "hex_color", "created_at", "updated_at")
+INSERT INTO "product_finishes" ("key", "label", "color", "created_at", "updated_at")
 SELECT "key", "label", "hex_color", CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM "_import_finishes"
 ON CONFLICT ("key") DO UPDATE SET
   "label" = EXCLUDED."label",
-  "hex_color" = EXCLUDED."hex_color",
+  "color" = EXCLUDED."color",
   "updated_at" = CURRENT_TIMESTAMP;
 
 CREATE TEMP TABLE "_import_attribute_definitions" ON COMMIT DROP AS
@@ -1405,13 +1406,12 @@ FROM "ranked_defaults"
 WHERE "families"."id" = "ranked_defaults"."family_id"
   AND "ranked_defaults"."rank" = 1;
 
-INSERT INTO "product_subcategory_links" ("product_id", "subcategory_id", "role")
-SELECT "products"."id", ("subcategory"."value")::BIGINT, 'BOTH'::"ProductSubcategoryRole"
+INSERT INTO "product_subcategory_links" ("product_id", "subcategory_id")
+SELECT "products"."id", ("subcategory"."value")::BIGINT
 FROM "_import_products" "imported"
 JOIN "products" ON "products"."sku" = "imported"."sku"
 CROSS JOIN LATERAL jsonb_array_elements_text("imported"."subcategory_ids") AS "subcategory"("value")
-ON CONFLICT ("product_id", "subcategory_id") DO UPDATE SET
-  "role" = EXCLUDED."role";
+ON CONFLICT ("product_id", "subcategory_id") DO NOTHING;
 
 INSERT INTO "product_media" (
   "product_id", "media_id", "role", "name", "alt_text", "sort_order", "created_at", "updated_at"

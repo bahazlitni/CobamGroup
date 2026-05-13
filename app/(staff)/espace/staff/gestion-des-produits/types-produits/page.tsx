@@ -28,6 +28,8 @@ import {
   reorderProductTypesClient,
   updateProductTaxonomyEntityClient,
 } from "@/features/product-taxonomy/client";
+import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
+import { canManageProductTemplates } from "@/features/product-taxonomy/access";
 import type {
   ProductTaxonomyAttributeDto,
   ProductTaxonomyAttributeGroupDto,
@@ -167,6 +169,7 @@ function moveItemById<T extends { id: number }>(
 }
 
 export default function ProductTypesAdminPage() {
+  const { user } = useStaffSessionContext();
   const [data, setData] = useState<ProductTypesAdminDto>({
     groups: [],
     productTypes: [],
@@ -193,6 +196,7 @@ export default function ProductTypesAdminPage() {
   const [draggedProductTypeId, setDraggedProductTypeId] = useState<number | null>(null);
   const [productTypeDropTarget, setProductTypeDropTarget] = useState<DropTarget>(null);
   const [isReordering, setIsReordering] = useState(false);
+  const canManageTemplates = user ? canManageProductTemplates(user) : false;
 
   const selectedProductType = useMemo(
     () =>
@@ -408,6 +412,11 @@ export default function ProductTypesAdminPage() {
 
   const saveGroup = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!canManageTemplates) {
+      toast.error("Vous n'avez pas la permission de modifier les modèles de produits.");
+      return;
+    }
+
     setSavingKey("group");
     try {
       const existingGroup = data.groups.find((group) => group.id === editingGroupId);
@@ -435,6 +444,11 @@ export default function ProductTypesAdminPage() {
 
   const saveProductType = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!canManageTemplates) {
+      toast.error("Vous n'avez pas la permission de modifier les modèles de produits.");
+      return;
+    }
+
     setSavingKey("productType");
     try {
       const existingProductType = data.productTypes.find(
@@ -481,6 +495,10 @@ export default function ProductTypesAdminPage() {
 
   const saveAttributeGroup = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!canManageTemplates) {
+      toast.error("Vous n'avez pas la permission de modifier les modèles de produits.");
+      return;
+    }
 
     if (!selectedProductType) {
       return;
@@ -515,6 +533,10 @@ export default function ProductTypesAdminPage() {
 
   const saveAttribute = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!canManageTemplates) {
+      toast.error("Vous n'avez pas la permission de modifier les modèles de produits.");
+      return;
+    }
 
     if (!selectedProductType) {
       return;
@@ -555,6 +577,11 @@ export default function ProductTypesAdminPage() {
     id: number,
     label: string,
   ) => {
+    if (!canManageTemplates) {
+      toast.error("Vous n'avez pas la permission de supprimer les modèles de produits.");
+      return;
+    }
+
     if (!window.confirm(`Supprimer "${label}" ?`)) {
       return;
     }
@@ -572,6 +599,10 @@ export default function ProductTypesAdminPage() {
   };
 
   const handleGroupDrop = async (targetGroupId: number) => {
+    if (!canManageTemplates) {
+      return;
+    }
+
     if (!draggedGroupId || !groupDropTarget) {
       return;
     }
@@ -616,6 +647,10 @@ export default function ProductTypesAdminPage() {
     targetProductTypeId: number,
     productTypes: ProductTaxonomyTypeDto[],
   ) => {
+    if (!canManageTemplates) {
+      return;
+    }
+
     if (!draggedProductTypeId || !productTypeDropTarget) {
       return;
     }
@@ -662,7 +697,9 @@ export default function ProductTypesAdminPage() {
       toast.success("Ordre des modèles de produits mis a jour.");
     } catch (reorderError: unknown) {
       await loadData();
-      toast.error(getErrorMessage(reorderError, "Impossible de reordonner les modèles de produits."));
+      toast.error(
+        getErrorMessage(reorderError, "Impossible de reordonner les modèles de produits."),
+      );
     } finally {
       setIsReordering(false);
     }
@@ -688,7 +725,13 @@ export default function ProductTypesAdminPage() {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.85fr)]">
           <div className="space-y-6">
             <Panel pretitle="Groupes" title="Groupes de modèles de produits">
-              <form onSubmit={saveGroup} className="grid gap-4 lg:grid-cols-[1fr_1fr_auto]">
+              <form
+                onSubmit={saveGroup}
+                className={cn(
+                  "grid gap-4 lg:grid-cols-[1fr_1fr_auto]",
+                  !canManageTemplates && "hidden",
+                )}
+              >
                 <PanelField id="product-type-group-name" label="Nom">
                   <PanelInput
                     id="product-type-group-name"
@@ -739,7 +782,7 @@ export default function ProductTypesAdminPage() {
                 {data.groups.map((group, index) => (
                   <div
                     key={group.id}
-                    draggable={!isReordering}
+                    draggable={canManageTemplates && !isReordering}
                     onDragStart={(event) => {
                       setDraggedGroupId(group.id);
                       event.dataTransfer.effectAllowed = "move";
@@ -776,30 +819,35 @@ export default function ProductTypesAdminPage() {
                         {group.slug} · #{index + 1}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <AnimatedUIButton
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        icon="modify"
-                        onClick={() => editGroup(group)}
-                      />
-                      <AnimatedUIButton
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        color="red"
-                        icon="trash"
-                        onClick={() => void deleteEntity("group", group.id, group.name)}
-                      />
-                    </div>
+                    {canManageTemplates ? (
+                      <div className="flex items-center gap-2">
+                        <AnimatedUIButton
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          icon="modify"
+                          onClick={() => editGroup(group)}
+                        />
+                        <AnimatedUIButton
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          color="red"
+                          icon="trash"
+                          onClick={() => void deleteEntity("group", group.id, group.name)}
+                        />
+                      </div>
+                    ) : null}
                   </div>
                 ))}
               </div>
             </Panel>
 
             <Panel pretitle="Modèles" title="Modèles de produits">
-              <form onSubmit={saveProductType} className="grid gap-4 lg:grid-cols-2">
+              <form
+                onSubmit={saveProductType}
+                className={cn("grid gap-4 lg:grid-cols-2", !canManageTemplates && "hidden")}
+              >
                 <PanelField id="product-type-name" label="Nom">
                   <PanelInput
                     id="product-type-name"
@@ -997,7 +1045,7 @@ export default function ProductTypesAdminPage() {
                           key={productType.id}
                           role="button"
                           tabIndex={0}
-                          draggable={!isReordering}
+                          draggable={canManageTemplates && !isReordering}
                           onClick={() => setSelectedProductTypeId(productType.id)}
                           onDragStart={(event) => {
                             setDraggedProductTypeId(productType.id);
@@ -1054,33 +1102,39 @@ export default function ProductTypesAdminPage() {
                               </span>
                             </span>
                           </span>
-                          <span className="mt-3 flex flex-wrap gap-2">
-                            <AnimatedUIButton
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              icon="modify"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                editProductType(productType);
-                              }}
-                            >
-                              Modifier
-                            </AnimatedUIButton>
-                            <AnimatedUIButton
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              color="red"
-                              icon="trash"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void deleteEntity("productType", productType.id, productType.name);
-                              }}
-                            >
-                              Supprimer
-                            </AnimatedUIButton>
-                          </span>
+                          {canManageTemplates ? (
+                            <span className="mt-3 flex flex-wrap gap-2">
+                              <AnimatedUIButton
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                icon="modify"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  editProductType(productType);
+                                }}
+                              >
+                                Modifier
+                              </AnimatedUIButton>
+                              <AnimatedUIButton
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                color="red"
+                                icon="trash"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  void deleteEntity(
+                                    "productType",
+                                    productType.id,
+                                    productType.name,
+                                  );
+                                }}
+                              >
+                                Supprimer
+                              </AnimatedUIButton>
+                            </span>
+                          ) : null}
                         </div>
                       ))}
                     </div>
@@ -1099,7 +1153,10 @@ export default function ProductTypesAdminPage() {
               <div className="space-y-6">
                 <form
                   onSubmit={saveAttributeGroup}
-                  className="grid gap-3 md:grid-cols-[1fr_1fr_auto]"
+                  className={cn(
+                    "grid gap-3 md:grid-cols-[1fr_1fr_auto]",
+                    !canManageTemplates && "hidden",
+                  )}
                 >
                   <PanelField id="attribute-group-name" label="Groupe">
                     <PanelInput
@@ -1161,49 +1218,56 @@ export default function ProductTypesAdminPage() {
                         <span className="text-cobam-dark-blue font-semibold">{group.name}</span>
                         <span className="ml-2 text-xs text-slate-400">{group.slug}</span>
                       </span>
-                      <span className="flex gap-2">
-                        <AnimatedUIButton
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          icon="plus"
-                          onClick={() => {
-                            const groupAttributeCount = selectedProductType.attributes.filter(
-                              (attribute) => attribute.attributeGroupId === group.id,
-                            ).length;
-                            setEditingAttributeId(null);
-                            setAttributeForm({
-                              ...emptyAttributeForm(),
-                              attributeGroupId: String(group.id),
-                              sortOrder: String(groupAttributeCount),
-                            });
-                          }}
-                        >
-                          Attribut
-                        </AnimatedUIButton>
-                        <AnimatedUIButton
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          icon="modify"
-                          onClick={() => editAttributeGroup(group)}
-                        />
-                        <AnimatedUIButton
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          color="red"
-                          icon="trash"
-                          onClick={() => void deleteEntity("attributeGroup", group.id, group.name)}
-                        />
-                      </span>
+                      {canManageTemplates ? (
+                        <span className="flex gap-2">
+                          <AnimatedUIButton
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            icon="plus"
+                            onClick={() => {
+                              const groupAttributeCount = selectedProductType.attributes.filter(
+                                (attribute) => attribute.attributeGroupId === group.id,
+                              ).length;
+                              setEditingAttributeId(null);
+                              setAttributeForm({
+                                ...emptyAttributeForm(),
+                                attributeGroupId: String(group.id),
+                                sortOrder: String(groupAttributeCount),
+                              });
+                            }}
+                          >
+                            Attribut
+                          </AnimatedUIButton>
+                          <AnimatedUIButton
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            icon="modify"
+                            onClick={() => editAttributeGroup(group)}
+                          />
+                          <AnimatedUIButton
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            color="red"
+                            icon="trash"
+                            onClick={() =>
+                              void deleteEntity("attributeGroup", group.id, group.name)
+                            }
+                          />
+                        </span>
+                      ) : null}
                     </div>
                   ))}
                 </div>
 
                 <form
                   onSubmit={saveAttribute}
-                  className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 md:grid-cols-2"
+                  className={cn(
+                    "grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 md:grid-cols-2",
+                    !canManageTemplates && "hidden",
+                  )}
                 >
                   <PanelField id="attribute-definition" label="Definition">
                     <StaffSearchSelect
@@ -1340,53 +1404,55 @@ export default function ProductTypesAdminPage() {
                       </span>
                     </div>,
                     ...section.attributes.map((attribute) => (
-                    <div
-                      key={attribute.id}
-                      className="rounded-md border border-slate-200 px-3 py-2"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span>
-                          <span className="text-cobam-dark-blue font-semibold">
-                            {attribute.label}
+                      <div
+                        key={attribute.id}
+                        className="rounded-md border border-slate-200 px-3 py-2"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span>
+                            <span className="text-cobam-dark-blue font-semibold">
+                              {attribute.label}
+                            </span>
+                            <span className="ml-2 text-xs text-slate-400">{attribute.name}</span>
                           </span>
-                          <span className="ml-2 text-xs text-slate-400">{attribute.name}</span>
-                        </span>
-                        <span className="flex items-center gap-2 text-xs text-slate-500">
-                          <Tags className="h-3.5 w-3.5" />
-                          {attribute.attributeGroupName ?? "Sans groupe"}
-                        </span>
+                          <span className="flex items-center gap-2 text-xs text-slate-500">
+                            <Tags className="h-3.5 w-3.5" />
+                            {attribute.attributeGroupName ?? "Sans groupe"}
+                          </span>
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                          <span className="text-xs text-slate-500">
+                            {attribute.inputType}
+                            {attribute.unit ? ` · ${attribute.unit}` : ""}
+                            {attribute.isRequired ? " · requis" : ""}
+                            {attribute.isFilterable ? " · filtrable" : ""}
+                            {isSpecialTemplateAttribute(attribute) ? " · automatique" : ""}
+                          </span>
+                          {canManageTemplates ? (
+                            <span className="flex gap-2">
+                              <AnimatedUIButton
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                icon="modify"
+                                onClick={() => editAttribute(attribute)}
+                              />
+                              {isSpecialTemplateAttribute(attribute) ? null : (
+                                <AnimatedUIButton
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  color="red"
+                                  icon="trash"
+                                  onClick={() =>
+                                    void deleteEntity("attribute", attribute.id, attribute.label)
+                                  }
+                                />
+                              )}
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
-                      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-xs text-slate-500">
-                          {attribute.inputType}
-                          {attribute.unit ? ` · ${attribute.unit}` : ""}
-                          {attribute.isRequired ? " · requis" : ""}
-                          {attribute.isFilterable ? " · filtrable" : ""}
-                          {isSpecialTemplateAttribute(attribute) ? " · automatique" : ""}
-                        </span>
-                        <span className="flex gap-2">
-                          <AnimatedUIButton
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            icon="modify"
-                            onClick={() => editAttribute(attribute)}
-                          />
-                          {isSpecialTemplateAttribute(attribute) ? null : (
-                            <AnimatedUIButton
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              color="red"
-                              icon="trash"
-                              onClick={() =>
-                                void deleteEntity("attribute", attribute.id, attribute.label)
-                              }
-                            />
-                          )}
-                        </span>
-                      </div>
-                    </div>
                     )),
                   ])}
                 </div>

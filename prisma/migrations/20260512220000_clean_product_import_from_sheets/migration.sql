@@ -1,4 +1,4 @@
--- Clean import products from COBAM spreadsheet files.
+-- Follow-up clean import products from COBAM spreadsheet files.
 -- This migration intentionally resets product and family data.
 -- Cleanup gates:
 --   * stock must be >= 3

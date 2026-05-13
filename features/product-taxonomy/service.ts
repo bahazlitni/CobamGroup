@@ -1,7 +1,16 @@
 import { ProductTypeAttributeInputType, StockUnit, type Prisma } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
-import { canAccessProducts, canManageProducts } from "@/features/products/access";
 import { prisma } from "@/lib/server/db/prisma";
+import {
+  canAccessProductAttributes,
+  canAccessProductColors,
+  canAccessProductFinishes,
+  canAccessProductTemplates,
+  canManageProductAttributes,
+  canManageProductColors,
+  canManageProductFinishes,
+  canManageProductTemplates,
+} from "./access";
 import type {
   ProductAttributeDefinitionDto,
   ProductAttributeDefinitionInput,
@@ -30,16 +39,42 @@ export class ProductTaxonomyServiceError extends Error {
   }
 }
 
-function assertCanRead(session: StaffSession) {
-  if (!canAccessProducts(session)) {
+function assertAccess(allowed: boolean) {
+  if (!allowed) {
     throw new ProductTaxonomyServiceError("Accès refusé.", 403);
   }
 }
 
-function assertCanWrite(session: StaffSession) {
-  if (!canManageProducts(session)) {
-    throw new ProductTaxonomyServiceError("Accès refusé.", 403);
-  }
+function assertCanReadProductTemplates(session: StaffSession) {
+  assertAccess(canAccessProductTemplates(session));
+}
+
+function assertCanManageProductTemplates(session: StaffSession) {
+  assertAccess(canManageProductTemplates(session));
+}
+
+function assertCanReadProductAttributes(session: StaffSession) {
+  assertAccess(canAccessProductAttributes(session));
+}
+
+function assertCanManageProductAttributes(session: StaffSession) {
+  assertAccess(canManageProductAttributes(session));
+}
+
+function assertCanReadProductColors(session: StaffSession) {
+  assertAccess(canAccessProductColors(session));
+}
+
+function assertCanManageProductColors(session: StaffSession) {
+  assertAccess(canManageProductColors(session));
+}
+
+function assertCanReadProductFinishes(session: StaffSession) {
+  assertAccess(canAccessProductFinishes(session));
+}
+
+function assertCanManageProductFinishes(session: StaffSession) {
+  assertAccess(canManageProductFinishes(session));
 }
 
 async function assertFinishImageMedia(mediaId: number | null) {
@@ -544,7 +579,7 @@ async function assertProtectedAttributeDefinitionRules(
 export async function listProductTypesAdminService(
   session: StaffSession,
 ): Promise<ProductTypesAdminDto> {
-  assertCanRead(session);
+  assertCanReadProductTemplates(session);
 
   const [groups, productTypes, attributeDefinitions, productSubcategories] = await Promise.all([
     prisma.productTypeGroup.findMany({
@@ -633,7 +668,7 @@ export async function createTaxonomyGroupService(
   session: StaffSession,
   input: ProductTaxonomyGroupInput,
 ) {
-  assertCanWrite(session);
+  assertCanManageProductTemplates(session);
 
   return mapGroup(
     await prisma.productTypeGroup.create({
@@ -647,7 +682,7 @@ export async function updateTaxonomyGroupService(
   id: number,
   input: ProductTaxonomyGroupInput,
 ) {
-  assertCanWrite(session);
+  assertCanManageProductTemplates(session);
 
   return mapGroup(
     await prisma.productTypeGroup.update({
@@ -658,7 +693,7 @@ export async function updateTaxonomyGroupService(
 }
 
 export async function deleteTaxonomyGroupService(session: StaffSession, id: number) {
-  assertCanWrite(session);
+  assertCanManageProductTemplates(session);
   await prisma.productTypeGroup.delete({ where: { id: BigInt(id) } });
 }
 
@@ -802,7 +837,7 @@ export async function createTaxonomyProductTypeService(
   session: StaffSession,
   input: ProductTaxonomyTypeInput,
 ) {
-  assertCanWrite(session);
+  assertCanManageProductTemplates(session);
 
   const productType = await prisma.$transaction(async (tx) => {
     const created = await tx.productType.create({
@@ -827,7 +862,7 @@ export async function updateTaxonomyProductTypeService(
   id: number,
   input: ProductTaxonomyTypeInput,
 ) {
-  assertCanWrite(session);
+  assertCanManageProductTemplates(session);
 
   const productType = await prisma.$transaction(async (tx) => {
     await tx.productType.update({
@@ -848,7 +883,7 @@ export async function updateTaxonomyProductTypeService(
 }
 
 export async function deleteTaxonomyProductTypeService(session: StaffSession, id: number) {
-  assertCanWrite(session);
+  assertCanManageProductTemplates(session);
   await prisma.productType.delete({ where: { id: BigInt(id) } });
 }
 
@@ -856,7 +891,7 @@ export async function reorderTaxonomyGroupsService(
   session: StaffSession,
   orderedIds: number[],
 ): Promise<ProductTypesAdminDto> {
-  assertCanWrite(session);
+  assertCanManageProductTemplates(session);
 
   await prisma.$transaction(
     orderedIds.map((id, index) =>
@@ -874,7 +909,7 @@ export async function reorderTaxonomyProductTypesService(
   session: StaffSession,
   orderedIds: number[],
 ): Promise<ProductTypesAdminDto> {
-  assertCanWrite(session);
+  assertCanManageProductTemplates(session);
 
   await prisma.$transaction(
     orderedIds.map((id, index) =>
@@ -892,7 +927,7 @@ export async function createTaxonomyAttributeGroupService(
   session: StaffSession,
   input: ProductTaxonomyAttributeGroupInput,
 ) {
-  assertCanWrite(session);
+  assertCanManageProductTemplates(session);
 
   return mapAttributeGroup(
     await prisma.productAttributeGroup.create({
@@ -909,7 +944,7 @@ export async function updateTaxonomyAttributeGroupService(
   id: number,
   input: ProductTaxonomyAttributeGroupInput,
 ) {
-  assertCanWrite(session);
+  assertCanManageProductTemplates(session);
 
   return mapAttributeGroup(
     await prisma.productAttributeGroup.update({
@@ -923,14 +958,14 @@ export async function updateTaxonomyAttributeGroupService(
 }
 
 export async function deleteTaxonomyAttributeGroupService(session: StaffSession, id: number) {
-  assertCanWrite(session);
+  assertCanManageProductTemplates(session);
   await prisma.productAttributeGroup.delete({ where: { id: BigInt(id) } });
 }
 
 function managedSpecialAttributeMessage(inputType: ProductTypeAttributeInputType) {
   return inputType === ProductTypeAttributeInputType.COLOR
-    ? "La couleur est geree par l'option \"A une couleur\" du modele."
-    : "La finition est geree par l'option \"A une finition\" du modele.";
+    ? 'La couleur est geree par l\'option "A une couleur" du modele.'
+    : 'La finition est geree par l\'option "A une finition" du modele.';
 }
 
 async function assertCanCreateTemplateAttribute(input: ProductTaxonomyAttributeInput) {
@@ -1019,7 +1054,7 @@ export async function createTaxonomyAttributeService(
   session: StaffSession,
   input: ProductTaxonomyAttributeInput,
 ) {
-  assertCanWrite(session);
+  assertCanManageProductTemplates(session);
   await assertCanCreateTemplateAttribute(input);
 
   return mapAttribute(
@@ -1050,7 +1085,7 @@ export async function updateTaxonomyAttributeService(
   id: number,
   input: ProductTaxonomyAttributeInput,
 ) {
-  assertCanWrite(session);
+  assertCanManageProductTemplates(session);
   await assertCanUpdateTemplateAttribute(id, input);
 
   return mapAttribute(
@@ -1078,13 +1113,13 @@ export async function updateTaxonomyAttributeService(
 }
 
 export async function deleteTaxonomyAttributeService(session: StaffSession, id: number) {
-  assertCanWrite(session);
+  assertCanManageProductTemplates(session);
   await assertCanDeleteTemplateAttribute(id);
   await prisma.productTypeAttribute.delete({ where: { id: BigInt(id) } });
 }
 
 export async function listProductAttributeDefinitionsService(session: StaffSession) {
-  assertCanRead(session);
+  assertCanReadProductAttributes(session);
 
   return (
     await prisma.productAttributeDefinition.findMany({
@@ -1097,7 +1132,7 @@ export async function createProductAttributeDefinitionService(
   session: StaffSession,
   input: ProductAttributeDefinitionInput,
 ) {
-  assertCanWrite(session);
+  assertCanManageProductAttributes(session);
   await assertProtectedAttributeDefinitionRules(input);
 
   return mapAttributeDefinition(
@@ -1112,7 +1147,7 @@ export async function updateProductAttributeDefinitionService(
   id: number,
   input: ProductAttributeDefinitionInput,
 ) {
-  assertCanWrite(session);
+  assertCanManageProductAttributes(session);
   await assertProtectedAttributeDefinitionRules(input, id);
 
   return mapAttributeDefinition(
@@ -1124,7 +1159,7 @@ export async function updateProductAttributeDefinitionService(
 }
 
 export async function deleteProductAttributeDefinitionService(session: StaffSession, id: number) {
-  assertCanWrite(session);
+  assertCanManageProductAttributes(session);
   const attributeDefinition = await prisma.productAttributeDefinition.findUnique({
     where: { id: BigInt(id) },
     select: { key: true },
@@ -1140,7 +1175,7 @@ export async function deleteProductAttributeDefinitionService(session: StaffSess
 }
 
 export async function listProductColorsService(session: StaffSession) {
-  assertCanRead(session);
+  assertCanReadProductColors(session);
 
   return (
     await prisma.productColor.findMany({
@@ -1150,7 +1185,7 @@ export async function listProductColorsService(session: StaffSession) {
 }
 
 export async function createProductColorService(session: StaffSession, input: ProductColorInput) {
-  assertCanWrite(session);
+  assertCanManageProductColors(session);
 
   return mapColor(await prisma.productColor.create({ data: input }));
 }
@@ -1160,7 +1195,7 @@ export async function updateProductColorService(
   id: number,
   input: ProductColorInput,
 ) {
-  assertCanWrite(session);
+  assertCanManageProductColors(session);
 
   return mapColor(
     await prisma.productColor.update({
@@ -1171,12 +1206,12 @@ export async function updateProductColorService(
 }
 
 export async function deleteProductColorService(session: StaffSession, id: number) {
-  assertCanWrite(session);
+  assertCanManageProductColors(session);
   await prisma.productColor.delete({ where: { id: BigInt(id) } });
 }
 
 export async function listProductFinishesService(session: StaffSession) {
-  assertCanRead(session);
+  assertCanReadProductFinishes(session);
 
   return (
     await prisma.productFinish.findMany({
@@ -1186,7 +1221,7 @@ export async function listProductFinishesService(session: StaffSession) {
 }
 
 export async function createProductFinishService(session: StaffSession, input: ProductFinishInput) {
-  assertCanWrite(session);
+  assertCanManageProductFinishes(session);
   await assertFinishImageMedia(input.imageMediaId);
 
   return mapFinish(
@@ -1206,7 +1241,7 @@ export async function updateProductFinishService(
   id: number,
   input: ProductFinishInput,
 ) {
-  assertCanWrite(session);
+  assertCanManageProductFinishes(session);
   await assertFinishImageMedia(input.imageMediaId);
 
   return mapFinish(
@@ -1223,6 +1258,6 @@ export async function updateProductFinishService(
 }
 
 export async function deleteProductFinishService(session: StaffSession, id: number) {
-  assertCanWrite(session);
+  assertCanManageProductFinishes(session);
   await prisma.productFinish.delete({ where: { id: BigInt(id) } });
 }

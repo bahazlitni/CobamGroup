@@ -42,6 +42,12 @@ import { canAccessArticleCategories } from "@/features/article-categories/access
 import { canAccessArticles } from "@/features/articles/access";
 import { canAccessMediaLibrary } from "@/features/media/access";
 import { canAccessProductCategories } from "@/features/product-categories/access";
+import {
+  canAccessProductAttributes,
+  canAccessProductColors,
+  canAccessProductFinishes,
+  canAccessProductTemplates,
+} from "@/features/product-taxonomy/access";
 import { canAccessProducts } from "@/features/products/access";
 import { canAccessRoles } from "@/features/roles/access";
 import { canAccessUsers } from "@/features/users/access";
@@ -66,15 +72,15 @@ function SidebarLink({
       prefetch={prefetch}
       className={cn(
         // Mobile: compact, icon-only; sm+: normal pill
-        "group inline-flex items-center justify-center md:justify-start gap-2 rounded-full",
-        "px-2 py-2 md:px-3 w-full",
+        "group inline-flex items-center justify-center gap-2 rounded-full md:justify-start",
+        "w-full px-2 py-2 md:px-3",
         "text-xs font-medium text-slate-600 transition-colors",
         "hover:bg-slate-100",
       )}
     >
       <span
         className={cn(
-          "text-slate-400 group-hover:text-cobam-water-blue/90",
+          "group-hover:text-cobam-water-blue/90 text-slate-400",
           selected ? "text-cobam-water-blue/90" : "",
         )}
       >
@@ -83,7 +89,7 @@ function SidebarLink({
       <p
         className={cn(
           // Hide label on mobile, show from sm+
-          "hidden md:inline text-slate-500 group-hover:text-cobam-water-blue",
+          "group-hover:text-cobam-water-blue hidden text-slate-500 md:inline",
           selected ? "text-cobam-water-blue font-semibold" : "",
         )}
       >
@@ -102,9 +108,7 @@ export type StaffTabGroup = {
 export type StaffTab = {
   key: string;
   label: string;
-  icon: ForwardRefExoticComponent<
-    Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
-  >;
+  icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>;
 };
 
 const STAFF_TABS: Record<string, StaffTabGroup> = {
@@ -149,7 +153,7 @@ const STAFF_TABS: Record<string, StaffTabGroup> = {
         label: "Catégories d'articles",
         icon: ListTree,
       },
-    }
+    },
   },
   "gestion-des-produits": {
     key: "gestion-des-produits",
@@ -195,7 +199,7 @@ const STAFF_TABS: Record<string, StaffTabGroup> = {
         label: "Finitions",
         icon: Paintbrush,
       },
-    }
+    },
   },
   autres: {
     key: "autres",
@@ -211,9 +215,9 @@ const STAFF_TABS: Record<string, StaffTabGroup> = {
         label: "Annuaire",
         icon: Users,
       },
-    }
+    },
   },
-  "administration": {
+  administration: {
     key: "administration",
     label: "Administration",
     tabs: {
@@ -247,9 +251,7 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
   const { user, clearSession } = useStaffSessionContext();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isBanNoticeOpen, setIsBanNoticeOpen] = useState(false);
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(
-    {},
-  );
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const [hasHydratedCollapseState, setHasHydratedCollapseState] = useState(false);
 
   const canAccessFlagMap: Record<string, Record<string, boolean>> = useMemo(
@@ -268,20 +270,18 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
       "gestion-des-produits": {
         produits: user ? canAccessProducts(user) : false,
         familles: user ? canAccessProducts(user) : false,
-        "categories-produits": user
-          ? canAccessProductCategories(user)
-          : false,
+        "categories-produits": user ? canAccessProductCategories(user) : false,
         marques: user ? canAccessProducts(user) : false,
-        attributs: user ? canAccessProducts(user) : false,
-        "types-produits": user ? canAccessProducts(user) : false,
-        couleurs: user ? canAccessProducts(user) : false,
-        finitions: user ? canAccessProducts(user) : false,
+        attributs: user ? canAccessProductAttributes(user) : false,
+        "types-produits": user ? canAccessProductTemplates(user) : false,
+        couleurs: user ? canAccessProductColors(user) : false,
+        finitions: user ? canAccessProductFinishes(user) : false,
       },
       autres: {
         medias: user ? canAccessMediaLibrary(user) : false,
         annuaire: user ? canAccessAnnuaire(user) : false,
       },
-      "administration": {
+      administration: {
         roles: user ? canAccessRoles(user) : false,
         membres: user ? canAccessUsers(user) : false,
       },
@@ -313,8 +313,7 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
   const displayRole = user?.roleLabel || "-";
   const isBanned = user?.status === "BANNED";
   const isAccountSelfPath =
-    pathname === "/espace/staff/compte/details" ||
-    pathname === "/espace/staff/compte/securite";
+    pathname === "/espace/staff/compte/details" || pathname === "/espace/staff/compte/securite";
   const banNoticeStorageKey = useMemo(() => {
     if (!user || user.status !== "BANNED" || !user.bannedAt) return null;
     return `staff_ban_notice_dismissed:${user.id}:${user.bannedAt}`;
@@ -357,9 +356,7 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      const rawValue = window.localStorage.getItem(
-        STAFF_NAV_COLLAPSE_STORAGE_KEY,
-      );
+      const rawValue = window.localStorage.getItem(STAFF_NAV_COLLAPSE_STORAGE_KEY);
 
       if (!rawValue) {
         setHasHydratedCollapseState(true);
@@ -384,10 +381,7 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
     }
 
     try {
-      window.localStorage.setItem(
-        STAFF_NAV_COLLAPSE_STORAGE_KEY,
-        JSON.stringify(collapsedGroups),
-      );
+      window.localStorage.setItem(STAFF_NAV_COLLAPSE_STORAGE_KEY, JSON.stringify(collapsedGroups));
     } catch {
       // Ignore localStorage persistence failures.
     }
@@ -414,25 +408,25 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
   return (
     <main className="flex min-h-screen bg-slate-50 text-slate-900">
       {/* Sidebar: narrow on mobile, normal on sm+ */}
-      <aside className="sticky left-0 top-0 max-h-screen flex w-14 flex-col border-r border-slate-300 bg-white md:w-64 scrollbar-left">
+      <aside className="scrollbar-left sticky top-0 left-0 flex max-h-screen w-14 flex-col border-r border-slate-300 bg-white md:w-64">
         <div className="border-b border-slate-300 px-2 py-3 text-[10px] text-slate-500 md:space-y-2 md:px-5 md:py-5">
           <p className="hidden md:block">
             Connecté en tant que : <strong>{displayEmail}</strong>
           </p>
-          <p className="text-center text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-400 md:text-left md:tracking-[0.2em]">
+          <p className="text-center text-[10px] font-semibold tracking-[0.15em] text-slate-400 uppercase md:text-left md:tracking-[0.2em]">
             <span className="hidden md:inline">Accès : </span>
             <strong>{isBanned ? "Compte banni" : displayRole}</strong>
           </p>
         </div>
 
         {/* Navigation */}
-        <nav className="overflow-y-auto flex-1 space-y-4 px-1 py-4 text-sm md:space-y-6 md:px-4 md:py-6">
+        <nav className="flex-1 space-y-4 overflow-y-auto px-1 py-4 text-sm md:space-y-6 md:px-4 md:py-6">
           {Object.values(canAccessViewMap).map((group: StaffTabGroup) => (
             <div key={group.key} className="space-y-2">
               <button
                 type="button"
                 onClick={() => toggleGroup(group.key)}
-                className="hidden w-full items-center justify-between rounded-full px-2 py-1 text-left text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-500 md:flex"
+                className="hidden w-full items-center justify-between rounded-full px-2 py-1 text-left text-[11px] font-semibold tracking-[0.2em] text-slate-400 uppercase transition-colors hover:bg-slate-100 hover:text-slate-500 md:flex"
                 aria-expanded={!collapsedGroups[group.key]}
                 aria-controls={`staff-nav-group-${group.key}`}
               >
@@ -472,12 +466,7 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
         {/* Footer: public site + logout */}
         <div className="flex flex-col space-y-2 border-t border-slate-300 px-2 py-3 text-[10px] text-slate-500 md:px-5 md:py-5">
           {/* Public site link: icon-only on mobile, full on sm+ */}
-          <AnimatedUIButton
-            icon="external-link"
-            color="default"
-            size="sm"
-            href="/"
-          >
+          <AnimatedUIButton icon="external-link" color="default" size="sm" href="/">
             Aller au site public
           </AnimatedUIButton>
 
@@ -498,9 +487,7 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
       </aside>
 
       <section className="flex flex-1 flex-col">
-        <div className="flex-1 space-y-8 px-4 py-8 md:px-6 md:py-12 lg:px-8">
-          {children}
-        </div>
+        <div className="flex-1 space-y-8 px-4 py-8 md:px-6 md:py-12 lg:px-8">{children}</div>
       </section>
 
       <BannedAccountNoticeDialog

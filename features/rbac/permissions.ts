@@ -145,8 +145,7 @@ export const PERMISSION_DEFINITIONS = [
     action: "delete",
     scope: "below_role",
     group: "Utilisateurs",
-    description:
-      "La suppression reste bloquée si le compte possède du contenu lié.",
+    description: "La suppression reste bloquée si le compte possède du contenu lié.",
   }),
 
   definePermission({
@@ -230,8 +229,7 @@ export const PERMISSION_DEFINITIONS = [
     action: "update",
     scope: "all",
     group: "Produits",
-    description:
-      "Les produits publiés restent protégés par la logique métier.",
+    description: "Les produits publiés restent protégés par la logique métier.",
   }),
   definePermission({
     key: "products.update.below_role",
@@ -240,8 +238,7 @@ export const PERMISSION_DEFINITIONS = [
     action: "update",
     scope: "below_role",
     group: "Produits",
-    description:
-      "Les produits publiés restent protégés par la logique métier.",
+    description: "Les produits publiés restent protégés par la logique métier.",
   }),
   definePermission({
     key: "products.update.own",
@@ -250,8 +247,7 @@ export const PERMISSION_DEFINITIONS = [
     action: "update",
     scope: "own",
     group: "Produits",
-    description:
-      "Les produits publiés restent protégés par la logique métier.",
+    description: "Les produits publiés restent protégés par la logique métier.",
   }),
   definePermission({
     key: "products.delete.all",
@@ -428,8 +424,7 @@ export const PERMISSION_DEFINITIONS = [
     action: "delete",
     scope: "all",
     group: "Catégories produit",
-    description:
-      "La suppression reste bloquée si la catégorie est encore attachée à un produit.",
+    description: "La suppression reste bloquée si la catégorie est encore attachée à un produit.",
   }),
   definePermission({
     key: "product_categories.delete.below_role",
@@ -438,8 +433,7 @@ export const PERMISSION_DEFINITIONS = [
     action: "delete",
     scope: "below_role",
     group: "Catégories produit",
-    description:
-      "La suppression reste bloquée si la catégorie est encore attachée à un produit.",
+    description: "La suppression reste bloquée si la catégorie est encore attachée à un produit.",
   }),
   definePermission({
     key: "product_categories.delete.own",
@@ -448,8 +442,64 @@ export const PERMISSION_DEFINITIONS = [
     action: "delete",
     scope: "own",
     group: "Catégories produit",
-    description:
-      "La suppression reste bloquée si la catégorie est encore attachée à un produit.",
+    description: "La suppression reste bloquée si la catégorie est encore attachée à un produit.",
+  }),
+
+  definePermission({
+    key: "product_colors.view",
+    label: "Can view colors",
+    resource: "product_colors",
+    action: "view",
+    group: "Couleurs produit",
+  }),
+  definePermission({
+    key: "product_colors.manage",
+    label: "Can manage colors",
+    resource: "product_colors",
+    action: "manage",
+    group: "Couleurs produit",
+  }),
+  definePermission({
+    key: "product_finishes.view",
+    label: "Can view finishes",
+    resource: "product_finishes",
+    action: "view",
+    group: "Finitions produit",
+  }),
+  definePermission({
+    key: "product_finishes.manage",
+    label: "Can manage finishes",
+    resource: "product_finishes",
+    action: "manage",
+    group: "Finitions produit",
+  }),
+  definePermission({
+    key: "product_templates.view",
+    label: "Can view product templates",
+    resource: "product_templates",
+    action: "view",
+    group: "Product Templates",
+  }),
+  definePermission({
+    key: "product_templates.manage",
+    label: "Can manage Product Templates",
+    resource: "product_templates",
+    action: "manage",
+    group: "Product Templates",
+  }),
+  definePermission({
+    key: "product_attributes.view",
+    label: "Can view product attributes",
+    resource: "product_attributes",
+    action: "view",
+    group: "Product Attributes",
+  }),
+  definePermission({
+    key: "product_attributes.manage",
+    label: "Can manage Product Attributes",
+    resource: "product_attributes",
+    action: "manage",
+    group: "Product Attributes",
   }),
 
   definePermission({
@@ -692,8 +742,7 @@ export const PERMISSION_DEFINITIONS = [
     action: "force_remove",
     scope: "all",
     group: "Catégories d'articles",
-    description:
-      "Détache les articles liés avant de supprimer définitivement la catégorie.",
+    description: "Détache les articles liés avant de supprimer définitivement la catégorie.",
   }),
   definePermission({
     key: "article_categories.force_remove.below_role",
@@ -702,8 +751,7 @@ export const PERMISSION_DEFINITIONS = [
     action: "force_remove",
     scope: "below_role",
     group: "Catégories d'articles",
-    description:
-      "Détache les articles liés avant de supprimer définitivement la catégorie.",
+    description: "Détache les articles liés avant de supprimer définitivement la catégorie.",
   }),
   definePermission({
     key: "article_categories.force_remove.own",
@@ -712,8 +760,7 @@ export const PERMISSION_DEFINITIONS = [
     action: "force_remove",
     scope: "own",
     group: "Catégories d'articles",
-    description:
-      "Détache les articles liés avant de supprimer définitivement la catégorie.",
+    description: "Détache les articles liés avant de supprimer définitivement la catégorie.",
   }),
 
   definePermission({
@@ -793,8 +840,7 @@ export type PermissionKey = (typeof PERMISSION_DEFINITIONS)[number]["key"];
 export const PERMISSIONS = Object.freeze(
   PERMISSION_DEFINITIONS.reduce(
     (accumulator, definition) => {
-      accumulator[definition.key.replace(/\./g, "_").toUpperCase()] =
-        definition.key;
+      accumulator[definition.key.replace(/\./g, "_").toUpperCase()] = definition.key;
       return accumulator;
     },
     {} as Record<string, PermissionKey>,
@@ -839,9 +885,7 @@ export const ARTICLE_CATEGORY_MANAGE_PERMISSION_KEYS = [
   PERMISSIONS.ARTICLE_CATEGORIES_DELETE_OWN,
 ] as const satisfies readonly PermissionKey[];
 
-export function hasMediaForceRemovePrerequisites(
-  permissions: readonly PermissionKey[],
-) {
+export function hasMediaForceRemovePrerequisites(permissions: readonly PermissionKey[]) {
   const permissionSet = new Set(permissions);
 
   const hasMediaAccess = MEDIA_ACCESS_PERMISSION_KEYS.some((permission) =>
@@ -863,26 +907,21 @@ export function normalizeMediaForceRemovePermissionDependencies(
     dedupedPermissions.includes(PERMISSIONS.MEDIA_FORCE_REMOVE) &&
     !hasMediaForceRemovePrerequisites(dedupedPermissions)
   ) {
-    return dedupedPermissions.filter(
-      (permission) => permission !== PERMISSIONS.MEDIA_FORCE_REMOVE,
-    );
+    return dedupedPermissions.filter((permission) => permission !== PERMISSIONS.MEDIA_FORCE_REMOVE);
   }
 
   return dedupedPermissions;
 }
 
-export function hasArticleCategoryForceRemovePrerequisites(
-  permissions: readonly PermissionKey[],
-) {
+export function hasArticleCategoryForceRemovePrerequisites(permissions: readonly PermissionKey[]) {
   const permissionSet = new Set(permissions);
 
-  const hasArticleCategoryAccess = ARTICLE_CATEGORY_ACCESS_PERMISSION_KEYS.some(
-    (permission) => permissionSet.has(permission),
+  const hasArticleCategoryAccess = ARTICLE_CATEGORY_ACCESS_PERMISSION_KEYS.some((permission) =>
+    permissionSet.has(permission),
   );
-  const hasArticleCategoryManagement =
-    ARTICLE_CATEGORY_MANAGE_PERMISSION_KEYS.some((permission) =>
-      permissionSet.has(permission),
-    );
+  const hasArticleCategoryManagement = ARTICLE_CATEGORY_MANAGE_PERMISSION_KEYS.some((permission) =>
+    permissionSet.has(permission),
+  );
 
   return hasArticleCategoryAccess && hasArticleCategoryManagement;
 }
@@ -901,16 +940,13 @@ export function normalizeArticleCategoryForceRemovePermissionDependencies(
     dedupedPermissions.some((permission) => forceRemovePermissions.has(permission)) &&
     !hasArticleCategoryForceRemovePrerequisites(dedupedPermissions)
   ) {
-    return dedupedPermissions.filter(
-      (permission) => !forceRemovePermissions.has(permission),
-    );
+    return dedupedPermissions.filter((permission) => !forceRemovePermissions.has(permission));
   }
 
   return dedupedPermissions;
 }
 
-export const STAFF_BASE_PERMISSION_KEYS = [
-] as const satisfies readonly PermissionKey[];
+export const STAFF_BASE_PERMISSION_KEYS = [] as const satisfies readonly PermissionKey[];
 
 export function getProtectedPowerTypePermissions(input: {
   powerType: PowerType;

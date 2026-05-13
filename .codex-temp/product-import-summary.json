@@ -3,11 +3,11 @@
   "template_confidence_threshold": 80,
   "subcategory_confidence_threshold": 80,
   "source_products": 6699,
-  "imported_products": 420,
-  "review_rows": 6279,
+  "imported_products": 419,
+  "review_rows": 6280,
   "families": 15,
   "variants": 38,
-  "single_products": 382,
+  "single_products": 381,
   "brands": 21,
   "media_links": 22,
   "template_counts": [
@@ -73,7 +73,7 @@
     ],
     [
       "corps-encastre-inverseur",
-      3
+      2
     ],
     [
       "peinture",
@@ -115,7 +115,7 @@
     ],
     [
       14,
-      47
+      46
     ],
     [
       18,
@@ -193,15 +193,15 @@
     ],
     [
       "Subcategory confidence below threshold (0 < 80).",
-      4517
+      4518
     ],
     [
       "No strict subcategory assigned.",
-      4517
+      4518
     ],
     [
       "Template confidence below threshold (0 < 80).",
-      4276
+      4277
     ],
     [
       "Stock below threshold (1 < 3).",

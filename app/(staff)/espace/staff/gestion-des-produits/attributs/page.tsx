@@ -10,6 +10,8 @@ import PanelField from "@/components/staff/ui/PanelField";
 import PanelInput from "@/components/staff/ui/PanelInput";
 import { StaffNotice, StaffPageHeader, StaffSelect, StaffTagInput } from "@/components/staff/ui";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
+import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
+import { canManageProductAttributes } from "@/features/product-taxonomy/access";
 import {
   createProductAttributeDefinitionClient,
   deleteProductAttributeDefinitionClient,
@@ -65,12 +67,14 @@ function getErrorMessage(error: unknown, fallback: string) {
 }
 
 export default function ProductAttributeDefinitionsAdminPage() {
+  const { user } = useStaffSessionContext();
   const [items, setItems] = useState<ProductAttributeDefinitionDto[]>([]);
   const [form, setForm] = useState<AttributeDefinitionFormState>(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const canManageAttributes = user ? canManageProductAttributes(user) : false;
   const editingItem = useMemo(
     () => items.find((item) => item.id === editingId) ?? null,
     [editingId, items],
@@ -112,6 +116,11 @@ export default function ProductAttributeDefinitionsAdminPage() {
 
   const saveItem = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!canManageAttributes) {
+      toast.error("Vous n'avez pas la permission de modifier les attributs.");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const payload = {
@@ -139,6 +148,11 @@ export default function ProductAttributeDefinitionsAdminPage() {
   };
 
   const deleteItem = async (item: ProductAttributeDefinitionDto) => {
+    if (!canManageAttributes) {
+      toast.error("Vous n'avez pas la permission de supprimer les attributs.");
+      return;
+    }
+
     if (isProtectedAttributeDefinition(item)) {
       toast.error("Les attributs Couleur et Finition ne peuvent pas être supprimés.");
       return;
@@ -182,96 +196,102 @@ export default function ProductAttributeDefinitionsAdminPage() {
       ) : null}
 
       {!isLoading && !error ? (
-        <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
-          <Panel
-            pretitle={editingId == null ? "Nouvel attribut" : "Modification"}
-            title="Définition"
-          >
-            <form onSubmit={saveItem} className="grid gap-4">
-              <PanelField id="product-attribute-label" label="Libellé">
-                <PanelInput
-                  id="product-attribute-label"
-                  fullWidth
-                  value={form.label}
-                  onChange={(event) => {
-                    const label = event.target.value;
-                    setForm((current) => ({
-                      ...current,
-                      label,
-                      key:
-                        current.key === "" || current.key === keyify(current.label)
-                          ? keyify(label)
-                          : current.key,
-                    }));
-                  }}
-                />
-              </PanelField>
-              <PanelField id="product-attribute-key" label="Clé">
-                <PanelInput
-                  id="product-attribute-key"
-                  fullWidth
-                  value={form.key}
-                  readOnly={isEditingProtectedDefinition}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, key: event.target.value }))
-                  }
-                />
-              </PanelField>
-              <PanelField id="product-attribute-unit" label="Unité">
-                <PanelInput
-                  id="product-attribute-unit"
-                  fullWidth
-                  placeholder="mm, Kg, L..."
-                  value={form.unit}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, unit: event.target.value }))
-                  }
-                />
-              </PanelField>
-              <PanelField id="product-attribute-input-type" label="Type de champ">
-                <StaffSelect
-                  id="product-attribute-input-type"
-                  fullWidth
-                  value={form.inputType}
-                  options={INPUT_TYPE_OPTIONS}
-                  disabled={isEditingProtectedDefinition}
-                  onValueChange={(value) =>
-                    setForm((current) => ({
-                      ...current,
-                      inputType: value as ProductTypeAttributeInputType,
-                      selectOptions: value === "SELECT" ? current.selectOptions : [],
-                    }))
-                  }
-                />
-              </PanelField>
-              {form.inputType === "SELECT" ? (
-                <PanelField id="product-attribute-select-options" label="Options">
-                  <StaffTagInput
-                    id="product-attribute-select-options"
-                    value={form.selectOptions}
-                    onChange={(selectOptions) =>
-                      setForm((current) => ({ ...current, selectOptions }))
+        <div
+          className={
+            canManageAttributes ? "grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]" : "grid gap-6"
+          }
+        >
+          {canManageAttributes ? (
+            <Panel
+              pretitle={editingId == null ? "Nouvel attribut" : "Modification"}
+              title="Définition"
+            >
+              <form onSubmit={saveItem} className="grid gap-4">
+                <PanelField id="product-attribute-label" label="Libellé">
+                  <PanelInput
+                    id="product-attribute-label"
+                    fullWidth
+                    value={form.label}
+                    onChange={(event) => {
+                      const label = event.target.value;
+                      setForm((current) => ({
+                        ...current,
+                        label,
+                        key:
+                          current.key === "" || current.key === keyify(current.label)
+                            ? keyify(label)
+                            : current.key,
+                      }));
+                    }}
+                  />
+                </PanelField>
+                <PanelField id="product-attribute-key" label="Clé">
+                  <PanelInput
+                    id="product-attribute-key"
+                    fullWidth
+                    value={form.key}
+                    readOnly={isEditingProtectedDefinition}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, key: event.target.value }))
                     }
                   />
                 </PanelField>
-              ) : null}
-              <div className="flex flex-wrap gap-2">
-                <AnimatedUIButton type="submit" icon="save" loading={isSaving}>
-                  {editingId == null ? "Ajouter" : "Enregistrer"}
-                </AnimatedUIButton>
-                {editingId != null ? (
-                  <AnimatedUIButton
-                    type="button"
-                    variant="ghost"
-                    icon="close"
-                    onClick={resetForm}
-                  >
-                    Annuler
-                  </AnimatedUIButton>
+                <PanelField id="product-attribute-unit" label="Unité">
+                  <PanelInput
+                    id="product-attribute-unit"
+                    fullWidth
+                    placeholder="mm, Kg, L..."
+                    value={form.unit}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, unit: event.target.value }))
+                    }
+                  />
+                </PanelField>
+                <PanelField id="product-attribute-input-type" label="Type de champ">
+                  <StaffSelect
+                    id="product-attribute-input-type"
+                    fullWidth
+                    value={form.inputType}
+                    options={INPUT_TYPE_OPTIONS}
+                    disabled={isEditingProtectedDefinition}
+                    onValueChange={(value) =>
+                      setForm((current) => ({
+                        ...current,
+                        inputType: value as ProductTypeAttributeInputType,
+                        selectOptions: value === "SELECT" ? current.selectOptions : [],
+                      }))
+                    }
+                  />
+                </PanelField>
+                {form.inputType === "SELECT" ? (
+                  <PanelField id="product-attribute-select-options" label="Options">
+                    <StaffTagInput
+                      id="product-attribute-select-options"
+                      value={form.selectOptions}
+                      onChange={(selectOptions) =>
+                        setForm((current) => ({ ...current, selectOptions }))
+                      }
+                    />
+                  </PanelField>
                 ) : null}
-              </div>
-            </form>
-          </Panel>
+                <div className="flex flex-wrap gap-2">
+                  <AnimatedUIButton type="submit" icon="save" loading={isSaving}>
+                    {editingId == null ? "Ajouter" : "Enregistrer"}
+                  </AnimatedUIButton>
+                  {editingId != null ? (
+                    <AnimatedUIButton
+                      type="button"
+                      variant="ghost"
+                      icon="close"
+                      onClick={resetForm}
+                    >
+                      Annuler
+                    </AnimatedUIButton>
+                  ) : null}
+                </div>
+              </form>
+            </Panel>
+          ) : null}
 
           <Panel pretitle={`${items.length} entrées`} title="Définitions disponibles">
             <div className="grid gap-2">
@@ -281,31 +301,33 @@ export default function ProductAttributeDefinitionsAdminPage() {
                   className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-slate-200 px-3 py-2"
                 >
                   <div>
-                    <p className="font-semibold text-cobam-dark-blue">{item.label}</p>
+                    <p className="text-cobam-dark-blue font-semibold">{item.label}</p>
                     <p className="text-xs text-slate-500">
                       {item.key} · {formatEnumLabel(item.inputType)}
                       {item.unit ? ` · ${item.unit}` : ""}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <AnimatedUIButton
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      icon="modify"
-                      onClick={() => editItem(item)}
-                    />
-                    {isProtectedAttributeDefinition(item) ? null : (
+                  {canManageAttributes ? (
+                    <div className="flex items-center gap-2">
                       <AnimatedUIButton
                         type="button"
                         size="sm"
                         variant="ghost"
-                        color="red"
-                        icon="trash"
-                        onClick={() => void deleteItem(item)}
+                        icon="modify"
+                        onClick={() => editItem(item)}
                       />
-                    )}
-                  </div>
+                      {isProtectedAttributeDefinition(item) ? null : (
+                        <AnimatedUIButton
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          color="red"
+                          icon="trash"
+                          onClick={() => void deleteItem(item)}
+                        />
+                      )}
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>

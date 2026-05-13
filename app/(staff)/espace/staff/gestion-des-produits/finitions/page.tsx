@@ -6,14 +6,14 @@ import { toast } from "sonner";
 import Loading from "@/components/staff/Loading";
 import ImagePreview from "@/components/staff/media/importers/ImagePreview";
 import MediaImageField from "@/components/staff/media/importers/media-image-field";
-import ColorHexField, {
-  normalizeHexInput,
-} from "@/components/staff/ui/ColorHexField";
+import ColorHexField, { normalizeHexInput } from "@/components/staff/ui/ColorHexField";
 import Panel from "@/components/staff/ui/Panel";
 import PanelField from "@/components/staff/ui/PanelField";
 import PanelInput from "@/components/staff/ui/PanelInput";
 import { StaffNotice, StaffPageHeader } from "@/components/staff/ui";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
+import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
+import { canManageProductFinishes } from "@/features/product-taxonomy/access";
 import {
   createProductFinishClient,
   deleteProductFinishClient,
@@ -47,12 +47,14 @@ function getErrorMessage(error: unknown, fallback: string) {
 }
 
 export default function ProductFinishesAdminPage() {
+  const { user } = useStaffSessionContext();
   const [items, setItems] = useState<ProductFinishDto[]>([]);
   const [form, setForm] = useState<FinishFormState>(emptyFinishForm);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const canManageFinishes = user ? canManageProductFinishes(user) : false;
 
   const loadItems = async () => {
     setError(null);
@@ -86,6 +88,11 @@ export default function ProductFinishesAdminPage() {
 
   const saveItem = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!canManageFinishes) {
+      toast.error("Vous n'avez pas la permission de modifier les finitions.");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const payload = {
@@ -105,15 +112,18 @@ export default function ProductFinishesAdminPage() {
       resetForm();
       await loadItems();
     } catch (saveError: unknown) {
-      toast.error(
-        getErrorMessage(saveError, "Impossible d'enregistrer la finition."),
-      );
+      toast.error(getErrorMessage(saveError, "Impossible d'enregistrer la finition."));
     } finally {
       setIsSaving(false);
     }
   };
 
   const deleteItem = async (item: ProductFinishDto) => {
+    if (!canManageFinishes) {
+      toast.error("Vous n'avez pas la permission de supprimer les finitions.");
+      return;
+    }
+
     if (!window.confirm(`Supprimer "${item.label}" ?`)) {
       return;
     }
@@ -124,9 +134,7 @@ export default function ProductFinishesAdminPage() {
       toast.success("Finition supprimée.");
       await loadItems();
     } catch (deleteError: unknown) {
-      toast.error(
-        getErrorMessage(deleteError, "Impossible de supprimer la finition."),
-      );
+      toast.error(getErrorMessage(deleteError, "Impossible de supprimer la finition."));
     } finally {
       setIsSaving(false);
     }
@@ -149,85 +157,91 @@ export default function ProductFinishesAdminPage() {
       ) : null}
 
       {!isLoading && !error ? (
-        <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
-          <Panel
-            pretitle={editingId == null ? "Nouvelle finition" : "Modification"}
-            title="Détails"
-          >
-            <form onSubmit={saveItem} className="grid gap-4">
-              <PanelField id="product-finish-label" label="Libellé">
-                <PanelInput
-                  id="product-finish-label"
-                  fullWidth
-                  value={form.label}
-                  onChange={(event) => {
-                    const label = event.target.value;
+        <div
+          className={
+            canManageFinishes ? "grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]" : "grid gap-6"
+          }
+        >
+          {canManageFinishes ? (
+            <Panel
+              pretitle={editingId == null ? "Nouvelle finition" : "Modification"}
+              title="Détails"
+            >
+              <form onSubmit={saveItem} className="grid gap-4">
+                <PanelField id="product-finish-label" label="Libellé">
+                  <PanelInput
+                    id="product-finish-label"
+                    fullWidth
+                    value={form.label}
+                    onChange={(event) => {
+                      const label = event.target.value;
+                      setForm((current) => ({
+                        ...current,
+                        label,
+                        key:
+                          current.key === "" || current.key === slugify(current.label)
+                            ? slugify(label)
+                            : current.key,
+                      }));
+                    }}
+                  />
+                </PanelField>
+                <PanelField id="product-finish-key" label="Clé">
+                  <PanelInput
+                    id="product-finish-key"
+                    fullWidth
+                    value={form.key}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, key: event.target.value }))
+                    }
+                  />
+                </PanelField>
+                <PanelField id="product-finish-color" label="Couleur">
+                  <ColorHexField
+                    id="product-finish-color"
+                    value={form.color}
+                    allowEmpty
+                    onChange={(color) =>
+                      setForm((current) => ({
+                        ...current,
+                        color,
+                      }))
+                    }
+                  />
+                </PanelField>
+                <MediaImageField
+                  label="Image de finition"
+                  description="Choisissez l'image qui représente cette finition dans la médiathèque."
+                  dialogTitle="Choisir une image de finition"
+                  dialogDescription="Sélectionnez ou importez une image depuis la médiathèque."
+                  mediaId={form.imageMediaId ? Number(form.imageMediaId) : null}
+                  onChange={(mediaId) =>
                     setForm((current) => ({
                       ...current,
-                      label,
-                      key:
-                        current.key === "" || current.key === slugify(current.label)
-                          ? slugify(label)
-                          : current.key,
-                    }));
-                  }}
-                />
-              </PanelField>
-              <PanelField id="product-finish-key" label="Clé">
-                <PanelInput
-                  id="product-finish-key"
-                  fullWidth
-                  value={form.key}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, key: event.target.value }))
-                  }
-                />
-              </PanelField>
-              <PanelField id="product-finish-color" label="Couleur">
-                <ColorHexField
-                  id="product-finish-color"
-                  value={form.color}
-                  allowEmpty
-                  onChange={(color) =>
-                    setForm((current) => ({
-                      ...current,
-                      color,
+                      imageMediaId: mediaId == null ? "" : String(mediaId),
                     }))
                   }
+                  emptyLabel="Aucune image de finition sélectionnée."
+                  previewClassName="h-24 w-24 rounded-lg"
                 />
-              </PanelField>
-              <MediaImageField
-                label="Image de finition"
-                description="Choisissez l'image qui représente cette finition dans la médiathèque."
-                dialogTitle="Choisir une image de finition"
-                dialogDescription="Sélectionnez ou importez une image depuis la médiathèque."
-                mediaId={form.imageMediaId ? Number(form.imageMediaId) : null}
-                onChange={(mediaId) =>
-                  setForm((current) => ({
-                    ...current,
-                    imageMediaId: mediaId == null ? "" : String(mediaId),
-                  }))
-                }
-                emptyLabel="Aucune image de finition sélectionnée."
-                previewClassName="h-24 w-24 rounded-lg"
-              />
-              <div className="flex flex-wrap gap-2">
-                <AnimatedUIButton type="submit" icon="save" loading={isSaving}>
-                  {editingId == null ? "Ajouter" : "Enregistrer"}
-                </AnimatedUIButton>
-                {editingId != null ? (
-                  <AnimatedUIButton
-                    type="button"
-                    variant="ghost"
-                    icon="close"
-                    onClick={resetForm}
-                  >
-                    Annuler
+                <div className="flex flex-wrap gap-2">
+                  <AnimatedUIButton type="submit" icon="save" loading={isSaving}>
+                    {editingId == null ? "Ajouter" : "Enregistrer"}
                   </AnimatedUIButton>
-                ) : null}
-              </div>
-            </form>
-          </Panel>
+                  {editingId != null ? (
+                    <AnimatedUIButton
+                      type="button"
+                      variant="ghost"
+                      icon="close"
+                      onClick={resetForm}
+                    >
+                      Annuler
+                    </AnimatedUIButton>
+                  ) : null}
+                </div>
+              </form>
+            </Panel>
+          ) : null}
 
           <Panel pretitle={`${items.length} entrées`} title="Finitions disponibles">
             <div className="grid gap-2">
@@ -246,17 +260,13 @@ export default function ProductFinishesAdminPage() {
                           <span
                             className="block h-9 w-9"
                             style={
-                              item.color
-                                ? { background: normalizeHexInput(item.color) }
-                                : undefined
+                              item.color ? { background: normalizeHexInput(item.color) } : undefined
                             }
                           />
                         }
                       />
                       <div>
-                        <p className="font-semibold text-cobam-dark-blue">
-                          {item.label}
-                        </p>
+                        <p className="text-cobam-dark-blue font-semibold">{item.label}</p>
                         <p className="text-xs text-slate-500">
                           {item.key}
                           {item.color ? ` · ${item.color}` : ""}
@@ -264,23 +274,25 @@ export default function ProductFinishesAdminPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <AnimatedUIButton
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        icon="modify"
-                        onClick={() => editItem(item)}
-                      />
-                      <AnimatedUIButton
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        color="red"
-                        icon="trash"
-                        onClick={() => void deleteItem(item)}
-                      />
-                    </div>
+                    {canManageFinishes ? (
+                      <div className="flex items-center gap-2">
+                        <AnimatedUIButton
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          icon="modify"
+                          onClick={() => editItem(item)}
+                        />
+                        <AnimatedUIButton
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          color="red"
+                          icon="trash"
+                          onClick={() => void deleteItem(item)}
+                        />
+                      </div>
+                    ) : null}
                   </div>
                 );
               })}
