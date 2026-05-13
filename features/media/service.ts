@@ -559,126 +559,232 @@ export async function resolveMediaFolderIdByPathService(session: StaffSession, p
   return folder ? Number(folder.id) : null;
 }
 
+function serializeMediaUploadDebugError(error: unknown) {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    };
+  }
+
+  return { value: String(error) };
+}
+
+function logMediaUploadServiceFailure(input: {
+  stage: string;
+  session: StaffSession;
+  upload: MediaUploadInput;
+  details: Record<string, unknown>;
+  error: unknown;
+}) {
+  console.log(
+    "MEDIA_UPLOAD_SERVICE_DEBUG_FAILURE",
+    JSON.stringify(
+      {
+        at: new Date().toISOString(),
+        stage: input.stage,
+        user: {
+          id: input.session.id,
+          email: input.session.email,
+          powerType: input.session.powerType,
+          permissionCount: input.session.permissions.length,
+        },
+        upload: {
+          fileName: input.upload.file.name,
+          fileType: input.upload.file.type,
+          fileSize: input.upload.file.size,
+          fileLastModified: input.upload.file.lastModified,
+          folderId: input.upload.folderId,
+          visibility: input.upload.visibility,
+          hasTitle: Boolean(input.upload.title),
+          hasAltText: Boolean(input.upload.altText),
+        },
+        storage: getMediaStorageInfo(),
+        maxUploadBytes: getMediaMaxUploadBytes(),
+        details: input.details,
+        error: serializeMediaUploadDebugError(input.error),
+      },
+      null,
+      2,
+    ),
+  );
+}
+
 export async function uploadMediaService(session: StaffSession, input: MediaUploadInput) {
-  if (!canUploadMedia(session)) {
-    throw new MediaServiceError("Accès refusé.", 403);
-  }
+  let debugStage = "permission_check";
+  let debugDetails: Record<string, unknown> = {};
 
-  const maxUploadBytes = getMediaMaxUploadBytes();
-  if (input.file.size > maxUploadBytes) {
-    throw new MediaServiceError(
-      `Fichier trop volumineux. Limite actuelle: ${Math.floor(maxUploadBytes / (1024 * 1024))} MB.`,
-      400,
-    );
-  }
-
-  const originalFilename = input.file.name || "upload";
-  const ownerUserId = getOwnerScope(session);
-
-  if (input.folderId != null) {
-    const folder = await findMediaFolderById(input.folderId, ownerUserId);
-
-    if (!folder) {
-      throw new MediaServiceError("Dossier introuvable.", 404);
+  try {
+    if (!canUploadMedia(session)) {
+      throw new MediaServiceError("Accès refusé.", 403);
     }
-  }
 
-  const extension = getFileExtension(originalFilename, input.file.type || null);
-  const uploadMimeType = normalizeUploadMimeType(input.file.type || null, extension);
-  const kind = inferMediaKind({
-    mimeType: uploadMimeType,
-    extension,
-  });
-  let buffer: Buffer;
+    debugStage = "max_upload_size";
+    const maxUploadBytes = getMediaMaxUploadBytes();
+    debugDetails = { maxUploadBytes };
+    if (input.file.size > maxUploadBytes) {
+      throw new MediaServiceError(
+        `Fichier trop volumineux. Limite actuelle: ${Math.floor(maxUploadBytes / (1024 * 1024))} MB.`,
+        400,
+      );
+    }
 
-  try {
-    buffer = Buffer.from(await input.file.arrayBuffer());
-  } catch (error) {
-    console.error("MEDIA_UPLOAD_READ_ERROR:", error);
-    throw new MediaServiceError("Impossible de lire le fichier fourni.", 400);
-  }
+    debugStage = "folder_lookup";
+    const originalFilename = input.file.name || "upload";
+    const ownerUserId = getOwnerScope(session);
+    debugDetails = { originalFilename, ownerUserId, folderId: input.folderId };
 
-  let mimeType = uploadMimeType;
-  let finalExtension = extension;
-  let finalFilename = originalFilename;
+    if (input.folderId != null) {
+      const folder = await findMediaFolderById(input.folderId, ownerUserId);
 
-  if (kind === MEDIA_KIND.IMAGE) {
-    const converted = await convertImageToWebp(buffer);
-    buffer = converted.buffer;
-    mimeType = converted.mimeType;
-    finalExtension = converted.extension;
-    const baseName = path.basename(originalFilename, path.extname(originalFilename));
-    finalFilename = `${baseName || "image"}.webp`;
-  }
+      if (!folder) {
+        throw new MediaServiceError("Dossier introuvable.", 404);
+      }
+    }
 
-  const storagePath = buildMediaStorageKey({
-    kind,
-    originalFilename: finalFilename,
-    extension: finalExtension,
-  });
-  const sha256Hash = createHash("sha256").update(buffer).digest("hex");
-  const storage = getMediaStorageDriver();
-  const imageArtifacts =
-    kind === MEDIA_KIND.IMAGE ? await analyzeImageBuffer(buffer, mimeType) : null;
-  const thumbnailStoragePath =
-    kind === MEDIA_KIND.IMAGE ? getMediaVariantStoragePath(storagePath, "thumbnail") : null;
-  let originalStored = false;
-  let thumbnailStored = false;
-
-  try {
-    await storage.putObject({
-      key: storagePath,
-      body: new Uint8Array(buffer),
-      contentType: mimeType,
+    debugStage = "kind_inference";
+    const extension = getFileExtension(originalFilename, input.file.type || null);
+    const uploadMimeType = normalizeUploadMimeType(input.file.type || null, extension);
+    const kind = inferMediaKind({
+      mimeType: uploadMimeType,
+      extension,
     });
-    originalStored = true;
+    debugDetails = { ...debugDetails, extension, uploadMimeType, kind };
+    let buffer: Buffer;
 
-    if (thumbnailStoragePath && imageArtifacts) {
-      await storage.putObject({
-        key: thumbnailStoragePath,
-        body: new Uint8Array(imageArtifacts.thumbnailBuffer),
-        contentType: imageArtifacts.thumbnailContentType,
-      });
-      thumbnailStored = true;
-    }
-  } catch (error) {
-    if (thumbnailStored && thumbnailStoragePath) {
-      await storage.deleteObject(thumbnailStoragePath).catch(() => undefined);
+    try {
+      debugStage = "read_file";
+      buffer = Buffer.from(await input.file.arrayBuffer());
+      debugDetails = { ...debugDetails, initialBufferBytes: buffer.byteLength };
+    } catch (error) {
+      console.error("MEDIA_UPLOAD_READ_ERROR:", error);
+      throw new MediaServiceError("Impossible de lire le fichier fourni.", 400);
     }
 
-    if (originalStored) {
-      await storage.deleteObject(storagePath).catch(() => undefined);
+    let mimeType = uploadMimeType;
+    let finalExtension = extension;
+    let finalFilename = originalFilename;
+
+    if (kind === MEDIA_KIND.IMAGE) {
+      debugStage = "convert_image_to_webp";
+      const converted = await convertImageToWebp(buffer);
+      buffer = converted.buffer;
+      mimeType = converted.mimeType;
+      finalExtension = converted.extension;
+      const baseName = path.basename(originalFilename, path.extname(originalFilename));
+      finalFilename = `${baseName || "image"}.webp`;
+      debugDetails = {
+        ...debugDetails,
+        convertedBufferBytes: buffer.byteLength,
+        finalFilename,
+        finalExtension,
+        mimeType,
+      };
     }
 
-    throw error;
-  }
-
-  try {
-    const media = await createMediaRecord({
-      folderId: input.folderId,
+    debugStage = "build_storage_key";
+    const storagePath = buildMediaStorageKey({
       kind,
-      visibility: input.visibility,
-      storagePath,
       originalFilename: finalFilename,
-      mimeType,
       extension: finalExtension,
-      title: input.title,
-      altText: input.altText,
-      widthPx: imageArtifacts?.widthPx ?? null,
-      heightPx: imageArtifacts?.heightPx ?? null,
-      sizeBytes: BigInt(buffer.byteLength),
-      sha256Hash,
-      uploadedByUserId: session.id,
     });
+    const sha256Hash = createHash("sha256").update(buffer).digest("hex");
+    const storage = getMediaStorageDriver();
+    debugDetails = {
+      ...debugDetails,
+      storagePath,
+      finalFilename,
+      finalExtension,
+      mimeType,
+      finalBufferBytes: buffer.byteLength,
+      sha256Prefix: sha256Hash.slice(0, 12),
+    };
 
-    return mapMediaToListItemDto(media, session);
+    debugStage = "analyze_image";
+    const imageArtifacts =
+      kind === MEDIA_KIND.IMAGE ? await analyzeImageBuffer(buffer, mimeType) : null;
+    const thumbnailStoragePath =
+      kind === MEDIA_KIND.IMAGE ? getMediaVariantStoragePath(storagePath, "thumbnail") : null;
+    debugDetails = {
+      ...debugDetails,
+      imageWidthPx: imageArtifacts?.widthPx ?? null,
+      imageHeightPx: imageArtifacts?.heightPx ?? null,
+      thumbnailStoragePath,
+      thumbnailBytes: imageArtifacts?.thumbnailBuffer.byteLength ?? null,
+    };
+    let originalStored = false;
+    let thumbnailStored = false;
+
+    try {
+      debugStage = "storage_put_original";
+      await storage.putObject({
+        key: storagePath,
+        body: new Uint8Array(buffer),
+        contentType: mimeType,
+      });
+      originalStored = true;
+
+      if (thumbnailStoragePath && imageArtifacts) {
+        debugStage = "storage_put_thumbnail";
+        await storage.putObject({
+          key: thumbnailStoragePath,
+          body: new Uint8Array(imageArtifacts.thumbnailBuffer),
+          contentType: imageArtifacts.thumbnailContentType,
+        });
+        thumbnailStored = true;
+      }
+    } catch (error) {
+      debugDetails = { ...debugDetails, originalStored, thumbnailStored };
+
+      if (thumbnailStored && thumbnailStoragePath) {
+        await storage.deleteObject(thumbnailStoragePath).catch(() => undefined);
+      }
+
+      if (originalStored) {
+        await storage.deleteObject(storagePath).catch(() => undefined);
+      }
+
+      throw error;
+    }
+
+    try {
+      debugStage = "database_create_media";
+      const media = await createMediaRecord({
+        folderId: input.folderId,
+        kind,
+        visibility: input.visibility,
+        storagePath,
+        originalFilename: finalFilename,
+        mimeType,
+        extension: finalExtension,
+        title: input.title,
+        altText: input.altText,
+        widthPx: imageArtifacts?.widthPx ?? null,
+        heightPx: imageArtifacts?.heightPx ?? null,
+        sizeBytes: BigInt(buffer.byteLength),
+        sha256Hash,
+        uploadedByUserId: session.id,
+      });
+
+      return mapMediaToListItemDto(media, session);
+    } catch (error) {
+      if (thumbnailStored && thumbnailStoragePath) {
+        await storage.deleteObject(thumbnailStoragePath).catch(() => undefined);
+      }
+      if (originalStored) {
+        await storage.deleteObject(storagePath).catch(() => undefined);
+      }
+      throw error;
+    }
   } catch (error) {
-    if (thumbnailStored && thumbnailStoragePath) {
-      await storage.deleteObject(thumbnailStoragePath).catch(() => undefined);
-    }
-    if (originalStored) {
-      await storage.deleteObject(storagePath).catch(() => undefined);
-    }
+    logMediaUploadServiceFailure({
+      stage: debugStage,
+      session,
+      upload: input,
+      details: debugDetails,
+      error,
+    });
     throw error;
   }
 }
