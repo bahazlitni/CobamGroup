@@ -20,6 +20,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       ok: true,
       items: result.items,
+      productBrandOptions: result.productBrandOptions,
       total: result.total,
       page: result.page,
       pageSize: result.pageSize,

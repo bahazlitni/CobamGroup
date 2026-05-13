@@ -108,6 +108,28 @@ type AllProductsListCacheExtra = {
   kindFilter: string;
 };
 
+function buildBrandSelectItems(currentBrand: string | null, brandOptions: string[]) {
+  const brands = new Set<string>();
+
+  if (currentBrand) {
+    brands.add(currentBrand);
+  }
+
+  for (const brand of brandOptions) {
+    if (brand) {
+      brands.add(brand);
+    }
+  }
+
+  return [
+    { value: NO_BRAND_VALUE, label: "Aucune marque" },
+    ...Array.from(brands).map((brand) => ({
+      value: brand,
+      label: brand,
+    })),
+  ];
+}
+
 export default function AllProductsPage() {
   const { user } = useStaffSessionContext();
   const canCreate = user ? canCreateProducts(user) : false;
@@ -116,6 +138,8 @@ export default function AllProductsPage() {
   const [listCache] = useState(() =>
     readStaffInfiniteListCache<AllProductsListItemDto, AllProductsListCacheExtra>(LIST_CACHE_KEY),
   );
+  const hasCachedProductBrandOptions =
+    (listCache?.extra?.productBrandOptions?.length ?? 0) > 0;
   const [items, setItems] = useState<AllProductsListItemDto[]>(() => listCache?.items ?? []);
   const [productBrandOptions, setProductBrandOptions] = useState<string[]>(
     () => listCache?.extra?.productBrandOptions ?? [],
@@ -144,7 +168,7 @@ export default function AllProductsPage() {
   const shiftKeyRef = useRef(false);
   const exportInFlightRef = useRef(false);
   const listRequestIdRef = useRef(0);
-  const didLoadInitialRef = useRef(listCache != null);
+  const didLoadInitialRef = useRef(listCache != null && hasCachedProductBrandOptions);
   const pageRef = useRef(page);
   const searchRef = useRef(search);
   const kindFilterRef = useRef(kindFilter);
@@ -840,13 +864,7 @@ export default function AllProductsPage() {
                   }
                   saving={false}
                   readOnly={!canEdit}
-                  items={[
-                    { value: NO_BRAND_VALUE, label: "Aucune marque" },
-                    ...productBrandOptions.map((brand) => ({
-                      value: brand,
-                      label: brand,
-                    })),
-                  ]}
+                  items={buildBrandSelectItems(item.brand, productBrandOptions)}
                   placeholder="Marque"
                 />
               </td>
