@@ -13,7 +13,6 @@ import {
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { Checkbox } from "@/components/ui/checkbox";
 import ProductEssentialEntries from "@/components/staff/products/ProductEssentialEntries";
-import formatEnumLabel from "@/lib/formatEnumLabel";
 import {
   Dialog,
   DialogContent,
@@ -55,13 +54,13 @@ import { EditableCell, EditingState, SelectCell } from "@/components/staff/ui/Ce
 const PAGE_SIZE = 20;
 const LIST_CACHE_KEY = "all-products";
 const NO_BRAND_VALUE = "__NO_BRAND__";
-const COLUMN_LABELS = ["SKU", "Nom", "Marque", "Stock", "Cycle", ""];
+const COLUMN_LABELS = ["SKU", "Stock", "Nom", "Marque", "Cycle", ""];
 const EXPORT_MODE_STORAGE_KEY = "all-products-export-mode";
 
 // Explicit column widths so columns never react to content changes.
 // Order matches the columns array passed to PanelTable below:
-// [checkbox, SKU, Nom, Marque, Stock, Cycle, Action]
-const COLUMN_WIDTHS = ["40px", "140px", "auto", "180px", "130px", "140px", "100px"];
+// [checkbox, SKU, Stock, Nom, Marque, Cycle, Action]
+const COLUMN_WIDTHS = ["40px", "140px", "130px", "auto", "180px", "140px", "100px"];
 
 // Shared box class: identical dimensions in idle and editing states.
 // h-8 = 32px. border is always present (transparent when idle) so the
@@ -840,6 +839,21 @@ export default function AllProductsPage() {
               </td>
               <td className="align-middle">
                 <EditableCell
+                  value={item.stockAvailable ?? "0"}
+                  rowId={item.id}
+                  field="stockAvailable"
+                  editing={editing}
+                  onStartEdit={handleStartEdit}
+                  onChangeEdit={handleChangeEdit}
+                  onCommitEdit={handleCommitEdit}
+                  onCancelEdit={handleCancelEdit}
+                  saving={false}
+                  readOnly={!canEdit}
+                  type="number"
+                />
+              </td>
+              <td className="align-middle">
+                <EditableCell
                   value={item.name}
                   rowId={item.id}
                   field="name"
@@ -867,26 +881,6 @@ export default function AllProductsPage() {
                   items={buildBrandSelectItems(item.brand, productBrandOptions)}
                   placeholder="Marque"
                 />
-              </td>
-              <td className="align-middle">
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-                  <EditableCell
-                    value={item.stockAvailable ?? "0"}
-                    rowId={item.id}
-                    field="stockAvailable"
-                    editing={editing}
-                    onStartEdit={handleStartEdit}
-                    onChangeEdit={handleChangeEdit}
-                    onCommitEdit={handleCommitEdit}
-                    onCancelEdit={handleCancelEdit}
-                    saving={false}
-                    readOnly={!canEdit}
-                    type="number"
-                  />
-                  <span className="pr-2 text-xs font-semibold whitespace-nowrap text-slate-400">
-                    {formatEnumLabel(item.stockUnit ?? "PIECE")}
-                  </span>
-                </div>
               </td>
               <td className="align-middle">
                 <SelectCell

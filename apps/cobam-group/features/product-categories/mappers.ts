@@ -15,6 +15,8 @@ type ProductSubcategoryWithCounts = {
   imageMediaId: bigint | null;
   sortOrder: number;
   isActive: boolean;
+  visibleEcommerce: boolean;
+  visibleVitrine: boolean;
   createdAt: Date;
   updatedAt: Date;
   _count: {
@@ -62,6 +64,8 @@ function mapProductSubcategoryToListItemDto(
     imageMediaId: toNumber(subcategory.imageMediaId),
     sortOrder: subcategory.sortOrder,
     isActive: subcategory.isActive,
+    visibleEcommerce: subcategory.visibleEcommerce,
+    visibleVitrine: subcategory.visibleVitrine,
     productFamilyCount: subcategory._count.productLinks,
     createdAt: subcategory.createdAt.toISOString(),
     updatedAt: subcategory.updatedAt.toISOString(),

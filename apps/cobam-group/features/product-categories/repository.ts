@@ -46,6 +46,8 @@ const productSubcategorySelect = {
   imageMediaId: true,
   sortOrder: true,
   isActive: true,
+  visibleEcommerce: true,
+  visibleVitrine: true,
   createdAt: true,
   updatedAt: true,
   _count: {
@@ -116,6 +118,8 @@ async function syncProductSubcategories(
           : null,
       sortOrder: subcategory.sortOrder,
       isActive: subcategory.isActive,
+      visibleEcommerce: subcategory.visibleEcommerce,
+      visibleVitrine: subcategory.visibleVitrine,
     };
 
     if (subcategory.id != null) {

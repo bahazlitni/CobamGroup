@@ -1,20 +1,75 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #111827;
+  --ec-paper: #fafaf7;
+  --ec-ink: #14202e;
+  --ec-muted: #647184;
+  --ec-line: #dbe2ea;
+  --ec-blue: #0a8dc1;
+  --ec-brass: #b08a5a;
+  --ec-stone: #f1eee8;
+  --ec-stone-strong: #e5ded2;
+  --ec-white: #ffffff;
+  --font-sans: "Sora", "Aptos", "Segoe UI", Arial, sans-serif;
+  --font-serif: "Source Serif 4", Georgia, serif;
 }
 
-body {
-  margin: 0;
-  background: var(--background);
-  color: var(--foreground);
-  font-family:
-    Arial,
-    Helvetica,
-    sans-serif;
+@theme inline {
+  --color-ec-paper: var(--ec-paper);
+  --color-ec-ink: var(--ec-ink);
+  --color-ec-muted: var(--ec-muted);
+  --color-ec-line: var(--ec-line);
+  --color-ec-blue: var(--ec-blue);
+  --color-ec-brass: var(--ec-brass);
+  --color-ec-stone: var(--ec-stone);
+  --color-ec-stone-strong: var(--ec-stone-strong);
+  --color-ec-white: var(--ec-white);
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
 }
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  background: var(--ec-paper);
+  color: var(--ec-ink);
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--ec-paper);
+  color: var(--ec-ink);
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--ec-blue) 25%, white);
+}
+
+.commerce-container {
+  width: min(92rem, calc(100vw - 2rem));
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .commerce-container {
+    width: min(92rem, calc(100vw - 3rem));
+  }
 }

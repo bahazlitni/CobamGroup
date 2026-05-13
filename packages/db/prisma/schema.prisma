@@ -334,18 +334,20 @@ model ProductCategory {
 }
 
 model ProductSubcategory {
-  id             BigInt   @id @default(autoincrement())
-  categoryId     BigInt   @map("category_id")
-  name           String   @db.VarChar(255)
-  subtitle       String?  @db.VarChar(255)
-  slug           String   @db.VarChar(255)
-  description    String?  @db.Text
-  descriptionSeo String?  @map("description_seo") @db.VarChar(160)
-  imageMediaId   BigInt?  @map("image_media_id")
-  sortOrder      Int      @default(0) @map("sort_order")
-  isActive       Boolean  @default(true) @map("is_active")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  id               BigInt   @id @default(autoincrement())
+  categoryId       BigInt   @map("category_id")
+  name             String   @db.VarChar(255)
+  subtitle         String?  @db.VarChar(255)
+  slug             String   @db.VarChar(255)
+  description      String?  @db.Text
+  descriptionSeo   String?  @map("description_seo") @db.VarChar(160)
+  imageMediaId     BigInt?  @map("image_media_id")
+  sortOrder        Int      @default(0) @map("sort_order")
+  isActive         Boolean  @default(true) @map("is_active")
+  visibleEcommerce Boolean  @default(true) @map("visible_ecommerce")
+  visibleVitrine   Boolean  @default(true) @map("visible_vitrine")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   category           ProductCategory                @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   imageMedia         Media?                         @relation("ProductSubcategoryImageMedia", fields: [imageMediaId], references: [id], onDelete: SetNull)
@@ -357,6 +359,8 @@ model ProductSubcategory {
   @@index([imageMediaId])
   @@index([sortOrder])
   @@index([isActive])
+  @@index([visibleEcommerce])
+  @@index([visibleVitrine])
   @@map("product_subcategories")
 }
 
@@ -372,7 +376,7 @@ model Product {
   name        String      @db.VarChar(255)
   displayName String      @map("display_name") @db.VarChar(255)
 
-  richTextDescription Json? @map("rich_text_description") @db.Json
+  richTextDescription Json?   @map("rich_text_description") @db.Json
   shortDescription    String? @map("short_description") @db.VarChar(500)
 
   titleSeo       String? @map("title_seo") @db.VarChar(60)

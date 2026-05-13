@@ -132,6 +132,20 @@ function parseProductSubcategoryInput(
       raw.isActive == null
         ? true
         : parseBoolean(raw.isActive, `subcategories[${index}].isActive`),
+    visibleEcommerce:
+      raw.visibleEcommerce == null
+        ? true
+        : parseBoolean(
+            raw.visibleEcommerce,
+            `subcategories[${index}].visibleEcommerce`,
+          ),
+    visibleVitrine:
+      raw.visibleVitrine == null
+        ? true
+        : parseBoolean(
+            raw.visibleVitrine,
+            `subcategories[${index}].visibleVitrine`,
+          ),
   };
 }
 

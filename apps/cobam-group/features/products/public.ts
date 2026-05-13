@@ -74,6 +74,15 @@ const PUBLIC_PRODUCT_SELECT = {
   visibleEcommerce: true,
   visibleVitrine: true,
   subcategories: {
+    where: {
+      subcategory: {
+        isActive: true,
+        visibleVitrine: true,
+        category: {
+          isActive: true,
+        },
+      },
+    },
     select: {
       subcategory: {
         select: {
@@ -293,11 +302,15 @@ function mapMediaRecord(
 }
 
 function isPublicProduct(product: PublicProductRecord) {
-  return product.kind === "VARIANT" && product.visibleEcommerce;
+  return product.kind === "VARIANT" && product.visibleVitrine && product.subcategories.length > 0;
 }
 
 function isPublicSingleProduct(product: PublicProductRecord) {
-  return (product.kind === "STANDARD" || product.kind === "SINGLE") && product.visibleEcommerce;
+  return (
+    (product.kind === "STANDARD" || product.kind === "SINGLE") &&
+    product.visibleVitrine &&
+    product.subcategories.length > 0
+  );
 }
 
 function getBrandName(brand: { name: string } | null | undefined) {
@@ -961,9 +974,9 @@ export async function listPublicProductsIndex(input: {
     JOIN products p ON p.id = m.product_id
     LEFT JOIN organizations p_brand ON p_brand.id = p.brand_id
     JOIN product_subcategory_links l ON l.product_id = p.id
-    JOIN product_subcategories s ON s.id = l.subcategory_id AND s.is_active = true
+    JOIN product_subcategories s ON s.id = l.subcategory_id AND s.is_active = true AND s.visible_vitrine = true
     JOIN product_types c ON c.id = s.category_id AND c.is_active = true
-    WHERE p.kind = 'VARIANT' AND p.visible_ecommerce = true
+    WHERE p.kind = 'VARIANT' AND p.visible_vitrine = true
     ${advancedSearchCondition}
     ${input.categorySlug ? Prisma.sql`AND "c".slug = ${input.categorySlug}` : Prisma.empty}
     ${input.subcategorySlug ? Prisma.sql`AND "s".slug = ${input.subcategorySlug}` : Prisma.empty}
@@ -1051,13 +1064,13 @@ export async function listPublicProductsIndex(input: {
     LEFT JOIN organizations p_brand ON p_brand.id = p.brand_id
     ${includeFamilies ? Prisma.sql`LEFT JOIN product_family_members fm ON fm.product_id = p.id` : Prisma.empty}
     JOIN product_subcategory_links l ON l.product_id = p.id
-    JOIN product_subcategories s ON s.id = l.subcategory_id AND s.is_active = true
+    JOIN product_subcategories s ON s.id = l.subcategory_id AND s.is_active = true AND s.visible_vitrine = true
     JOIN product_types c ON c.id = s.category_id AND c.is_active = true
     WHERE ${
       includeFamilies
         ? Prisma.sql`(p.kind IN ('STANDARD', 'SINGLE') OR (p.kind = 'VARIANT' AND fm.product_id IS NULL))`
         : Prisma.sql`p.kind IN ('STANDARD', 'SINGLE', 'VARIANT')`
-    } AND p.visible_ecommerce = true
+    } AND p.visible_vitrine = true
     ${advancedSearchCondition}
     ${input.categorySlug ? Prisma.sql`AND "c".slug = ${input.categorySlug}` : Prisma.empty}
     ${input.subcategorySlug ? Prisma.sql`AND "s".slug = ${input.subcategorySlug}` : Prisma.empty}
@@ -1256,7 +1269,18 @@ export async function findPublicSingleProductBySlug(
     where: {
       slug: productSlug,
       kind: { in: ["STANDARD", "SINGLE"] },
-      visibleEcommerce: true,
+      visibleVitrine: true,
+      subcategories: {
+        some: {
+          subcategory: {
+            isActive: true,
+            visibleVitrine: true,
+            category: {
+              isActive: true,
+            },
+          },
+        },
+      },
     },
     select: PUBLIC_PRODUCT_SELECT,
   });
@@ -1286,7 +1310,18 @@ export async function findPublicProductBySlug(
       kind: {
         in: ["STANDARD", "SINGLE", "VARIANT"],
       },
-      visibleEcommerce: true,
+      visibleVitrine: true,
+      subcategories: {
+        some: {
+          subcategory: {
+            isActive: true,
+            visibleVitrine: true,
+            category: {
+              isActive: true,
+            },
+          },
+        },
+      },
     },
     select: PUBLIC_PRODUCT_SELECT,
   });

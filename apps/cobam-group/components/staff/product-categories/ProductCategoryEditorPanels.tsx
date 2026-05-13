@@ -421,7 +421,7 @@ export default function ProductCategoryEditorPanels({
                       </PanelField>
                     </div>
 
-                    <div className="grid gap-6 md:grid-cols-3">
+                    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-5">
                       <PanelField
                         id={`subcategory-slug-${subcategory.formKey}`}
                         label="Slug"
@@ -479,6 +479,50 @@ export default function ProductCategoryEditorPanels({
                           options={[
                             { value: "true", label: "Active" },
                             { value: "false", label: "Inactive" },
+                          ]}
+                        />
+                      </PanelField>
+
+                      <PanelField
+                        id={`subcategory-visible-ecommerce-${subcategory.formKey}`}
+                        label="Visible e-commerce"
+                      >
+                        <StaffSelect
+                          id={`subcategory-visible-ecommerce-${subcategory.formKey}`}
+                          fullWidth
+                          value={String(subcategory.visibleEcommerce)}
+                          onValueChange={(value) =>
+                            onSubcategoryChange(
+                              subcategory.formKey,
+                              "visibleEcommerce",
+                              value === "true",
+                            )
+                          }
+                          options={[
+                            { value: "true", label: "Oui" },
+                            { value: "false", label: "Non" },
+                          ]}
+                        />
+                      </PanelField>
+
+                      <PanelField
+                        id={`subcategory-visible-vitrine-${subcategory.formKey}`}
+                        label="Visible vitrine"
+                      >
+                        <StaffSelect
+                          id={`subcategory-visible-vitrine-${subcategory.formKey}`}
+                          fullWidth
+                          value={String(subcategory.visibleVitrine)}
+                          onValueChange={(value) =>
+                            onSubcategoryChange(
+                              subcategory.formKey,
+                              "visibleVitrine",
+                              value === "true",
+                            )
+                          }
+                          options={[
+                            { value: "true", label: "Oui" },
+                            { value: "false", label: "Non" },
                           ]}
                         />
                       </PanelField>

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { ProductKind } from "@prisma/client";
+import { Prisma, ProductKind } from "@prisma/client";
 import { listPublicArticles } from "@/features/articles/public";
 import { buildAbsoluteUrl } from "@/lib/seo/site";
 import { prisma } from "@/lib/server/db/prisma";
@@ -45,7 +45,47 @@ function dedupeEntries(
   return Array.from(seen.values());
 }
 
+async function hasProductSubcategoryVisibilityColumns() {
+  const columns = await prisma
+    .$queryRaw<Array<{ column_name: string }>>(Prisma.sql`
+      SELECT "column_name"
+      FROM "information_schema"."columns"
+      WHERE "table_schema" = 'public'
+        AND "table_name" = 'product_subcategories'
+        AND "column_name" IN ('visible_ecommerce', 'visible_vitrine')
+    `)
+    .catch(() => []);
+
+  return columns.length === 2;
+}
+
+function publicSubcategoryWhere(
+  hasVisibilityColumns: boolean,
+): Prisma.ProductSubcategoryWhereInput {
+  return hasVisibilityColumns
+    ? { isActive: true, visibleVitrine: true }
+    : { isActive: true };
+}
+
+function publicProductSubcategoryLinkWhere(
+  hasVisibilityColumns: boolean,
+): Prisma.ProductSubcategoryLinkWhereInput {
+  return {
+    subcategory: {
+      ...publicSubcategoryWhere(hasVisibilityColumns),
+      category: {
+        isActive: true,
+      },
+    },
+  };
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
+  const visibleSubcategoryWhere = publicSubcategoryWhere(hasVisibilityColumns);
+  const visibleSubcategoryLinkWhere =
+    publicProductSubcategoryLinkWhere(hasVisibilityColumns);
+
   const [
     categories,
     subcategories,
@@ -54,12 +94,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     articles,
   ] = await Promise.all([
     prisma.productCategory.findMany({
-      where: { isActive: true },
+      where: {
+        isActive: true,
+        subcategories: {
+          some: visibleSubcategoryWhere,
+        },
+      },
       select: { slug: true, updatedAt: true },
     }),
     prisma.productSubcategory.findMany({
       where: {
-        isActive: true,
+        ...visibleSubcategoryWhere,
         category: {
           isActive: true,
         },
@@ -79,12 +124,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         kind: {
           in: [ProductKind.STANDARD, ProductKind.SINGLE, ProductKind.VARIANT],
         },
-        visibleEcommerce: true,
+        visibleVitrine: true,
+        subcategories: {
+          some: visibleSubcategoryLinkWhere,
+        },
       },
       select: {
         slug: true,
         updatedAt: true,
         subcategories: {
+          where: visibleSubcategoryLinkWhere,
           orderBy: {
             subcategoryId: "asc",
           },
@@ -109,7 +158,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           some: {
             product: {
               kind: ProductKind.VARIANT,
-              visibleEcommerce: true,
+              visibleVitrine: true,
+              subcategories: {
+                some: visibleSubcategoryLinkWhere,
+              },
             },
           },
         },
@@ -123,6 +175,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             product: {
               select: {
                 subcategories: {
+                  where: visibleSubcategoryLinkWhere,
                   orderBy: {
                     subcategoryId: "asc",
                   },

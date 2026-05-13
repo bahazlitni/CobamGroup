@@ -19,6 +19,8 @@ export type ProductSubcategoryInput = {
   imageMediaId: number | null;
   sortOrder: number;
   isActive: boolean;
+  visibleEcommerce: boolean;
+  visibleVitrine: boolean;
 };
 
 export type ProductCategoryCreateInput = {
@@ -49,6 +51,8 @@ export type ProductSubcategoryListItemDto = {
   imageMediaId: number | null;
   sortOrder: number;
   isActive: boolean;
+  visibleEcommerce: boolean;
+  visibleVitrine: boolean;
   productFamilyCount: number;
   createdAt: string;
   updatedAt: string;

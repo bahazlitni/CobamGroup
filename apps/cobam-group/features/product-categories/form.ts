@@ -15,6 +15,8 @@ export type ProductSubcategoryEditorState = {
   imageMediaId: number | null;
   sortOrder: string;
   isActive: boolean;
+  visibleEcommerce: boolean;
+  visibleVitrine: boolean;
 };
 
 export type ProductCategoryEditorFormState = {
@@ -48,6 +50,8 @@ export function createEmptyProductSubcategoryEditorState(
     imageMediaId: overrides.imageMediaId ?? null,
     sortOrder: overrides.sortOrder ?? "0",
     isActive: overrides.isActive ?? true,
+    visibleEcommerce: overrides.visibleEcommerce ?? true,
+    visibleVitrine: overrides.visibleVitrine ?? true,
   };
 }
 
@@ -104,6 +108,8 @@ export function productCategoryDetailToFormState(
           imageMediaId: subcategory.imageMediaId ?? null,
           sortOrder: String(subcategory.sortOrder ?? index),
           isActive: subcategory.isActive,
+          visibleEcommerce: subcategory.visibleEcommerce,
+          visibleVitrine: subcategory.visibleVitrine,
         }),
       ),
     ),
@@ -132,6 +138,8 @@ function subcategoryEditorStateToPayload(
     imageMediaId: state.imageMediaId,
     sortOrder: parsedSortOrder,
     isActive: state.isActive,
+    visibleEcommerce: state.visibleEcommerce,
+    visibleVitrine: state.visibleVitrine,
   };
 }
 

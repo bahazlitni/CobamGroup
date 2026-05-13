@@ -37,6 +37,14 @@ type PublicProductCategoryRecord = {
   }>;
 };
 
+type PublicProductCategoryCardRecord = PublicProductCategoryRecord & {
+  subcategories: Array<
+    PublicProductCategoryRecord["subcategories"][number] & {
+      productLinks?: Array<{ productId: bigint }>;
+    }
+  >;
+};
+
 type PublicProductSubcategoryRecord = {
   id: bigint;
   categoryId: bigint;
@@ -55,46 +63,129 @@ type PublicProductSubcategoryRecord = {
   };
 };
 
-const publicCategorySelect = {
-  id: true,
-  name: true,
-  subtitle: true,
-  slug: true,
-  themeColor: true,
-  description: true,
-  descriptionSeo: true,
-  imageMediaId: true,
-  imageMedia: {
-    select: {
-      id: true,
-      isActive: true,
-      deletedAt: true,
+let subcategoryVisibilityColumnsPromise: Promise<boolean> | null = null;
+
+function hasProductSubcategoryVisibilityColumns() {
+  subcategoryVisibilityColumnsPromise ??= prisma
+    .$queryRaw<Array<{ column_name: string }>>(Prisma.sql`
+      SELECT "column_name"
+      FROM "information_schema"."columns"
+      WHERE "table_schema" = 'public'
+        AND "table_name" = 'product_subcategories'
+        AND "column_name" IN ('visible_ecommerce', 'visible_vitrine')
+    `)
+    .then((columns) => columns.length === 2)
+    .catch(() => false);
+
+  return subcategoryVisibilityColumnsPromise;
+}
+
+function publicVitrineSubcategoryWhere(
+  hasVisibilityColumns: boolean,
+): Prisma.ProductSubcategoryWhereInput {
+  return hasVisibilityColumns
+    ? { isActive: true, visibleVitrine: true }
+    : { isActive: true };
+}
+
+function publicCategorySelectFor(
+  hasVisibilityColumns: boolean,
+): Prisma.ProductCategorySelect {
+  return {
+    id: true,
+    name: true,
+    subtitle: true,
+    slug: true,
+    themeColor: true,
+    description: true,
+    descriptionSeo: true,
+    imageMediaId: true,
+    imageMedia: {
+      select: {
+        id: true,
+        isActive: true,
+        deletedAt: true,
+      },
     },
-  },
-  subcategories: {
-    where: {
-      isActive: true,
-    },
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
-    select: {
-      id: true,
-      categoryId: true,
-      name: true,
-      subtitle: true,
-      slug: true,
-      description: true,
-      descriptionSeo: true,
-      imageMediaId: true,
-      imageMedia: {
-        select: {
-          id: true,
-          isActive: true,
-          deletedAt: true,
+    subcategories: {
+      where: publicVitrineSubcategoryWhere(hasVisibilityColumns),
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
+      select: {
+        id: true,
+        categoryId: true,
+        name: true,
+        subtitle: true,
+        slug: true,
+        description: true,
+        descriptionSeo: true,
+        imageMediaId: true,
+        imageMedia: {
+          select: {
+            id: true,
+            isActive: true,
+            deletedAt: true,
+          },
         },
       },
     },
-  },
-} satisfies Prisma.ProductCategorySelect;
+  };
+}
+
+function publicCategoryCardSelectFor(
+  hasVisibilityColumns: boolean,
+): Prisma.ProductCategorySelect {
+  return {
+    id: true,
+    name: true,
+    subtitle: true,
+    slug: true,
+    themeColor: true,
+    description: true,
+    descriptionSeo: true,
+    imageMediaId: true,
+    imageMedia: {
+      select: {
+        id: true,
+        isActive: true,
+        deletedAt: true,
+      },
+    },
+    subcategories: {
+      where: publicVitrineSubcategoryWhere(hasVisibilityColumns),
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
+      select: {
+        id: true,
+        categoryId: true,
+        name: true,
+        subtitle: true,
+        slug: true,
+        description: true,
+        descriptionSeo: true,
+        imageMediaId: true,
+        imageMedia: {
+          select: {
+            id: true,
+            isActive: true,
+            deletedAt: true,
+          },
+        },
+        productLinks: {
+          where: {
+            product: {
+              visibleVitrine: true,
+              kind: {
+                in: ["STANDARD", "SINGLE", "VARIANT"],
+              },
+            },
+          },
+          select: {
+            productId: true,
+          },
+        },
+      },
+    },
+  };
+}
 
 const publicSubcategorySelect = {
   id: true,
@@ -307,13 +398,17 @@ function mapSubcategoryToCardData(
 export async function listPublicMegaMenuProductCategories(): Promise<
   PublicMegaMenuProductCategory[]
 > {
-  const categories = await prisma.productCategory.findMany({
+  const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
+  const categories = (await prisma.productCategory.findMany({
     where: {
       isActive: true,
+      subcategories: {
+        some: publicVitrineSubcategoryWhere(hasVisibilityColumns),
+      },
     },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
-    select: publicCategorySelect,
-  });
+    select: publicCategorySelectFor(hasVisibilityColumns),
+  })) as unknown as PublicProductCategoryRecord[];
 
   await ensurePublicCategoryImages(categories);
 
@@ -328,13 +423,17 @@ export async function listPublicMegaMenuProductCategories(): Promise<
 export async function findPublicRootProductCategoryBySlug(
   slug: string,
 ): Promise<PublicProductCategoryPageData | null> {
-  const category = await prisma.productCategory.findFirst({
+  const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
+  const category = (await prisma.productCategory.findFirst({
     where: {
       isActive: true,
       slug,
+      subcategories: {
+        some: publicVitrineSubcategoryWhere(hasVisibilityColumns),
+      },
     },
-    select: publicCategorySelect,
-  });
+    select: publicCategorySelectFor(hasVisibilityColumns),
+  })) as unknown as PublicProductCategoryRecord | null;
 
   if (!category) {
     return null;
@@ -348,9 +447,10 @@ export async function findPublicProductSubcategoryBySlugs(input: {
   categorySlug: string;
   subcategorySlug: string;
 }): Promise<PublicProductCategoryPageData | null> {
+  const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
   const subcategory = await prisma.productSubcategory.findFirst({
     where: {
-      isActive: true,
+      ...publicVitrineSubcategoryWhere(hasVisibilityColumns),
       slug: input.subcategorySlug,
       category: {
         isActive: true,
@@ -371,66 +471,18 @@ export async function findPublicProductSubcategoryBySlugs(input: {
 export async function listPublicProductSubcategoryCardsByCategorySlug(
   categorySlug: string,
 ): Promise<PublicProductSubcategoryCardData[]> {
-  const category = await prisma.productCategory.findFirst({
+  const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
+  const category = (await prisma.productCategory.findFirst({
     where: {
       isActive: true,
       slug: categorySlug,
+      subcategories: {
+        some: publicVitrineSubcategoryWhere(hasVisibilityColumns),
+      },
     },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
-    select: {
-      id: true,
-      name: true,
-      subtitle: true,
-      slug: true,
-      themeColor: true,
-      description: true,
-      descriptionSeo: true,
-      imageMediaId: true,
-      imageMedia: {
-        select: {
-          id: true,
-          isActive: true,
-          deletedAt: true,
-        },
-      },
-      subcategories: {
-        where: {
-          isActive: true,
-        },
-        orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
-        select: {
-          id: true,
-          categoryId: true,
-          name: true,
-          subtitle: true,
-          slug: true,
-          description: true,
-          descriptionSeo: true,
-          imageMediaId: true,
-          imageMedia: {
-            select: {
-              id: true,
-              isActive: true,
-              deletedAt: true,
-            },
-          },
-          productLinks: {
-            where: {
-              product: {
-                visibleEcommerce: true,
-                kind: {
-                  in: ["STANDARD", "SINGLE", "VARIANT"],
-                },
-              },
-            },
-            select: {
-              productId: true,
-            },
-          },
-        },
-      },
-    },
-  });
+    select: publicCategoryCardSelectFor(hasVisibilityColumns),
+  })) as unknown as PublicProductCategoryCardRecord | null;
 
   if (!category) {
     return [];

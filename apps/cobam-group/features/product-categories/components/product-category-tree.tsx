@@ -8,12 +8,8 @@ import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 export type ProductCategoryTreeNode = ProductCategoryListItemDto;
 
 function ProductSubcategoryRow({
-  pathname,
-  category,
   subcategory,
 }: {
-  pathname: string;
-  category: ProductCategoryTreeNode;
   subcategory: ProductCategoryTreeNode["subcategories"][number];
 }) {
   const hasImage = subcategory.imageMediaId != null;
@@ -33,6 +29,18 @@ function ProductSubcategoryRow({
             color={subcategory.isActive ? "green" : "default"}
           >
             {subcategory.isActive ? "Active" : "Inactive"}
+          </StaffBadge>
+          <StaffBadge
+            size="sm"
+            color={subcategory.visibleEcommerce ? "blue" : "default"}
+          >
+            E-commerce {subcategory.visibleEcommerce ? "oui" : "non"}
+          </StaffBadge>
+          <StaffBadge
+            size="sm"
+            color={subcategory.visibleVitrine ? "blue" : "default"}
+          >
+            Vitrine {subcategory.visibleVitrine ? "oui" : "non"}
           </StaffBadge>
           <StaffBadge size="sm" color="green" icon="package">
             {subcategory.productFamilyCount} famille
@@ -127,9 +135,7 @@ function ProductCategoryRow({
         <ul className="space-y-2 pl-6">
           {node.subcategories.map((subcategory) => (
             <ProductSubcategoryRow
-              pathname={pathname}
               key={subcategory.id}
-              category={node}
               subcategory={subcategory}
             />
           ))}
