@@ -11,6 +11,7 @@ import { rankPublicProductSearchRows } from "./search";
 import { productBrandLabel, richTextDescriptionToString } from "./model-b-compat";
 import type {
   PublicProductColorReference,
+  PublicProductBrand,
   PublicProductFinishReference,
   PublicProductInspector,
   PublicProductInspectorAttribute,
@@ -27,6 +28,7 @@ import type {
 } from "./types";
 
 export type {
+  PublicProductBrand,
   PublicProductColorReference,
   PublicProductFinishReference,
   PublicProductInspector,
@@ -64,7 +66,7 @@ const PUBLIC_PRODUCT_SELECT = {
   shortDescription: true,
   richTextDescription: true,
   descriptionSeo: true,
-  brand: { select: { name: true } },
+  brand: { select: { name: true, description: true } },
   visibleEcommerce: true,
   visibleVitrine: true,
   subcategories: {
@@ -104,6 +106,8 @@ const PUBLIC_PRODUCT_SELECT = {
       value: true,
       unit: true,
       inputType: true,
+      groupName: true,
+      groupSortOrder: true,
       sortOrder: true,
     },
   },
@@ -328,6 +332,13 @@ function getBrandName(brand: { name: string } | null | undefined) {
   return productBrandLabel(brand);
 }
 
+function mapProductBrand(
+  brand: { name: string; description: string | null } | null | undefined,
+): PublicProductBrand | null {
+  const name = getBrandName(brand);
+  return name ? { name, description: brand?.description ?? null } : null;
+}
+
 function getProductDescription(record: {
   shortDescription: string | null;
   richTextDescription: Prisma.JsonValue | null;
@@ -423,6 +434,9 @@ function mapVariantAttributes(product: PublicProductRecord): PublicProductInspec
       name: presentation.name,
       value: formatAttributeValue(attribute),
       unit: presentation.unit,
+      groupName: attribute.groupName,
+      groupSortOrder: attribute.groupSortOrder,
+      sortOrder: attribute.sortOrder,
       specialType: presentation.specialType,
     };
   });
@@ -628,6 +642,7 @@ async function mapSimpleInspector(
   record: PublicProductRecord,
   input: {
     kind: "SINGLE" | "VARIANT";
+    brand: PublicProductBrand | null;
     brandNames: string[];
   },
 ): Promise<PublicSimpleProductInspector> {
@@ -647,6 +662,7 @@ async function mapSimpleInspector(
     displayName: record.displayName,
     description: getProductDescription(record),
     descriptionSeo: record.descriptionSeo,
+    brand: input.brand,
     brandNames: input.brandNames,
     media,
     datasheet: mapTechnicalMedia(record),
@@ -1182,6 +1198,7 @@ export async function findPublicFamilyBySlug(
     subtitle: record.subtitle,
     description: record.description,
     descriptionSeo: record.descriptionSeo,
+    brand: mapProductBrand(defaultVariant.brand),
     brandName: getBrandName(defaultVariant.brand),
     coverMedia,
     defaultVariantId: Number(defaultVariant.id),
@@ -1211,9 +1228,11 @@ export async function findPublicSingleProductBySlug(
   await makeMediaPublicMany(collectProductMediaIdsForPublishing([record]));
 
   const brandName = getBrandName(record.brand);
+  const brand = mapProductBrand(record.brand);
 
   return await mapSimpleInspector(record, {
     kind: "SINGLE",
+    brand,
     brandNames: brandName ? [brandName] : [],
   });
 }
@@ -1242,9 +1261,11 @@ export async function findPublicProductBySlug(
   await makeMediaPublicMany(collectProductMediaIdsForPublishing([record]));
 
   const brandName = getBrandName(record.brand);
+  const brand = mapProductBrand(record.brand);
 
   return await mapSimpleInspector(record, {
     kind: record.kind === "VARIANT" ? "VARIANT" : "SINGLE",
+    brand,
     brandNames: brandName ? [brandName] : [],
   });
 }

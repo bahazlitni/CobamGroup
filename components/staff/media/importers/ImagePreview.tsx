@@ -29,11 +29,10 @@ export default function ImagePreview({
   fallback,
   style,
 }: ImagePreviewProps) {
-  const { objectUrl, isLoading } = useMediaObjectUrl(
-    src ? null : mediaId,
-    variant,
-  );
+  const { objectUrl, isLoading } = useMediaObjectUrl(src ? null : mediaId, variant);
   const effectiveSrc = src || objectUrl;
+  const shouldUseUnoptimizedImage =
+    effectiveSrc?.startsWith("blob:") || effectiveSrc?.startsWith("data:");
 
   if (effectiveSrc) {
     return (
@@ -42,11 +41,12 @@ export default function ImagePreview({
         style={style}
       >
         <Image
-          draggable={false} 
+          draggable={false}
           width={1280}
           height={960}
           src={effectiveSrc}
           alt={alt}
+          unoptimized={shouldUseUnoptimizedImage}
           className={cn("h-full w-full object-cover", imageClassName)}
         />
       </div>
@@ -57,7 +57,7 @@ export default function ImagePreview({
     return (
       <div
         className={cn(
-          "flex items-center justify-center overflow-hidden border border-slate-300 bg-slate-50 animate-pulse",
+          "flex animate-pulse items-center justify-center overflow-hidden border border-slate-300 bg-slate-50",
           className,
         )}
         style={style}
@@ -75,7 +75,7 @@ export default function ImagePreview({
       )}
       style={style}
     >
-      {fallback ?? <ImageIcon className="text-slate-300 h-7 w-7" />}
+      {fallback ?? <ImageIcon className="h-7 w-7 text-slate-300" />}
     </div>
   );
 }

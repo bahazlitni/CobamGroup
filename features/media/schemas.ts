@@ -50,6 +50,30 @@ function parseMediaVisibility(value: string | null | undefined): MediaVisibility
       : null;
 }
 
+const MEDIA_UPLOAD_FILE_FIELD_NAMES = ["file", "media", "files", "files[]"];
+
+function isValidMediaUploadFile(value: FormDataEntryValue | null): value is File {
+  return value instanceof File && value.size > 0;
+}
+
+function findMediaUploadFile(formData: FormData) {
+  for (const fieldName of MEDIA_UPLOAD_FILE_FIELD_NAMES) {
+    for (const entry of formData.getAll(fieldName)) {
+      if (isValidMediaUploadFile(entry)) {
+        return entry;
+      }
+    }
+  }
+
+  for (const [, entry] of formData.entries()) {
+    if (isValidMediaUploadFile(entry)) {
+      return entry;
+    }
+  }
+
+  return null;
+}
+
 export function parseMediaIdParam(idParam: string) {
   const id = Number(idParam);
 
@@ -117,9 +141,7 @@ export function parseMediaListQuery(searchParams: URLSearchParams): MediaListQue
 
   const kindRaw = searchParams.get("kind");
   const kind: MediaFilterKind =
-    kindRaw && MEDIA_KIND_VALUES.includes(kindRaw as MediaKind)
-      ? (kindRaw as MediaKind)
-      : "ALL";
+    kindRaw && MEDIA_KIND_VALUES.includes(kindRaw as MediaKind) ? (kindRaw as MediaKind) : "ALL";
 
   const statusRaw = searchParams.get("status");
   const status: MediaFilterStatus =
@@ -145,9 +167,9 @@ export function parseMediaListQuery(searchParams: URLSearchParams): MediaListQue
 }
 
 export function parseMediaUploadFormData(formData: FormData): MediaUploadInput {
-  const fileEntry = formData.get("file");
+  const fileEntry = findMediaUploadFile(formData);
 
-  if (!(fileEntry instanceof File) || fileEntry.size <= 0) {
+  if (!fileEntry) {
     throw new MediaValidationError("Aucun fichier valide n'a ete fourni.");
   }
 

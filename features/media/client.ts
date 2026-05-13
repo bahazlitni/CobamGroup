@@ -166,7 +166,7 @@ export async function findMediaFolderIdByPathClient(path: string): Promise<numbe
 
 export async function uploadMediaClient(input: MediaUploadRequest): Promise<MediaListItemDto> {
   const formData = new FormData();
-  formData.set("file", input.file);
+  formData.append("file", input.file, input.file.name || "upload");
   if (input.title?.trim()) formData.set("title", input.title.trim());
   if (input.altText?.trim()) formData.set("altText", input.altText.trim());
   if (input.visibility) formData.set("visibility", input.visibility);

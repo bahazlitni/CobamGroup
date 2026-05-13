@@ -251,12 +251,20 @@ export type PublicProductFinishReference = {
   imageUrl: string | null;
 };
 
+export type PublicProductBrand = {
+  name: string;
+  description: string | null;
+};
+
 export type PublicProductInspectorAttribute = {
   attributeId: string;
   kind: string;
   name: string;
   value: string;
   unit: string | null;
+  groupName: string | null;
+  groupSortOrder: number;
+  sortOrder: number;
   specialType: "COLOR" | "FINISH" | null;
 };
 
@@ -280,6 +288,7 @@ export type PublicProductInspector = {
   subtitle: string | null;
   description: string | null;
   descriptionSeo: string | null;
+  brand: PublicProductBrand | null;
   brandName: string | null;
   coverMedia: PublicProductInspectorMedia | null;
   defaultVariantId: number | null;
@@ -298,6 +307,7 @@ export type PublicSimpleProductInspector = {
   displayName: string;
   description: string | null;
   descriptionSeo: string | null;
+  brand: PublicProductBrand | null;
   brandNames: string[];
   media: PublicProductInspectorMedia[];
   datasheet: PublicProductInspectorMedia | null;

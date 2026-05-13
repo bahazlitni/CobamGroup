@@ -60,7 +60,7 @@ import type {
   MediaUploadInput,
   MediaVisibility,
 } from "./types";
-import { MEDIA_KIND, MEDIA_VISIBILITY } from "./types";
+import { MEDIA_KIND } from "./types";
 import {
   getMediaMaxUploadBytes,
   getMediaStorageDriver,
@@ -221,15 +221,89 @@ function getFileExtension(filename: string, mimeType: string | null) {
   return subtype.toLowerCase();
 }
 
+const IMAGE_EXTENSIONS = new Set([
+  "avif",
+  "bmp",
+  "gif",
+  "heic",
+  "heif",
+  "ico",
+  "jfif",
+  "jpeg",
+  "jpg",
+  "png",
+  "svg",
+  "tif",
+  "tiff",
+  "webp",
+]);
+
+const VIDEO_EXTENSIONS = new Set(["avi", "m4v", "mkv", "mov", "mp4", "mpeg", "mpg", "webm"]);
+
+const MIME_TYPE_BY_EXTENSION: Record<string, string> = {
+  "7z": "application/x-7z-compressed",
+  avi: "video/x-msvideo",
+  avif: "image/avif",
+  bmp: "image/bmp",
+  csv: "text/csv",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  gif: "image/gif",
+  heic: "image/heic",
+  heif: "image/heif",
+  jfif: "image/jpeg",
+  jpeg: "image/jpeg",
+  jpg: "image/jpeg",
+  json: "application/json",
+  m4a: "audio/mp4",
+  m4v: "video/x-m4v",
+  mkv: "video/x-matroska",
+  mov: "video/quicktime",
+  mp3: "audio/mpeg",
+  mp4: "video/mp4",
+  mpeg: "video/mpeg",
+  mpg: "video/mpeg",
+  ogg: "audio/ogg",
+  pdf: "application/pdf",
+  png: "image/png",
+  ppt: "application/vnd.ms-powerpoint",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  rar: "application/vnd.rar",
+  svg: "image/svg+xml",
+  tif: "image/tiff",
+  tiff: "image/tiff",
+  txt: "text/plain",
+  wav: "audio/wav",
+  webm: "video/webm",
+  webp: "image/webp",
+  xls: "application/vnd.ms-excel",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  xml: "application/xml",
+  zip: "application/zip",
+};
+
+const GENERIC_UPLOAD_MIME_TYPES = new Set(["application/octet-stream", "binary/octet-stream"]);
+
+function normalizeUploadMimeType(mimeType: string | null, extension: string | null) {
+  const normalizedMimeType = mimeType?.trim().toLowerCase() || null;
+  const extensionMimeType = extension ? (MIME_TYPE_BY_EXTENSION[extension] ?? null) : null;
+
+  if (!normalizedMimeType || GENERIC_UPLOAD_MIME_TYPES.has(normalizedMimeType)) {
+    return extensionMimeType ?? normalizedMimeType;
+  }
+
+  return normalizedMimeType;
+}
+
 function inferMediaKind(input: { mimeType: string | null; extension: string | null }) {
   const mimeType = input.mimeType?.toLowerCase() ?? null;
   const extension = input.extension?.toLowerCase() ?? null;
 
-  if (mimeType?.startsWith("image/")) {
+  if ((extension && IMAGE_EXTENSIONS.has(extension)) || mimeType?.startsWith("image/")) {
     return MEDIA_KIND.IMAGE;
   }
 
-  if (mimeType?.startsWith("video/")) {
+  if ((extension && VIDEO_EXTENSIONS.has(extension)) || mimeType?.startsWith("video/")) {
     return MEDIA_KIND.VIDEO;
   }
 
@@ -310,25 +384,6 @@ async function analyzeImageBuffer(buffer: Buffer, mimeType: string | null) {
       400,
     );
   }
-}
-
-function getMediaReferenceCount(media: Awaited<ReturnType<typeof findMediaById>>) {
-  if (!media) {
-    return 0;
-  }
-
-  return (
-    media._count.productFamilyLinks +
-    media._count.productVariantLinks +
-    media._count.brandLogoFor +
-    media._count.productCategoryImageFor +
-    media._count.productFinishImageFor +
-    media._count.productSubcategoryImageFor +
-    media._count.staffProfileAvatarFor +
-    media._count.articleMediaLinks +
-    media._count.articleCoverFor +
-    media._count.articleOgImageFor
-  );
 }
 
 function assertMediaCanBeDeletedWithoutForce(
@@ -529,12 +584,21 @@ export async function uploadMediaService(session: StaffSession, input: MediaUplo
   }
 
   const extension = getFileExtension(originalFilename, input.file.type || null);
+  const uploadMimeType = normalizeUploadMimeType(input.file.type || null, extension);
   const kind = inferMediaKind({
-    mimeType: input.file.type || null,
+    mimeType: uploadMimeType,
     extension,
   });
-  let buffer = Buffer.from(await input.file.arrayBuffer());
-  let mimeType = input.file.type || null;
+  let buffer: Buffer;
+
+  try {
+    buffer = Buffer.from(await input.file.arrayBuffer());
+  } catch (error) {
+    console.error("MEDIA_UPLOAD_READ_ERROR:", error);
+    throw new MediaServiceError("Impossible de lire le fichier fourni.", 400);
+  }
+
+  let mimeType = uploadMimeType;
   let finalExtension = extension;
   let finalFilename = originalFilename;
 
@@ -555,13 +619,9 @@ export async function uploadMediaService(session: StaffSession, input: MediaUplo
   const sha256Hash = createHash("sha256").update(buffer).digest("hex");
   const storage = getMediaStorageDriver();
   const imageArtifacts =
-    kind === MEDIA_KIND.IMAGE
-      ? await analyzeImageBuffer(buffer, mimeType)
-      : null;
+    kind === MEDIA_KIND.IMAGE ? await analyzeImageBuffer(buffer, mimeType) : null;
   const thumbnailStoragePath =
-    kind === MEDIA_KIND.IMAGE
-      ? getMediaVariantStoragePath(storagePath, "thumbnail")
-      : null;
+    kind === MEDIA_KIND.IMAGE ? getMediaVariantStoragePath(storagePath, "thumbnail") : null;
   let originalStored = false;
   let thumbnailStored = false;
 
@@ -674,8 +734,7 @@ export async function updateMediaService(
     input.visibility != null && existingMedia.visibility !== input.visibility;
   const shouldChangeFolder =
     input.folderId !== undefined && existingMedia.folderId !== input.folderId;
-  const shouldChangeTitle =
-    input.title !== undefined && existingMedia.title !== input.title;
+  const shouldChangeTitle = input.title !== undefined && existingMedia.title !== input.title;
   const shouldChangeAltText =
     input.altText !== undefined && existingMedia.altText !== input.altText;
 
@@ -874,19 +933,12 @@ export async function deleteMediaService(
     throw new MediaServiceError("Impossible de supprimer le fichier dans le stockage.", 500);
   }
 
-  const deletionResult = forceRemove
-    ? await detachMediaReferencesAndDeleteMediaRecord(mediaId)
-    : {
-        deletedMedia: await deleteMediaRecord(mediaId),
-        detachedReferences: null,
-      };
-  const referenceCount = forceRemove
-    ? (deletionResult.detachedReferences?.total ?? getMediaReferenceCount(media))
-    : getMediaReferenceCount(media);
-  const forceSummarySuffix =
-    forceRemove && referenceCount > 0
-      ? ` (${deletionResult.detachedReferences?.total ?? 0} reference(s) retirees)`
-      : "";
+  if (forceRemove) {
+    await detachMediaReferencesAndDeleteMediaRecord(mediaId);
+    return;
+  }
+
+  await deleteMediaRecord(mediaId);
 }
 
 async function readStoredMediaObject(

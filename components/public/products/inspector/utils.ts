@@ -1,5 +1,6 @@
 import { PublicProductBreadcrumb } from "@/features/products/public-breadcrumb";
 import {
+  PublicProductBrand,
   PublicProductColorReference,
   PublicProductFinishReference,
   PublicProductInspector,
@@ -31,6 +32,7 @@ export type UnifiedInspectorProduct = {
   entityType: "FAMILY" | "SINGLE" | "VARIANT";
   id: number;
   slug: string;
+  brand: PublicProductBrand | null;
   brandName: string | null;
   coverMedia: PublicProductInspectorMedia | null;
   defaultVariantId: number | null;
@@ -60,6 +62,13 @@ export type NormalAttributeGroup = {
   name: string;
   unit: string | null;
   options: NormalAttributeOption[];
+};
+
+export type NormalAttributeDisplayGroup = {
+  key: string;
+  name: string;
+  sortOrder: number;
+  attributes: PublicProductInspectorAttribute[];
 };
 
 export type SelectorPillProps = {
@@ -96,6 +105,7 @@ export function normalizeInspectorProduct(
       entityType: "FAMILY",
       id: product.id,
       slug: product.slug,
+      brand: product.brand,
       brandName: product.brandName,
       coverMedia: product.coverMedia,
       defaultVariantId: product.defaultVariantId,
@@ -110,6 +120,7 @@ export function normalizeInspectorProduct(
     entityType: product.kind,
     id: product.id,
     slug: product.slug,
+    brand: product.brand,
     brandName: product.brandNames.length > 0 ? product.brandNames.join(" · ") : null,
     coverMedia: product.media[0] ?? null,
     defaultVariantId: product.id,
@@ -310,6 +321,47 @@ export function buildNormalAttributeGroups(product: UnifiedInspectorProduct) {
   return [...groups.values()];
 }
 
+export function buildNormalAttributeDisplayGroups(
+  attributes: PublicProductInspectorAttribute[],
+): NormalAttributeDisplayGroup[] {
+  const groups = new Map<string, NormalAttributeDisplayGroup>();
+
+  for (const attribute of attributes) {
+    if (attribute.specialType != null) {
+      continue;
+    }
+
+    const groupName = attribute.groupName?.trim() || "Caractéristiques";
+    const groupKey = `${attribute.groupSortOrder}:${groupName}`;
+    const existingGroup = groups.get(groupKey);
+
+    if (existingGroup) {
+      existingGroup.attributes.push(attribute);
+      continue;
+    }
+
+    groups.set(groupKey, {
+      key: groupKey,
+      name: groupName,
+      sortOrder: attribute.groupSortOrder,
+      attributes: [attribute],
+    });
+  }
+
+  return [...groups.values()]
+    .map((group) => ({
+      ...group,
+      attributes: [...group.attributes].sort(
+        (left, right) =>
+          left.sortOrder - right.sortOrder || left.name.localeCompare(right.name, "fr"),
+      ),
+    }))
+    .sort(
+      (left, right) =>
+        left.sortOrder - right.sortOrder || left.name.localeCompare(right.name, "fr"),
+    );
+}
+
 export function findVariantBySpecialValues(
   variants: PublicProductInspectorVariant[],
   finishReferences: PublicProductFinishReference[],
@@ -378,8 +430,7 @@ export function buildSpecialOptions(input: {
             (reference) =>
               normalizeLooseValue(reference.key) === key ||
               normalizeLooseValue(reference.name) === key,
-          ) ??
-          null,
+          ) ?? null,
       };
     });
 

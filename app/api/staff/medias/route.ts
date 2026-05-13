@@ -7,11 +7,7 @@ import {
   parseMediaListQuery,
   parseMediaUploadFormData,
 } from "@/features/media/schemas";
-import {
-  listMediaService,
-  MediaServiceError,
-  uploadMediaService,
-} from "@/features/media/service";
+import { listMediaService, MediaServiceError, uploadMediaService } from "@/features/media/service";
 
 export const runtime = "nodejs";
 
@@ -41,24 +37,28 @@ export async function GET(req: Request) {
       error instanceof MediaValidationError ||
       error instanceof MediaServiceError
     ) {
-      return NextResponse.json(
-        { ok: false, message: error.message },
-        { status: error.status },
-      );
+      return NextResponse.json({ ok: false, message: error.message }, { status: error.status });
     }
 
     console.error("MEDIA_LIST_ERROR:", error);
-    return NextResponse.json(
-      { ok: false, message: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ ok: false, message: "Internal server error" }, { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
   try {
     const session = await requireStaffSession(req);
-    const formData = await req.formData();
+    let formData: FormData;
+
+    try {
+      formData = await req.formData();
+    } catch (error) {
+      console.error("MEDIA_UPLOAD_FORMDATA_ERROR:", error);
+      throw new MediaValidationError(
+        "Le fichier n'a pas pu etre lu. Verifiez le fichier et reessayez.",
+      );
+    }
+
     const input = parseMediaUploadFormData(formData);
     const media = await uploadMediaService(session, input);
 
@@ -69,16 +69,10 @@ export async function POST(req: Request) {
       error instanceof MediaValidationError ||
       error instanceof MediaServiceError
     ) {
-      return NextResponse.json(
-        { ok: false, message: error.message },
-        { status: error.status },
-      );
+      return NextResponse.json({ ok: false, message: error.message }, { status: error.status });
     }
 
     console.error("MEDIA_UPLOAD_ERROR:", error);
-    return NextResponse.json(
-      { ok: false, message: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ ok: false, message: "Internal server error" }, { status: 500 });
   }
 }
