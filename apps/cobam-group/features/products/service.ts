@@ -470,186 +470,192 @@ async function writeFamily(familyId: number | null, input: ProductFamilyUpsertIn
     }
   }
 
-  return prisma.$transaction(async (tx) => {
-    const existingFamily =
-      familyId == null
-        ? null
-        : await tx.productFamily.findUnique({
-            where: { id: BigInt(familyId) },
-            select: {
-              id: true,
-              members: {
-                select: {
-                  productId: true,
-                  product: {
-                    select: {
-                      id: true,
-                      sku: true,
-                      slug: true,
-                    },
+  const existingFamily =
+    familyId == null
+      ? null
+      : await prisma.productFamily.findUnique({
+          where: { id: BigInt(familyId) },
+          select: {
+            id: true,
+            members: {
+              select: {
+                productId: true,
+                product: {
+                  select: {
+                    id: true,
+                    sku: true,
+                    slug: true,
                   },
                 },
               },
             },
-          });
-
-    if (familyId != null && !existingFamily) {
-      throw new ProductServiceError("Famille introuvable.", 404);
-    }
-
-    const existingById = new Map(
-      (existingFamily?.members ?? []).map((member) => [
-        Number(member.productId),
-        {
-          sku: member.product.sku,
-          slug: member.product.slug,
-        },
-      ]),
-    );
-
-    await assertFamilySlugAvailable(input.slug, familyId ?? undefined);
-    await assertVariantUniqueConstraints(input.variants, existingById);
-
-    const family =
-      familyId == null
-        ? await tx.productFamily.create({
-            data: {
-              name: input.name,
-              slug: input.slug,
-              subtitle: input.subtitle,
-              description: input.description,
-              descriptionSeo: input.descriptionSeo,
-              mainImageMediaId:
-                input.mainImageMediaId == null ? null : BigInt(input.mainImageMediaId),
-            },
-            select: {
-              id: true,
-            },
-          })
-        : await tx.productFamily.update({
-            where: { id: BigInt(familyId) },
-            data: {
-              name: input.name,
-              slug: input.slug,
-              subtitle: input.subtitle,
-              description: input.description,
-              descriptionSeo: input.descriptionSeo,
-              mainImageMediaId:
-                input.mainImageMediaId == null ? null : BigInt(input.mainImageMediaId),
-            },
-            select: {
-              id: true,
-            },
-          });
-
-    const keptProductIds = input.variants
-      .map((variant) => variant.id)
-      .filter((variantId): variantId is number => variantId != null);
-
-    const removedProductIds = (existingFamily?.members ?? [])
-      .map((member) => Number(member.productId))
-      .filter((productId) => !keptProductIds.includes(productId));
-
-    if (removedProductIds.length > 0) {
-      await tx.productFamilyMember.deleteMany({
-        where: {
-          familyId: family.id,
-          productId: {
-            in: removedProductIds.map((id) => BigInt(id)),
           },
-        },
-      });
+        });
 
-      await tx.product.deleteMany({
-        where: {
-          id: {
-            in: removedProductIds.map((id) => BigInt(id)),
-          },
-        },
-      });
-    }
+  if (familyId != null && !existingFamily) {
+    throw new ProductServiceError("Famille introuvable.", 404);
+  }
 
-    const createdOrUpdatedIds: bigint[] = [];
+  const existingById = new Map(
+    (existingFamily?.members ?? []).map((member) => [
+      Number(member.productId),
+      {
+        sku: member.product.sku,
+        slug: member.product.slug,
+      },
+    ]),
+  );
 
-    for (const [index, variant] of input.variants.entries()) {
-      const brandId = await resolveProductBrandOrganizationId(tx, variant.brand);
-      const productData: Prisma.ProductUncheckedCreateInput = {
-        sku: variant.sku,
-        slug: variant.slug,
-        kind: "VARIANT",
-        productTypeId: variant.productTypeId == null ? null : BigInt(variant.productTypeId),
-        name: variant.name,
-        displayName: variant.displayName,
-        richTextDescription: stringToRichTextDescription(variant.description),
-        shortDescription: variant.shortDescription,
-        titleSeo: variant.titleSeo,
-        descriptionSeo: variant.descriptionSeo,
-        tags: variant.tags,
-        guaranteeMonths: variant.guaranteeMonths,
-        brandId,
-        visibleEcommerce: variant.visibleEcommerce,
-        visibleVitrine: variant.visibleVitrine,
-        isFeatured: variant.isFeatured,
-        isPromoted: variant.isPromoted,
-        isNew: variant.isNew,
-        stockAvailable: variant.stockAvailable,
-        stockAlertThreshold: variant.stockAlertThreshold,
-        stockUnit: variant.stockUnit,
-        stockAvailability: variant.stockAvailability,
-        stockVisibility: variant.stockVisibility,
-        basePriceTtcTnd: variant.basePriceTtcTnd,
-        currentPriceTtcTnd: variant.currentPriceTtcTnd,
-        vatRate: variant.vatRate,
-        priceVisibility: variant.priceVisibility,
-      };
+  await assertFamilySlugAvailable(input.slug, familyId ?? undefined);
+  await assertVariantUniqueConstraints(input.variants, existingById);
 
-      const product =
-        variant.id == null
-          ? await tx.product.create({
-              data: productData,
-              select: { id: true },
+  return prisma.$transaction(
+    async (tx) => {
+      const family =
+        familyId == null
+          ? await tx.productFamily.create({
+              data: {
+                name: input.name,
+                slug: input.slug,
+                subtitle: input.subtitle,
+                description: input.description,
+                descriptionSeo: input.descriptionSeo,
+                mainImageMediaId:
+                  input.mainImageMediaId == null ? null : BigInt(input.mainImageMediaId),
+              },
+              select: {
+                id: true,
+              },
             })
-          : await tx.product.update({
-              where: { id: BigInt(variant.id) },
-              data: productData,
-              select: { id: true },
+          : await tx.productFamily.update({
+              where: { id: BigInt(familyId) },
+              data: {
+                name: input.name,
+                slug: input.slug,
+                subtitle: input.subtitle,
+                description: input.description,
+                descriptionSeo: input.descriptionSeo,
+                mainImageMediaId:
+                  input.mainImageMediaId == null ? null : BigInt(input.mainImageMediaId),
+              },
+              select: {
+                id: true,
+              },
             });
 
-      await syncVariantRelations(tx, product.id, variant);
+      const keptProductIds = input.variants
+        .map((variant) => variant.id)
+        .filter((variantId): variantId is number => variantId != null);
 
-      await tx.productFamilyMember.upsert({
-        where: {
-          productId: product.id,
-        },
-        update: {
-          familyId: family.id,
-          sortOrder: index,
-        },
-        create: {
-          familyId: family.id,
-          productId: product.id,
-          sortOrder: index,
+      const removedProductIds = (existingFamily?.members ?? [])
+        .map((member) => Number(member.productId))
+        .filter((productId) => !keptProductIds.includes(productId));
+
+      if (removedProductIds.length > 0) {
+        await tx.productFamilyMember.deleteMany({
+          where: {
+            familyId: family.id,
+            productId: {
+              in: removedProductIds.map((id) => BigInt(id)),
+            },
+          },
+        });
+
+        await tx.product.deleteMany({
+          where: {
+            id: {
+              in: removedProductIds.map((id) => BigInt(id)),
+            },
+          },
+        });
+      }
+
+      const createdOrUpdatedIds: bigint[] = [];
+
+      for (const [index, variant] of input.variants.entries()) {
+        const brandId = await resolveProductBrandOrganizationId(tx, variant.brand);
+        const productData: Prisma.ProductUncheckedCreateInput = {
+          sku: variant.sku,
+          slug: variant.slug,
+          kind: "VARIANT",
+          productTypeId: variant.productTypeId == null ? null : BigInt(variant.productTypeId),
+          name: variant.name,
+          displayName: variant.displayName,
+          richTextDescription: stringToRichTextDescription(variant.description),
+          shortDescription: variant.shortDescription,
+          titleSeo: variant.titleSeo,
+          descriptionSeo: variant.descriptionSeo,
+          tags: variant.tags,
+          guaranteeMonths: variant.guaranteeMonths,
+          brandId,
+          visibleEcommerce: variant.visibleEcommerce,
+          visibleVitrine: variant.visibleVitrine,
+          isFeatured: variant.isFeatured,
+          isPromoted: variant.isPromoted,
+          isNew: variant.isNew,
+          stockAvailable: variant.stockAvailable,
+          stockAlertThreshold: variant.stockAlertThreshold,
+          stockUnit: variant.stockUnit,
+          stockAvailability: variant.stockAvailability,
+          stockVisibility: variant.stockVisibility,
+          basePriceTtcTnd: variant.basePriceTtcTnd,
+          currentPriceTtcTnd: variant.currentPriceTtcTnd,
+          vatRate: variant.vatRate,
+          priceVisibility: variant.priceVisibility,
+        };
+
+        const product =
+          variant.id == null
+            ? await tx.product.create({
+                data: productData,
+                select: { id: true },
+              })
+            : await tx.product.update({
+                where: { id: BigInt(variant.id) },
+                data: productData,
+                select: { id: true },
+              });
+
+        await syncVariantRelations(tx, product.id, variant);
+
+        await tx.productFamilyMember.upsert({
+          where: {
+            productId: product.id,
+          },
+          update: {
+            familyId: family.id,
+            sortOrder: index,
+          },
+          create: {
+            familyId: family.id,
+            productId: product.id,
+            sortOrder: index,
+          },
+        });
+
+        createdOrUpdatedIds.push(product.id);
+      }
+
+      const defaultProductId =
+        createdOrUpdatedIds[input.defaultVariantIndex] ?? createdOrUpdatedIds[0] ?? null;
+
+      await tx.productFamily.update({
+        where: { id: family.id },
+        data: {
+          defaultProductId,
         },
       });
 
-      createdOrUpdatedIds.push(product.id);
-    }
-
-    const defaultProductId =
-      createdOrUpdatedIds[input.defaultVariantIndex] ?? createdOrUpdatedIds[0] ?? null;
-
-    await tx.productFamily.update({
-      where: { id: family.id },
-      data: {
-        defaultProductId,
-      },
-    });
-
-    return tx.productFamily.findUniqueOrThrow({
-      where: { id: family.id },
-      select: STAFF_FAMILY_DETAIL_SELECT,
-    });
-  });
+      return tx.productFamily.findUniqueOrThrow({
+        where: { id: family.id },
+        select: STAFF_FAMILY_DETAIL_SELECT,
+      });
+    },
+    {
+      maxWait: 10_000,
+      timeout: 60_000,
+    },
+  );
 }
 
 export async function getProductFormOptionsService(
