@@ -163,12 +163,18 @@ async function syncProductSubcategories(
           id: BigInt(subcategory.id),
         },
         data,
+        select: {
+          id: true,
+        },
       });
       continue;
     }
 
     await tx.productSubcategory.create({
       data,
+      select: {
+        id: true,
+      },
     });
   }
 }

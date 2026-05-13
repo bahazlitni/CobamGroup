@@ -421,8 +421,9 @@ export default function ProductCategoryEditorPanels({
                       </PanelField>
                     </div>
 
-                    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-5">
+                    <div className="grid gap-x-5 gap-y-6 md:grid-cols-2 xl:grid-cols-12">
                       <PanelField
+                        className="xl:col-span-3"
                         id={`subcategory-slug-${subcategory.formKey}`}
                         label="Slug"
                       >
@@ -442,6 +443,7 @@ export default function ProductCategoryEditorPanels({
                       </PanelField>
 
                       <PanelField
+                        className="xl:col-span-2"
                         id={`subcategory-sort-order-${subcategory.formKey}`}
                         label="Ordre d'affichage"
                       >
@@ -449,6 +451,7 @@ export default function ProductCategoryEditorPanels({
                           id={`subcategory-sort-order-${subcategory.formKey}`}
                           type="number"
                           inputMode="numeric"
+                          fullWidth
                           value={subcategory.sortOrder}
                           onChange={(event) =>
                             onSubcategoryChange(
@@ -462,6 +465,7 @@ export default function ProductCategoryEditorPanels({
                       </PanelField>
 
                       <PanelField
+                        className="xl:col-span-2"
                         id={`subcategory-status-${subcategory.formKey}`}
                         label="État"
                       >
@@ -484,6 +488,7 @@ export default function ProductCategoryEditorPanels({
                       </PanelField>
 
                       <PanelField
+                        className="xl:col-span-3"
                         id={`subcategory-visible-ecommerce-${subcategory.formKey}`}
                         label="Visible e-commerce"
                       >
@@ -506,6 +511,7 @@ export default function ProductCategoryEditorPanels({
                       </PanelField>
 
                       <PanelField
+                        className="xl:col-span-2"
                         id={`subcategory-visible-vitrine-${subcategory.formKey}`}
                         label="Visible vitrine"
                       >
