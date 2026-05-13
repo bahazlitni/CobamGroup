@@ -5,6 +5,7 @@ import type {
   ProductCategoryListQuery,
   ProductCategoryUpdateInput,
 } from "./types";
+import type { ProductCategoryWithRelations } from "./mappers";
 
 function buildProductCategoryWhere(
   query: ProductCategoryListQuery,
@@ -35,56 +36,86 @@ function buildProductCategoryWhere(
   return where;
 }
 
-const productSubcategorySelect = {
-  id: true,
-  categoryId: true,
-  name: true,
-  subtitle: true,
-  slug: true,
-  description: true,
-  descriptionSeo: true,
-  imageMediaId: true,
-  sortOrder: true,
-  isActive: true,
-  visibleEcommerce: true,
-  visibleVitrine: true,
-  createdAt: true,
-  updatedAt: true,
-  _count: {
-    select: {
-      productLinks: true,
-    },
-  },
-} satisfies Prisma.ProductSubcategorySelect;
+let subcategoryVisibilityColumnsPromise: Promise<boolean> | null = null;
 
-const productCategorySelect = {
-  id: true,
-  name: true,
-  subtitle: true,
-  slug: true,
-  themeColor: true,
-  description: true,
-  descriptionSeo: true,
-  imageMediaId: true,
-  sortOrder: true,
-  isActive: true,
-  createdAt: true,
-  updatedAt: true,
-  subcategories: {
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
-    select: productSubcategorySelect,
-  },
-  _count: {
-    select: {
-      subcategories: true,
+function hasProductSubcategoryVisibilityColumns() {
+  subcategoryVisibilityColumnsPromise ??= prisma
+    .$queryRaw<Array<{ column_name: string }>>(Prisma.sql`
+      SELECT "column_name"
+      FROM "information_schema"."columns"
+      WHERE "table_schema" = 'public'
+        AND "table_name" = 'product_subcategories'
+        AND "column_name" IN ('visible_ecommerce', 'visible_vitrine')
+    `)
+    .then((columns) => columns.length === 2)
+    .catch(() => false);
+
+  return subcategoryVisibilityColumnsPromise;
+}
+
+function productSubcategorySelectFor(
+  hasVisibilityColumns: boolean,
+): Prisma.ProductSubcategorySelect {
+  return {
+    id: true,
+    categoryId: true,
+    name: true,
+    subtitle: true,
+    slug: true,
+    description: true,
+    descriptionSeo: true,
+    imageMediaId: true,
+    sortOrder: true,
+    isActive: true,
+    ...(hasVisibilityColumns
+      ? {
+        visibleEcommerce: true,
+        visibleVitrine: true,
+      }
+      : {}),
+    createdAt: true,
+    updatedAt: true,
+    _count: {
+      select: {
+        productLinks: true,
+      },
     },
-  },
-} satisfies Prisma.ProductCategorySelect;
+  };
+}
+
+function productCategorySelectFor(
+  hasVisibilityColumns: boolean,
+): Prisma.ProductCategorySelect {
+  return {
+    id: true,
+    name: true,
+    subtitle: true,
+    slug: true,
+    themeColor: true,
+    description: true,
+    descriptionSeo: true,
+    imageMediaId: true,
+    sortOrder: true,
+    isActive: true,
+    createdAt: true,
+    updatedAt: true,
+    subcategories: {
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
+      select: productSubcategorySelectFor(hasVisibilityColumns),
+    },
+    _count: {
+      select: {
+        subcategories: true,
+      },
+    },
+  };
+}
 
 async function syncProductSubcategories(
   tx: Prisma.TransactionClient,
   categoryId: bigint,
   subcategories: ProductCategoryCreateInput["subcategories"],
+  hasVisibilityColumns: boolean,
 ) {
   const keptSubcategoryIds = subcategories
     .map((subcategory) => subcategory.id)
@@ -118,8 +149,12 @@ async function syncProductSubcategories(
           : null,
       sortOrder: subcategory.sortOrder,
       isActive: subcategory.isActive,
-      visibleEcommerce: subcategory.visibleEcommerce,
-      visibleVitrine: subcategory.visibleVitrine,
+      ...(hasVisibilityColumns
+        ? {
+          visibleEcommerce: subcategory.visibleEcommerce,
+          visibleVitrine: subcategory.visibleVitrine,
+        }
+        : {}),
     };
 
     if (subcategory.id != null) {
@@ -138,14 +173,18 @@ async function syncProductSubcategories(
   }
 }
 
-export async function listProductCategories(query: ProductCategoryListQuery) {
+export async function listProductCategories(
+  query: ProductCategoryListQuery,
+): Promise<ProductCategoryWithRelations[]> {
+  const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
+
   return prisma.productCategory.findMany({
     where: buildProductCategoryWhere(query),
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { createdAt: "desc" }],
     skip: query.tree ? undefined : (query.page - 1) * query.pageSize,
     take: query.tree ? undefined : query.pageSize,
-    select: productCategorySelect,
-  });
+    select: productCategorySelectFor(hasVisibilityColumns),
+  }) as unknown as Promise<ProductCategoryWithRelations[]>;
 }
 
 export async function countProductCategories(query: ProductCategoryListQuery) {
@@ -154,11 +193,15 @@ export async function countProductCategories(query: ProductCategoryListQuery) {
   });
 }
 
-export async function findProductCategoryById(categoryId: number) {
+export async function findProductCategoryById(
+  categoryId: number,
+): Promise<ProductCategoryWithRelations | null> {
+  const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
+
   return prisma.productCategory.findUnique({
     where: { id: BigInt(categoryId) },
-    select: productCategorySelect,
-  });
+    select: productCategorySelectFor(hasVisibilityColumns),
+  }) as unknown as Promise<ProductCategoryWithRelations | null>;
 }
 
 export async function findProductCategoryBySlug(slug: string) {
@@ -233,7 +276,9 @@ export async function findProductSubcategoriesByCategoryAndSlugs(input: {
 
 export async function createProductCategory(
   input: ProductCategoryCreateInput,
-) {
+): Promise<ProductCategoryWithRelations> {
+  const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
+
   return prisma.$transaction(async (tx) => {
     const category = await tx.productCategory.create({
       data: {
@@ -253,19 +298,26 @@ export async function createProductCategory(
       },
     });
 
-    await syncProductSubcategories(tx, category.id, input.subcategories);
+    await syncProductSubcategories(
+      tx,
+      category.id,
+      input.subcategories,
+      hasVisibilityColumns,
+    );
 
     return tx.productCategory.findUniqueOrThrow({
       where: { id: category.id },
-      select: productCategorySelect,
-    });
+      select: productCategorySelectFor(hasVisibilityColumns),
+    }) as unknown as Promise<ProductCategoryWithRelations>;
   });
 }
 
 export async function updateProductCategory(
   categoryId: number,
   input: ProductCategoryUpdateInput,
-) {
+): Promise<ProductCategoryWithRelations> {
+  const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
+
   return prisma.$transaction(async (tx) => {
     const categoryIdValue = BigInt(categoryId);
 
@@ -285,12 +337,17 @@ export async function updateProductCategory(
       },
     });
 
-    await syncProductSubcategories(tx, categoryIdValue, input.subcategories);
+    await syncProductSubcategories(
+      tx,
+      categoryIdValue,
+      input.subcategories,
+      hasVisibilityColumns,
+    );
 
     return tx.productCategory.findUniqueOrThrow({
       where: { id: categoryIdValue },
-      select: productCategorySelect,
-    });
+      select: productCategorySelectFor(hasVisibilityColumns),
+    }) as unknown as Promise<ProductCategoryWithRelations>;
   });
 }
 
@@ -306,7 +363,9 @@ export async function countProductFamiliesForCategory(categoryId: number) {
       subcategories: {
         some: {
           subcategory: {
-            categoryId: BigInt(categoryId),
+            is: {
+              categoryId: BigInt(categoryId),
+            },
           },
         },
       },

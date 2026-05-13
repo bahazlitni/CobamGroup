@@ -26,19 +26,24 @@ const MEDIA_SELECT = {
 
 const VISIBLE_ECOMMERCE_SUBCATEGORY_LINK_WHERE = {
   subcategory: {
-    isActive: true,
-    visibleEcommerce: true,
-    category: {
+    is: {
       isActive: true,
+      category: {
+        is: {
+          isActive: true,
+        },
+      },
     },
   },
 } satisfies Prisma.ProductSubcategoryLinkWhereInput;
 
 const VISIBLE_ECOMMERCE_FAMILY_MEMBER_WHERE = {
   product: {
-    visibleEcommerce: true,
-    subcategories: {
-      some: VISIBLE_ECOMMERCE_SUBCATEGORY_LINK_WHERE,
+    is: {
+      visibleEcommerce: true,
+      subcategories: {
+        some: VISIBLE_ECOMMERCE_SUBCATEGORY_LINK_WHERE,
+      },
     },
   },
 } satisfies Prisma.ProductFamilyMemberWhereInput;
@@ -528,19 +533,29 @@ function categoryWhere(categorySlug?: string | null) {
     subcategories: {
       some: {
         subcategory: {
-          isActive: true,
-          visibleEcommerce: true,
-          category: {
+          is: {
             isActive: true,
+            category: {
+              is: {
+                isActive: true,
+              },
+            },
+            ...(categorySlug
+              ? {
+                  OR: [
+                    { slug: categorySlug },
+                    {
+                      category: {
+                        is: {
+                          slug: categorySlug,
+                          isActive: true,
+                        },
+                      },
+                    },
+                  ],
+                }
+              : {}),
           },
-          ...(categorySlug
-            ? {
-                OR: [
-                  { slug: categorySlug },
-                  { category: { slug: categorySlug, isActive: true } },
-                ],
-              }
-            : {}),
         },
       },
     },
@@ -601,7 +616,9 @@ function familyWhere(input: {
   return {
     members: {
       some: {
-        product: productFilter,
+        product: {
+          is: productFilter,
+        },
       },
     },
     ...(input.search
@@ -609,7 +626,7 @@ function familyWhere(input: {
           OR: [
             { name: { contains: input.search, mode: "insensitive" as const } },
             { subtitle: { contains: input.search, mode: "insensitive" as const } },
-            { members: { some: { product: productSearchWhere(input.search) } } },
+            { members: { some: { product: { is: productSearchWhere(input.search) } } } },
           ],
         }
       : {}),
@@ -656,7 +673,6 @@ export async function getCommerceCategories(): Promise<CommerceCategory[]> {
       subcategories: {
         some: {
           isActive: true,
-          visibleEcommerce: true,
         },
       },
     },
@@ -669,14 +685,14 @@ export async function getCommerceCategories(): Promise<CommerceCategory[]> {
       description: true,
       imageMedia: { select: MEDIA_SELECT },
       subcategories: {
-        where: { isActive: true, visibleEcommerce: true },
+        where: { isActive: true },
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
         select: {
           id: true,
           name: true,
           slug: true,
           productLinks: {
-            where: { product: { visibleEcommerce: true } },
+            where: { product: { is: { visibleEcommerce: true } } },
             select: { productId: true },
           },
         },

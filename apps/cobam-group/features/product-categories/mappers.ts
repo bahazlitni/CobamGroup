@@ -4,7 +4,7 @@ import type {
   ProductSubcategoryListItemDto,
 } from "./types";
 
-type ProductSubcategoryWithCounts = {
+export type ProductSubcategoryWithCounts = {
   id: bigint;
   categoryId: bigint;
   name: string;
@@ -15,8 +15,8 @@ type ProductSubcategoryWithCounts = {
   imageMediaId: bigint | null;
   sortOrder: number;
   isActive: boolean;
-  visibleEcommerce: boolean;
-  visibleVitrine: boolean;
+  visibleEcommerce?: boolean;
+  visibleVitrine?: boolean;
   createdAt: Date;
   updatedAt: Date;
   _count: {
@@ -24,7 +24,7 @@ type ProductSubcategoryWithCounts = {
   };
 };
 
-type ProductCategoryWithRelations = {
+export type ProductCategoryWithRelations = {
   id: bigint;
   name: string;
   subtitle: string | null;
@@ -64,8 +64,8 @@ function mapProductSubcategoryToListItemDto(
     imageMediaId: toNumber(subcategory.imageMediaId),
     sortOrder: subcategory.sortOrder,
     isActive: subcategory.isActive,
-    visibleEcommerce: subcategory.visibleEcommerce,
-    visibleVitrine: subcategory.visibleVitrine,
+    visibleEcommerce: subcategory.visibleEcommerce ?? true,
+    visibleVitrine: subcategory.visibleVitrine ?? true,
     productFamilyCount: subcategory._count.productLinks,
     createdAt: subcategory.createdAt.toISOString(),
     updatedAt: subcategory.updatedAt.toISOString(),
