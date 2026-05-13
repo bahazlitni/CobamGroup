@@ -27,6 +27,12 @@ export function stringToRichTextDescription(value: string | null | undefined) {
 
 function readRichTextNodeText(value: unknown): string {
   if (typeof value === "string") {
+    const parsed = parseMaybeJsonString(value);
+
+    if (parsed !== value) {
+      return readRichTextNodeText(parsed);
+    }
+
     return value;
   }
 
@@ -45,6 +51,30 @@ function readRichTextNodeText(value: unknown): string {
   }
 
   return "";
+}
+
+function parseMaybeJsonString(value: string, depth = 0): unknown {
+  if (depth >= 3) {
+    return value;
+  }
+
+  const trimmed = value.trim();
+
+  if (!trimmed || !/^[{["]/.test(trimmed)) {
+    return value;
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed) as unknown;
+
+    if (typeof parsed === "string") {
+      return parseMaybeJsonString(parsed, depth + 1);
+    }
+
+    return parsed;
+  } catch {
+    return value;
+  }
 }
 
 export function richTextDescriptionToString(value: RichTextDescriptionValue) {

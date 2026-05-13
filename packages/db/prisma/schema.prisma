@@ -372,7 +372,7 @@ model Product {
   name        String      @db.VarChar(255)
   displayName String      @map("display_name") @db.VarChar(255)
 
-  richTextDescription Json?
+  richTextDescription Json? @map("rich_text_description") @db.Json
   shortDescription    String? @map("short_description") @db.VarChar(500)
 
   titleSeo       String? @map("title_seo") @db.VarChar(60)

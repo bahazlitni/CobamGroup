@@ -52,6 +52,48 @@ function normalizeDocument(document: ArticleDocument): ArticleDocument {
   };
 }
 
+function getWrappedSerializedDocumentText(document: ArticleDocument): string | null {
+  const content = Array.isArray(document.content) ? document.content : [];
+
+  if (content.length !== 1) {
+    return null;
+  }
+
+  const [paragraph] = content;
+
+  if (paragraph?.type !== "paragraph" || !Array.isArray(paragraph.content)) {
+    return null;
+  }
+
+  if (paragraph.content.length !== 1) {
+    return null;
+  }
+
+  const [textNode] = paragraph.content;
+
+  if (textNode?.type !== "text" || typeof textNode.text !== "string") {
+    return null;
+  }
+
+  const text = textNode.text.trim();
+
+  return text.startsWith("{") || text.startsWith('"') ? text : null;
+}
+
+function unwrapSerializedDocumentText(
+  document: ArticleDocument,
+  depth: number,
+): ArticleDocument {
+  const normalized = normalizeDocument(document);
+  const wrappedDocumentText = getWrappedSerializedDocumentText(normalized);
+
+  if (wrappedDocumentText && depth < 3) {
+    return parseArticleContentInternal(wrappedDocumentText, depth + 1);
+  }
+
+  return normalized;
+}
+
 function createParagraph(text: string): JSONContent {
   return {
     type: "paragraph",
@@ -163,32 +205,51 @@ export function createEmptyArticleDocument(): ArticleDocument {
   return cloneDocument(EMPTY_ARTICLE_DOCUMENT);
 }
 
-export function parseArticleContent(
+function parseArticleContentInternal(
   value: string | ArticleDocument | null | undefined,
+  depth: number,
 ): ArticleDocument {
   if (!value) {
     return createEmptyArticleDocument();
   }
 
   if (isArticleDocument(value)) {
-    return normalizeDocument(value);
+    return unwrapSerializedDocumentText(value, depth);
   }
 
   if (typeof value !== "string") {
     return createEmptyArticleDocument();
   }
 
-  try {
-    const parsed = JSON.parse(value) as unknown;
+  const trimmed = value.trim();
 
-    if (isArticleDocument(parsed)) {
-      return normalizeDocument(parsed);
+  if (!trimmed) {
+    return createEmptyArticleDocument();
+  }
+
+  if (depth < 3) {
+    try {
+      const parsed = JSON.parse(trimmed) as unknown;
+
+      if (isArticleDocument(parsed)) {
+        return unwrapSerializedDocumentText(parsed, depth);
+      }
+
+      if (typeof parsed === "string") {
+        return parseArticleContentInternal(parsed, depth + 1);
+      }
+    } catch {
+      // Legacy plain text is converted into paragraphs.
     }
-  } catch {
-    // Legacy plain text is converted into paragraphs.
   }
 
   return textToDocument(value);
+}
+
+export function parseArticleContent(
+  value: string | ArticleDocument | null | undefined,
+): ArticleDocument {
+  return parseArticleContentInternal(value, 0);
 }
 
 export function serializeArticleContent(document: ArticleDocument): string {

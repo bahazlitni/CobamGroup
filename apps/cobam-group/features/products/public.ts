@@ -909,7 +909,7 @@ export async function listPublicProductsIndex(input: {
       p.name AS product_name,
       p_brand.name AS product_brand,
       p.tags AS product_tags,
-      COALESCE(p.short_description, p."richTextDescription"::text) AS product_description,
+      COALESCE(p.short_description, p.rich_text_description::text) AS product_description,
       p.description_seo AS product_description_seo,
       (
         SELECT COALESCE(string_agg(pa.name || ' ' || pa.value, ' '), '')
@@ -928,7 +928,7 @@ export async function listPublicProductsIndex(input: {
           fp.name,
           fp.tags,
           fp_brand.name,
-          COALESCE(fp.short_description, fp."richTextDescription"::text),
+          COALESCE(fp.short_description, fp.rich_text_description::text),
           fp.description_seo,
           (
             SELECT COALESCE(string_agg(fpa.name || ' ' || fpa.value, ' '), '')
@@ -1019,7 +1019,7 @@ export async function listPublicProductsIndex(input: {
       p.name AS product_name,
       p_brand.name AS product_brand,
       p.tags AS product_tags,
-      COALESCE(p.short_description, p."richTextDescription"::text) AS product_description,
+      COALESCE(p.short_description, p.rich_text_description::text) AS product_description,
       p.description_seo AS product_description_seo,
       (
         SELECT COALESCE(string_agg(pa.name || ' ' || pa.value, ' '), '')
