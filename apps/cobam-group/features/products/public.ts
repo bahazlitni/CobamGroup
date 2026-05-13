@@ -1,5 +1,9 @@
 import { Prisma } from "@prisma/client";
-import { getArticlePlainText } from "@/features/articles/document";
+import {
+  extractArticleMediaIds,
+  getArticlePlainText,
+  replaceArticleImageSources,
+} from "@/features/articles/document";
 import { makeMediaPublicMany } from "@/features/media/repository";
 import { prisma } from "@/lib/server/db/prisma";
 import {
@@ -288,38 +292,6 @@ function mapMediaRecord(
   };
 }
 
-function collectMediaIdsForPublishing(record: PublicFamilyRecord) {
-  const ids = new Set<number>();
-
-  if (record.mainImage && isRenderableMedia(record.mainImage)) {
-    ids.add(Number(record.mainImage.id));
-  }
-
-  for (const member of record.members) {
-    for (const link of member.product.media) {
-      if (isRenderableMedia(link.media)) {
-        ids.add(Number(link.media.id));
-      }
-    }
-  }
-
-  return [...ids];
-}
-
-function collectProductMediaIdsForPublishing(records: Array<Pick<PublicProductRecord, "media">>) {
-  const ids = new Set<number>();
-
-  for (const record of records) {
-    for (const link of record.media) {
-      if (isRenderableMedia(link.media)) {
-        ids.add(Number(link.media.id));
-      }
-    }
-  }
-
-  return [...ids];
-}
-
 function isPublicProduct(product: PublicProductRecord) {
   return product.kind === "VARIANT" && product.visibleEcommerce;
 }
@@ -346,9 +318,77 @@ function getProductDescription(record: {
   return record.shortDescription ?? richTextDescriptionToString(record.richTextDescription);
 }
 
+function serializeProductRichDescription(value: Prisma.JsonValue | null) {
+  if (!value) {
+    return null;
+  }
+
+  const plainText = richTextDescriptionToString(value);
+  if (!plainText) {
+    return null;
+  }
+
+  return typeof value === "string" ? value : JSON.stringify(value);
+}
+
+function getProductRichDescription(record: {
+  richTextDescription: Prisma.JsonValue | null;
+}) {
+  const serialized = serializeProductRichDescription(record.richTextDescription);
+
+  return serialized
+    ? replaceArticleImageSources(serialized, (mediaId) => buildPublicMediaUrl(mediaId, "original"))
+    : null;
+}
+
 function parseRichTextPreview(value: string | null | undefined) {
   const text = getArticlePlainText(value ?? "").trim();
   return text || null;
+}
+
+function collectProductRichDescriptionMediaIds(record: {
+  richTextDescription: Prisma.JsonValue | null;
+}) {
+  const serialized = serializeProductRichDescription(record.richTextDescription);
+  return serialized ? extractArticleMediaIds(serialized) : [];
+}
+
+function collectMediaIdsForPublishing(record: PublicFamilyRecord) {
+  const ids = new Set<number>();
+
+  if (record.mainImage && isRenderableMedia(record.mainImage)) {
+    ids.add(Number(record.mainImage.id));
+  }
+
+  for (const member of record.members) {
+    collectProductRichDescriptionMediaIds(member.product).forEach((id) => ids.add(id));
+
+    for (const link of member.product.media) {
+      if (isRenderableMedia(link.media)) {
+        ids.add(Number(link.media.id));
+      }
+    }
+  }
+
+  return [...ids];
+}
+
+function collectProductMediaIdsForPublishing(
+  records: Array<Pick<PublicProductRecord, "media" | "richTextDescription">>,
+) {
+  const ids = new Set<number>();
+
+  for (const record of records) {
+    collectProductRichDescriptionMediaIds(record).forEach((id) => ids.add(id));
+
+    for (const link of record.media) {
+      if (isRenderableMedia(link.media)) {
+        ids.add(Number(link.media.id));
+      }
+    }
+  }
+
+  return [...ids];
 }
 
 function mapSubcategoryLinks(
@@ -630,7 +670,7 @@ function mapInspectorVariant(product: PublicProductRecord): PublicProductInspect
     slug: product.slug,
     name: product.name,
     displayName: product.displayName,
-    description: getProductDescription(product),
+    description: getProductRichDescription(product),
     datasheet: mapTechnicalMedia(product),
     certificate: mapCertificateMedia(product),
     media: mapVariantMedia(product),
@@ -660,7 +700,7 @@ async function mapSimpleInspector(
     slug: record.slug,
     name: record.name,
     displayName: record.displayName,
-    description: getProductDescription(record),
+    description: getProductRichDescription(record),
     descriptionSeo: record.descriptionSeo,
     brand: input.brand,
     brandNames: input.brandNames,
