@@ -14,12 +14,13 @@
 /coverage
 
 # next.js
-/.next/
+.next/
+.turbo/
 /out/
 
 # production
 /build
-/.storage/
+.storage/
 /scripts
 
 # misc

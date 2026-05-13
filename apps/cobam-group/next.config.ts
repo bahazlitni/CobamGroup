@@ -8,6 +8,7 @@ function getMediaUploadBodyLimit() {
 }
 
 const nextConfig: NextConfig = {
+  transpilePackages: ["@cobam/db", "@cobam/media-storage"],
   htmlLimitedBots: /.*/,
   experimental: {
     proxyClientMaxBodySize: getMediaUploadBodyLimit(),

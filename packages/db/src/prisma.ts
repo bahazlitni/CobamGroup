@@ -1,9 +1,18 @@
-// @/lib/server/db/prisma
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 
-const connectionString = process.env.DATABASE_URL!;
+function resolveConnectionString() {
+  const value = process.env.DATABASE_URL;
+
+  if (!value) {
+    throw new Error("DATABASE_URL is required to initialize Prisma.");
+  }
+
+  return value;
+}
+
+const connectionString = resolveConnectionString();
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -84,7 +93,10 @@ function resolvePoolConnectionString() {
     const url = new URL(connectionString);
     const sslmode = url.searchParams.get("sslmode")?.toLowerCase() ?? null;
 
-    if (sslmode === "no-verify" || process.env.DATABASE_ALLOW_SELF_SIGNED_SSL === "true") {
+    if (
+      sslmode === "no-verify" ||
+      process.env.DATABASE_ALLOW_SELF_SIGNED_SSL === "true"
+    ) {
       url.searchParams.delete("sslmode");
       return url.toString();
     }

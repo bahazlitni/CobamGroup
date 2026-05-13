@@ -1,21 +1,52 @@
-// @/lib/server/storage/media/index.ts
-
 import path from "path";
 import { S3Client } from "@aws-sdk/client-s3";
 import { LocalMediaStorageDriver } from "./local-driver";
 import { S3MediaStorageDriver } from "./s3-driver";
 import { getMediaMaxUploadBytes } from "./upload-limits";
-import type { MediaStorageDriver, MediaStorageDriverKind, MediaStorageInfo } from "./types";
+import type {
+  MediaStorageDriver,
+  MediaStorageDriverKind,
+  MediaStorageInfo,
+} from "./types";
 
-const LOCAL_MEDIA_ROOT = path.resolve(
-  process.cwd(),
-  process.env.MEDIA_LOCAL_ROOT ?? ".storage/media",
-);
+const DEFAULT_LOCAL_MEDIA_ROOT = ".storage/media";
 
 const globalForMediaStorage = globalThis as typeof globalThis & {
   mediaStorageDriver?: MediaStorageDriver;
   mediaS3Client?: S3Client;
 };
+
+function resolveWorkspaceRootFromAppCwd(cwd: string) {
+  const parent = path.dirname(cwd);
+
+  if (path.basename(parent) === "apps") {
+    return path.dirname(parent);
+  }
+
+  return null;
+}
+
+function resolveLocalMediaRoot() {
+  if (process.env.MEDIA_LOCAL_ROOT) {
+    return path.resolve(
+      /*turbopackIgnore: true*/ process.cwd(),
+      process.env.MEDIA_LOCAL_ROOT,
+    );
+  }
+
+  const workspaceRoot = resolveWorkspaceRootFromAppCwd(process.cwd());
+
+  if (workspaceRoot) {
+    return path.resolve(workspaceRoot, DEFAULT_LOCAL_MEDIA_ROOT);
+  }
+
+  return path.resolve(
+    /*turbopackIgnore: true*/ process.cwd(),
+    DEFAULT_LOCAL_MEDIA_ROOT,
+  );
+}
+
+const LOCAL_MEDIA_ROOT = resolveLocalMediaRoot();
 
 function getDriverKind(): MediaStorageDriverKind {
   return process.env.STORAGE_DRIVER === "s3" ? "s3" : "local";
@@ -92,9 +123,16 @@ export function getMediaStorageInfo(): MediaStorageInfo {
   return {
     driver: "local",
     label: "Stockage local",
-    locationLabel: "Disque du serveur",
-    hint: "Pratique en developpement ou sur un VPS unique.",
+    locationLabel: "Stockage partage",
+    hint: "Les applications du workspace utilisent le meme dossier local par defaut.",
   };
 }
 
 export { getMediaMaxUploadBytes };
+export type {
+  MediaStorageDriver,
+  MediaStorageDriverKind,
+  MediaStorageInfo,
+  PutStoredMediaObjectInput,
+  StoredMediaObject,
+} from "./types";

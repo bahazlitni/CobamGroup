@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cobam Workspace
 
-## Getting Started
+This repository is an npm workspace containing the main COBAM GROUP app and the new `e-cobam` app.
 
-First, run the development server:
+## Structure
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```text
+apps/
+  cobam-group/     Existing public + staff Next.js app
+  e-cobam/         New e-commerce Next.js app
+packages/
+  db/              Shared Prisma schema, migrations, and Prisma client helper
+  media-storage/   Shared local/S3 media storage driver
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Common Commands
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run dev              # apps/cobam-group on port 3000
+npm run dev:e-cobam      # apps/e-cobam on port 3001
+npm run build:main
+npm run build:e-cobam
+npm run typecheck:all
+npm run db:validate
+npm run db:migrate:dev
+npm run db:migrate:deploy
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Shared Database
 
-## Learn More
+The Prisma schema now lives at:
 
-To learn more about Next.js, take a look at the following resources:
+```text
+packages/db/prisma/schema.prisma
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Both apps must use the shared `@cobam/db` package. Generate and migrate from the root commands above so both apps stay aligned with the same schema and migrations.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Shared Media Storage
 
-## Deploy on Vercel
+Both apps must point to the same media storage backend.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+For local workspace development, the default local storage path resolves to:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```text
+.storage/media
+```
+
+For VPS/production, set the same storage variables in both app environments. With local disk storage, prefer an absolute shared path:
+
+```env
+STORAGE_DRIVER=local
+MEDIA_LOCAL_ROOT=/var/www/cobam-storage/media
+```
+
+With S3-compatible storage, both apps should use the same bucket and credentials:
+
+```env
+STORAGE_DRIVER=s3
+MEDIA_S3_ENDPOINT=
+MEDIA_S3_REGION=us-east-1
+MEDIA_S3_ACCESS_KEY_ID=
+MEDIA_S3_SECRET_ACCESS_KEY=
+MEDIA_S3_BUCKET=
+```

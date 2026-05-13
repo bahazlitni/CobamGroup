@@ -23,6 +23,15 @@
       }
     ],
     "paths": {
+      "@cobam/db": [
+        "../../packages/db/src"
+      ],
+      "@cobam/media-storage": [
+        "../../packages/media-storage/src"
+      ],
+      "@cobam/media-storage/*": [
+        "../../packages/media-storage/src/*"
+      ],
       "@/*": [
         "./*"
       ]

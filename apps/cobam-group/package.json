@@ -1,0 +1,27 @@
+{
+  "name": "@cobam/cobam-group",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "prebuild": "npm run db:generate",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "prisma generate --schema ../../packages/db/prisma/schema.prisma",
+    "db:validate": "prisma validate --schema ../../packages/db/prisma/schema.prisma",
+    "db:migrate:dev": "prisma migrate dev --schema ../../packages/db/prisma/schema.prisma",
+    "db:migrate:deploy": "prisma migrate deploy --schema ../../packages/db/prisma/schema.prisma",
+    "rbac:reset": "tsx scripts/reset-rbac-roles.ts",
+    "staff:seed": "tsx scripts/seed-staff-users.ts",
+    "test:unit": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@cobam/db": "*",
+    "@cobam/media-storage": "*"
+  }
+}
