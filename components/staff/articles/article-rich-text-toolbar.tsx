@@ -18,11 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -69,11 +65,7 @@ function ToolbarButton({
       onClick={onClick}
       title={label}
       aria-label={label}
-      className={cn(
-        "h-9 rounded-xl border-slate-300",
-        iconOnly ? "w-9 px-0" : "px-3",
-        className,
-      )}
+      className={cn("h-9 rounded-xl border-slate-300", iconOnly ? "w-9 px-0" : "px-3", className)}
     >
       {children}
     </Button>
@@ -133,53 +125,47 @@ function normalizeLinkUrl(value: string) {
   return `https://${normalized}`;
 }
 
-export default function ArticleRichTextToolbar({
-  editor,
-}: ArticleRichTextToolbarProps) {
+export default function ArticleRichTextToolbar({ editor }: ArticleRichTextToolbarProps) {
   const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
   const [linkValue, setLinkValue] = useState("");
   const [linkTextValue, setLinkTextValue] = useState("");
   const isReadOnly = !editor?.isEditable;
-  const editorState =
-    useEditorState({
-      editor,
-      selector: ({ editor: currentEditor }) => {
-        const nextColor = currentEditor?.getAttributes("textStyle").color;
-        const nextLinkHref = currentEditor?.getAttributes("link").href;
+  const editorState = useEditorState({
+    editor,
+    selector: ({ editor: currentEditor }) => {
+      const nextColor = currentEditor?.getAttributes("textStyle").color;
+      const nextLinkHref = currentEditor?.getAttributes("link").href;
 
-        return {
-          activeBlock: getActiveBlockValue(currentEditor),
-          currentColor:
-            typeof nextColor === "string" && nextColor.startsWith("#")
-              ? nextColor
-              : "#14202e",
-          isTable: currentEditor?.isActive("table") ?? false,
-          isBold: currentEditor?.isActive("bold") ?? false,
-          isItalic: currentEditor?.isActive("italic") ?? false,
-          isUnderline: currentEditor?.isActive("underline") ?? false,
-          isStrike: currentEditor?.isActive("strike") ?? false,
-          isLink: currentEditor?.isActive("link") ?? false,
-          currentLinkHref:
-            typeof nextLinkHref === "string" ? nextLinkHref : "",
-          isBlockquote: currentEditor?.isActive("blockquote") ?? false,
-          isBulletList: currentEditor?.isActive("bulletList") ?? false,
-          isOrderedList: currentEditor?.isActive("orderedList") ?? false,
-        };
-      },
-    }) ?? {
-      activeBlock: "paragraph",
-      currentColor: "#14202e",
-      isTable: false,
-      isBold: false,
-      isItalic: false,
-      isUnderline: false,
-      isStrike: false,
-      isLink: false,
-      currentLinkHref: "",
-      isBlockquote: false,
-      isBulletList: false,
-      isOrderedList: false,
-    };
+      return {
+        activeBlock: getActiveBlockValue(currentEditor),
+        currentColor:
+          typeof nextColor === "string" && nextColor.startsWith("#") ? nextColor : "#14202e",
+        isTable: currentEditor?.isActive("table") ?? false,
+        isBold: currentEditor?.isActive("bold") ?? false,
+        isItalic: currentEditor?.isActive("italic") ?? false,
+        isUnderline: currentEditor?.isActive("underline") ?? false,
+        isStrike: currentEditor?.isActive("strike") ?? false,
+        isLink: currentEditor?.isActive("link") ?? false,
+        currentLinkHref: typeof nextLinkHref === "string" ? nextLinkHref : "",
+        isBlockquote: currentEditor?.isActive("blockquote") ?? false,
+        isBulletList: currentEditor?.isActive("bulletList") ?? false,
+        isOrderedList: currentEditor?.isActive("orderedList") ?? false,
+      };
+    },
+  }) ?? {
+    activeBlock: "paragraph",
+    currentColor: "#14202e",
+    isTable: false,
+    isBold: false,
+    isItalic: false,
+    isUnderline: false,
+    isStrike: false,
+    isLink: false,
+    currentLinkHref: "",
+    isBlockquote: false,
+    isBulletList: false,
+    isOrderedList: false,
+  };
 
   const applyLink = () => {
     if (!editor) {
@@ -217,7 +203,7 @@ export default function ArticleRichTextToolbar({
   };
 
   return (
-    <div className="sticky top-0 z-2 flex w-full flex-col gap-3 border-b border-slate-300 p-4 pt-6 backdrop-blur supports-[backdrop-filter]:bg-slate-50/85">
+    <div className="sticky top-0 z-30 flex w-full flex-col gap-3 border-b border-slate-300 bg-slate-50/95 p-4 pt-6 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-slate-50/85">
       <div className="flex min-w-max items-center justify-center gap-2">
         <Select
           value={editorState.activeBlock}
@@ -226,7 +212,7 @@ export default function ArticleRichTextToolbar({
         >
           <SelectTrigger className="h-9 min-w-40 rounded-xl border-slate-300 bg-white">
             <div className="flex items-center gap-2">
-            <SelectValue placeholder="Titre rapide" />
+              <SelectValue placeholder="Titre rapide" />
             </div>
           </SelectTrigger>
           <SelectContent>
@@ -286,12 +272,8 @@ export default function ArticleRichTextToolbar({
           onOpenChange={(nextOpen) => {
             setIsLinkPopoverOpen(nextOpen);
             if (nextOpen) {
-              const selectedText = editor
-                ?.state.doc.textBetween(
-                  editor.state.selection.from,
-                  editor.state.selection.to,
-                  " ",
-                )
+              const selectedText = editor?.state.doc
+                .textBetween(editor.state.selection.from, editor.state.selection.to, " ")
                 .trim();
 
               setLinkValue(editorState.currentLinkHref);
@@ -321,9 +303,7 @@ export default function ArticleRichTextToolbar({
           >
             <div className="space-y-3">
               <div className="space-y-1">
-                <p className="text-sm font-semibold text-cobam-dark-blue">
-                  Ajouter un lien
-                </p>
+                <p className="text-cobam-dark-blue text-sm font-semibold">Ajouter un lien</p>
                 <p className="text-xs text-slate-500">
                   Renseignez le texte visible et l&apos;URL du lien.
                 </p>
@@ -414,11 +394,7 @@ export default function ArticleRichTextToolbar({
           label="Tableau"
           disabled={isReadOnly}
           onClick={() =>
-            editor
-              ?.chain()
-              .focus()
-              .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-              .run()
+            editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
           }
         >
           Tableau
@@ -453,15 +429,11 @@ export default function ArticleRichTextToolbar({
                   type="button"
                   title={`${preset.name} - ${preset.description}`}
                   aria-label={`Appliquer ${preset.name}`}
-                  onClick={() =>
-                    editor?.chain().focus().setColor(preset.value).run()
-                  }
+                  onClick={() => editor?.chain().focus().setColor(preset.value).run()}
                   disabled={isReadOnly}
                   className={cn(
                     "h-7 w-7 rounded-full border-2 transition-transform duration-200 hover:scale-105",
-                    isActive
-                      ? "border-slate-900 ring-2 ring-slate-200"
-                      : "border-white shadow-sm",
+                    isActive ? "border-slate-900 ring-2 ring-slate-200" : "border-white shadow-sm",
                   )}
                   style={{ backgroundColor: preset.value }}
                 />
@@ -474,9 +446,7 @@ export default function ArticleRichTextToolbar({
             <Input
               type="color"
               value={editorState.currentColor}
-              onChange={(event) =>
-                editor?.chain().focus().setColor(event.target.value).run()
-              }
+              onChange={(event) => editor?.chain().focus().setColor(event.target.value).run()}
               disabled={isReadOnly}
               className="h-6 w-8 cursor-pointer rounded-md border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
             />

@@ -4,11 +4,8 @@ import path from "path";
 import { S3Client } from "@aws-sdk/client-s3";
 import { LocalMediaStorageDriver } from "./local-driver";
 import { S3MediaStorageDriver } from "./s3-driver";
-import type {
-  MediaStorageDriver,
-  MediaStorageDriverKind,
-  MediaStorageInfo,
-} from "./types";
+import { getMediaMaxUploadBytes } from "./upload-limits";
+import type { MediaStorageDriver, MediaStorageDriverKind, MediaStorageInfo } from "./types";
 
 const LOCAL_MEDIA_ROOT = path.resolve(
   process.cwd(),
@@ -100,12 +97,4 @@ export function getMediaStorageInfo(): MediaStorageInfo {
   };
 }
 
-export function getMediaMaxUploadBytes() {
-  const parsedMegabytes = Number(process.env.MEDIA_MAX_UPLOAD_MB ?? "100");
-  const megabytes =
-    Number.isFinite(parsedMegabytes) && parsedMegabytes > 0
-      ? parsedMegabytes
-      : 100;
-
-  return Math.floor(megabytes * 1024 * 1024);
-}
+export { getMediaMaxUploadBytes };

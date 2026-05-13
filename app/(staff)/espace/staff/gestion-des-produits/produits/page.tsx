@@ -29,6 +29,13 @@ import {
   canUnpublishProducts,
 } from "@/features/products/access";
 import {
+  mergeUniqueById,
+  readStaffInfiniteListCache,
+  useStaffInfiniteScroll,
+  useStaffScrollRestoration,
+  writeStaffInfiniteListCache,
+} from "@/lib/client/use-staff-infinite-scroll";
+import {
   AllProductsClientError,
   deleteAllProductsBulkClient,
   exportAllProductsClient,
@@ -45,7 +52,8 @@ import {
 import { EditableCell, EditingState, SelectCell } from "@/components/staff/ui/Cells";
 
 
-const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
+const PAGE_SIZE = 20;
+const LIST_CACHE_KEY = "all-products";
 const COLUMN_LABELS = ["SKU", "Nom", "Marque", "Cycle", ""];
 const EXPORT_MODE_STORAGE_KEY = "all-products-export-mode";
 
@@ -100,6 +108,13 @@ function getStoredExportAction(value: string | null): AllProductsExportAction | 
   return null;
 }
 
+type AllProductsListCacheExtra = {
+  productBrandOptions: string[];
+  searchDraft: string;
+  search: string;
+  kindFilter: string;
+};
+
 export default function AllProductsPage() {
   const { user } = useStaffSessionContext();
   const canCreate = user ? canCreateProducts(user) : false;
@@ -107,15 +122,32 @@ export default function AllProductsPage() {
   const canChangeLifecycle = user
     ? canPublishProducts(user) || canUnpublishProducts(user)
     : false;
-  const [items, setItems] = useState<AllProductsListItemDto[]>([]);
-  const [productBrandOptions, setProductBrandOptions] = useState<string[]>([]);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<(typeof PAGE_SIZE_OPTIONS)[number]>(20);
-  const [searchDraft, setSearchDraft] = useState("");
-  const [search, setSearch] = useState("");
-  const [kindFilter, setKindFilter] = useState<string>("ALL");
-  const [total, setTotal] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [listCache] = useState(() =>
+    readStaffInfiniteListCache<AllProductsListItemDto, AllProductsListCacheExtra>(
+      LIST_CACHE_KEY,
+    ),
+  );
+  const [items, setItems] = useState<AllProductsListItemDto[]>(
+    () => listCache?.items ?? [],
+  );
+  const [productBrandOptions, setProductBrandOptions] = useState<string[]>(
+    () => listCache?.extra?.productBrandOptions ?? [],
+  );
+  const [page, setPage] = useState(() => listCache?.page ?? 1);
+  const [pageSize] = useState(() => listCache?.pageSize ?? PAGE_SIZE);
+  const [searchDraft, setSearchDraft] = useState(
+    () => listCache?.extra?.searchDraft ?? "",
+  );
+  const [search, setSearch] = useState(() => listCache?.extra?.search ?? "");
+  const [kindFilter, setKindFilter] = useState<string>(
+    () => listCache?.extra?.kindFilter ?? "ALL",
+  );
+  const [total, setTotal] = useState(() => listCache?.total ?? 0);
+  const [isLoading, setIsLoading] = useState(listCache == null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(() =>
+    listCache ? listCache.items.length < listCache.total : true,
+  );
   const [error, setError] = useState<string | null>(null);
   const [exportAction, setExportAction] =
     useState<AllProductsExportAction>("extended-pdf");
@@ -129,6 +161,11 @@ export default function AllProductsPage() {
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
   const shiftKeyRef = useRef(false);
   const exportInFlightRef = useRef(false);
+  const listRequestIdRef = useRef(0);
+  const didLoadInitialRef = useRef(listCache != null);
+  const pageRef = useRef(page);
+  const searchRef = useRef(search);
+  const kindFilterRef = useRef(kindFilter);
   const [bulkForm, setBulkForm] = useState({
     sku: "",
     name: "",
@@ -160,28 +197,64 @@ export default function AllProductsPage() {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    setIsLoading(true);
-    setError(null);
+    pageRef.current = page;
+  }, [page]);
 
-    void (async () => {
+  useEffect(() => {
+    searchRef.current = search;
+  }, [search]);
+
+  useEffect(() => {
+    kindFilterRef.current = kindFilter;
+  }, [kindFilter]);
+
+  const fetchPage = useCallback(
+    async (options?: {
+      page?: number;
+      search?: string;
+      kindFilter?: string;
+      reset?: boolean;
+    }) => {
+      const nextPage = options?.page ?? pageRef.current;
+      const reset = options?.reset ?? nextPage === 1;
+      const nextSearch = options?.search ?? searchRef.current;
+      const nextKindFilter = options?.kindFilter ?? kindFilterRef.current;
+      const requestId = ++listRequestIdRef.current;
+
+      if (reset) {
+        setIsLoading(true);
+        setItems([]);
+        setPage(1);
+        setHasMore(true);
+        setSearch(nextSearch);
+      } else {
+        setIsLoadingMore(true);
+      }
+      setError(null);
+
       try {
         const result = await listAllProductsClient({
-          page,
+          page: nextPage,
           pageSize,
-          q: search,
-          kind: kindFilter === "ALL" ? null : kindFilter,
+          q: nextSearch,
+          kind: nextKindFilter === "ALL" ? null : nextKindFilter,
         });
 
-        if (cancelled) {
+        if (requestId !== listRequestIdRef.current) {
           return;
         }
 
-        setItems(result.items);
-        setProductBrandOptions(result.productBrandOptions);
+        setItems((current) =>
+          reset ? result.items : mergeUniqueById(current, result.items),
+        );
+        setProductBrandOptions(
+          Array.isArray(result.productBrandOptions) ? result.productBrandOptions : [],
+        );
         setTotal(result.total);
+        setPage(result.page);
+        setHasMore(result.page * result.pageSize < result.total);
       } catch (err: unknown) {
-        if (cancelled) {
+        if (requestId !== listRequestIdRef.current) {
           return;
         }
 
@@ -192,17 +265,90 @@ export default function AllProductsPage() {
               ? err.message
               : "Impossible de charger les produits.",
         );
+        if (reset) {
+          setTotal(0);
+          setHasMore(false);
+        }
       } finally {
-        if (!cancelled) {
+        if (requestId === listRequestIdRef.current) {
           setIsLoading(false);
+          setIsLoadingMore(false);
         }
       }
-    })();
+    },
+    [pageSize],
+  );
 
-    return () => {
-      cancelled = true;
-    };
-  }, [page, pageSize, search, kindFilter, reloadToken]);
+  useEffect(() => {
+    if (didLoadInitialRef.current) {
+      return;
+    }
+
+    didLoadInitialRef.current = true;
+    void fetchPage({ page: 1, reset: true });
+  }, [fetchPage]);
+
+  useEffect(() => {
+    if (reloadToken === 0) {
+      return;
+    }
+
+    void fetchPage({
+      page: 1,
+      search,
+      kindFilter,
+      reset: true,
+    });
+  }, [fetchPage, kindFilter, reloadToken, search]);
+
+  const loadMore = useCallback(async () => {
+    if (isLoading || isLoadingMore || !hasMore) {
+      return;
+    }
+
+    await fetchPage({ page: page + 1, reset: false });
+  }, [fetchPage, hasMore, isLoading, isLoadingMore, page]);
+
+  const sentinelRef = useStaffInfiniteScroll({
+    hasMore,
+    isLoading: isLoading || isLoadingMore,
+    onLoadMore: loadMore,
+    enabled: !error,
+  });
+
+  useStaffScrollRestoration(LIST_CACHE_KEY, !isLoading);
+
+  useEffect(() => {
+    if (isLoading && items.length === 0 && total === 0) {
+      return;
+    }
+
+    writeStaffInfiniteListCache<AllProductsListItemDto, AllProductsListCacheExtra>(
+      LIST_CACHE_KEY,
+      {
+        items,
+        total,
+        page,
+        pageSize,
+        extra: {
+          productBrandOptions,
+          searchDraft,
+          search,
+          kindFilter,
+        },
+      },
+    );
+  }, [
+    isLoading,
+    items,
+    kindFilter,
+    page,
+    pageSize,
+    productBrandOptions,
+    search,
+    searchDraft,
+    total,
+  ]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -235,15 +381,18 @@ export default function AllProductsPage() {
     );
   }, [items]);
 
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const allSelected = items.length > 0 && selectedIds.length === items.length;
   const isIndeterminate =
     selectedIds.length > 0 && selectedIds.length < items.length;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setPage(1);
-    setSearch(searchDraft.trim());
+    void fetchPage({
+      page: 1,
+      search: searchDraft.trim(),
+      kindFilter,
+      reset: true,
+    });
   };
 
   const handleExportActionChange = useCallback((action: AllProductsExportAction) => {
@@ -589,7 +738,12 @@ export default function AllProductsPage() {
               placeholder="Tous les types"
               onValueChange={(value) => {
                 setKindFilter(value);
-                setPage(1);
+                void fetchPage({
+                  page: 1,
+                  search,
+                  kindFilter: value,
+                  reset: true,
+                });
               }}
               options={[
                 { value: "ALL", label: "Tous les types" },
@@ -656,21 +810,14 @@ export default function AllProductsPage() {
         error={error}
         isEmpty={items.length === 0}
         emptyMessage="Aucun produit ne correspond a ces criteres."
-        pagination={{
-          goPrev: () => setPage((current) => Math.max(1, current - 1)),
-          goNext: () => setPage((current) => Math.min(totalPages, current + 1)),
-          updatePageSize: (value) => {
-            setPage(1);
-            setPageSize(value as (typeof PAGE_SIZE_OPTIONS)[number]);
-          },
-          canPrev: page > 1,
-          canNext: page < totalPages,
-          page,
-          pageSize,
+        infiniteScroll={{
+          hasMore,
+          isLoadingMore,
+          onLoadMore: loadMore,
+          loaded: items.length,
           total,
-          totalPages,
-          pageSizeOptions: PAGE_SIZE_OPTIONS,
           itemLabel: "produit",
+          sentinelRef,
         }}
       >
         {items.map((item, index) => {

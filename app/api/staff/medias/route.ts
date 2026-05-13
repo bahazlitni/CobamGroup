@@ -8,70 +8,50 @@ import {
   parseMediaUploadFormData,
 } from "@/features/media/schemas";
 import { listMediaService, MediaServiceError, uploadMediaService } from "@/features/media/service";
+import { getMediaMaxUploadBytes } from "@/lib/server/storage/media/upload-limits";
 
 export const runtime = "nodejs";
 
-function serializeUploadError(error: unknown) {
-  if (error instanceof Error) {
-    return {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-    };
-  }
+const MEDIA_UPLOAD_MULTIPART_OVERHEAD_BYTES = 2 * 1024 * 1024;
 
-  return { value: String(error) };
+function getUploadLimitMessage() {
+  return `Fichier trop volumineux. Limite actuelle: ${Math.floor(
+    getMediaMaxUploadBytes() / (1024 * 1024),
+  )} MB.`;
 }
 
-function getUploadRequestDebug(req: Request) {
-  return {
-    url: req.url,
-    method: req.method,
-    contentType: req.headers.get("content-type"),
-    contentLength: req.headers.get("content-length"),
-    forwardedFor: req.headers.get("x-forwarded-for"),
-    forwardedProto: req.headers.get("x-forwarded-proto"),
-    userAgent: req.headers.get("user-agent"),
-  };
-}
-
-function getUploadInputDebug(input: ReturnType<typeof parseMediaUploadFormData> | null) {
-  if (!input) {
+function parseContentLength(value: string | null) {
+  if (!value) {
     return null;
   }
 
-  return {
-    fileName: input.file.name,
-    fileType: input.file.type,
-    fileSize: input.file.size,
-    fileLastModified: input.file.lastModified,
-    folderId: input.folderId,
-    visibility: input.visibility,
-    hasTitle: Boolean(input.title),
-    hasAltText: Boolean(input.altText),
-  };
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
-function logUploadRouteFailure(input: {
-  stage: string;
-  req: Request;
-  parsedInput: ReturnType<typeof parseMediaUploadFormData> | null;
-  error: unknown;
-}) {
-  console.log(
-    "MEDIA_UPLOAD_ROUTE_DEBUG_FAILURE",
-    JSON.stringify(
-      {
-        at: new Date().toISOString(),
-        stage: input.stage,
-        request: getUploadRequestDebug(input.req),
-        input: getUploadInputDebug(input.parsedInput),
-        error: serializeUploadError(input.error),
-      },
-      null,
-      2,
-    ),
+function isRequestBodyTooLargeError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+  return (
+    message.includes("too large") ||
+    message.includes("exceeded") ||
+    message.includes("body size") ||
+    message.includes("413")
   );
+}
+
+function assertRequestBodyWithinUploadLimit(req: Request) {
+  const contentLength = parseContentLength(req.headers.get("content-length"));
+
+  if (
+    contentLength != null &&
+    contentLength > getMediaMaxUploadBytes() + MEDIA_UPLOAD_MULTIPART_OVERHEAD_BYTES
+  ) {
+    throw new MediaValidationError(getUploadLimitMessage(), 413);
+  }
 }
 
 export async function GET(req: Request) {
@@ -109,37 +89,29 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  let debugStage = "require_staff_session";
-  let parsedInput: ReturnType<typeof parseMediaUploadFormData> | null = null;
-
   try {
     const session = await requireStaffSession(req);
+    assertRequestBodyWithinUploadLimit(req);
     let formData: FormData;
 
     try {
-      debugStage = "parse_form_data";
       formData = await req.formData();
     } catch (error) {
+      if (isRequestBodyTooLargeError(error)) {
+        throw new MediaValidationError(getUploadLimitMessage(), 413);
+      }
+
       console.error("MEDIA_UPLOAD_FORMDATA_ERROR:", error);
       throw new MediaValidationError(
         "Le fichier n'a pas pu etre lu. Verifiez le fichier et reessayez.",
       );
     }
 
-    debugStage = "parse_upload_input";
-    parsedInput = parseMediaUploadFormData(formData);
-    debugStage = "upload_media_service";
-    const media = await uploadMediaService(session, parsedInput);
+    const input = parseMediaUploadFormData(formData);
+    const media = await uploadMediaService(session, input);
 
     return NextResponse.json({ ok: true, media }, { status: 201 });
   } catch (error: unknown) {
-    logUploadRouteFailure({
-      stage: debugStage,
-      req,
-      parsedInput,
-      error,
-    });
-
     if (
       error instanceof AuthError ||
       error instanceof MediaValidationError ||

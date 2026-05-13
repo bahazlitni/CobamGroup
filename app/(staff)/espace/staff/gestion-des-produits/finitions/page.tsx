@@ -159,91 +159,100 @@ export default function ProductFinishesAdminPage() {
       {!isLoading && !error ? (
         <div
           className={
-            canManageFinishes ? "grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]" : "grid gap-6"
+            canManageFinishes
+              ? "grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)] xl:items-start"
+              : "grid gap-6"
           }
         >
           {canManageFinishes ? (
-            <Panel
-              pretitle={editingId == null ? "Nouvelle finition" : "Modification"}
-              title="Détails"
-            >
-              <form onSubmit={saveItem} className="grid gap-4">
-                <PanelField id="product-finish-label" label="Libellé">
-                  <PanelInput
-                    id="product-finish-label"
-                    fullWidth
-                    value={form.label}
-                    onChange={(event) => {
-                      const label = event.target.value;
+            <div className="xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)] xl:self-start xl:overflow-y-auto xl:overscroll-contain xl:pr-1">
+              <Panel
+                className="max-w-none"
+                pretitle={editingId == null ? "Nouvelle finition" : "Modification"}
+                title="Détails"
+              >
+                <form onSubmit={saveItem} className="grid gap-4">
+                  <PanelField id="product-finish-label" label="Libellé">
+                    <PanelInput
+                      id="product-finish-label"
+                      fullWidth
+                      value={form.label}
+                      onChange={(event) => {
+                        const label = event.target.value;
+                        setForm((current) => ({
+                          ...current,
+                          label,
+                          key:
+                            current.key === "" || current.key === slugify(current.label)
+                              ? slugify(label)
+                              : current.key,
+                        }));
+                      }}
+                    />
+                  </PanelField>
+                  <PanelField id="product-finish-key" label="Clé">
+                    <PanelInput
+                      id="product-finish-key"
+                      fullWidth
+                      value={form.key}
+                      onChange={(event) =>
+                        setForm((current) => ({ ...current, key: event.target.value }))
+                      }
+                    />
+                  </PanelField>
+                  <PanelField id="product-finish-color" label="Couleur">
+                    <ColorHexField
+                      id="product-finish-color"
+                      value={form.color}
+                      allowEmpty
+                      onChange={(color) =>
+                        setForm((current) => ({
+                          ...current,
+                          color,
+                        }))
+                      }
+                    />
+                  </PanelField>
+                  <MediaImageField
+                    label="Image de finition"
+                    description="Choisissez l'image qui représente cette finition dans la médiathèque."
+                    dialogTitle="Choisir une image de finition"
+                    dialogDescription="Sélectionnez ou importez une image depuis la médiathèque."
+                    mediaId={form.imageMediaId ? Number(form.imageMediaId) : null}
+                    onChange={(mediaId) =>
                       setForm((current) => ({
                         ...current,
-                        label,
-                        key:
-                          current.key === "" || current.key === slugify(current.label)
-                            ? slugify(label)
-                            : current.key,
-                      }));
-                    }}
-                  />
-                </PanelField>
-                <PanelField id="product-finish-key" label="Clé">
-                  <PanelInput
-                    id="product-finish-key"
-                    fullWidth
-                    value={form.key}
-                    onChange={(event) =>
-                      setForm((current) => ({ ...current, key: event.target.value }))
-                    }
-                  />
-                </PanelField>
-                <PanelField id="product-finish-color" label="Couleur">
-                  <ColorHexField
-                    id="product-finish-color"
-                    value={form.color}
-                    allowEmpty
-                    onChange={(color) =>
-                      setForm((current) => ({
-                        ...current,
-                        color,
+                        imageMediaId: mediaId == null ? "" : String(mediaId),
                       }))
                     }
+                    emptyLabel="Aucune image de finition sélectionnée."
+                    previewClassName="h-24 w-24 rounded-lg"
                   />
-                </PanelField>
-                <MediaImageField
-                  label="Image de finition"
-                  description="Choisissez l'image qui représente cette finition dans la médiathèque."
-                  dialogTitle="Choisir une image de finition"
-                  dialogDescription="Sélectionnez ou importez une image depuis la médiathèque."
-                  mediaId={form.imageMediaId ? Number(form.imageMediaId) : null}
-                  onChange={(mediaId) =>
-                    setForm((current) => ({
-                      ...current,
-                      imageMediaId: mediaId == null ? "" : String(mediaId),
-                    }))
-                  }
-                  emptyLabel="Aucune image de finition sélectionnée."
-                  previewClassName="h-24 w-24 rounded-lg"
-                />
-                <div className="flex flex-wrap gap-2">
-                  <AnimatedUIButton type="submit" icon="save" loading={isSaving}>
-                    {editingId == null ? "Ajouter" : "Enregistrer"}
-                  </AnimatedUIButton>
-                  {editingId != null ? (
-                    <AnimatedUIButton
-                      type="button"
-                      variant="ghost"
-                      icon="close"
-                      onClick={resetForm}
-                    >
-                      Annuler
+                  <div className="flex flex-wrap gap-2">
+                    <AnimatedUIButton type="submit" icon="save" loading={isSaving}>
+                      {editingId == null ? "Ajouter" : "Enregistrer"}
                     </AnimatedUIButton>
-                  ) : null}
-                </div>
-              </form>
-            </Panel>
+                    {editingId != null ? (
+                      <AnimatedUIButton
+                        type="button"
+                        variant="ghost"
+                        icon="close"
+                        onClick={resetForm}
+                      >
+                        Annuler
+                      </AnimatedUIButton>
+                    ) : null}
+                  </div>
+                </form>
+              </Panel>
+            </div>
           ) : null}
 
-          <Panel pretitle={`${items.length} entrées`} title="Finitions disponibles">
+          <Panel
+            className="max-w-none min-w-0"
+            pretitle={`${items.length} entrées`}
+            title="Finitions disponibles"
+          >
             <div className="grid gap-2">
               {items.map((item) => {
                 return (

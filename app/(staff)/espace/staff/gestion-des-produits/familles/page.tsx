@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Package } from "lucide-react";
 import PanelTable from "@/components/staff/ui/PanelTable";
 import { StaffBadge, StaffFilterBar, StaffPageHeader } from "@/components/staff/ui";
@@ -20,6 +20,13 @@ import {
 import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
 import { canCreateProducts } from "@/features/products/access";
 import {
+  mergeUniqueById,
+  readStaffInfiniteListCache,
+  useStaffInfiniteScroll,
+  useStaffScrollRestoration,
+  writeStaffInfiniteListCache,
+} from "@/lib/client/use-staff-infinite-scroll";
+import {
   deleteProductFamiliesBulkClient,
   listProductsClient,
   ProductsClientError,
@@ -30,19 +37,43 @@ import type { ProductLifecycle } from "@prisma/client";
 import { PRODUCT_LIFECYCLE_VALUES } from "@/features/products/lifecycle";
 
 const PAGE_SIZE = 20;
-const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
+const LIST_CACHE_KEY = "product-families";
+
+type ProductFamiliesListCacheExtra = {
+  productBrandOptions: string[];
+  searchInput: string;
+  activeSearch: string;
+};
 
 export default function ProductsListPage() {
   const { user } = useStaffSessionContext();
   const canCreate = user ? canCreateProducts(user) : false;
-  const [items, setItems] = useState<ProductFamilyListItemDto[]>([]);
-  const [productBrandOptions, setProductBrandOptions] = useState<string[]>([]);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<(typeof PAGE_SIZE_OPTIONS)[number]>(PAGE_SIZE);
-  const [total, setTotal] = useState(0);
-  const [searchInput, setSearchInput] = useState("");
-  const [activeSearch, setActiveSearch] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [listCache] = useState(() =>
+    readStaffInfiniteListCache<
+      ProductFamilyListItemDto,
+      ProductFamiliesListCacheExtra
+    >(LIST_CACHE_KEY),
+  );
+  const [items, setItems] = useState<ProductFamilyListItemDto[]>(
+    () => listCache?.items ?? [],
+  );
+  const [productBrandOptions, setProductBrandOptions] = useState<string[]>(
+    () => listCache?.extra?.productBrandOptions ?? [],
+  );
+  const [page, setPage] = useState(() => listCache?.page ?? 1);
+  const [pageSize] = useState(() => listCache?.pageSize ?? PAGE_SIZE);
+  const [total, setTotal] = useState(() => listCache?.total ?? 0);
+  const [searchInput, setSearchInput] = useState(
+    () => listCache?.extra?.searchInput ?? "",
+  );
+  const [activeSearch, setActiveSearch] = useState(
+    () => listCache?.extra?.activeSearch ?? "",
+  );
+  const [isLoading, setIsLoading] = useState(listCache == null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(() =>
+    listCache ? listCache.items.length < listCache.total : true,
+  );
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
@@ -50,6 +81,10 @@ export default function ProductsListPage() {
   const [reloadToken, setReloadToken] = useState(0);
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
   const shiftKeyRef = useRef(false);
+  const listRequestIdRef = useRef(0);
+  const didLoadInitialRef = useRef(listCache != null);
+  const pageRef = useRef(page);
+  const activeSearchRef = useRef(activeSearch);
   const [bulkForm, setBulkForm] = useState({
     brand: null as string | null,
     lifecycle: null as ProductFamilyListItemDto["lifecycle"] | null,
@@ -65,29 +100,57 @@ export default function ProductsListPage() {
   });
 
   useEffect(() => {
-    let cancelled = false;
-    setIsLoading(true);
-    setError(null);
+    pageRef.current = page;
+  }, [page]);
 
-    void (async () => {
+  useEffect(() => {
+    activeSearchRef.current = activeSearch;
+  }, [activeSearch]);
+
+  const fetchPage = useCallback(
+    async (options?: {
+      page?: number;
+      search?: string;
+      reset?: boolean;
+    }) => {
+      const nextPage = options?.page ?? pageRef.current;
+      const reset = options?.reset ?? nextPage === 1;
+      const nextSearch = options?.search ?? activeSearchRef.current;
+      const requestId = ++listRequestIdRef.current;
+
+      if (reset) {
+        setIsLoading(true);
+        setItems([]);
+        setPage(1);
+        setHasMore(true);
+        setActiveSearch(nextSearch);
+      } else {
+        setIsLoadingMore(true);
+      }
+      setError(null);
+
       try {
         const result = await listProductsClient({
-          page,
+          page: nextPage,
           pageSize,
-          q: activeSearch,
+          q: nextSearch,
         });
 
-        if (cancelled) {
+        if (requestId !== listRequestIdRef.current) {
           return;
         }
 
-        setItems(result.items);
+        setItems((current) =>
+          reset ? result.items : mergeUniqueById(current, result.items),
+        );
         setProductBrandOptions(
           Array.isArray(result.productBrandOptions) ? result.productBrandOptions : [],
         );
         setTotal(result.total);
+        setPage(result.page);
+        setHasMore(result.page * result.pageSize < result.total);
       } catch (err: unknown) {
-        if (cancelled) {
+        if (requestId !== listRequestIdRef.current) {
           return;
         }
 
@@ -98,17 +161,83 @@ export default function ProductsListPage() {
               ? err.message
               : "Impossible de charger les familles produit.",
         );
+        if (reset) {
+          setTotal(0);
+          setHasMore(false);
+        }
       } finally {
-        if (!cancelled) {
+        if (requestId === listRequestIdRef.current) {
           setIsLoading(false);
+          setIsLoadingMore(false);
         }
       }
-    })();
+    },
+    [pageSize],
+  );
 
-    return () => {
-      cancelled = true;
-    };
-  }, [activeSearch, page, pageSize, reloadToken]);
+  useEffect(() => {
+    if (didLoadInitialRef.current) {
+      return;
+    }
+
+    didLoadInitialRef.current = true;
+    void fetchPage({ page: 1, reset: true });
+  }, [fetchPage]);
+
+  useEffect(() => {
+    if (reloadToken === 0) {
+      return;
+    }
+
+    void fetchPage({ page: 1, search: activeSearch, reset: true });
+  }, [activeSearch, fetchPage, reloadToken]);
+
+  const loadMore = useCallback(async () => {
+    if (isLoading || isLoadingMore || !hasMore) {
+      return;
+    }
+
+    await fetchPage({ page: page + 1, reset: false });
+  }, [fetchPage, hasMore, isLoading, isLoadingMore, page]);
+
+  const sentinelRef = useStaffInfiniteScroll({
+    hasMore,
+    isLoading: isLoading || isLoadingMore,
+    onLoadMore: loadMore,
+    enabled: !error,
+  });
+
+  useStaffScrollRestoration(LIST_CACHE_KEY, !isLoading);
+
+  useEffect(() => {
+    if (isLoading && items.length === 0 && total === 0) {
+      return;
+    }
+
+    writeStaffInfiniteListCache<
+      ProductFamilyListItemDto,
+      ProductFamiliesListCacheExtra
+    >(LIST_CACHE_KEY, {
+      items,
+      total,
+      page,
+      pageSize,
+      extra: {
+        productBrandOptions,
+        searchInput,
+        activeSearch,
+      },
+    });
+  }, [
+    activeSearch,
+    isLoading,
+    items,
+    page,
+    pageSize,
+    productBrandOptions,
+    searchInput,
+    total,
+  ]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -139,14 +268,12 @@ export default function ProductsListPage() {
     setSelectedIds((current) => current.filter((id) => items.some((item) => item.id === id)));
   }, [items]);
 
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const allSelected = items.length > 0 && selectedIds.length === items.length;
   const isIndeterminate = selectedIds.length > 0 && selectedIds.length < items.length;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setPage(1);
-    setActiveSearch(searchInput.trim());
+    void fetchPage({ page: 1, search: searchInput.trim(), reset: true });
   };
 
   const handleToggleSelection = (
@@ -410,21 +537,14 @@ export default function ProductsListPage() {
         error={error}
         isEmpty={items.length === 0}
         emptyMessage="Aucune famille ne correspond a ces criteres."
-        pagination={{
-          goPrev: () => setPage((current) => Math.max(1, current - 1)),
-          goNext: () => setPage((current) => Math.min(totalPages, current + 1)),
-          updatePageSize: (value) => {
-            setPage(1);
-            setPageSize(value as (typeof PAGE_SIZE_OPTIONS)[number]);
-          },
-          canPrev: page > 1,
-          canNext: page < totalPages,
-          page,
-          pageSize,
+        infiniteScroll={{
+          hasMore,
+          isLoadingMore,
+          onLoadMore: loadMore,
+          loaded: items.length,
           total,
-          totalPages,
-          pageSizeOptions: PAGE_SIZE_OPTIONS,
           itemLabel: "famille",
+          sentinelRef,
         }}
       >
         {items.map((family, index) => (

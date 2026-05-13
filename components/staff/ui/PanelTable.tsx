@@ -1,21 +1,17 @@
-import type { ReactNode } from "react";
+import type { ReactNode, RefCallback } from "react";
+import { Loader2 } from "lucide-react";
 import Loading from "@/components/staff/Loading";
-import StaffSelect from "@/components/staff/ui/PanelSelect";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 
-type TablePagination = {
-  goPrev: () => void | Promise<void>;
-  goNext: () => void | Promise<void>;
-  updatePageSize: (n: number) => void | Promise<void>;
-  canPrev: boolean;
-  canNext: boolean;
-  pageSize: number;
+type TableInfiniteScroll = {
+  hasMore: boolean;
+  isLoadingMore: boolean;
+  onLoadMore: () => void | Promise<void>;
+  loaded: number;
   total: number;
-  totalPages: number;
-  page: number;
-  pageSizeOptions?: readonly number[];
   itemLabel: string;
   itemLabelPlural?: string;
+  sentinelRef?: RefCallback<HTMLDivElement>;
 };
 
 export interface Props {
@@ -26,7 +22,7 @@ export interface Props {
   isEmpty: boolean;
   error: string | null;
   emptyMessage?: string;
-  pagination?: TablePagination;
+  infiniteScroll?: TableInfiniteScroll;
 }
 
 export default function PanelTable({
@@ -37,16 +33,28 @@ export default function PanelTable({
   isEmpty,
   error,
   emptyMessage = "Aucun élément ne correspond à ces critères.",
-  pagination,
+  infiniteScroll,
 }: Props) {
   const columnCount = columns.length;
-  const pageSizeOptions = pagination?.pageSizeOptions ?? [8, 12, 16, 20];
+  const infiniteHasMore = infiniteScroll?.hasMore ?? false;
+  const infiniteIsLoadingMore = infiniteScroll?.isLoadingMore ?? false;
+  const infiniteLoaded = infiniteScroll?.loaded ?? 0;
+  const infiniteTotal = infiniteScroll?.total ?? 0;
+  const infiniteItemLabel = infiniteScroll?.itemLabel ?? "";
+  const infiniteOnLoadMore = infiniteScroll?.onLoadMore;
+  const infiniteSentinelRef = infiniteScroll?.sentinelRef;
   const itemLabelPlural =
-    pagination?.itemLabelPlural ?? `${pagination?.itemLabel ?? ""}s`;
+    infiniteScroll?.itemLabelPlural ?? `${infiniteItemLabel}s`;
+  const showInfiniteFooter = Boolean(
+    infiniteScroll && !isLoading && !error && !isEmpty,
+  );
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-300 bg-white shadow-sm">
-      <table className="min-w-full divide-y divide-slate-100 text-sm panel-table" style={{ tableLayout: columnWidths ? "fixed" : undefined }}>
+    <div className="overflow-visible rounded-lg border border-slate-300 bg-white shadow-sm">
+      <table
+        className="min-w-full divide-y divide-slate-100 text-sm panel-table"
+        style={{ tableLayout: columnWidths ? "fixed" : undefined }}
+      >
         {columnWidths ? (
           <colgroup>
             {columnWidths.map((w, i) => (
@@ -54,12 +62,12 @@ export default function PanelTable({
             ))}
           </colgroup>
         ) : null}
-        <thead className="bg-slate-50/80">
+        <thead className="sticky top-0 z-10 bg-slate-50/95 shadow-[0_1px_0_rgba(203,213,225,0.75)] backdrop-blur">
           <tr>
             {columns.map((column, index) => (
               <th
                 key={`column-${index}`}
-                className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400"
+                className="sticky top-0 z-10 bg-slate-50/95 px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 backdrop-blur"
               >
                 {column}
               </th>
@@ -105,56 +113,44 @@ export default function PanelTable({
         </tbody>
       </table>
 
-      {pagination ? (
+      {showInfiniteFooter && infiniteScroll ? (
         <div className="flex flex-col gap-3 border-t border-slate-100 bg-slate-50/60 px-4 py-3 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <div className="inline-flex items-center gap-2">
-            <span>Afficher</span>
-            <div>
-              <StaffSelect
-                triggerClassName="!h-6 px-2 text-xs"
-                value={String(pagination.pageSize)}
-                onValueChange={(value) =>
-                  void pagination.updatePageSize(Number(value))
-                }
-                options={pageSizeOptions.map((option) => ({
-                  value: String(option),
-                  label: String(option),
-                }))}
-              />
-            </div>
-            <span>
-              / {pagination.total}{" "}
-              {pagination.total > 1 ? itemLabelPlural : pagination.itemLabel}
-            </span>
-          </div>
+          <span>
+            {infiniteLoaded} / {infiniteTotal}{" "}
+            {infiniteTotal > 1
+              ? itemLabelPlural
+              : infiniteItemLabel}
+          </span>
 
-          <div className="flex items-center justify-end gap-3">
-            <AnimatedUIButton
-              type="button"
-              disabled={!pagination.canPrev}
-              onClick={() => void pagination.goPrev()}
-              variant="ghost"
-              size="sm"
-              icon="chevron-left"
-            >
-              Précédent
-            </AnimatedUIButton>
-
-            <span>
-              Page {pagination.page} sur {pagination.totalPages}
-            </span>
-
-            <AnimatedUIButton
-              type="button"
-              disabled={!pagination.canNext}
-              onClick={() => void pagination.goNext()}
-              variant="ghost"
-              size="sm"
-              icon="chevron-right"
-              iconPosition="left"
-            >
-              Suivant
-            </AnimatedUIButton>
+          <div className="flex min-h-9 items-center justify-end gap-3">
+            {infiniteIsLoadingMore ? (
+              <span className="inline-flex items-center gap-2 font-medium text-slate-500">
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                Chargement...
+              </span>
+            ) : infiniteHasMore ? (
+              <>
+                {infiniteSentinelRef ? (
+                  <div
+                    ref={infiniteSentinelRef}
+                    className="h-px w-px"
+                    aria-hidden="true"
+                  />
+                ) : null}
+                <AnimatedUIButton
+                  type="button"
+                  onClick={() => void infiniteOnLoadMore?.()}
+                  variant="ghost"
+                  size="sm"
+                  icon="chevron-down"
+                  iconPosition="left"
+                >
+                  Charger plus
+                </AnimatedUIButton>
+              </>
+            ) : infiniteLoaded > 0 ? (
+              <span>Tous les éléments sont chargés.</span>
+            ) : null}
           </div>
         </div>
       ) : null}

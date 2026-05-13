@@ -1,9 +1,23 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  mergeUniqueById,
+  readStaffInfiniteListCache,
+  useStaffInfiniteScroll,
+  useStaffScrollRestoration,
+  writeStaffInfiniteListCache,
+} from "@/lib/client/use-staff-infinite-scroll";
 import { listArticlesClient } from "../client";
 import type { ArticleListItemDto } from "../types";
-import { usePersistentPageSize } from "@/lib/client/use-persistent-page-size";
+
+const LIST_CACHE_KEY = "articles";
+
+type ArticlesListCacheExtra = {
+  search: string;
+  activeSearch: string;
+  status: string;
+};
 
 export type UseArticlesListState = {
   items: ArticleListItemDto[];
@@ -13,28 +27,41 @@ export type UseArticlesListState = {
   search: string;
   status: string;
   isLoading: boolean;
+  isLoadingMore: boolean;
   error: string | null;
   totalPages: number;
   canPrev: boolean;
   canNext: boolean;
+  hasMore: boolean;
 };
 
 export function useArticlesList(initialPageSize = 12) {
-  const [items, setItems] = useState<ArticleListItemDto[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = usePersistentPageSize(
-    "staff:articles:list:page-size",
-    initialPageSize,
-    [8, 12, 16, 20] as const,
+  const [cache] = useState(() =>
+    readStaffInfiniteListCache<ArticleListItemDto, ArticlesListCacheExtra>(
+      LIST_CACHE_KEY,
+    ),
   );
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [items, setItems] = useState<ArticleListItemDto[]>(
+    () => cache?.items ?? [],
+  );
+  const [total, setTotal] = useState(() => cache?.total ?? 0);
+  const [page, setPage] = useState(() => cache?.page ?? 1);
+  const [pageSize] = useState(() => cache?.pageSize ?? initialPageSize);
+  const [search, setSearch] = useState(() => cache?.extra?.search ?? "");
+  const [activeSearch, setActiveSearch] = useState(
+    () => cache?.extra?.activeSearch ?? cache?.extra?.search ?? "",
+  );
+  const [status, setStatus] = useState(() => cache?.extra?.status ?? "");
+  const [isLoadingInitial, setIsLoadingInitial] = useState(cache == null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(() =>
+    cache ? cache.items.length < cache.total : true,
+  );
   const [error, setError] = useState<string | null>(null);
+  const requestIdRef = useRef(0);
+  const didLoadInitialRef = useRef(cache != null);
   const pageRef = useRef(page);
-  const pageSizeRef = useRef(pageSize);
-  const searchRef = useRef(search);
+  const activeSearchRef = useRef(activeSearch);
   const statusRef = useRef(status);
 
   useEffect(() => {
@@ -42,12 +69,8 @@ export function useArticlesList(initialPageSize = 12) {
   }, [page]);
 
   useEffect(() => {
-    pageSizeRef.current = pageSize;
-  }, [pageSize]);
-
-  useEffect(() => {
-    searchRef.current = search;
-  }, [search]);
+    activeSearchRef.current = activeSearch;
+  }, [activeSearch]);
 
   useEffect(() => {
     statusRef.current = status;
@@ -61,64 +84,128 @@ export function useArticlesList(initialPageSize = 12) {
   const fetchArticles = useCallback(
     async (opts?: {
       page?: number;
-      pageSize?: number;
       search?: string;
       status?: string;
+      reset?: boolean;
     }) => {
       const nextPage = opts?.page ?? pageRef.current;
-      const nextPageSize = opts?.pageSize ?? pageSizeRef.current;
-      const nextSearch = opts?.search ?? searchRef.current;
+      const reset = opts?.reset ?? nextPage === 1;
+      const nextSearch = opts?.search ?? activeSearchRef.current;
       const nextStatus = opts?.status ?? statusRef.current;
+      const requestId = ++requestIdRef.current;
 
-      setIsLoading(true);
+      if (reset) {
+        setIsLoadingInitial(true);
+        setItems([]);
+        setPage(1);
+        setHasMore(true);
+        setActiveSearch(nextSearch);
+      } else {
+        setIsLoadingMore(true);
+      }
       setError(null);
 
       try {
         const result = await listArticlesClient({
           page: nextPage,
-          pageSize: nextPageSize,
+          pageSize,
           q: nextSearch,
           status: nextStatus,
         });
 
-        setItems(result.items);
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
+
+        setItems((current) =>
+          reset ? result.items : mergeUniqueById(current, result.items),
+        );
         setTotal(result.total);
         setPage(result.page);
-        setPageSize(result.pageSize);
+        setHasMore(result.page * result.pageSize < result.total);
       } catch (err: unknown) {
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
+
         setError(err instanceof Error ? err.message : "Erreur inconnue");
+        if (reset) {
+          setTotal(0);
+          setHasMore(false);
+        }
       } finally {
-        setIsLoading(false);
+        if (requestId === requestIdRef.current) {
+          setIsLoadingInitial(false);
+          setIsLoadingMore(false);
+        }
       }
     },
-    [setPageSize],
+    [pageSize],
   );
 
   useEffect(() => {
-    void fetchArticles({ page: 1, pageSize, status });
-  }, [fetchArticles, pageSize, status]);
+    if (didLoadInitialRef.current) {
+      return;
+    }
+
+    didLoadInitialRef.current = true;
+    void fetchArticles({ page: 1, reset: true });
+  }, [fetchArticles]);
 
   const submitSearch = useCallback(async () => {
-    await fetchArticles({ page: 1, pageSize, search, status });
-  }, [fetchArticles, pageSize, search, status]);
+    await fetchArticles({ page: 1, search, status, reset: true });
+  }, [fetchArticles, search, status]);
 
-  const updatePageSize = useCallback(
-    async (value: number) => {
-      setPageSize(value);
-      await fetchArticles({ page: 1, pageSize: value });
+  const setStatusAndReload = useCallback(
+    (value: string) => {
+      setStatus(value);
+      void fetchArticles({
+        page: 1,
+        search,
+        status: value,
+        reset: true,
+      });
     },
-    [fetchArticles, setPageSize],
+    [fetchArticles, search],
   );
 
-  const goPrev = useCallback(async () => {
-    if (page <= 1) return;
-    await fetchArticles({ page: page - 1 });
-  }, [fetchArticles, page]);
+  const loadMore = useCallback(async () => {
+    if (isLoadingInitial || isLoadingMore || !hasMore) {
+      return;
+    }
 
-  const goNext = useCallback(async () => {
-    if (page >= totalPages) return;
-    await fetchArticles({ page: page + 1 });
-  }, [fetchArticles, page, totalPages]);
+    await fetchArticles({ page: page + 1, reset: false });
+  }, [fetchArticles, hasMore, isLoadingInitial, isLoadingMore, page]);
+
+  const sentinelRef = useStaffInfiniteScroll({
+    hasMore,
+    isLoading: isLoadingInitial || isLoadingMore,
+    onLoadMore: loadMore,
+    enabled: !error,
+  });
+
+  useStaffScrollRestoration(LIST_CACHE_KEY, !isLoadingInitial);
+
+  useEffect(() => {
+    if (isLoadingInitial && items.length === 0 && total === 0) {
+      return;
+    }
+
+    writeStaffInfiniteListCache<ArticleListItemDto, ArticlesListCacheExtra>(
+      LIST_CACHE_KEY,
+      {
+        items,
+        total,
+        page,
+        pageSize,
+        extra: {
+          search,
+          activeSearch,
+          status,
+        },
+      },
+    );
+  }, [activeSearch, isLoadingInitial, items, page, pageSize, search, status, total]);
 
   return {
     items,
@@ -127,17 +214,18 @@ export function useArticlesList(initialPageSize = 12) {
     pageSize,
     search,
     status,
-    isLoading,
+    isLoading: isLoadingInitial,
+    isLoadingMore,
     error,
     totalPages,
     canPrev: page > 1,
-    canNext: page < totalPages,
+    canNext: hasMore,
+    hasMore,
+    sentinelRef,
     setSearch,
-    setStatus,
+    setStatus: setStatusAndReload,
     fetchArticles,
     submitSearch,
-    updatePageSize,
-    goPrev,
-    goNext,
+    loadMore,
   };
 }

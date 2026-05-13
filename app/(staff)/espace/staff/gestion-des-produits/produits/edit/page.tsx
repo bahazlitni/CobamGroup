@@ -782,7 +782,7 @@ function SingleProductEditPageContent() {
         })()}
       </StaffPageHeader>
 
-      <Panel pretitle="Produit" title="Informations principales">
+      <Panel pretitle="Produit" title="Informations principales" allowOverflow>
         <ProductEssentialEntries
           sku={form.sku}
           name={form.name}

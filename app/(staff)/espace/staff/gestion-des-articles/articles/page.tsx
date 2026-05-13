@@ -32,7 +32,6 @@ function getArticleStatusBadge(status: ArticleStatus) {
   }
 }
 
-const PAGE_SIZE_OPTIONS = [8, 12, 16, 20];
 const columns = [
   "Titre",
   "Auteur",
@@ -47,21 +46,17 @@ export default function ArticlesListPage() {
   const {
     items,
     total,
-    page,
-    pageSize,
     search,
     status,
     isLoading,
+    isLoadingMore,
     error,
-    totalPages,
-    canPrev,
-    canNext,
+    hasMore,
+    sentinelRef,
     setSearch,
     setStatus,
     submitSearch,
-    updatePageSize,
-    goPrev,
-    goNext,
+    loadMore,
   } = useArticlesList(12);
 
   const pathname = usePathname();
@@ -108,18 +103,14 @@ export default function ArticlesListPage() {
         error={error}
         isEmpty={items.length === 0}
         emptyMessage="Aucun article ne correspond à ces critères."
-        pagination={{
-          goPrev,
-          goNext,
-          updatePageSize,
-          canPrev,
-          canNext,
-          pageSize,
+        infiniteScroll={{
+          hasMore,
+          isLoadingMore,
+          onLoadMore: loadMore,
+          loaded: items.length,
           total,
-          totalPages,
-          page,
-          pageSizeOptions: PAGE_SIZE_OPTIONS,
           itemLabel: "article",
+          sentinelRef,
         }}
       >
         {items.map((article: ArticleListItemDto) => {

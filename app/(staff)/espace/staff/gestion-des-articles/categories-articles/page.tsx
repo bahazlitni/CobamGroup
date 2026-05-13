@@ -12,7 +12,6 @@ import { useStaffSessionContext } from "@/features/auth/client/staff-session-pro
 import { canCreateArticleCategories } from "@/features/article-categories/access";
 import { useArticleCategoriesList } from "@/features/article-categories/hooks/use-article-categories-list";
 
-const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
 const columns = [
   "Catégorie",
   "Couleur",
@@ -31,19 +30,15 @@ export default function ArticleCategoriesListPage() {
   const {
     items,
     total,
-    page,
-    pageSize,
     search,
     isLoading,
+    isLoadingMore,
     error,
-    totalPages,
-    canPrev,
-    canNext,
+    hasMore,
+    sentinelRef,
     setSearch,
     submitSearch,
-    updatePageSize,
-    goPrev,
-    goNext,
+    loadMore,
   } = useArticleCategoriesList(20);
 
   const handleSubmit = async (event: FormEvent) => {
@@ -79,18 +74,14 @@ export default function ArticleCategoriesListPage() {
         error={error}
         isEmpty={items.length === 0}
         emptyMessage="Aucune catégorie d'articles ne correspond à ces critères."
-        pagination={{
-          goPrev,
-          goNext,
-          updatePageSize: (value) => updatePageSize(value as 10 | 20 | 50),
-          canPrev,
-          canNext,
-          pageSize,
+        infiniteScroll={{
+          hasMore,
+          isLoadingMore,
+          onLoadMore: loadMore,
+          loaded: items.length,
           total,
-          totalPages,
-          page,
-          pageSizeOptions: PAGE_SIZE_OPTIONS,
           itemLabel: "catégorie",
+          sentinelRef,
         }}
       >
         {items.map((category) => (

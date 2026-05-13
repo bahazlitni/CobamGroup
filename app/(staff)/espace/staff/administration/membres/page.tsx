@@ -14,7 +14,6 @@ import { useUsersList } from "@/features/users/hooks/use-users-list";
 import type { StaffUserListItemDto } from "@/features/users/types";
 import SearchInput from "@/components/staff/ui/SearchInput";
 
-const PAGE_SIZE_OPTIONS: Array<10 | 20 | 50> = [10, 20, 50];
 const columns = ["Utilisateur", "Accès", "Poste", "Créé le", "Actions"];
 
 function getDisplayName(user: StaffUserListItemDto) {
@@ -81,24 +80,20 @@ export default function UsersListPage() {
   const {
     items,
     total,
-    page,
-    pageSize,
     search,
     roleKey,
     powerType,
     isLoading,
+    isLoadingMore,
     error,
-    totalPages,
-    canPrev,
-    canNext,
+    hasMore,
+    sentinelRef,
     setSearch,
     setRoleKey,
     setPowerType,
     submitSearch,
-    updatePageSize,
-    goPrev,
-    goNext,
     fetchUsers,
+    loadMore,
   } = useUsersList(20);
 
   const handleSubmit = useCallback(
@@ -112,17 +107,17 @@ export default function UsersListPage() {
   const handleRoleChange = useCallback(
     async (value: string) => {
       setRoleKey(value);
-      await fetchUsers({ page: 1, roleKey: value });
+      await fetchUsers({ page: 1, search, roleKey: value, reset: true });
     },
-    [fetchUsers, setRoleKey],
+    [fetchUsers, search, setRoleKey],
   );
 
   const handlePowerTypeChange = useCallback(
     async (value: "" | "ROOT" | "ADMIN" | "STAFF") => {
       setPowerType(value);
-      await fetchUsers({ page: 1, powerType: value });
+      await fetchUsers({ page: 1, search, powerType: value, reset: true });
     },
-    [fetchUsers, setPowerType],
+    [fetchUsers, search, setPowerType],
   );
 
   return (
@@ -177,18 +172,14 @@ export default function UsersListPage() {
         error={error}
         isEmpty={items.length === 0}
         emptyMessage="Aucun utilisateur ne correspond à ces critères."
-        pagination={{
-          goPrev,
-          goNext,
-          updatePageSize: (value) => updatePageSize(value as 10 | 20 | 50),
-          canPrev,
-          canNext,
-          pageSize,
+        infiniteScroll={{
+          hasMore,
+          isLoadingMore,
+          onLoadMore: loadMore,
+          loaded: items.length,
           total,
-          totalPages,
-          page,
-          pageSizeOptions: PAGE_SIZE_OPTIONS,
           itemLabel: "utilisateur",
+          sentinelRef,
         }}
       >
         {items.map((user) => {

@@ -1,7 +1,17 @@
 import type { NextConfig } from "next";
 
+function getMediaUploadBodyLimit() {
+  const parsedMegabytes = Number(process.env.MEDIA_MAX_UPLOAD_MB ?? "100");
+  const megabytes = Number.isFinite(parsedMegabytes) && parsedMegabytes > 0 ? parsedMegabytes : 100;
+
+  return Math.ceil(megabytes * 1024 * 1024);
+}
+
 const nextConfig: NextConfig = {
   htmlLimitedBots: /.*/,
+  experimental: {
+    proxyClientMaxBodySize: getMediaUploadBodyLimit(),
+  },
   images: {
     localPatterns: [
       {
@@ -24,12 +34,14 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/2025/08/26/guide-expert-2025-marbre-et-faience/:slash?",
-        destination: "/actualites/gres-cerame-faience-ou-marbre-le-guide-d-expert-2025-qui-va-revolutionner-votre-choix",
+        destination:
+          "/actualites/gres-cerame-faience-ou-marbre-le-guide-d-expert-2025-qui-va-revolutionner-votre-choix",
         permanent: true,
       },
       {
         source: "/2025/09/05/erreurs-choix-materiaux-de-construction/:slash?",
-        destination: "/actualites/les-7-erreurs-a-eviter-dans-le-choix-de-vos-fournisseurs-de-materiaux-de-construction",
+        destination:
+          "/actualites/les-7-erreurs-a-eviter-dans-le-choix-de-vos-fournisseurs-de-materiaux-de-construction",
         permanent: true,
       },
       {
@@ -44,7 +56,8 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/product/melangeur-de-bain-douche-monastir/:slash?",
-        destination: "/produits/salle-de-bain-et-cuisine/robinetterie/famille/melangeur-de-bain-douche-monastir",
+        destination:
+          "/produits/salle-de-bain-et-cuisine/robinetterie/famille/melangeur-de-bain-douche-monastir",
         permanent: true,
       },
       {
