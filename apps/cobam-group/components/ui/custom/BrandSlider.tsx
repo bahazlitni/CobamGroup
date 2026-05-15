@@ -14,7 +14,12 @@ export default function BrandSlider({
   brands,
   speed = 80,
 }: BrandSliderProps) {
-  if (brands.length === 0) return null;
+  const brandsWithImages = brands.filter(
+    (brand): brand is PublicOrganizationBrand & { imageUrl: string } =>
+      typeof brand.imageUrl === "string" && brand.imageUrl.trim().length > 0,
+  );
+
+  if (brandsWithImages.length === 0) return null;
 
   return (
     <RailCarousel
@@ -29,27 +34,21 @@ export default function BrandSlider({
       previousButtonLabel="Marques précédentes"
       nextButtonLabel="Marques suivantes"
     >
-      {brands.map((brand) => (
+      {brandsWithImages.map((brand) => (
         <Link
           key={brand.slug}
           draggable={false}
           href={`/produits?search=${encodeURIComponent(brand.name)}`}
           className="transition-all duration-300 opacity-70 hover:opacity-100 select-none group flex h-24 w-32 flex-shrink-0 rounded-xl bg-white"
         >
-          {brand.imageUrl ? (
-            <Image
-              src={brand.imageUrl}
-              alt={brand.name}
-              width={480}
-              height={240}
-              className="h-full w-full object-contain p-3 transition-transform duration-300 group-hover:scale-110"
-              draggable={false}
-            />
-          ) : (
-            <span className="px-2 text-center text-sm font-semibold text-cobam-dark-blue">
-              {brand.name}
-            </span>
-          )}
+          <Image
+            src={brand.imageUrl}
+            alt={brand.name}
+            width={480}
+            height={240}
+            className="h-full w-full object-contain p-3 transition-transform duration-300 group-hover:scale-110"
+            draggable={false}
+          />
         </Link>
       ))}
     </RailCarousel>
