@@ -137,7 +137,7 @@ export default function MediaGrid({
   onOpenFolder: (folderId: number) => void;
   onDropSelectionToFolder: (
     folderId: number,
-    selection: DraggedMediaSelection,
+    sélection: DraggedMediaSelection,
   ) => void;
   onDragStartFolder: (
     folderId: number,

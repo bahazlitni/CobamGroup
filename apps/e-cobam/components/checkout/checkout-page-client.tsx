@@ -7,10 +7,15 @@ import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import {
   CART_UPDATED_EVENT,
   EMPTY_CART,
+  clearStoredCouponCode,
   readCart,
+  readStoredCouponCode,
+  storeCouponCode,
+  validatePromotionCode,
   type CartState,
 } from "@/lib/cart-store";
 import { formatPriceTnd } from "@/lib/format";
+import type { PromotionQuote } from "@/lib/promotion-types";
 import { Button, ButtonLink } from "@/components/ui/button";
 
 type FulfillmentMethod = "DELIVERY" | "PICKUP";
@@ -46,6 +51,11 @@ export function CheckoutPageClient() {
   const [postalCode, setPostalCode] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("BANK_TRANSFER");
   const [notes, setNotes] = useState("");
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCouponCode, setAppliedCouponCode] = useState("");
+  const [promotion, setPromotion] = useState<PromotionQuote | null>(null);
+  const [couponPending, setCouponPending] = useState(false);
+  const [couponMessage, setCouponMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -74,6 +84,46 @@ export function CheckoutPageClient() {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    const storedCode = readStoredCouponCode();
+
+    if (storedCode) {
+      setCouponCode(storedCode);
+      setAppliedCouponCode(storedCode);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!appliedCouponCode.trim() || cart.lines.length === 0) {
+      setPromotion(null);
+      return;
+    }
+
+    let mounted = true;
+
+    async function refreshPromotion() {
+      try {
+        const quote = await validatePromotionCode(appliedCouponCode);
+
+        if (mounted) {
+          setPromotion(quote);
+          setCouponMessage(quote.message);
+        }
+      } catch (cause) {
+        if (mounted) {
+          setPromotion(null);
+          setCouponMessage(cause instanceof Error ? cause.message : "Code promo invalide.");
+        }
+      }
+    }
+
+    void refreshPromotion();
+
+    return () => {
+      mounted = false;
+    };
+  }, [cart.lines.length, cart.summary.subtotalTtc, appliedCouponCode]);
 
   const itemLines = useMemo(
     () => cart.lines.map((line) => `${line.quantity} x ${line.name}`).join(", "),
@@ -110,6 +160,7 @@ export function CheckoutPageClient() {
           },
           payment: { method: paymentMethod },
           notes,
+          couponCode: promotion?.code ?? (appliedCouponCode || undefined),
         }),
       });
 
@@ -119,6 +170,7 @@ export function CheckoutPageClient() {
       }
 
       const result = (await response.json()) as { orderNumber: string };
+      clearStoredCouponCode();
       window.dispatchEvent(new CustomEvent<CartState>(CART_UPDATED_EVENT, { detail: EMPTY_CART }));
       router.push(`/commande/${encodeURIComponent(result.orderNumber)}`);
     } catch (cause) {
@@ -126,6 +178,44 @@ export function CheckoutPageClient() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  async function handleApplyCoupon(event?: React.FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
+    const code = couponCode.trim();
+
+    if (!code) {
+      clearStoredCouponCode();
+      setAppliedCouponCode("");
+      setPromotion(null);
+      setCouponMessage(null);
+      return;
+    }
+
+    setCouponPending(true);
+    setCouponMessage(null);
+
+    try {
+      const quote = await validatePromotionCode(code);
+      setPromotion(quote);
+      setCouponCode(quote.code);
+      setAppliedCouponCode(quote.code);
+      storeCouponCode(quote.code);
+      setCouponMessage(quote.message);
+    } catch (cause) {
+      setPromotion(null);
+      setCouponMessage(cause instanceof Error ? cause.message : "Code promo invalide.");
+    } finally {
+      setCouponPending(false);
+    }
+  }
+
+  function handleRemoveCoupon() {
+    clearStoredCouponCode();
+    setCouponCode("");
+    setAppliedCouponCode("");
+    setPromotion(null);
+    setCouponMessage(null);
   }
 
   if (loading) {
@@ -197,7 +287,7 @@ export function CheckoutPageClient() {
                 />
               </label>
               <label className="space-y-2 sm:col-span-2">
-                <span className={labelClass}>Societe</span>
+                <span className={labelClass}>Société</span>
                 <input
                   autoComplete="organization"
                   value={companyName}
@@ -217,7 +307,7 @@ export function CheckoutPageClient() {
                 />
               </label>
               <label className="space-y-2">
-                <span className={labelClass}>Telephone</span>
+                <span className={labelClass}>Téléphone</span>
                 <input
                   required
                   type="tel"
@@ -268,7 +358,7 @@ export function CheckoutPageClient() {
                   />
                 </label>
                 <label className="space-y-2 sm:col-span-2">
-                  <span className={labelClass}>Complement</span>
+                  <span className={labelClass}>Complément</span>
                   <input
                     autoComplete="address-line2"
                     value={addressLine2}
@@ -307,7 +397,7 @@ export function CheckoutPageClient() {
               </div>
             ) : (
               <div className="mt-5 rounded-2xl bg-ec-paper p-4 text-sm font-semibold text-ec-muted">
-                Retrait au point COBAM confirme avec l&apos;equipe commerciale.
+                Retrait au point COBAM confirmé avec l'équipe commerciale.
               </div>
             )}
           </div>
@@ -351,6 +441,41 @@ export function CheckoutPageClient() {
         <aside className="h-fit rounded-[1.5rem] border border-ec-line bg-white p-6 lg:sticky lg:top-28">
           <h2 className="text-xl font-black text-ec-ink">Resume</h2>
           <p className="mt-2 text-sm leading-6 text-ec-muted">{itemLines}</p>
+          <div className="mt-5 rounded-2xl bg-ec-paper p-3">
+            <label className="text-xs font-bold uppercase tracking-[0.18em] text-ec-muted">
+              Code promo
+            </label>
+            <div className="mt-2 flex gap-2">
+              <input
+                value={couponCode}
+                onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
+                placeholder="COBAM"
+                className="min-w-0 flex-1 rounded-full border border-ec-line bg-white px-4 py-2 text-sm font-semibold text-ec-ink outline-none focus:border-ec-blue"
+              />
+              <button
+                type="button"
+                disabled={couponPending}
+                className="rounded-full bg-ec-ink px-4 py-2 text-sm font-black text-white [color:#fff] disabled:opacity-60"
+                onClick={() => void handleApplyCoupon()}
+              >
+                {couponPending ? "..." : "OK"}
+              </button>
+            </div>
+            {couponMessage ? (
+              <p className={`mt-2 text-xs font-semibold ${promotion ? "text-emerald-700" : "text-rose-700"}`}>
+                {couponMessage}
+              </p>
+            ) : null}
+            {promotion ? (
+              <button
+                type="button"
+                className="mt-2 text-xs font-black text-ec-muted hover:text-ec-ink"
+                onClick={handleRemoveCoupon}
+              >
+                Retirer le code
+              </button>
+            ) : null}
+          </div>
           <div className="mt-5 space-y-4 text-sm">
             <div className="flex justify-between text-ec-muted">
               <span>Articles</span>
@@ -366,6 +491,14 @@ export function CheckoutPageClient() {
                 {totalLabel(cart.summary.taxTtc, formatPriceTnd(0) ?? "0 TND")}
               </span>
             </div>
+            {promotion && Number(promotion.discountTtc) > 0 ? (
+              <div className="flex justify-between text-ec-muted">
+                <span>Réduction</span>
+                <span className="font-semibold text-emerald-700">
+                  -{formatPriceTnd(promotion.discountTtc) ?? formatPriceTnd(0)}
+                </span>
+              </div>
+            ) : null}
             <div className="flex justify-between text-ec-muted">
               <span>Livraison</span>
               <span className="font-semibold text-ec-ink">A confirmer</span>
@@ -373,7 +506,7 @@ export function CheckoutPageClient() {
           </div>
           <div className="mt-5 flex justify-between border-t border-ec-line pt-5 text-base font-black text-ec-ink">
             <span>Total</span>
-            <span>{totalLabel(cart.summary.totalTtc)}</span>
+            <span>{totalLabel(promotion?.totalTtc ?? cart.summary.totalTtc)}</span>
           </div>
           {cart.summary.hasQuoteLines ? (
             <div className="mt-6 rounded-2xl bg-amber-50 p-4 text-sm leading-7 text-amber-800">

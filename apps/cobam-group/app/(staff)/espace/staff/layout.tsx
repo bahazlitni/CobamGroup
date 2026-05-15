@@ -13,7 +13,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Building2,
+  BadgePercent,
   ChevronDown,
+  CreditCard,
   FileText,
   ImageIcon,
   ListTree,
@@ -22,11 +24,14 @@ import {
   Paintbrush,
   Package,
   Palette,
+  ReceiptText,
   Shield,
   Shapes,
   Tags,
+  Truck,
   User,
   Users,
+  UsersRound,
 } from "lucide-react";
 import BannedAccountNoticeDialog from "@/components/staff/ui/BannedAccountNoticeDialog";
 import "./globals.css";
@@ -40,6 +45,13 @@ import { canAccessPersonalDetails, canAccessSecuritySettings } from "@/features/
 import { canAccessAnnuaire } from "@/features/annuaire/access";
 import { canAccessArticleCategories } from "@/features/article-categories/access";
 import { canAccessArticles } from "@/features/articles/access";
+import {
+  canAccessEcommerceCustomers,
+  canAccessEcommerceFulfillments,
+  canAccessEcommerceOrders,
+  canAccessEcommercePayments,
+  canAccessEcommercePromotions,
+} from "@/features/ecommerce-admin/access";
 import { canAccessMediaLibrary } from "@/features/media/access";
 import { canAccessProductCategories } from "@/features/product-categories/access";
 import {
@@ -201,6 +213,37 @@ const STAFF_TABS: Record<string, StaffTabGroup> = {
       },
     },
   },
+  "e-commerce": {
+    key: "e-commerce",
+    label: "E-commerce",
+    tabs: {
+      commandes: {
+        key: "commandes",
+        label: "Commandes",
+        icon: ReceiptText,
+      },
+      clients: {
+        key: "clients",
+        label: "Comptes clients",
+        icon: UsersRound,
+      },
+      promotions: {
+        key: "promotions",
+        label: "Promotions",
+        icon: BadgePercent,
+      },
+      paiements: {
+        key: "paiements",
+        label: "Paiements",
+        icon: CreditCard,
+      },
+      livraisons: {
+        key: "livraisons",
+        label: "Livraisons",
+        icon: Truck,
+      },
+    },
+  },
   autres: {
     key: "autres",
     label: "Autres",
@@ -276,6 +319,13 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
         "types-produits": user ? canAccessProductTemplates(user) : false,
         couleurs: user ? canAccessProductColors(user) : false,
         finitions: user ? canAccessProductFinishes(user) : false,
+      },
+      "e-commerce": {
+        commandes: user ? canAccessEcommerceOrders(user) : false,
+        clients: user ? canAccessEcommerceCustomers(user) : false,
+        promotions: user ? canAccessEcommercePromotions(user) : false,
+        paiements: user ? canAccessEcommercePayments(user) : false,
+        livraisons: user ? canAccessEcommerceFulfillments(user) : false,
       },
       autres: {
         medias: user ? canAccessMediaLibrary(user) : false,

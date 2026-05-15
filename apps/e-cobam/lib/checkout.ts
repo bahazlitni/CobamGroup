@@ -1,9 +1,19 @@
 import {
   Prisma,
   type CommerceFulfillmentMethod,
+  type CommerceFulfillmentStatus,
+  type CommerceOrderStatus,
   type CommercePaymentMethod,
+  type CommercePaymentStatus,
   type StockUnit,
 } from "@prisma/client";
+import type { CustomerSession } from "@/lib/customer-auth";
+import {
+  type AppliedPromotion,
+  PromotionError,
+  quotePromotionForCartId,
+  recordPromotionRedemption,
+} from "@/lib/promotions";
 
 const CHECKOUT_SESSION_EXPIRY_HOURS = 2;
 const STOCK_RESERVATION_DAYS = 7;
@@ -77,14 +87,15 @@ export type CheckoutOrderResult = {
 export type PublicOrderSummary = {
   orderNumber: string;
   placedAt: string;
-  status: string;
-  paymentStatus: string;
-  fulfillmentStatus: string;
+  status: CommerceOrderStatus;
+  paymentStatus: CommercePaymentStatus;
+  fulfillmentStatus: CommerceFulfillmentStatus;
   paymentMethod: CommercePaymentMethod | null;
   fulfillmentMethod: CommerceFulfillmentMethod | null;
   guestEmail: string | null;
   guestPhone: string | null;
   subtotalTtc: string;
+  discountTtc: string;
   taxTtc: string;
   shippingTtc: string;
   totalTtc: string;
@@ -116,6 +127,7 @@ type NormalizedCheckoutInput = {
   shippingAddress: Prisma.InputJsonObject;
   billingAddress: Prisma.InputJsonObject;
   notes: string | null;
+  couponCode: string | null;
 };
 
 type PreparedLine = {
@@ -214,12 +226,13 @@ function normalizeCheckoutInput(input: unknown): NormalizedCheckoutInput {
   const firstName = requireText(customerInput.firstName, "Prenom", 100);
   const lastName = requireText(customerInput.lastName, "Nom", 100);
   const email = requireEmail(customerInput.email);
-  const phone = requireText(customerInput.phone, "Telephone", 50);
+  const phone = requireText(customerInput.phone, "Téléphone", 50);
   const companyName = cleanText(customerInput.companyName, 255);
   const fullName = [firstName, lastName].join(" ");
   const fulfillmentMethod = parseFulfillmentMethod(fulfillmentInput.method);
   const paymentMethod = parsePaymentMethod(paymentInput.method);
   const notes = cleanText(body.notes, 1000);
+  const couponCode = cleanText(body.couponCode, 80);
 
   const shippingAddress =
     fulfillmentMethod === "PICKUP"
@@ -262,6 +275,7 @@ function normalizeCheckoutInput(input: unknown): NormalizedCheckoutInput {
     shippingAddress,
     billingAddress: shippingAddress,
     notes,
+    couponCode,
   };
 }
 
@@ -392,7 +406,36 @@ function prepareCartLines(cart: CheckoutCartRecord) {
   };
 }
 
-export async function createGuestCheckoutOrder(guestToken: string | null | undefined, input: unknown) {
+function applyPromotionToTotals(
+  totals: ReturnType<typeof prepareCartLines>,
+  promotion: AppliedPromotion | null,
+) {
+  if (!promotion) {
+    return totals;
+  }
+
+  const subtotalTtc = decimalToNumber(new Prisma.Decimal(totals.subtotalTtc)) ?? 0;
+  const taxTtc = decimalToNumber(new Prisma.Decimal(totals.taxTtc)) ?? 0;
+  const shippingTtc = decimalToNumber(new Prisma.Decimal(totals.shippingTtc)) ?? 0;
+  const discountTtc = Math.min(
+    subtotalTtc + shippingTtc,
+    Math.max(0, decimalToNumber(new Prisma.Decimal(promotion.discountTtc)) ?? 0),
+  );
+  const taxDiscount = subtotalTtc > 0 ? taxTtc * (discountTtc / subtotalTtc) : 0;
+
+  return {
+    ...totals,
+    discountTtc: money(discountTtc),
+    taxTtc: money(Math.max(0, taxTtc - taxDiscount)),
+    totalTtc: money(Math.max(0, subtotalTtc + shippingTtc - discountTtc)),
+  };
+}
+
+export async function createGuestCheckoutOrder(
+  guestToken: string | null | undefined,
+  input: unknown,
+  customerSession?: CustomerSession | null,
+) {
   if (!guestToken) {
     throw new CheckoutError("Votre panier est vide.");
   }
@@ -415,10 +458,26 @@ export async function createGuestCheckoutOrder(guestToken: string | null | undef
       throw new CheckoutError("Votre panier est vide.");
     }
 
-    const totals = prepareCartLines(cart);
+    const customerId = customerSession ? BigInt(customerSession.customerId) : null;
+    const baseTotals = prepareCartLines(cart);
+    let promotion: AppliedPromotion | null = null;
+
+    try {
+      promotion = await quotePromotionForCartId(tx, cart.id, normalized.couponCode, customerId, now);
+    } catch (error) {
+      if (error instanceof PromotionError) {
+        throw new CheckoutError(error.message, error.status);
+      }
+
+      throw error;
+    }
+
+    const totals = applyPromotionToTotals(baseTotals, promotion);
+
     const checkoutSession = await tx.checkoutSession.create({
       data: {
         cartId: cart.id,
+        customerId,
         status: "COMPLETED",
         currency: cart.currency,
         subtotalTtc: totals.subtotalTtc,
@@ -438,6 +497,7 @@ export async function createGuestCheckoutOrder(guestToken: string | null | undef
       data: {
         orderNumber: orderNumber(now),
         cartId: cart.id,
+        customerId,
         guestEmail: normalized.customer.email,
         guestPhone: normalized.customer.phone,
         status: "PENDING",
@@ -484,6 +544,8 @@ export async function createGuestCheckoutOrder(guestToken: string | null | undef
       select: { id: true, orderNumber: true },
     });
 
+    await recordPromotionRedemption(tx, promotion, order.id, customerId);
+
     await tx.commercePayment.create({
       data: {
         orderId: order.id,
@@ -514,6 +576,7 @@ export async function createGuestCheckoutOrder(guestToken: string | null | undef
           productId: line.productId,
           orderId: order.id,
           cartId: cart.id,
+          customerId,
           quantity: money(line.quantity),
           status: "RESERVED",
           expiresAt: addDays(now, STOCK_RESERVATION_DAYS),
@@ -553,6 +616,7 @@ export async function getPublicOrderSummary(orderNumberValue: string): Promise<P
       guestEmail: true,
       guestPhone: true,
       subtotalTtc: true,
+      discountTtc: true,
       taxTtc: true,
       shippingTtc: true,
       totalTtc: true,
@@ -599,6 +663,7 @@ export async function getPublicOrderSummary(orderNumberValue: string): Promise<P
     guestEmail: order.guestEmail,
     guestPhone: order.guestPhone,
     subtotalTtc: order.subtotalTtc.toString(),
+    discountTtc: order.discountTtc.toString(),
     taxTtc: order.taxTtc.toString(),
     shippingTtc: order.shippingTtc.toString(),
     totalTtc: order.totalTtc.toString(),

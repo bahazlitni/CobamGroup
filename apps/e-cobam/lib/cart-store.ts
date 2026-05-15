@@ -1,6 +1,7 @@
 "use client";
 
 import type { ProductAvailability, StockUnit } from "@prisma/client";
+import type { PromotionQuote } from "@/lib/promotion-types";
 
 export type CartItemSnapshot = {
   id: number;
@@ -36,6 +37,7 @@ export type CartState = {
 };
 
 const LEGACY_CART_KEY = "e-cobam-cart";
+const COUPON_CODE_KEY = "e-cobam-coupon-code";
 export const CART_UPDATED_EVENT = "e-cobam-cart-updated";
 
 export const EMPTY_CART: CartState = {
@@ -180,6 +182,7 @@ export async function updateCartLine(productId: number, quantity: number) {
 
 export async function clearCart() {
   await syncLegacyCart();
+  clearStoredCouponCode();
   return requestCart("/api/cart", { method: "DELETE" }, true);
 }
 
@@ -187,4 +190,45 @@ export function getCartCount(cart: CartState | CartLine[]) {
   const lines = Array.isArray(cart) ? cart : cart.lines;
 
   return lines.reduce((sum, line) => sum + line.quantity, 0);
+}
+
+export function readStoredCouponCode() {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  return window.localStorage.getItem(COUPON_CODE_KEY) ?? "";
+}
+
+export function storeCouponCode(code: string) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(COUPON_CODE_KEY, code);
+}
+
+export function clearStoredCouponCode() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(COUPON_CODE_KEY);
+}
+
+export async function validatePromotionCode(code: string) {
+  const response = await fetch("/api/promotions/coupon", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code }),
+  });
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message ?? "Code promo invalide.");
+  }
+
+  const body = (await response.json()) as { promotion: PromotionQuote };
+  return body.promotion;
 }

@@ -8,12 +8,17 @@ import {
   CART_UPDATED_EVENT,
   EMPTY_CART,
   clearCart,
+  clearStoredCouponCode,
   readCart,
+  readStoredCouponCode,
+  storeCouponCode,
   updateCartLine,
+  validatePromotionCode,
   type CartLine,
   type CartState,
 } from "@/lib/cart-store";
 import { formatPriceTnd } from "@/lib/format";
+import type { PromotionQuote } from "@/lib/promotion-types";
 import { Button, ButtonLink } from "@/components/ui/button";
 
 function cartTotalLabel(value: string, fallback = "Sur devis") {
@@ -39,6 +44,11 @@ export function CartPageClient() {
   const [pendingProductId, setPendingProductId] = useState<number | null>(null);
   const [clearing, setClearing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCouponCode, setAppliedCouponCode] = useState("");
+  const [promotion, setPromotion] = useState<PromotionQuote | null>(null);
+  const [couponPending, setCouponPending] = useState(false);
+  const [couponMessage, setCouponMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -86,6 +96,46 @@ export function CartPageClient() {
     };
   }, []);
 
+  useEffect(() => {
+    const storedCode = readStoredCouponCode();
+
+    if (storedCode) {
+      setCouponCode(storedCode);
+      setAppliedCouponCode(storedCode);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!appliedCouponCode.trim() || cart.lines.length === 0) {
+      setPromotion(null);
+      return;
+    }
+
+    let mounted = true;
+
+    async function refreshPromotion() {
+      try {
+        const quote = await validatePromotionCode(appliedCouponCode);
+
+        if (mounted) {
+          setPromotion(quote);
+          setCouponMessage(quote.message);
+        }
+      } catch (cause) {
+        if (mounted) {
+          setPromotion(null);
+          setCouponMessage(cause instanceof Error ? cause.message : "Code promo invalide.");
+        }
+      }
+    }
+
+    void refreshPromotion();
+
+    return () => {
+      mounted = false;
+    };
+  }, [cart.lines.length, cart.summary.subtotalTtc, appliedCouponCode]);
+
   const mailBody = useMemo(
     () => cart.lines.map((line) => `${line.quantity} x ${line.name} (${line.sku})`).join("\n"),
     [cart.lines],
@@ -115,6 +165,43 @@ export function CartPageClient() {
     } finally {
       setClearing(false);
     }
+  }
+
+  async function handleApplyCoupon(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const code = couponCode.trim();
+
+    if (!code) {
+      clearStoredCouponCode();
+      setPromotion(null);
+      setCouponMessage(null);
+      return;
+    }
+
+    setCouponPending(true);
+    setCouponMessage(null);
+
+    try {
+      const quote = await validatePromotionCode(code);
+      setPromotion(quote);
+      setCouponCode(quote.code);
+      setAppliedCouponCode(quote.code);
+      storeCouponCode(quote.code);
+      setCouponMessage(quote.message);
+    } catch (cause) {
+      setPromotion(null);
+      setCouponMessage(cause instanceof Error ? cause.message : "Code promo invalide.");
+    } finally {
+      setCouponPending(false);
+    }
+  }
+
+  function handleRemoveCoupon() {
+    clearStoredCouponCode();
+    setCouponCode("");
+    setAppliedCouponCode("");
+    setPromotion(null);
+    setCouponMessage(null);
   }
 
   if (loading && cart.lines.length === 0) {
@@ -243,6 +330,40 @@ export function CartPageClient() {
 
         <aside className="h-fit rounded-[1.5rem] border border-ec-line bg-white p-6 lg:sticky lg:top-28">
           <h2 className="text-xl font-black text-ec-ink">Résumé</h2>
+          <form onSubmit={handleApplyCoupon} className="mt-5 rounded-2xl bg-ec-paper p-3">
+            <label className="text-xs font-bold uppercase tracking-[0.18em] text-ec-muted">
+              Code promo
+            </label>
+            <div className="mt-2 flex gap-2">
+              <input
+                value={couponCode}
+                onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
+                placeholder="COBAM"
+                className="min-w-0 flex-1 rounded-full border border-ec-line bg-white px-4 py-2 text-sm font-semibold text-ec-ink outline-none focus:border-ec-blue"
+              />
+              <button
+                type="submit"
+                disabled={couponPending}
+                className="rounded-full bg-ec-ink px-4 py-2 text-sm font-black text-white [color:#fff] disabled:opacity-60"
+              >
+                {couponPending ? "..." : "OK"}
+              </button>
+            </div>
+            {couponMessage ? (
+              <p className={`mt-2 text-xs font-semibold ${promotion ? "text-emerald-700" : "text-rose-700"}`}>
+                {couponMessage}
+              </p>
+            ) : null}
+            {promotion ? (
+              <button
+                type="button"
+                className="mt-2 text-xs font-black text-ec-muted hover:text-ec-ink"
+                onClick={handleRemoveCoupon}
+              >
+                Retirer le code
+              </button>
+            ) : null}
+          </form>
           <div className="mt-5 space-y-4 text-sm">
             <div className="flex justify-between text-ec-muted">
               <span>Articles</span>
@@ -260,6 +381,14 @@ export function CartPageClient() {
                 {cartTotalLabel(cart.summary.taxTtc, formatPriceTnd(0) ?? "0 TND")}
               </span>
             </div>
+            {promotion && Number(promotion.discountTtc) > 0 ? (
+              <div className="flex justify-between text-ec-muted">
+                <span>Réduction</span>
+                <span className="font-semibold text-emerald-700">
+                  -{formatPriceTnd(promotion.discountTtc) ?? formatPriceTnd(0)}
+                </span>
+              </div>
+            ) : null}
             <div className="flex justify-between text-ec-muted">
               <span>Livraison</span>
               <span className="font-semibold text-ec-ink">
@@ -269,7 +398,7 @@ export function CartPageClient() {
           </div>
           <div className="mt-5 flex justify-between border-t border-ec-line pt-5 text-base font-black text-ec-ink">
             <span>Total</span>
-            <span>{cartTotalLabel(cart.summary.totalTtc)}</span>
+            <span>{cartTotalLabel(promotion?.totalTtc ?? cart.summary.totalTtc)}</span>
           </div>
           {cart.summary.hasQuoteLines ? (
             <div className="mt-6 rounded-2xl bg-amber-50 p-4 text-sm leading-7 text-amber-800">
@@ -277,7 +406,7 @@ export function CartPageClient() {
             </div>
           ) : (
             <div className="mt-6 rounded-2xl bg-ec-paper p-4 text-sm leading-7 text-ec-muted">
-              Les prix sont captures dans le panier et revalides a chaque modification de quantite.
+              Les prix sont capturés dans le panier et revalidés à chaque modification de quantité.
             </div>
           )}
           <ButtonLink

@@ -273,7 +273,7 @@ export default function ArticleRichTextToolbar({ editor }: ArticleRichTextToolba
             setIsLinkPopoverOpen(nextOpen);
             if (nextOpen) {
               const selectedText = editor?.state.doc
-                .textBetween(editor.state.selection.from, editor.state.selection.to, " ")
+                .textBetween(editor.state.sélection.from, editor.state.sélection.to, " ")
                 .trim();
 
               setLinkValue(editorState.currentLinkHref);

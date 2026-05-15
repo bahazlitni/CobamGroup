@@ -50,7 +50,7 @@ export default function PanelTable({
   );
 
   return (
-    <div className="overflow-visible rounded-lg border border-slate-300 bg-white shadow-sm">
+    <div className="overflow-visible border border-slate-300 bg-white shadow-sm">
       <table
         className="min-w-full divide-y divide-slate-100 text-sm panel-table"
         style={{ tableLayout: columnWidths ? "fixed" : undefined }}

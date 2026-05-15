@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { CART_TOKEN_COOKIE } from "@/lib/cart";
 import { CheckoutError, createGuestCheckoutOrder } from "@/lib/checkout";
+import { getCustomerSession } from "@/lib/customer-auth";
 
 export const runtime = "nodejs";
 
@@ -22,7 +23,8 @@ function errorResponse(error: unknown) {
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => null);
-    const result = await createGuestCheckoutOrder(await currentCartToken(), body);
+    const session = await getCustomerSession();
+    const result = await createGuestCheckoutOrder(await currentCartToken(), body, session);
     const response = NextResponse.json(result);
 
     response.cookies.set(CART_TOKEN_COOKIE, "", {

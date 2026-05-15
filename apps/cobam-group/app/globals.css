@@ -509,7 +509,7 @@ body:has(.cobam-catalog-landing) header > div {
   max-width: 1500px;
 }
 
-.cobam-catalog-landing ::selection {
+.cobam-catalog-landing ::sélection {
   background: rgba(10, 141, 193, 0.22);
   color: #ffffff;
 }

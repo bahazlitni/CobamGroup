@@ -2,7 +2,7 @@
 
 import type { DragEvent } from "react";
 
-const DRAGGED_MEDIA_SELECTION_MIME = "application/x-cobam-media-selection";
+const DRAGGED_MEDIA_SELECTION_MIME = "application/x-cobam-media-sélection";
 
 export type DraggedMediaSelection = {
   mediaIds: number[];
@@ -15,14 +15,14 @@ function normalizeIds(ids: readonly number[]) {
 
 export function writeDraggedMediaSelection(
   event: DragEvent,
-  selection: {
+  sélection: {
     mediaIds?: readonly number[];
     folderIds?: readonly number[];
   },
 ) {
   const payload: DraggedMediaSelection = {
-    mediaIds: normalizeIds(selection.mediaIds ?? []),
-    folderIds: normalizeIds(selection.folderIds ?? []),
+    mediaIds: normalizeIds(sélection.mediaIds ?? []),
+    folderIds: normalizeIds(sélection.folderIds ?? []),
   };
 
   if (payload.mediaIds.length === 0 && payload.folderIds.length === 0) {

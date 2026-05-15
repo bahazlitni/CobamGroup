@@ -28,6 +28,7 @@ const VISIBLE_ECOMMERCE_SUBCATEGORY_LINK_WHERE = {
   subcategory: {
     is: {
       isActive: true,
+      visibleEcommerce: true,
       category: {
         is: {
           isActive: true,
@@ -535,6 +536,7 @@ function categoryWhere(categorySlug?: string | null) {
         subcategory: {
           is: {
             isActive: true,
+            visibleEcommerce: true,
             category: {
               is: {
                 isActive: true,
@@ -698,6 +700,7 @@ export async function getCommerceCategories(): Promise<CommerceCategory[]> {
       subcategories: {
         some: {
           isActive: true,
+          visibleEcommerce: true,
         },
       },
     },
@@ -710,7 +713,7 @@ export async function getCommerceCategories(): Promise<CommerceCategory[]> {
       description: true,
       imageMedia: { select: MEDIA_SELECT },
       subcategories: {
-        where: { isActive: true },
+        where: { isActive: true, visibleEcommerce: true },
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
         select: {
           id: true,

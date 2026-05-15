@@ -833,6 +833,77 @@ export const PERMISSION_DEFINITIONS = [
     action: "manage",
     group: "Annuaire",
   }),
+
+  definePermission({
+    key: "ecommerce_orders.view",
+    label: "Voir les commandes e-commerce",
+    resource: "ecommerce_orders",
+    action: "view",
+    group: "E-commerce",
+  }),
+  definePermission({
+    key: "ecommerce_orders.manage",
+    label: "Gerer les commandes e-commerce",
+    resource: "ecommerce_orders",
+    action: "manage",
+    group: "E-commerce",
+  }),
+  definePermission({
+    key: "ecommerce_customers.view",
+    label: "Voir les comptes clients e-commerce",
+    resource: "ecommerce_customers",
+    action: "view",
+    group: "E-commerce",
+  }),
+  definePermission({
+    key: "ecommerce_customers.manage",
+    label: "Gerer les comptes clients e-commerce",
+    resource: "ecommerce_customers",
+    action: "manage",
+    group: "E-commerce",
+  }),
+  definePermission({
+    key: "ecommerce_promotions.view",
+    label: "Voir les promotions e-commerce",
+    resource: "ecommerce_promotions",
+    action: "view",
+    group: "E-commerce",
+  }),
+  definePermission({
+    key: "ecommerce_promotions.manage",
+    label: "Gerer les promotions e-commerce",
+    resource: "ecommerce_promotions",
+    action: "manage",
+    group: "E-commerce",
+  }),
+  definePermission({
+    key: "ecommerce_payments.view",
+    label: "Voir les paiements e-commerce",
+    resource: "ecommerce_payments",
+    action: "view",
+    group: "E-commerce",
+  }),
+  definePermission({
+    key: "ecommerce_payments.manage",
+    label: "Gerer les paiements e-commerce",
+    resource: "ecommerce_payments",
+    action: "manage",
+    group: "E-commerce",
+  }),
+  definePermission({
+    key: "ecommerce_fulfillments.view",
+    label: "Voir les livraisons e-commerce",
+    resource: "ecommerce_fulfillments",
+    action: "view",
+    group: "E-commerce",
+  }),
+  definePermission({
+    key: "ecommerce_fulfillments.manage",
+    label: "Gerer les livraisons e-commerce",
+    resource: "ecommerce_fulfillments",
+    action: "manage",
+    group: "E-commerce",
+  }),
 ] as const satisfies readonly PermissionDefinition[];
 
 export type PermissionKey = (typeof PERMISSION_DEFINITIONS)[number]["key"];

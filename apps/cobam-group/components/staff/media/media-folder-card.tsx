@@ -30,7 +30,7 @@ export default function MediaFolderCard({
   onOpen: (folderId: number) => void;
   onDropSelection: (
     folderId: number,
-    selection: DraggedMediaSelection,
+    sélection: DraggedMediaSelection,
   ) => void;
   onDragStart: (folderId: number, event: DragEvent<HTMLDivElement>) => void;
 }) {
@@ -38,9 +38,9 @@ export default function MediaFolderCard({
   const pendingShiftRef = useRef(false);
 
   const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
-    const selection = readDraggedMediaSelection(event);
+    const sélection = readDraggedMediaSelection(event);
 
-    if (selection.mediaIds.length === 0 && selection.folderIds.length === 0) {
+    if (sélection.mediaIds.length === 0 && sélection.folderIds.length === 0) {
       return;
     }
 
@@ -54,16 +54,16 @@ export default function MediaFolderCard({
   };
 
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
-    const selection = readDraggedMediaSelection(event);
+    const sélection = readDraggedMediaSelection(event);
 
     setIsDragOver(false);
 
-    if (selection.mediaIds.length === 0 && selection.folderIds.length === 0) {
+    if (sélection.mediaIds.length === 0 && sélection.folderIds.length === 0) {
       return;
     }
 
     event.preventDefault();
-    onDropSelection(folder.id, selection);
+    onDropSelection(folder.id, sélection);
   };
 
   return (

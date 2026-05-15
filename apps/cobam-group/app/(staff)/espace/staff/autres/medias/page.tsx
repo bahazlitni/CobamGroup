@@ -11,7 +11,7 @@ import MediaFolderBreadcrumbs from "@/components/staff/media/media-folder-breadc
 import MediaFolderCreateDialog from "@/components/staff/media/media-folder-create-dialog";
 import MediaGrid from "@/components/staff/media/media-grid";
 import MediaInspectorDialog from "@/components/staff/media/media-inspector-dialog";
-import MediaSelectionBar from "@/components/staff/media/media-selection-bar";
+import MediaSelectionBar from "@/components/staff/media/media-sélection-bar";
 import MediaStats from "@/components/staff/media/media-stats";
 import MediaToolbar from "@/components/staff/media/media-toolbar";
 import MediaUploadDialog from "@/components/staff/media/media-upload-dialog";
@@ -391,7 +391,7 @@ function MediaLibraryPageContent() {
 
   const handleDropSelectionToFolder = async (
     folderId: number | null,
-    selection: {
+    sélection: {
       mediaIds: number[];
       folderIds: number[];
     },
@@ -399,12 +399,12 @@ function MediaLibraryPageContent() {
     try {
       let movedCount = 0;
 
-      if (selection.folderIds.length > 0) {
-        movedCount += await moveFolderIdsToFolder(selection.folderIds, folderId);
+      if (sélection.folderIds.length > 0) {
+        movedCount += await moveFolderIdsToFolder(sélection.folderIds, folderId);
       }
 
-      if (selection.mediaIds.length > 0) {
-        movedCount += await moveMediaIdsToFolder(selection.mediaIds, folderId);
+      if (sélection.mediaIds.length > 0) {
+        movedCount += await moveMediaIdsToFolder(sélection.mediaIds, folderId);
       }
 
       if (movedCount > 0) {

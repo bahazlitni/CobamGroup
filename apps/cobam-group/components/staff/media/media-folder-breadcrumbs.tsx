@@ -20,7 +20,7 @@ export default function MediaFolderBreadcrumbs({
   onOpenFolder: (folderId: number) => void;
   onDropSelectionToFolder: (
     folderId: number | null,
-    selection: DraggedMediaSelection,
+    sélection: DraggedMediaSelection,
   ) => void;
 }) {
   const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
@@ -29,9 +29,9 @@ export default function MediaFolderBreadcrumbs({
     event: DragEvent<HTMLButtonElement>,
     target: string,
   ) => {
-    const selection = readDraggedMediaSelection(event);
+    const sélection = readDraggedMediaSelection(event);
 
-    if (selection.mediaIds.length === 0 && selection.folderIds.length === 0) {
+    if (sélection.mediaIds.length === 0 && sélection.folderIds.length === 0) {
       return;
     }
 
@@ -45,15 +45,15 @@ export default function MediaFolderBreadcrumbs({
     folderId: number | null,
     target: string,
   ) => {
-    const selection = readDraggedMediaSelection(event);
+    const sélection = readDraggedMediaSelection(event);
     setDragOverTarget((current) => (current === target ? null : current));
 
-    if (selection.mediaIds.length === 0 && selection.folderIds.length === 0) {
+    if (sélection.mediaIds.length === 0 && sélection.folderIds.length === 0) {
       return;
     }
 
     event.preventDefault();
-    onDropSelectionToFolder(folderId, selection);
+    onDropSelectionToFolder(folderId, sélection);
   };
 
   return (

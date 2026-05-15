@@ -1,25 +1,19 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, UserRound } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { formatPriceTnd } from "@/lib/format";
 import { getPublicOrderSummary, type PublicOrderSummary } from "@/lib/checkout";
+import {
+  fulfillmentMethodLabels,
+  fulfillmentStatusLabels,
+  paymentMethodLabels,
+  paymentStatusLabels,
+} from "@/lib/order-labels";
 
 type PageProps = {
   params: Promise<{ orderNumber: string }>;
-};
-
-const paymentLabels: Record<string, string> = {
-  BANK_TRANSFER: "Virement bancaire",
-  CASH_ON_DELIVERY: "Paiement a la livraison",
-  PAY_IN_STORE: "Paiement en magasin",
-  CARD: "Carte bancaire",
-};
-
-const fulfillmentLabels: Record<string, string> = {
-  DELIVERY: "Livraison",
-  PICKUP: "Retrait en magasin",
 };
 
 function formatDate(value: string) {
@@ -80,25 +74,38 @@ export default async function OrderConfirmationPage({ params }: PageProps) {
               Creee le {formatDate(order.placedAt)}
             </p>
           </div>
-          <ButtonLink href="/catalogue" variant="secondary" icon={<ArrowRight className="size-4" />}>
-            Continuer vos achats
-          </ButtonLink>
+          <div className="flex flex-wrap gap-3">
+            <ButtonLink
+              href={`/compte?commande=${encodeURIComponent(order.orderNumber)}`}
+              variant="secondary"
+              icon={<UserRound className="size-4" />}
+            >
+              Suivre dans le compte
+            </ButtonLink>
+            <ButtonLink href="/catalogue" variant="secondary" icon={<ArrowRight className="size-4" />}>
+              Continuer vos achats
+            </ButtonLink>
+          </div>
         </div>
 
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           <div className="rounded-[1.25rem] bg-ec-paper p-4">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-ec-muted">Paiement</p>
             <p className="mt-2 text-sm font-black text-ec-ink">
-              {order.paymentMethod ? paymentLabels[order.paymentMethod] : "A confirmer"}
+              {order.paymentMethod ? paymentMethodLabels[order.paymentMethod] : "A confirmer"}
             </p>
-            <p className="mt-1 text-xs font-semibold text-ec-muted">{order.paymentStatus}</p>
+            <p className="mt-1 text-xs font-semibold text-ec-muted">
+              {paymentStatusLabels[order.paymentStatus]}
+            </p>
           </div>
           <div className="rounded-[1.25rem] bg-ec-paper p-4">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-ec-muted">Livraison</p>
             <p className="mt-2 text-sm font-black text-ec-ink">
-              {order.fulfillmentMethod ? fulfillmentLabels[order.fulfillmentMethod] : "A confirmer"}
+              {order.fulfillmentMethod ? fulfillmentMethodLabels[order.fulfillmentMethod] : "A confirmer"}
             </p>
-            <p className="mt-1 text-xs font-semibold text-ec-muted">{order.fulfillmentStatus}</p>
+            <p className="mt-1 text-xs font-semibold text-ec-muted">
+              {fulfillmentStatusLabels[order.fulfillmentStatus]}
+            </p>
           </div>
           <div className="rounded-[1.25rem] bg-ec-paper p-4">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-ec-muted">Contact</p>
@@ -163,6 +170,14 @@ export default async function OrderConfirmationPage({ params }: PageProps) {
                 {formatPriceTnd(order.taxTtc) ?? formatPriceTnd(0)}
               </span>
             </div>
+            {Number(order.discountTtc) > 0 ? (
+              <div className="flex justify-between text-ec-muted">
+                <span>Réduction</span>
+                <span className="font-semibold text-emerald-700">
+                  -{formatPriceTnd(order.discountTtc) ?? formatPriceTnd(0)}
+                </span>
+              </div>
+            ) : null}
             <div className="flex justify-between text-ec-muted">
               <span>Livraison</span>
               <span className="font-semibold text-ec-ink">

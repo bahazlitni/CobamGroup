@@ -10,6 +10,14 @@ type RawCategoryRow = {
   product_count: bigint;
 };
 
+type RawSubcategoryRow = {
+  category_id: bigint;
+  id: bigint;
+  name: string;
+  slug: string;
+  product_count: bigint;
+};
+
 type RawProductRow = {
   id: bigint;
   sku: string;
@@ -260,6 +268,15 @@ function mapCategoryRow(row: RawCategoryRow): LandingCategory {
   };
 }
 
+function mapSubcategoryRow(row: RawSubcategoryRow) {
+  return {
+    id: Number(row.id),
+    name: row.name,
+    slug: row.slug,
+    productCount: Number(row.product_count),
+  };
+}
+
 function mapProductRow(row: RawProductRow): LandingProduct {
   const stock = stockLabel(row.stock_availability, row.stock_available);
   const productName = row.display_name?.trim() || row.name;
@@ -348,7 +365,48 @@ async function fetchLandingCategories(hasVisibilityColumns: boolean) {
     LIMIT 8
   `);
 
-  return rows.map(mapCategoryRow);
+  const categories = rows.map(mapCategoryRow);
+  const categoryIds = categories.map((category) => BigInt(category.id));
+
+  if (categoryIds.length === 0) {
+    return [];
+  }
+
+  const subcategoryRows = await db.$queryRaw<RawSubcategoryRow[]>(Prisma.sql`
+    SELECT
+      "s"."category_id",
+      "s"."id",
+      "s"."name",
+      "s"."slug",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_subcategories" "s"
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "s"."category_id" IN (${Prisma.join(categoryIds)})
+      AND "s"."is_active" = true
+      ${subcategoryVisibilityFilter}
+    GROUP BY "s"."category_id", "s"."id", "s"."name", "s"."slug", "s"."sort_order"
+    ORDER BY "s"."sort_order" ASC, "s"."name" ASC
+  `);
+  const subcategoriesByCategory = new Map<number, LandingCategory["subcategories"]>();
+
+  for (const row of subcategoryRows) {
+    const categoryId = Number(row.category_id);
+    const subcategories = subcategoriesByCategory.get(categoryId) ?? [];
+    subcategories.push(mapSubcategoryRow(row));
+    subcategoriesByCategory.set(categoryId, subcategories);
+  }
+
+  return categories
+    .map((category) => ({
+      ...category,
+      subcategories: subcategoriesByCategory.get(category.id) ?? [],
+    }))
+    .filter((category) => category.subcategories.length > 0);
 }
 
 async function fetchLandingProducts(hasVisibilityColumns: boolean) {
@@ -442,6 +500,21 @@ async function fetchVisibleProductCount() {
     where: {
       visibleEcommerce: true,
       kind: { in: ["STANDARD", "SINGLE", "VARIANT"] },
+      subcategories: {
+        some: {
+          subcategory: {
+            is: {
+              isActive: true,
+              visibleEcommerce: true,
+              category: {
+                is: {
+                  isActive: true,
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
 }

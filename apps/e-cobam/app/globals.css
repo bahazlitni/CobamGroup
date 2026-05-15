@@ -28,39 +28,41 @@
   --font-serif: var(--font-serif);
 }
 
-* {
-  box-sizing: border-box;
-}
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
 
-html {
-  background: var(--ec-paper);
-  color: var(--ec-ink);
-  scroll-behavior: smooth;
-}
+  html {
+    background: var(--ec-paper);
+    color: var(--ec-ink);
+    scroll-behavior: smooth;
+  }
 
-body {
-  margin: 0;
-  background: var(--ec-paper);
-  color: var(--ec-ink);
-  font-family: var(--font-sans);
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-}
+  body {
+    margin: 0;
+    background: var(--ec-paper);
+    color: var(--ec-ink);
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
 
-::selection {
-  background: color-mix(in srgb, var(--ec-blue) 25%, white);
+  ::sélection {
+    background: color-mix(in srgb, var(--ec-blue) 25%, white);
+  }
 }
 
 .commerce-container {

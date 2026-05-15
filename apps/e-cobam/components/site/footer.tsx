@@ -74,7 +74,6 @@ export function SiteFooter({ categories }: { categories: LandingCategory[] }) {
 
         <div className="mt-12 flex flex-col gap-3 border-t border-ec-line pt-6 text-xs text-ec-muted sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} COBAM GROUP. Tous droits réservés.</p>
-          <p>Catalogue e-commerce connecté à la base COBAM GROUP.</p>
         </div>
       </div>
     </footer>

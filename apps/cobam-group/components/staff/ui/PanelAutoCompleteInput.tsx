@@ -298,7 +298,7 @@ export default function PanelAutoCompleteInput({
       return;
     }
 
-    // Delay slightly so mouse selection can happen first
+    // Delay slightly so mouse sélection can happen first
     requestAnimationFrame(() => {
       const activeElement = document.activeElement;
       if (activeElement && rootRef.current?.contains(activeElement)) {
@@ -399,7 +399,7 @@ export default function PanelAutoCompleteInput({
                   setHighlightedIndex(index);
                 }}
                 onMouseDown={(event) => {
-                  // Prevent input blur before selection
+                  // Prevent input blur before sélection
                   event.preventDefault();
                   handleSuggestionSelect(suggestion);
                 }}

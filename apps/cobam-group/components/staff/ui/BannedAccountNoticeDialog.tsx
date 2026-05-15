@@ -85,7 +85,7 @@ export default function BannedAccountNoticeDialog({
               className="mt-0.5 h-4 w-4 rounded border-slate-300 text-cobam-dark-blue focus:ring-cobam-water-blue"
             />
             <span>
-              Ne plus afficher ce message pour ce bannissement precis.
+              Ne plus afficher ce message pour ce bannissement précis.
             </span>
           </label>
 

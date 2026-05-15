@@ -16,7 +16,7 @@ type CatalogSearchParams = {
   marque?: string | string[];
   tri?: string | string[];
   disponibilite?: string | string[];
-  selection?: string | string[];
+  sélection?: string | string[];
   page?: string | string[];
 };
 
@@ -67,7 +67,7 @@ function catalogHref(input: {
   if (input.brand) params.set("marque", input.brand);
   if (input.sort && input.sort !== "latest") params.set("tri", input.sort);
   if (input.availability) params.set("disponibilite", input.availability);
-  if (input.promotedOnly) params.set("selection", "promotion");
+  if (input.promotedOnly) params.set("sélection", "promotion");
   if (input.page && input.page > 1) params.set("page", input.page.toString());
 
   const query = params.toString();
@@ -92,7 +92,7 @@ export default async function CatalogPage({
   const brand = normalizeSearchParam(params.marque);
   const sort = normalizeSearchParam(params.tri) ?? "latest";
   const availability = resolveAvailability(params.disponibilite);
-  const promotedOnly = normalizeSearchParam(params.selection) === "promotion";
+  const promotedOnly = normalizeSearchParam(params.sélection) === "promotion";
   const page = resolvePage(params.page);
   const result = await listCommerceProducts({
     category,
@@ -132,7 +132,7 @@ export default async function CatalogPage({
             {category ? <input type="hidden" name="categorie" value={category} /> : null}
             {brand ? <input type="hidden" name="marque" value={brand} /> : null}
             {availability ? <input type="hidden" name="disponibilite" value={availability} /> : null}
-            {promotedOnly ? <input type="hidden" name="selection" value="promotion" /> : null}
+            {promotedOnly ? <input type="hidden" name="sélection" value="promotion" /> : null}
             <div className="flex items-center gap-2">
               <Search className="ml-4 size-5 text-ec-muted" />
               <input
@@ -304,7 +304,7 @@ export default async function CatalogPage({
               {category ? <input type="hidden" name="categorie" value={category} /> : null}
               {brand ? <input type="hidden" name="marque" value={brand} /> : null}
               {availability ? <input type="hidden" name="disponibilite" value={availability} /> : null}
-              {promotedOnly ? <input type="hidden" name="selection" value="promotion" /> : null}
+              {promotedOnly ? <input type="hidden" name="sélection" value="promotion" /> : null}
               <label className="text-sm text-ec-muted" htmlFor="tri">
                 Trier
               </label>

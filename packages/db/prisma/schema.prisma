@@ -459,10 +459,13 @@ model CustomerProfile {
   defaultBillingAddress  CustomerAddress?              @relation("CustomerDefaultBillingAddress", fields: [defaultBillingAddressId], references: [id], onDelete: SetNull)
   defaultShippingAddress CustomerAddress?              @relation("CustomerDefaultShippingAddress", fields: [defaultShippingAddressId], references: [id], onDelete: SetNull)
   addresses              CustomerAddress[]             @relation("CustomerAddresses")
+  paymentMethods         CustomerPaymentMethod[]
   carts                  ShoppingCart[]
   checkoutSessions       CheckoutSession[]
   orders                 CommerceOrder[]
   promotionRedemptions   CommercePromotionRedemption[]
+  couponScopes           CommerceCouponCustomer[]
+  notifications          CustomerNotification[]
   wishlistItems          CommerceWishlistItem[]
   returnRequests         CommerceReturnRequest[]
   orderMessages          CommerceOrderMessage[]
@@ -492,13 +495,57 @@ model CustomerAddress {
   createdAt         DateTime            @default(now()) @map("created_at")
   updatedAt         DateTime            @updatedAt @map("updated_at")
 
-  customer           CustomerProfile   @relation("CustomerAddresses", fields: [customerId], references: [id], onDelete: Cascade)
-  defaultBillingFor  CustomerProfile[] @relation("CustomerDefaultBillingAddress")
-  defaultShippingFor CustomerProfile[] @relation("CustomerDefaultShippingAddress")
+  customer           CustomerProfile         @relation("CustomerAddresses", fields: [customerId], references: [id], onDelete: Cascade)
+  defaultBillingFor  CustomerProfile[]       @relation("CustomerDefaultBillingAddress")
+  defaultShippingFor CustomerProfile[]       @relation("CustomerDefaultShippingAddress")
+  paymentMethods     CustomerPaymentMethod[]
 
   @@index([customerId])
   @@index([type])
   @@map("customer_addresses")
+}
+
+model CustomerPaymentMethod {
+  id                      BigInt                @id @default(autoincrement())
+  customerId              BigInt                @map("customer_id")
+  method                  CommercePaymentMethod @default(BANK_TRANSFER)
+  label                   String?               @db.VarChar(120)
+  provider                String?               @db.VarChar(80)
+  providerPaymentMethodId String?               @map("provider_payment_method_id") @db.VarChar(191)
+  holderName              String?               @map("holder_name") @db.VarChar(255)
+  billingAddressId        BigInt?               @map("billing_address_id")
+  isDefault               Boolean               @default(false) @map("is_default")
+  isActive                Boolean               @default(true) @map("is_active")
+  createdAt               DateTime              @default(now()) @map("created_at")
+  updatedAt               DateTime              @updatedAt @map("updated_at")
+
+  customer       CustomerProfile  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  billingAddress CustomerAddress? @relation(fields: [billingAddressId], references: [id], onDelete: SetNull)
+
+  @@index([customerId])
+  @@index([billingAddressId])
+  @@index([method])
+  @@index([isActive])
+  @@map("customer_payment_methods")
+}
+
+model CustomerNotification {
+  id         BigInt    @id @default(autoincrement())
+  customerId BigInt    @map("customer_id")
+  orderId    BigInt?   @map("order_id")
+  type       String    @db.VarChar(80)
+  title      String    @db.VarChar(255)
+  body       String    @db.Text
+  href       String?   @db.VarChar(500)
+  readAt     DateTime? @map("read_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  customer CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  order    CommerceOrder?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([customerId, readAt, createdAt])
+  @@index([orderId])
+  @@map("customer_notifications")
 }
 
 model ShoppingCart {
@@ -606,6 +653,7 @@ model CommerceOrder {
   refunds              CommerceRefund[]
   fulfillments         CommerceFulfillment[]
   promotionRedemptions CommercePromotionRedemption[]
+  notifications        CustomerNotification[]
   invoice              CommerceInvoice?
   returnRequests       CommerceReturnRequest[]
   messages             CommerceOrderMessage[]
@@ -846,11 +894,25 @@ model CommerceCoupon {
   updatedAt             DateTime  @updatedAt @map("updated_at")
 
   promotion   CommercePromotion             @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  customers   CommerceCouponCustomer[]
   redemptions CommercePromotionRedemption[]
 
   @@index([promotionId])
   @@index([isActive])
   @@map("commerce_coupons")
+}
+
+model CommerceCouponCustomer {
+  couponId   BigInt   @map("coupon_id")
+  customerId BigInt   @map("customer_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  coupon   CommerceCoupon  @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  customer CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@id([couponId, customerId])
+  @@index([customerId])
+  @@map("commerce_coupon_customers")
 }
 
 model CommercePromotionProduct {

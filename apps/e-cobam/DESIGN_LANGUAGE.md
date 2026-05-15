@@ -43,7 +43,7 @@ The palette should not drift into a single blue theme. Use white, stone, ink, bl
 - **Header:** sticky, compact, searchable, with category navigation and cart entry.
 - **Product cards:** image-first, price/devis, stock status, brand/category label, and strong hover affordance.
 - **Catalog:** left filters on desktop, simple full-width search and sort controls.
-- **Product detail:** large gallery, sticky commerce panel rhythm, variant selection, attributes grouped by DB group, documents, and local cart action.
+- **Product detail:** large gallery, sticky commerce panel rhythm, variant sélection, attributes grouped by DB group, documents, and local cart action.
 - **Cart and checkout:** server-backed guest cart, checkout sessions, and pending orders. Keep validation on the server and keep manual payment states honest until an online provider is integrated.
 
 ## Data Rules

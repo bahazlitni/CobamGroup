@@ -901,7 +901,7 @@ export default function AllProductsPage() {
                 {actionHref ? (
                   <AnimatedUIButton
                     href={actionHref}
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     icon="arrow-right"
                   >
