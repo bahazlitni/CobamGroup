@@ -1,5 +1,7 @@
 "use client";
 
+import type { ProductAvailability, StockUnit } from "@prisma/client";
+
 export type CartItemSnapshot = {
   id: number;
   sku: string;
@@ -10,12 +12,45 @@ export type CartItemSnapshot = {
 
 export type CartLine = CartItemSnapshot & {
   quantity: number;
+  stock: {
+    available: string;
+    unit: StockUnit;
+    availability: ProductAvailability;
+    label: string;
+    tone: "available" | "warning" | "unavailable";
+  };
+  lineTotalTtc: string | null;
+  priceChanged: boolean;
 };
 
-const CART_KEY = "e-cobam-cart";
+export type CartState = {
+  lines: CartLine[];
+  summary: {
+    itemCount: number;
+    subtotalTtc: string;
+    taxTtc: string;
+    deliveryEstimateTtc: string | null;
+    totalTtc: string;
+    hasQuoteLines: boolean;
+  };
+};
+
+const LEGACY_CART_KEY = "e-cobam-cart";
 export const CART_UPDATED_EVENT = "e-cobam-cart-updated";
 
-function parseCart(value: string | null): CartLine[] {
+export const EMPTY_CART: CartState = {
+  lines: [],
+  summary: {
+    itemCount: 0,
+    subtotalTtc: "0",
+    taxTtc: "0",
+    deliveryEstimateTtc: null,
+    totalTtc: "0",
+    hasQuoteLines: false,
+  },
+};
+
+function parseLegacyCart(value: string | null): Array<CartItemSnapshot & { quantity: number }> {
   if (!value) {
     return [];
   }
@@ -27,14 +62,14 @@ function parseCart(value: string | null): CartLine[] {
     }
 
     return parsed
-      .filter((item): item is CartLine => {
+      .filter((item): item is CartItemSnapshot & { quantity: number } => {
         return (
           item != null &&
           typeof item === "object" &&
-          typeof (item as CartLine).id === "number" &&
-          typeof (item as CartLine).sku === "string" &&
-          typeof (item as CartLine).name === "string" &&
-          typeof (item as CartLine).quantity === "number"
+          typeof (item as CartItemSnapshot).id === "number" &&
+          typeof (item as CartItemSnapshot).sku === "string" &&
+          typeof (item as CartItemSnapshot).name === "string" &&
+          typeof (item as { quantity?: unknown }).quantity === "number"
         );
       })
       .map((item) => ({
@@ -46,47 +81,110 @@ function parseCart(value: string | null): CartLine[] {
   }
 }
 
-function writeCart(lines: CartLine[]) {
-  window.localStorage.setItem(CART_KEY, JSON.stringify(lines));
-  window.dispatchEvent(new CustomEvent(CART_UPDATED_EVENT));
+function dispatchCartUpdated(cart: CartState) {
+  window.dispatchEvent(new CustomEvent<CartState>(CART_UPDATED_EVENT, { detail: cart }));
 }
 
-export function readCart() {
+async function requestCart(path: string, init?: RequestInit, emit = false) {
+  const response = await fetch(path, {
+    ...init,
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+      ...init?.headers,
+    },
+  });
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message ?? "Le panier n'est pas disponible pour le moment.");
+  }
+
+  const cart = (await response.json()) as CartState;
+
+  if (emit) {
+    dispatchCartUpdated(cart);
+  }
+
+  return cart;
+}
+
+let legacySyncPromise: Promise<void> | null = null;
+
+async function syncLegacyCart() {
   if (typeof window === "undefined") {
-    return [];
+    return;
   }
 
-  return parseCart(window.localStorage.getItem(CART_KEY));
-}
-
-export function addCartItem(snapshot: CartItemSnapshot, quantity = 1) {
-  const lines = readCart();
-  const existing = lines.find((line) => line.id === snapshot.id);
-
-  if (existing) {
-    existing.quantity += Math.max(1, Math.floor(quantity));
-    writeCart(lines);
-    return lines;
+  if (legacySyncPromise) {
+    return legacySyncPromise;
   }
 
-  const next = [...lines, { ...snapshot, quantity: Math.max(1, Math.floor(quantity)) }];
-  writeCart(next);
-  return next;
+  legacySyncPromise = (async () => {
+    const legacyLines = parseLegacyCart(window.localStorage.getItem(LEGACY_CART_KEY));
+
+    if (legacyLines.length === 0) {
+      return;
+    }
+
+    for (const line of legacyLines) {
+      await requestCart(
+        "/api/cart",
+        {
+          method: "POST",
+          body: JSON.stringify({ productId: line.id, quantity: line.quantity }),
+        },
+        false,
+      );
+    }
+
+    window.localStorage.removeItem(LEGACY_CART_KEY);
+  })().catch((error) => {
+    legacySyncPromise = null;
+    console.error(error);
+  });
+
+  return legacySyncPromise;
 }
 
-export function updateCartLine(productId: number, quantity: number) {
-  const next = readCart()
-    .map((line) => (line.id === productId ? { ...line, quantity: Math.floor(quantity) } : line))
-    .filter((line) => line.quantity > 0);
-
-  writeCart(next);
-  return next;
+export async function readCart() {
+  await syncLegacyCart();
+  return requestCart("/api/cart");
 }
 
-export function clearCart() {
-  writeCart([]);
+export async function addCartItem(snapshot: CartItemSnapshot, quantity = 1) {
+  await syncLegacyCart();
+
+  return requestCart(
+    "/api/cart",
+    {
+      method: "POST",
+      body: JSON.stringify({ productId: snapshot.id, quantity }),
+    },
+    true,
+  );
 }
 
-export function getCartCount(lines: CartLine[]) {
+export async function updateCartLine(productId: number, quantity: number) {
+  await syncLegacyCart();
+
+  return requestCart(
+    `/api/cart/items/${productId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ quantity }),
+    },
+    true,
+  );
+}
+
+export async function clearCart() {
+  await syncLegacyCart();
+  return requestCart("/api/cart", { method: "DELETE" }, true);
+}
+
+export function getCartCount(cart: CartState | CartLine[]) {
+  const lines = Array.isArray(cart) ? cart : cart.lines;
+
   return lines.reduce((sum, line) => sum + line.quantity, 0);
 }

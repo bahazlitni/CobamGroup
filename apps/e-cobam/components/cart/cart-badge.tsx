@@ -2,21 +2,44 @@
 
 import { useEffect, useState } from "react";
 import { ShoppingBag } from "lucide-react";
-import { CART_UPDATED_EVENT, getCartCount, readCart } from "@/lib/cart-store";
+import { CART_UPDATED_EVENT, getCartCount, readCart, type CartState } from "@/lib/cart-store";
 
 export function CartBadge() {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    const refresh = () => setCount(getCartCount(readCart()));
+    let mounted = true;
 
-    refresh();
-    window.addEventListener(CART_UPDATED_EVENT, refresh);
-    window.addEventListener("storage", refresh);
+    async function refresh() {
+      try {
+        const cart = await readCart();
+        if (mounted) {
+          setCount(getCartCount(cart));
+        }
+      } catch {
+        if (mounted) {
+          setCount(0);
+        }
+      }
+    }
+
+    function handleCartUpdated(event: Event) {
+      const detail = (event as CustomEvent<CartState>).detail;
+
+      if (detail?.lines) {
+        setCount(getCartCount(detail));
+        return;
+      }
+
+      void refresh();
+    }
+
+    void refresh();
+    window.addEventListener(CART_UPDATED_EVENT, handleCartUpdated);
 
     return () => {
-      window.removeEventListener(CART_UPDATED_EVENT, refresh);
-      window.removeEventListener("storage", refresh);
+      mounted = false;
+      window.removeEventListener(CART_UPDATED_EVENT, handleCartUpdated);
     };
   }, []);
 

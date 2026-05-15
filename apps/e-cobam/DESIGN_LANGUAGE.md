@@ -44,13 +44,13 @@ The palette should not drift into a single blue theme. Use white, stone, ink, bl
 - **Product cards:** image-first, price/devis, stock status, brand/category label, and strong hover affordance.
 - **Catalog:** left filters on desktop, simple full-width search and sort controls.
 - **Product detail:** large gallery, sticky commerce panel rhythm, variant selection, attributes grouped by DB group, documents, and local cart action.
-- **Cart:** client-side shell until cart/order models exist. It must be honest about being a future checkout bridge.
+- **Cart and checkout:** server-backed guest cart, checkout sessions, and pending orders. Keep validation on the server and keep manual payment states honest until an online provider is integrated.
 
 ## Data Rules
 
 - Product/category/brand/media data must come from the shared Prisma database.
 - Media is served through the e-cobam `/api/media/:id/file` route and shared storage driver.
-- Cart currently uses localStorage only. Do not add fake order writes before real cart/order/customer models exist.
+- Cart and checkout data must use the shared ecommerce Prisma models. Do not add fake payment capture before an online payment provider is integrated.
 - If price is hidden or missing, display **Sur devis** instead of inventing a price.
 - The homepage uses a resilient landing data helper. Category/product loading failures must stay inside the affected section, never become a full-page storefront error.
 - Subcategory visibility flags should be respected when the database has the columns; until every environment is migrated, the landing page must still render real visible products without crashing.
@@ -77,6 +77,6 @@ Future checkout/account work should keep the existing flow:
 1. Product discovery in `/catalogue`.
 2. Product confidence in `/produits/[slug]`.
 3. Basket preparation in `/panier`.
-4. Future authenticated checkout/account routes can replace the local cart bridge without changing product browsing patterns.
+4. Checkout turns the guest cart into a pending order; future authenticated account routes can reuse the same order model.
 
 When adding new features, prefer small commerce-specific components and server-loaded data. Push client components only where state is truly interactive.

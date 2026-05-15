@@ -135,6 +135,131 @@ enum StockUnit {
   SQUARE_CENTIMETER
 }
 
+enum CustomerType {
+  INDIVIDUAL
+  COMPANY
+}
+
+enum CustomerAddressType {
+  BILLING
+  SHIPPING
+  BOTH
+}
+
+enum ShoppingCartStatus {
+  ACTIVE
+  CONVERTED
+  ABANDONED
+}
+
+enum CheckoutSessionStatus {
+  OPEN
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+enum CommerceOrderStatus {
+  DRAFT
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY_FOR_PICKUP
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum CommercePaymentMethod {
+  CARD
+  BANK_TRANSFER
+  CASH_ON_DELIVERY
+  PAY_IN_STORE
+}
+
+enum CommercePaymentStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum CommerceRefundStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+enum CommerceFulfillmentMethod {
+  DELIVERY
+  PICKUP
+}
+
+enum CommerceFulfillmentStatus {
+  PENDING
+  SCHEDULED
+  PREPARING
+  READY
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+  CANCELLED
+}
+
+enum CommercePromotionStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  EXPIRED
+  ARCHIVED
+}
+
+enum CommerceDiscountType {
+  PERCENT
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}
+
+enum CommerceInvoiceStatus {
+  DRAFT
+  ISSUED
+  CANCELLED
+}
+
+enum CommerceReturnRequestStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  RECEIVED
+  REFUNDED
+  CANCELLED
+}
+
+enum CommerceReturnItemStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  RECEIVED
+  REFUNDED
+}
+
+enum CommerceMessageVisibility {
+  CUSTOMER
+  STAFF_INTERNAL
+}
+
+enum CommerceStockReservationStatus {
+  RESERVED
+  RELEASED
+  CONSUMED
+  EXPIRED
+}
+
 model User {
   id                         String     @id @default(cuid())
   email                      String     @unique
@@ -159,10 +284,14 @@ model User {
   createdArticleCategories ArticleCategory[]   @relation("ArticleCategoryCreatedByUser")
   updatedArticleCategories ArticleCategory[]   @relation("ArticleCategoryUpdatedByUser")
   profile                  StaffProfile?
+  customerProfile          CustomerProfile?
 
-  receivedRoleAssignments UserRoleAssignment[] @relation("RoleAssignmentTarget")
-  grantedRoleAssignments  UserRoleAssignment[] @relation("RoleAssignmentGrantedBy")
-  revokedRoleAssignments  UserRoleAssignment[] @relation("RoleAssignmentRevokedBy")
+  receivedRoleAssignments   UserRoleAssignment[]       @relation("RoleAssignmentTarget")
+  grantedRoleAssignments    UserRoleAssignment[]       @relation("RoleAssignmentGrantedBy")
+  revokedRoleAssignments    UserRoleAssignment[]       @relation("RoleAssignmentRevokedBy")
+  commerceOrderStatusEvents CommerceOrderStatusEvent[] @relation("CommerceOrderStatusEventCreatedBy")
+  commerceFulfillmentEvents CommerceFulfillmentEvent[] @relation("CommerceFulfillmentEventCreatedBy")
+  commerceOrderMessages     CommerceOrderMessage[]     @relation("CommerceOrderMessageStaffUser")
 
   @@index([powerType])
   @@index([status])
@@ -310,6 +439,601 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
+model CustomerProfile {
+  id                       BigInt       @id @default(autoincrement())
+  userId                   String       @unique @map("user_id")
+  type                     CustomerType @default(INDIVIDUAL)
+  firstName                String?      @map("first_name") @db.VarChar(100)
+  lastName                 String?      @map("last_name") @db.VarChar(100)
+  companyName              String?      @map("company_name") @db.VarChar(255)
+  taxIdentifier            String?      @map("tax_identifier") @db.VarChar(100)
+  phone                    String?      @db.VarChar(50)
+  emailMarketingOptIn      Boolean      @default(false) @map("email_marketing_opt_in")
+  smsMarketingOptIn        Boolean      @default(false) @map("sms_marketing_opt_in")
+  defaultBillingAddressId  BigInt?      @map("default_billing_address_id")
+  defaultShippingAddressId BigInt?      @map("default_shipping_address_id")
+  createdAt                DateTime     @default(now()) @map("created_at")
+  updatedAt                DateTime     @updatedAt @map("updated_at")
+
+  user                   User                          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  defaultBillingAddress  CustomerAddress?              @relation("CustomerDefaultBillingAddress", fields: [defaultBillingAddressId], references: [id], onDelete: SetNull)
+  defaultShippingAddress CustomerAddress?              @relation("CustomerDefaultShippingAddress", fields: [defaultShippingAddressId], references: [id], onDelete: SetNull)
+  addresses              CustomerAddress[]             @relation("CustomerAddresses")
+  carts                  ShoppingCart[]
+  checkoutSessions       CheckoutSession[]
+  orders                 CommerceOrder[]
+  promotionRedemptions   CommercePromotionRedemption[]
+  wishlistItems          CommerceWishlistItem[]
+  returnRequests         CommerceReturnRequest[]
+  orderMessages          CommerceOrderMessage[]
+  stockReservations      CommerceStockReservation[]
+
+  @@index([type])
+  @@index([defaultBillingAddressId])
+  @@index([defaultShippingAddressId])
+  @@map("customer_profiles")
+}
+
+model CustomerAddress {
+  id                BigInt              @id @default(autoincrement())
+  customerId        BigInt              @map("customer_id")
+  type              CustomerAddressType @default(BOTH)
+  label             String?             @db.VarChar(100)
+  fullName          String              @map("full_name") @db.VarChar(255)
+  phone             String?             @db.VarChar(50)
+  addressLine1      String              @map("address_line_1") @db.VarChar(255)
+  addressLine2      String?             @map("address_line_2") @db.VarChar(255)
+  city              String              @db.VarChar(120)
+  governorate       String?             @db.VarChar(120)
+  postalCode        String?             @map("postal_code") @db.VarChar(30)
+  countryCode       String              @default("TN") @map("country_code") @db.VarChar(2)
+  isDefaultBilling  Boolean             @default(false) @map("is_default_billing")
+  isDefaultShipping Boolean             @default(false) @map("is_default_shipping")
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+
+  customer           CustomerProfile   @relation("CustomerAddresses", fields: [customerId], references: [id], onDelete: Cascade)
+  defaultBillingFor  CustomerProfile[] @relation("CustomerDefaultBillingAddress")
+  defaultShippingFor CustomerProfile[] @relation("CustomerDefaultShippingAddress")
+
+  @@index([customerId])
+  @@index([type])
+  @@map("customer_addresses")
+}
+
+model ShoppingCart {
+  id         BigInt             @id @default(autoincrement())
+  customerId BigInt?            @map("customer_id")
+  guestToken String?            @unique @map("guest_token") @db.VarChar(191)
+  status     ShoppingCartStatus @default(ACTIVE)
+  currency   String             @default("TND") @db.VarChar(3)
+  expiresAt  DateTime?          @map("expires_at")
+  createdAt  DateTime           @default(now()) @map("created_at")
+  updatedAt  DateTime           @updatedAt @map("updated_at")
+
+  customer          CustomerProfile?           @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items             ShoppingCartItem[]
+  checkoutSessions  CheckoutSession[]
+  convertedOrder    CommerceOrder?             @relation("OrderSourceCart")
+  stockReservations CommerceStockReservation[]
+
+  @@index([customerId, status])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("shopping_carts")
+}
+
+model ShoppingCartItem {
+  id            BigInt   @id @default(autoincrement())
+  cartId        BigInt   @map("cart_id")
+  productId     BigInt   @map("product_id")
+  quantity      Decimal  @db.Decimal(12, 3)
+  unitPriceTtc  Decimal? @map("unit_price_ttc") @db.Decimal(12, 3)
+  vatRate       Decimal  @default(19.000) @map("vat_rate") @db.Decimal(5, 3)
+  priceSnapshot Json?    @map("price_snapshot") @db.Json
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  cart    ShoppingCart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([cartId, productId])
+  @@index([productId])
+  @@map("shopping_cart_items")
+}
+
+model CheckoutSession {
+  id                      BigInt                @id @default(autoincrement())
+  cartId                  BigInt                @map("cart_id")
+  customerId              BigInt?               @map("customer_id")
+  status                  CheckoutSessionStatus @default(OPEN)
+  currency                String                @default("TND") @db.VarChar(3)
+  subtotalTtc             Decimal               @default(0) @map("subtotal_ttc") @db.Decimal(12, 3)
+  discountTtc             Decimal               @default(0) @map("discount_ttc") @db.Decimal(12, 3)
+  shippingTtc             Decimal               @default(0) @map("shipping_ttc") @db.Decimal(12, 3)
+  taxTtc                  Decimal               @default(0) @map("tax_ttc") @db.Decimal(12, 3)
+  totalTtc                Decimal               @default(0) @map("total_ttc") @db.Decimal(12, 3)
+  shippingAddressSnapshot Json?                 @map("shipping_address_snapshot") @db.Json
+  billingAddressSnapshot  Json?                 @map("billing_address_snapshot") @db.Json
+  expiresAt               DateTime              @map("expires_at")
+  completedAt             DateTime?             @map("completed_at")
+  createdAt               DateTime              @default(now()) @map("created_at")
+  updatedAt               DateTime              @updatedAt @map("updated_at")
+
+  cart     ShoppingCart      @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  customer CustomerProfile?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  payments CommercePayment[]
+
+  @@index([cartId])
+  @@index([customerId])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("checkout_sessions")
+}
+
+model CommerceOrder {
+  id                      BigInt                    @id @default(autoincrement())
+  orderNumber             String                    @unique @map("order_number") @db.VarChar(50)
+  customerId              BigInt?                   @map("customer_id")
+  cartId                  BigInt?                   @unique @map("cart_id")
+  guestEmail              String?                   @map("guest_email") @db.VarChar(255)
+  guestPhone              String?                   @map("guest_phone") @db.VarChar(50)
+  status                  CommerceOrderStatus       @default(PENDING)
+  paymentStatus           CommercePaymentStatus     @default(PENDING) @map("payment_status")
+  fulfillmentStatus       CommerceFulfillmentStatus @default(PENDING) @map("fulfillment_status")
+  currency                String                    @default("TND") @db.VarChar(3)
+  subtotalTtc             Decimal                   @default(0) @map("subtotal_ttc") @db.Decimal(12, 3)
+  discountTtc             Decimal                   @default(0) @map("discount_ttc") @db.Decimal(12, 3)
+  shippingTtc             Decimal                   @default(0) @map("shipping_ttc") @db.Decimal(12, 3)
+  taxTtc                  Decimal                   @default(0) @map("tax_ttc") @db.Decimal(12, 3)
+  totalTtc                Decimal                   @default(0) @map("total_ttc") @db.Decimal(12, 3)
+  customerSnapshot        Json?                     @map("customer_snapshot") @db.Json
+  billingAddressSnapshot  Json?                     @map("billing_address_snapshot") @db.Json
+  shippingAddressSnapshot Json?                     @map("shipping_address_snapshot") @db.Json
+  notes                   String?                   @db.Text
+  cancellationReason      String?                   @map("cancellation_reason") @db.Text
+  placedAt                DateTime                  @default(now()) @map("placed_at")
+  confirmedAt             DateTime?                 @map("confirmed_at")
+  cancelledAt             DateTime?                 @map("cancelled_at")
+  createdAt               DateTime                  @default(now()) @map("created_at")
+  updatedAt               DateTime                  @updatedAt @map("updated_at")
+
+  customer             CustomerProfile?              @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  cart                 ShoppingCart?                 @relation("OrderSourceCart", fields: [cartId], references: [id], onDelete: SetNull)
+  items                CommerceOrderItem[]
+  statusEvents         CommerceOrderStatusEvent[]
+  payments             CommercePayment[]
+  refunds              CommerceRefund[]
+  fulfillments         CommerceFulfillment[]
+  promotionRedemptions CommercePromotionRedemption[]
+  invoice              CommerceInvoice?
+  returnRequests       CommerceReturnRequest[]
+  messages             CommerceOrderMessage[]
+  stockReservations    CommerceStockReservation[]
+
+  @@index([customerId, placedAt])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([fulfillmentStatus])
+  @@index([placedAt])
+  @@map("commerce_orders")
+}
+
+model CommerceOrderItem {
+  id                 BigInt    @id @default(autoincrement())
+  orderId            BigInt    @map("order_id")
+  productId          BigInt?   @map("product_id")
+  sku                String    @db.VarChar(100)
+  name               String    @db.VarChar(255)
+  slug               String?   @db.VarChar(255)
+  imageUrl           String?   @map("image_url") @db.VarChar(500)
+  brandName          String?   @map("brand_name") @db.VarChar(255)
+  quantity           Decimal   @db.Decimal(12, 3)
+  stockUnit          StockUnit @default(PIECE) @map("stock_unit")
+  unitPriceTtc       Decimal?  @map("unit_price_ttc") @db.Decimal(12, 3)
+  vatRate            Decimal   @default(19.000) @map("vat_rate") @db.Decimal(5, 3)
+  discountTtc        Decimal   @default(0) @map("discount_ttc") @db.Decimal(12, 3)
+  lineSubtotalTtc    Decimal   @default(0) @map("line_subtotal_ttc") @db.Decimal(12, 3)
+  lineTotalTtc       Decimal   @default(0) @map("line_total_ttc") @db.Decimal(12, 3)
+  attributesSnapshot Json?     @map("attributes_snapshot") @db.Json
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  order       CommerceOrder        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product?             @relation(fields: [productId], references: [id], onDelete: SetNull)
+  returnItems CommerceReturnItem[]
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([sku])
+  @@map("commerce_order_items")
+}
+
+model CommerceOrderStatusEvent {
+  id              BigInt               @id @default(autoincrement())
+  orderId         BigInt               @map("order_id")
+  fromStatus      CommerceOrderStatus? @map("from_status")
+  toStatus        CommerceOrderStatus  @map("to_status")
+  note            String?              @db.Text
+  createdByUserId String?              @map("created_by_user_id")
+  createdAt       DateTime             @default(now()) @map("created_at")
+
+  order     CommerceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdBy User?         @relation("CommerceOrderStatusEventCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([orderId, createdAt])
+  @@index([createdByUserId])
+  @@map("commerce_order_status_events")
+}
+
+model CommercePayment {
+  id                   BigInt                @id @default(autoincrement())
+  orderId              BigInt                @map("order_id")
+  checkoutSessionId    BigInt?               @map("checkout_session_id")
+  provider             String                @db.VarChar(80)
+  method               CommercePaymentMethod
+  status               CommercePaymentStatus @default(PENDING)
+  amount               Decimal               @db.Decimal(12, 3)
+  currency             String                @default("TND") @db.VarChar(3)
+  providerPaymentId    String?               @map("provider_payment_id") @db.VarChar(191)
+  providerSessionId    String?               @map("provider_session_id") @db.VarChar(191)
+  transactionReference String?               @map("transaction_reference") @db.VarChar(191)
+  failureCode          String?               @map("failure_code") @db.VarChar(100)
+  failureReason        String?               @map("failure_reason") @db.Text
+  paidAt               DateTime?             @map("paid_at")
+  failedAt             DateTime?             @map("failed_at")
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @updatedAt @map("updated_at")
+
+  order           CommerceOrder          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  checkoutSession CheckoutSession?       @relation(fields: [checkoutSessionId], references: [id], onDelete: SetNull)
+  events          CommercePaymentEvent[]
+  refunds         CommerceRefund[]
+
+  @@index([orderId])
+  @@index([checkoutSessionId])
+  @@index([provider, providerPaymentId])
+  @@index([status])
+  @@map("commerce_payments")
+}
+
+model CommercePaymentEvent {
+  id              BigInt    @id @default(autoincrement())
+  paymentId       BigInt?   @map("payment_id")
+  provider        String    @db.VarChar(80)
+  providerEventId String    @map("provider_event_id") @db.VarChar(191)
+  type            String    @db.VarChar(120)
+  payload         Json      @db.Json
+  receivedAt      DateTime  @default(now()) @map("received_at")
+  processedAt     DateTime? @map("processed_at")
+
+  payment CommercePayment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, providerEventId])
+  @@index([paymentId])
+  @@index([receivedAt])
+  @@map("commerce_payment_events")
+}
+
+model CommerceRefund {
+  id               BigInt               @id @default(autoincrement())
+  paymentId        BigInt               @map("payment_id")
+  orderId          BigInt               @map("order_id")
+  amount           Decimal              @db.Decimal(12, 3)
+  currency         String               @default("TND") @db.VarChar(3)
+  status           CommerceRefundStatus @default(PENDING)
+  reason           String?              @db.Text
+  providerRefundId String?              @map("provider_refund_id") @db.VarChar(191)
+  createdAt        DateTime             @default(now()) @map("created_at")
+  updatedAt        DateTime             @updatedAt @map("updated_at")
+
+  payment CommercePayment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  order   CommerceOrder   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId])
+  @@index([orderId])
+  @@index([status])
+  @@map("commerce_refunds")
+}
+
+model PickupLocation {
+  id           BigInt   @id @default(autoincrement())
+  slug         String   @unique @db.VarChar(150)
+  name         String   @db.VarChar(255)
+  phone        String?  @db.VarChar(50)
+  addressLine1 String   @map("address_line_1") @db.VarChar(255)
+  addressLine2 String?  @map("address_line_2") @db.VarChar(255)
+  city         String   @db.VarChar(120)
+  governorate  String?  @db.VarChar(120)
+  postalCode   String?  @map("postal_code") @db.VarChar(30)
+  countryCode  String   @default("TN") @map("country_code") @db.VarChar(2)
+  isActive     Boolean  @default(true) @map("is_active")
+  sortOrder    Int      @default(0) @map("sort_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  fulfillments CommerceFulfillment[]
+
+  @@index([isActive])
+  @@index([sortOrder])
+  @@map("pickup_locations")
+}
+
+model CommerceFulfillment {
+  id                      BigInt                    @id @default(autoincrement())
+  orderId                 BigInt                    @map("order_id")
+  method                  CommerceFulfillmentMethod
+  status                  CommerceFulfillmentStatus @default(PENDING)
+  pickupLocationId        BigInt?                   @map("pickup_location_id")
+  deliveryAddressSnapshot Json?                     @map("delivery_address_snapshot") @db.Json
+  requestedDate           DateTime?                 @map("requested_date")
+  scheduledAt             DateTime?                 @map("scheduled_at")
+  shippedAt               DateTime?                 @map("shipped_at")
+  deliveredAt             DateTime?                 @map("delivered_at")
+  trackingNumber          String?                   @map("tracking_number") @db.VarChar(120)
+  carrierName             String?                   @map("carrier_name") @db.VarChar(120)
+  notes                   String?                   @db.Text
+  createdAt               DateTime                  @default(now()) @map("created_at")
+  updatedAt               DateTime                  @updatedAt @map("updated_at")
+
+  order          CommerceOrder              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  pickupLocation PickupLocation?            @relation(fields: [pickupLocationId], references: [id], onDelete: SetNull)
+  events         CommerceFulfillmentEvent[]
+
+  @@index([orderId])
+  @@index([pickupLocationId])
+  @@index([method])
+  @@index([status])
+  @@map("commerce_fulfillments")
+}
+
+model CommerceFulfillmentEvent {
+  id              BigInt                     @id @default(autoincrement())
+  fulfillmentId   BigInt                     @map("fulfillment_id")
+  fromStatus      CommerceFulfillmentStatus? @map("from_status")
+  toStatus        CommerceFulfillmentStatus  @map("to_status")
+  note            String?                    @db.Text
+  trackingPayload Json?                      @map("tracking_payload") @db.Json
+  createdByUserId String?                    @map("created_by_user_id")
+  createdAt       DateTime                   @default(now()) @map("created_at")
+
+  fulfillment CommerceFulfillment @relation(fields: [fulfillmentId], references: [id], onDelete: Cascade)
+  createdBy   User?               @relation("CommerceFulfillmentEventCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([fulfillmentId, createdAt])
+  @@index([createdByUserId])
+  @@map("commerce_fulfillment_events")
+}
+
+model CommercePromotion {
+  id                 BigInt                  @id @default(autoincrement())
+  name               String                  @db.VarChar(255)
+  status             CommercePromotionStatus @default(DRAFT)
+  discountType       CommerceDiscountType    @map("discount_type")
+  discountValue      Decimal                 @map("discount_value") @db.Decimal(12, 3)
+  startsAt           DateTime?               @map("starts_at")
+  endsAt             DateTime?               @map("ends_at")
+  minimumSubtotalTtc Decimal?                @map("minimum_subtotal_ttc") @db.Decimal(12, 3)
+  usageLimit         Int?                    @map("usage_limit")
+  usageCount         Int                     @default(0) @map("usage_count")
+  rulesJson          Json?                   @map("rules_json") @db.Json
+  createdAt          DateTime                @default(now()) @map("created_at")
+  updatedAt          DateTime                @updatedAt @map("updated_at")
+
+  coupons     CommerceCoupon[]
+  products    CommercePromotionProduct[]
+  categories  CommercePromotionCategory[]
+  brands      CommercePromotionBrand[]
+  redemptions CommercePromotionRedemption[]
+
+  @@index([status])
+  @@index([startsAt])
+  @@index([endsAt])
+  @@map("commerce_promotions")
+}
+
+model CommerceCoupon {
+  id                    BigInt    @id @default(autoincrement())
+  promotionId           BigInt    @map("promotion_id")
+  code                  String    @unique @db.VarChar(80)
+  usageLimit            Int?      @map("usage_limit")
+  usageLimitPerCustomer Int?      @map("usage_limit_per_customer")
+  usageCount            Int       @default(0) @map("usage_count")
+  startsAt              DateTime? @map("starts_at")
+  endsAt                DateTime? @map("ends_at")
+  isActive              Boolean   @default(true) @map("is_active")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  promotion   CommercePromotion             @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  redemptions CommercePromotionRedemption[]
+
+  @@index([promotionId])
+  @@index([isActive])
+  @@map("commerce_coupons")
+}
+
+model CommercePromotionProduct {
+  promotionId BigInt @map("promotion_id")
+  productId   BigInt @map("product_id")
+
+  promotion CommercePromotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  product   Product           @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@id([promotionId, productId])
+  @@index([productId])
+  @@map("commerce_promotion_products")
+}
+
+model CommercePromotionCategory {
+  promotionId BigInt @map("promotion_id")
+  categoryId  BigInt @map("category_id")
+
+  promotion CommercePromotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  category  ProductCategory   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@id([promotionId, categoryId])
+  @@index([categoryId])
+  @@map("commerce_promotion_categories")
+}
+
+model CommercePromotionBrand {
+  promotionId BigInt @map("promotion_id")
+  brandId     BigInt @map("brand_id")
+
+  promotion CommercePromotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  brand     Organization      @relation(fields: [brandId], references: [id], onDelete: Restrict)
+
+  @@id([promotionId, brandId])
+  @@index([brandId])
+  @@map("commerce_promotion_brands")
+}
+
+model CommercePromotionRedemption {
+  id                BigInt   @id @default(autoincrement())
+  promotionId       BigInt   @map("promotion_id")
+  couponId          BigInt?  @map("coupon_id")
+  customerId        BigInt?  @map("customer_id")
+  orderId           BigInt   @map("order_id")
+  discountAmountTtc Decimal  @map("discount_amount_ttc") @db.Decimal(12, 3)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  promotion CommercePromotion @relation(fields: [promotionId], references: [id], onDelete: Restrict)
+  coupon    CommerceCoupon?   @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  customer  CustomerProfile?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  order     CommerceOrder     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([promotionId, orderId])
+  @@index([couponId])
+  @@index([customerId])
+  @@index([orderId])
+  @@map("commerce_promotion_redemptions")
+}
+
+model CommerceInvoice {
+  id            BigInt                @id @default(autoincrement())
+  orderId       BigInt                @unique @map("order_id")
+  invoiceNumber String                @unique @map("invoice_number") @db.VarChar(80)
+  status        CommerceInvoiceStatus @default(DRAFT)
+  issuedAt      DateTime?             @map("issued_at")
+  totalTtc      Decimal               @default(0) @map("total_ttc") @db.Decimal(12, 3)
+  currency      String                @default("TND") @db.VarChar(3)
+  pdfMediaId    BigInt?               @map("pdf_media_id")
+  createdAt     DateTime              @default(now()) @map("created_at")
+  updatedAt     DateTime              @updatedAt @map("updated_at")
+
+  order    CommerceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  pdfMedia Media?        @relation("CommerceInvoicePdfMedia", fields: [pdfMediaId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([pdfMediaId])
+  @@map("commerce_invoices")
+}
+
+model CommerceReturnRequest {
+  id           BigInt                      @id @default(autoincrement())
+  orderId      BigInt                      @map("order_id")
+  customerId   BigInt?                     @map("customer_id")
+  status       CommerceReturnRequestStatus @default(REQUESTED)
+  reason       String?                     @db.VarChar(255)
+  customerNote String?                     @map("customer_note") @db.Text
+  staffNote    String?                     @map("staff_note") @db.Text
+  requestedAt  DateTime                    @default(now()) @map("requested_at")
+  resolvedAt   DateTime?                   @map("resolved_at")
+  createdAt    DateTime                    @default(now()) @map("created_at")
+  updatedAt    DateTime                    @updatedAt @map("updated_at")
+
+  order    CommerceOrder        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customer CustomerProfile?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items    CommerceReturnItem[]
+
+  @@index([orderId])
+  @@index([customerId])
+  @@index([status])
+  @@map("commerce_return_requests")
+}
+
+model CommerceReturnItem {
+  id              BigInt                   @id @default(autoincrement())
+  returnRequestId BigInt                   @map("return_request_id")
+  orderItemId     BigInt                   @map("order_item_id")
+  quantity        Decimal                  @db.Decimal(12, 3)
+  status          CommerceReturnItemStatus @default(REQUESTED)
+  reason          String?                  @db.VarChar(255)
+  refundAmountTtc Decimal?                 @map("refund_amount_ttc") @db.Decimal(12, 3)
+  createdAt       DateTime                 @default(now()) @map("created_at")
+  updatedAt       DateTime                 @updatedAt @map("updated_at")
+
+  returnRequest CommerceReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+  orderItem     CommerceOrderItem     @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+
+  @@index([returnRequestId])
+  @@index([orderItemId])
+  @@index([status])
+  @@map("commerce_return_items")
+}
+
+model CommerceOrderMessage {
+  id          BigInt                    @id @default(autoincrement())
+  orderId     BigInt                    @map("order_id")
+  customerId  BigInt?                   @map("customer_id")
+  staffUserId String?                   @map("staff_user_id")
+  visibility  CommerceMessageVisibility @default(CUSTOMER)
+  subject     String?                   @db.VarChar(255)
+  body        String                    @db.Text
+  readAt      DateTime?                 @map("read_at")
+  createdAt   DateTime                  @default(now()) @map("created_at")
+
+  order     CommerceOrder    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customer  CustomerProfile? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  staffUser User?            @relation("CommerceOrderMessageStaffUser", fields: [staffUserId], references: [id], onDelete: SetNull)
+
+  @@index([orderId, createdAt])
+  @@index([customerId])
+  @@index([staffUserId])
+  @@index([visibility])
+  @@map("commerce_order_messages")
+}
+
+model CommerceWishlistItem {
+  id         BigInt   @id @default(autoincrement())
+  customerId BigInt   @map("customer_id")
+  productId  BigInt   @map("product_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  customer CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product  Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, productId])
+  @@index([productId])
+  @@map("commerce_wishlist_items")
+}
+
+model CommerceStockReservation {
+  id         BigInt                         @id @default(autoincrement())
+  productId  BigInt                         @map("product_id")
+  orderId    BigInt?                        @map("order_id")
+  cartId     BigInt?                        @map("cart_id")
+  customerId BigInt?                        @map("customer_id")
+  quantity   Decimal                        @db.Decimal(12, 3)
+  status     CommerceStockReservationStatus @default(RESERVED)
+  expiresAt  DateTime?                      @map("expires_at")
+  createdAt  DateTime                       @default(now()) @map("created_at")
+  updatedAt  DateTime                       @updatedAt @map("updated_at")
+
+  product  Product          @relation(fields: [productId], references: [id], onDelete: Restrict)
+  order    CommerceOrder?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  cart     ShoppingCart?    @relation(fields: [cartId], references: [id], onDelete: SetNull)
+  customer CustomerProfile? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([productId, status])
+  @@index([orderId])
+  @@index([cartId])
+  @@index([customerId])
+  @@index([expiresAt])
+  @@map("commerce_stock_reservations")
+}
+
 model ProductCategory {
   id             BigInt   @id @default(autoincrement())
   name           String   @db.VarChar(255)
@@ -324,8 +1048,9 @@ model ProductCategory {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  imageMedia    Media?               @relation("ProductCategoryImageMedia", fields: [imageMediaId], references: [id], onDelete: SetNull)
-  subcategories ProductSubcategory[]
+  imageMedia     Media?                      @relation("ProductCategoryImageMedia", fields: [imageMediaId], references: [id], onDelete: SetNull)
+  subcategories  ProductSubcategory[]
+  promotionLinks CommercePromotionCategory[]
 
   @@index([imageMediaId])
   @@index([sortOrder])
@@ -408,12 +1133,17 @@ model Product {
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   familyMembership   ProductFamilyMember?
-  defaultForFamilies ProductFamily[]          @relation("ProductFamilyDefaultProduct")
-  brand              Organization?            @relation(fields: [brandId], references: [id], onDelete: SetNull)
-  productType        ProductType?             @relation(fields: [productTypeId], references: [id], onDelete: SetNull)
+  defaultForFamilies ProductFamily[]            @relation("ProductFamilyDefaultProduct")
+  brand              Organization?              @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  productType        ProductType?               @relation(fields: [productTypeId], references: [id], onDelete: SetNull)
   subcategories      ProductSubcategoryLink[]
   media              ProductMedia[]
   attributes         ProductAttribute[]
+  cartItems          ShoppingCartItem[]
+  orderItems         CommerceOrderItem[]
+  promotionLinks     CommercePromotionProduct[]
+  wishlistItems      CommerceWishlistItem[]
+  stockReservations  CommerceStockReservation[]
 
   @@index([brandId])
   @@index([productTypeId])
@@ -440,8 +1170,9 @@ model Organization {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  logoMedia Media?    @relation("OrganizationLogoMedia", fields: [logoMediaId], references: [id], onDelete: SetNull)
-  products  Product[]
+  logoMedia           Media?                   @relation("OrganizationLogoMedia", fields: [logoMediaId], references: [id], onDelete: SetNull)
+  products            Product[]
+  promotionBrandLinks CommercePromotionBrand[]
 
   @@index([logoMediaId])
   @@map("organizations")
@@ -842,6 +1573,7 @@ model Media {
   staffProfileAvatarFor      StaffProfile[]       @relation("StaffProfileAvatarMedia")
   productFinishImageFor      ProductFinish[]      @relation("ProductFinishImageMedia")
   organizationLogoFor        Organization[]       @relation("OrganizationLogoMedia")
+  commerceInvoicePdfs        CommerceInvoice[]    @relation("CommerceInvoicePdfMedia")
   articleCoverFor            Article[]            @relation("ArticleCoverMedia")
   articleOgImageFor          Article[]            @relation("ArticleOgImageMedia")
   articleMediaLinks          ArticleMediaLink[]

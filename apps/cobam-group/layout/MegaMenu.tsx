@@ -12,6 +12,7 @@ import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 interface MegaMenuProps {
   menuLabel: string;
   data: PublicMegaMenuProductCategory[];
+  triggerClassName?: string;
 }
 
 const DEFAULT_THEME_COLOR = "#9CA3AF";
@@ -49,7 +50,7 @@ function withAlpha(hex: string | null | undefined, alpha: number) {
   return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
 }
 
-export default function MegaMenu({ menuLabel, data }: MegaMenuProps) {
+export default function MegaMenu({ menuLabel, data, triggerClassName }: MegaMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [hoveredSubCategory, setHoveredSubCategory] =
@@ -142,7 +143,10 @@ export default function MegaMenu({ menuLabel, data }: MegaMenuProps) {
             closeMenu();
           }
         }}
-        className="flex items-center gap-1 bg-transparent px-0 py-0 text-sm font-semibold text-cobam-dark-blue transition-colors outline-none hover:text-cobam-water-blue focus:text-cobam-water-blue"
+        className={cn(
+          "flex items-center gap-1 bg-transparent px-0 py-0 text-sm font-semibold text-cobam-dark-blue transition-colors outline-none hover:text-cobam-water-blue focus:text-cobam-water-blue",
+          triggerClassName,
+        )}
       >
         <span className="font-semibold text-[13px] tracking-[0.18em] uppercase transition-colors whitespace-nowrap pointer-events-none">{menuLabel}</span>
         <ChevronDown

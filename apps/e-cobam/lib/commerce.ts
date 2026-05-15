@@ -579,11 +579,30 @@ function productSearchWhere(search?: string | null) {
   } satisfies Prisma.ProductWhereInput;
 }
 
+function productAvailabilityWhere(availability?: ProductAvailability | null) {
+  if (!availability) {
+    return {};
+  }
+
+  if (availability === "IN_STOCK") {
+    return {
+      stockAvailability: "IN_STOCK",
+      stockAvailable: { gt: 0 },
+    } satisfies Prisma.ProductWhereInput;
+  }
+
+  return {
+    stockAvailability: availability,
+  } satisfies Prisma.ProductWhereInput;
+}
+
 function productBaseWhere(input: {
   categorySlug?: string | null;
   brandSlug?: string | null;
   search?: string | null;
   standaloneOnly?: boolean;
+  availability?: ProductAvailability | null;
+  promotedOnly?: boolean;
 }) {
   return {
     visibleEcommerce: true,
@@ -597,6 +616,8 @@ function productBaseWhere(input: {
         }
       : {}),
     ...(input.brandSlug ? { brand: { is: { slug: input.brandSlug } } } : {}),
+    ...(input.promotedOnly ? { isPromoted: true } : {}),
+    ...productAvailabilityWhere(input.availability),
     ...categoryWhere(input.categorySlug),
     ...productSearchWhere(input.search),
   } satisfies Prisma.ProductWhereInput;
@@ -606,11 +627,15 @@ function familyWhere(input: {
   categorySlug?: string | null;
   brandSlug?: string | null;
   search?: string | null;
+  availability?: ProductAvailability | null;
+  promotedOnly?: boolean;
 }) {
   const productFilter = productBaseWhere({
     categorySlug: input.categorySlug,
     brandSlug: input.brandSlug,
     search: input.search,
+    availability: input.availability,
+    promotedOnly: input.promotedOnly,
   });
 
   return {
@@ -753,6 +778,8 @@ export async function listCommerceProducts(input: {
   brand?: string | null;
   search?: string | null;
   sort?: string | null;
+  availability?: ProductAvailability | null;
+  promotedOnly?: boolean;
   page?: number;
   pageSize?: number;
 }): Promise<CommerceCatalogResult> {
@@ -765,6 +792,8 @@ export async function listCommerceProducts(input: {
         categorySlug: input.category,
         brandSlug: input.brand,
         search: input.search,
+        availability: input.availability,
+        promotedOnly: input.promotedOnly,
       }),
       take: 120,
       select: PRODUCT_FAMILY_SELECT,
@@ -775,6 +804,8 @@ export async function listCommerceProducts(input: {
         categorySlug: input.category,
         brandSlug: input.brand,
         search: input.search,
+        availability: input.availability,
+        promotedOnly: input.promotedOnly,
         standaloneOnly: true,
       }),
       take: 160,

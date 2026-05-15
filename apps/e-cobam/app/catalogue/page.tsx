@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ProductAvailability } from "@prisma/client";
 import Link from "next/link";
 import { Filter, Search, SlidersHorizontal } from "lucide-react";
 import { ProductCard } from "@/components/commerce/product-card";
@@ -14,6 +15,8 @@ type CatalogSearchParams = {
   categorie?: string | string[];
   marque?: string | string[];
   tri?: string | string[];
+  disponibilite?: string | string[];
+  selection?: string | string[];
   page?: string | string[];
 };
 
@@ -38,6 +41,46 @@ function resolvePage(value: string | string[] | undefined) {
   return Number.isInteger(page) && page > 0 ? page : 1;
 }
 
+function resolveAvailability(value: string | string[] | undefined): ProductAvailability | null {
+  const raw = normalizeSearchParam(value);
+
+  if (raw === "IN_STOCK" || raw === "ON_ORDER" || raw === "OUT_OF_STOCK") {
+    return raw;
+  }
+
+  return null;
+}
+
+function catalogHref(input: {
+  search?: string | null;
+  category?: string | null;
+  brand?: string | null;
+  sort?: string | null;
+  availability?: ProductAvailability | null;
+  promotedOnly?: boolean;
+  page?: number | null;
+}) {
+  const params = new URLSearchParams();
+
+  if (input.search) params.set("search", input.search);
+  if (input.category) params.set("categorie", input.category);
+  if (input.brand) params.set("marque", input.brand);
+  if (input.sort && input.sort !== "latest") params.set("tri", input.sort);
+  if (input.availability) params.set("disponibilite", input.availability);
+  if (input.promotedOnly) params.set("selection", "promotion");
+  if (input.page && input.page > 1) params.set("page", input.page.toString());
+
+  const query = params.toString();
+  return query ? `/catalogue?${query}` : "/catalogue";
+}
+
+const availabilityOptions: Array<{ value: ProductAvailability | null; label: string }> = [
+  { value: null, label: "Toutes disponibilités" },
+  { value: "IN_STOCK", label: "En stock" },
+  { value: "ON_ORDER", label: "Sur commande" },
+  { value: "OUT_OF_STOCK", label: "Rupture" },
+];
+
 export default async function CatalogPage({
   searchParams,
 }: {
@@ -48,15 +91,26 @@ export default async function CatalogPage({
   const category = normalizeSearchParam(params.categorie);
   const brand = normalizeSearchParam(params.marque);
   const sort = normalizeSearchParam(params.tri) ?? "latest";
+  const availability = resolveAvailability(params.disponibilite);
+  const promotedOnly = normalizeSearchParam(params.selection) === "promotion";
   const page = resolvePage(params.page);
   const result = await listCommerceProducts({
     category,
     brand,
     search,
     sort,
+    availability,
+    promotedOnly,
     page,
   });
   const totalPages = Math.max(1, Math.ceil(result.total / 36));
+  const availabilityLabel = availabilityOptions.find((item) => item.value === availability)?.label;
+  const activeFilterSummary = [
+    result.activeCategory?.name ?? "Tous les produits",
+    availability ? availabilityLabel : null,
+    promotedOnly ? "Sélections COBAM" : null,
+    search ? `recherche "${search}"` : null,
+  ].filter(Boolean);
 
   return (
     <main className="commerce-container py-8 sm:py-10 lg:py-14">
@@ -77,6 +131,8 @@ export default async function CatalogPage({
           <form action="/catalogue" className="rounded-full bg-white p-2 shadow-2xl shadow-black/10">
             {category ? <input type="hidden" name="categorie" value={category} /> : null}
             {brand ? <input type="hidden" name="marque" value={brand} /> : null}
+            {availability ? <input type="hidden" name="disponibilite" value={availability} /> : null}
+            {promotedOnly ? <input type="hidden" name="selection" value="promotion" /> : null}
             <div className="flex items-center gap-2">
               <Search className="ml-4 size-5 text-ec-muted" />
               <input
@@ -100,20 +156,60 @@ export default async function CatalogPage({
               <Filter className="size-4" />
               Rayons
             </div>
-            <Link href="/catalogue" className={activeClass(!category)}>
+            <Link
+              href={catalogHref({ search, brand, availability, promotedOnly })}
+              className={activeClass(!category)}
+            >
               Tous les rayons
             </Link>
             {result.categories.map((item) => (
-              <Link
-                key={item.slug}
-                href={`/catalogue?categorie=${item.slug}${search ? `&search=${encodeURIComponent(search)}` : ""}${brand ? `&marque=${brand}` : ""}`}
-                className={activeClass(category === item.slug)}
-              >
-                <span>{item.name}</span>
-                <span className="float-right text-xs opacity-60">
-                  {formatCompactNumber(item.productCount)}
-                </span>
-              </Link>
+              <div key={item.slug}>
+                <Link
+                  href={catalogHref({
+                    category: item.slug,
+                    search,
+                    brand,
+                    availability,
+                    promotedOnly,
+                  })}
+                  className={activeClass(
+                    category === item.slug ||
+                      item.subcategories.some((subcategory) => subcategory.slug === category),
+                  )}
+                >
+                  <span>{item.name}</span>
+                  <span className="float-right text-xs opacity-60">
+                    {formatCompactNumber(item.productCount)}
+                  </span>
+                </Link>
+                {item.subcategories.length > 0 ? (
+                  <div className="mt-1 space-y-1 pl-3">
+                    {item.subcategories.map((subcategory) => (
+                      <Link
+                        key={subcategory.slug}
+                        href={catalogHref({
+                          category: subcategory.slug,
+                          search,
+                          brand,
+                          availability,
+                          promotedOnly,
+                        })}
+                        className={cn(
+                          "flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition",
+                          category === subcategory.slug
+                            ? "bg-ec-blue/10 text-ec-blue"
+                            : "text-ec-muted hover:bg-ec-stone hover:text-ec-ink",
+                        )}
+                      >
+                        <span>{subcategory.name}</span>
+                        <span className="opacity-60">
+                          {formatCompactNumber(subcategory.productCount)}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
             ))}
           </div>
 
@@ -123,7 +219,7 @@ export default async function CatalogPage({
               Marques
             </div>
             <Link
-              href={`/catalogue${category ? `?categorie=${category}` : ""}`}
+              href={catalogHref({ category, search, availability, promotedOnly })}
               className={activeClass(!brand)}
             >
               Toutes les marques
@@ -131,12 +227,59 @@ export default async function CatalogPage({
             {result.brands.slice(0, 14).map((item) => (
               <Link
                 key={item.slug}
-                href={`/catalogue?marque=${item.slug}${category ? `&categorie=${category}` : ""}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
+                href={catalogHref({
+                  brand: item.slug,
+                  category,
+                  search,
+                  availability,
+                  promotedOnly,
+                })}
                 className={activeClass(brand === item.slug)}
               >
                 {item.name}
               </Link>
             ))}
+          </div>
+
+          <div className="rounded-[1.5rem] border border-ec-line bg-white p-4">
+            <div className="mb-3 flex items-center gap-2 px-2 text-sm font-semibold uppercase tracking-[0.18em] text-ec-muted">
+              <SlidersHorizontal className="size-4" />
+              Disponibilité
+            </div>
+            {availabilityOptions.map((item) => (
+              <Link
+                key={item.value ?? "all"}
+                href={catalogHref({
+                  category,
+                  brand,
+                  search,
+                  availability: item.value,
+                  promotedOnly,
+                })}
+                className={activeClass(availability === item.value)}
+              >
+                {item.label}
+              </Link>
+            ))}
+            <div className="my-3 border-t border-ec-line" />
+            <Link
+              href={catalogHref({ category, brand, search, availability })}
+              className={activeClass(!promotedOnly)}
+            >
+              Toutes les offres
+            </Link>
+            <Link
+              href={catalogHref({
+                category,
+                brand,
+                search,
+                availability,
+                promotedOnly: true,
+              })}
+              className={activeClass(promotedOnly)}
+            >
+              Sélections COBAM
+            </Link>
           </div>
         </aside>
 
@@ -151,10 +294,17 @@ export default async function CatalogPage({
                 {search ? ` · recherche "${search}"` : ""}
               </p>
             </div>
+            {availability || promotedOnly ? (
+              <p className="text-xs font-semibold text-ec-blue sm:text-right">
+                {activeFilterSummary.join(" · ")}
+              </p>
+            ) : null}
             <form action="/catalogue" className="flex items-center gap-2">
               {search ? <input type="hidden" name="search" value={search} /> : null}
               {category ? <input type="hidden" name="categorie" value={category} /> : null}
               {brand ? <input type="hidden" name="marque" value={brand} /> : null}
+              {availability ? <input type="hidden" name="disponibilite" value={availability} /> : null}
+              {promotedOnly ? <input type="hidden" name="selection" value="promotion" /> : null}
               <label className="text-sm text-ec-muted" htmlFor="tri">
                 Trier
               </label>
@@ -198,7 +348,15 @@ export default async function CatalogPage({
             <div className="mt-8 flex items-center justify-center gap-3">
               {page > 1 ? (
                 <ButtonLink
-                  href={`/catalogue?page=${page - 1}${search ? `&search=${encodeURIComponent(search)}` : ""}${category ? `&categorie=${category}` : ""}${brand ? `&marque=${brand}` : ""}${sort ? `&tri=${sort}` : ""}`}
+                  href={catalogHref({
+                    page: page - 1,
+                    search,
+                    category,
+                    brand,
+                    sort,
+                    availability,
+                    promotedOnly,
+                  })}
                   variant="secondary"
                 >
                   Page précédente
@@ -209,7 +367,15 @@ export default async function CatalogPage({
               </span>
               {page < totalPages ? (
                 <ButtonLink
-                  href={`/catalogue?page=${page + 1}${search ? `&search=${encodeURIComponent(search)}` : ""}${category ? `&categorie=${category}` : ""}${brand ? `&marque=${brand}` : ""}${sort ? `&tri=${sort}` : ""}`}
+                  href={catalogHref({
+                    page: page + 1,
+                    search,
+                    category,
+                    brand,
+                    sort,
+                    availability,
+                    promotedOnly,
+                  })}
                   variant="secondary"
                 >
                   Page suivante
