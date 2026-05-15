@@ -487,88 +487,443 @@ html {
   margin-right: 0.75rem;
 }
 
-.cobam-home-shell {
-  --cobam-graphite: #07111d;
-  --cobam-navy: #14202e;
-  --cobam-blue: #0a8dc1;
-  --cobam-stone: #f4f1eb;
-  --cobam-metal: #b7bec5;
+/* -------------------------------------------------- */
+/* COBAM lightweight catalog-journey homepage          */
+/* -------------------------------------------------- */
+
+.cobam-catalog-landing {
+  --catalog-navy: #14202e;
+  --catalog-graphite: #07111d;
+  --catalog-blue: #0a8dc1;
+  --catalog-stone: #f4f1eb;
+  --catalog-warm: #e8e1d7;
   overflow: clip;
 }
 
-.cobam-home-shell ::selection {
-  background: rgba(10, 141, 193, 0.28);
+body:has(.cobam-catalog-landing) header {
+  border-bottom-color: rgba(20, 32, 46, 0.1);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+body:has(.cobam-catalog-landing) header > div {
+  max-width: 1500px;
+}
+
+.cobam-catalog-landing ::selection {
+  background: rgba(10, 141, 193, 0.22);
   color: #ffffff;
 }
 
-.cobam-hero-grid {
+.cobam-static-grid {
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
-  background-position: center;
-  background-size: 72px 72px;
-  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.75), transparent 72%);
+    linear-gradient(rgba(255, 255, 255, 0.065) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 82px 82px;
 }
 
-.cobam-blueprint-grid {
-  background-image:
-    linear-gradient(rgba(127, 214, 255, 0.14) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(127, 214, 255, 0.1) 1px, transparent 1px);
-  background-size: 54px 54px;
+.cobam-section-kicker {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.28em;
+  line-height: 1.4;
+  text-transform: uppercase;
 }
 
-.cobam-noise {
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='0.38'/%3E%3C/svg%3E");
-  mix-blend-mode: soft-light;
+.cobam-editorial-title {
+  max-width: 58rem;
+  font-family: var(--font-playfair), serif;
+  font-size: clamp(3.4rem, 7vw, 7.8rem);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 0.92;
+  text-wrap: balance;
 }
 
-.cobam-material-panel {
-  animation: cobam-panel-drift 8s ease-in-out infinite alternate;
-  will-change: translate;
+.cobam-premium-button {
+  display: inline-flex;
+  min-height: 3.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0 1.35rem;
+  border: 1px solid transparent;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+  transition:
+    background-color 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease,
+    transform 220ms ease;
 }
 
-.cobam-brand-track {
-  animation: cobam-marquee 38s linear infinite;
-  padding-inline: max(1.25rem, calc((100vw - 1460px) / 2 + 3rem));
-  will-change: transform;
+.cobam-premium-button:hover,
+.cobam-premium-button:focus-visible {
+  transform: translateY(-2px);
 }
 
-.cobam-brand-marquee:hover .cobam-brand-track {
-  animation-play-state: paused;
+.cobam-premium-button-light {
+  background: #ffffff;
+  color: var(--catalog-navy);
 }
 
-@keyframes cobam-marquee {
+.cobam-premium-button-light:hover,
+.cobam-premium-button-light:focus-visible {
+  background: var(--catalog-blue);
+  color: #ffffff;
+}
+
+.cobam-premium-button-ghost {
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+}
+
+.cobam-premium-button-ghost:hover,
+.cobam-premium-button-ghost:focus-visible {
+  border-color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.cobam-premium-button-navy {
+  background: var(--catalog-navy);
+  color: #ffffff;
+}
+
+.cobam-premium-button-navy:hover,
+.cobam-premium-button-navy:focus-visible {
+  background: var(--catalog-blue);
+}
+
+.cobam-premium-button-line {
+  border-color: rgba(20, 32, 46, 0.18);
+  color: var(--catalog-navy);
+}
+
+.cobam-premium-button-line:hover,
+.cobam-premium-button-line:focus-visible {
+  border-color: var(--catalog-blue);
+  color: var(--catalog-blue);
+}
+
+.cobam-catalog-hero::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 16rem;
+  background: linear-gradient(to top, rgba(7, 17, 29, 0.72), transparent);
+  content: "";
+  pointer-events: none;
+}
+
+.cobam-catalog-hero-live {
+  --hero-shift-x: 0px;
+  --hero-shift-y: 0px;
+  --hero-bg-shift-x: 0px;
+  --hero-bg-shift-y: 0px;
+  --hero-bg-scroll-shift: 0px;
+  --hero-copy-shift: 0px;
+  --hero-visual-shift: 0px;
+  isolation: isolate;
+}
+
+.cobam-hero-bg-slide {
+  opacity: 0;
+  transform: translate3d(
+      var(--hero-bg-shift-x, 0px),
+      calc(var(--hero-bg-shift-y, 0px) + var(--hero-bg-scroll-shift, 0px)),
+      0
+    )
+    scale(1.08);
+  transition:
+    opacity 900ms ease,
+    transform 1400ms ease;
+}
+
+.cobam-hero-bg-slide.is-active {
+  opacity: 0.52;
+  transform: translate3d(
+      var(--hero-bg-shift-x, 0px),
+      calc(var(--hero-bg-shift-y, 0px) + var(--hero-bg-scroll-shift, 0px)),
+      0
+    )
+    scale(1.03);
+  will-change: opacity, transform;
+}
+
+.cobam-hero-copy {
+  animation: cobam-hero-rise 720ms ease-out both;
+  transform: translate3d(0, var(--hero-copy-shift, 0px), 0);
+  transition: transform 180ms ease-out;
+}
+
+.cobam-hero-visual {
+  animation: cobam-hero-rise 820ms 100ms ease-out both;
+  transform: translate3d(
+    var(--hero-shift-x, 0px),
+    calc(var(--hero-shift-y, 0px) + var(--hero-visual-shift, 0px)),
+    0
+  );
+  transition: transform 180ms ease-out;
+}
+
+.cobam-hero-image-frame {
+  box-shadow: 0 36px 110px rgba(0, 0, 0, 0.28);
+}
+
+.cobam-hero-image-frame img {
+  transform: scale(1.025);
+}
+
+.cobam-hero-slide-controls {
+  position: absolute;
+  right: clamp(1.25rem, 4vw, 3rem);
+  bottom: clamp(1.25rem, 4vw, 3rem);
+  z-index: 20;
+  display: flex;
+  gap: 0.45rem;
+}
+
+.cobam-hero-slide-controls button {
+  display: inline-flex;
+  width: 2.35rem;
+  height: 2.35rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(7, 17, 29, 0.38);
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  transition:
+    border-color 220ms ease,
+    background-color 220ms ease,
+    color 220ms ease;
+}
+
+.cobam-hero-slide-controls button.is-active,
+.cobam-hero-slide-controls button:hover,
+.cobam-hero-slide-controls button:focus-visible {
+  border-color: rgba(143, 220, 255, 0.72);
+  background: rgba(10, 141, 193, 0.32);
+  color: #ffffff;
+}
+
+.cobam-hero-index-item {
+  display: inline-flex;
+  min-width: 11rem;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  padding: 0.85rem 1rem;
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  transition:
+    border-color 220ms ease,
+    color 220ms ease,
+    background-color 220ms ease;
+}
+
+.cobam-hero-index-item span {
+  color: #8fdcff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.cobam-hero-index-item strong {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.cobam-hero-index-item:hover,
+.cobam-hero-index-item:focus-visible {
+  border-color: rgba(143, 220, 255, 0.5);
+  background: rgba(10, 141, 193, 0.14);
+  color: #ffffff;
+}
+
+.cobam-journey-index-row {
+  display: grid;
+  grid-template-columns: 4rem minmax(8rem, 0.7fr) minmax(12rem, 0.9fr) minmax(16rem, 1.4fr) auto;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 1.45rem 0;
+  color: var(--catalog-navy);
+  text-decoration: none;
+  transition:
+    color 220ms ease,
+    padding-left 220ms ease;
+}
+
+.cobam-journey-index-row strong {
+  font-size: clamp(1.6rem, 3vw, 3rem);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.cobam-journey-index-row em {
+  color: #59636e;
+  font-size: 0.8rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.cobam-journey-index-row p {
+  color: #59636e;
+  line-height: 1.7;
+}
+
+.cobam-journey-index-row:hover,
+.cobam-journey-index-row:focus-visible {
+  color: var(--catalog-blue);
+  padding-left: 0.75rem;
+}
+
+.cobam-catalog-chapter {
+  background:
+    linear-gradient(90deg, rgba(20, 32, 46, 0.045) 1px, transparent 1px),
+    var(--catalog-stone);
+  background-size: 96px 96px;
+  padding: clamp(5.5rem, 9vw, 9rem) 0;
+}
+
+.cobam-catalog-chapter.is-quiet {
+  background:
+    linear-gradient(90deg, rgba(20, 32, 46, 0.05) 1px, transparent 1px),
+    var(--catalog-warm);
+  background-size: 96px 96px;
+}
+
+.cobam-catalog-chapter figure {
+  box-shadow: 0 26px 80px rgba(20, 32, 46, 0.14);
+}
+
+.cobam-subcategory-link {
+  display: flex;
+  min-height: 3.2rem;
+  align-items: center;
+  gap: 0.9rem;
+  border-bottom: 1px solid rgba(20, 32, 46, 0.14);
+  color: var(--catalog-navy);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-decoration: none;
+  transition:
+    border-color 220ms ease,
+    color 220ms ease,
+    padding-left 220ms ease;
+}
+
+.cobam-subcategory-link span {
+  color: var(--catalog-blue);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.cobam-subcategory-link:hover,
+.cobam-subcategory-link:focus-visible {
+  border-color: var(--catalog-blue);
+  color: var(--catalog-blue);
+  padding-left: 0.35rem;
+}
+
+.cobam-icon-action {
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(20, 32, 46, 0.16);
+  background: rgba(255, 255, 255, 0.36);
+  color: var(--catalog-navy);
+  transition:
+    border-color 220ms ease,
+    background-color 220ms ease,
+    color 220ms ease,
+    transform 220ms ease;
+}
+
+.cobam-icon-action:hover,
+.cobam-icon-action:focus-visible {
+  border-color: var(--catalog-blue);
+  background: #ffffff;
+  color: var(--catalog-blue);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 1023px) {
+  .cobam-journey-index-row {
+    grid-template-columns: 3.5rem 1fr auto;
+    gap: 1rem;
+  }
+
+  .cobam-journey-index-row em,
+  .cobam-journey-index-row p {
+    grid-column: 2 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .cobam-catalog-hero h1 {
+    max-width: 100%;
+    font-size: clamp(3rem, 13vw, 3.9rem);
+    line-height: 0.9;
+  }
+
+  .cobam-editorial-title {
+    font-size: clamp(3rem, 16vw, 4.6rem);
+  }
+
+  .cobam-premium-button {
+    width: 100%;
+    padding-inline: 1rem;
+  }
+
+  .cobam-hero-slide-controls {
+    display: none;
+  }
+
+  .cobam-journey-index-row {
+    grid-template-columns: 2.75rem 1fr;
+  }
+
+  .cobam-journey-index-row svg {
+    display: none;
+  }
+
+  .cobam-journey-index-row strong {
+    font-size: 2rem;
+  }
+}
+
+@keyframes cobam-hero-rise {
   from {
-    transform: translate3d(0, 0, 0);
+    opacity: 0;
   }
 
   to {
-    transform: translate3d(-50%, 0, 0);
-  }
-}
-
-@keyframes cobam-panel-drift {
-  from {
-    translate: 0 0;
-  }
-
-  to {
-    translate: 0 -18px;
+    opacity: 1;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cobam-material-panel,
-  .cobam-brand-track {
+  .cobam-hero-bg-slide,
+  .cobam-hero-copy,
+  .cobam-hero-visual {
     animation: none;
-  }
-
-  .cobam-home-shell *,
-  .cobam-home-shell *::before,
-  .cobam-home-shell *::after {
-    scroll-behavior: auto;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
+    transition: none;
+    transform: none;
   }
 }

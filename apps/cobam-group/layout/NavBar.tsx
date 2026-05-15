@@ -1,26 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+
 import {
+  Search,
+  Menu,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Menu,
-  Search,
+  ArrowRight,
 } from "lucide-react";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
-import type { PublicMegaMenuProductCategory } from "@/features/product-categories/public-types";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import Link from "next/link";
 import MegaMenu from "@/layout/MegaMenu";
+import type { PublicMegaMenuProductCategory } from "@/features/product-categories/public-types";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 import NavbarSearch from "@/layout/NavbarSearch";
 import { useNavbarVisibility } from "@/layout/navbar-visibility";
-import { cn } from "@/lib/utils";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
+
 
 const brandsLinks = [
   { label: "Nos Partenaires", href: "/partenaires" },
@@ -36,6 +45,7 @@ const mainLinks = [
   },
   { label: "PRODUITS", href: "#", hasMega: true, children: undefined },
   { label: "MARQUES", href: "#", hasMega: false, children: brandsLinks },
+
   {
     label: "ACTUALITÉS",
     href: "/actualites",
@@ -51,49 +61,18 @@ export default function NavBar({
   productCategories: PublicMegaMenuProductCategory[];
 }) {
   const [searchOpen, setSearchOpen] = useState(false);
+  const [societyOpen, setSocietyOpen] = useState(false);
   const [brandsOpen, setBrandsOpen] = useState(false);
+  const [mobileSocietyOpen, setMobileSocietyOpen] = useState(false);
   const [mobileBrandsOpen, setMobileBrandsOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [produitsOpen, setProduitsOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   const { isNavbarHidden } = useNavbarVisibility();
-  const pathname = usePathname();
-  const isHomePage = pathname === "/";
-
-  useEffect(() => {
-    if (!isHomePage) {
-      return;
-    }
-
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 18);
-    };
-
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [isHomePage]);
-
-  const homeSurface = isHomePage;
-  const desktopLinkClassName = cn(
-    "font-semibold text-[13px] uppercase tracking-[0.18em] transition-colors whitespace-nowrap",
-    homeSurface
-      ? "text-white/78 hover:text-white"
-      : "text-cobam-dark-blue hover:text-cobam-water-blue",
-  );
-  const iconButtonClassName = cn(
-    "p-2 transition-colors",
-    homeSurface ? "text-white/76 hover:text-white" : "text-cobam-carbon-grey hover:text-cobam-water-blue",
-  );
-  const mobileMenuClassName = cn(
-    "lg:hidden transition-colors",
-    homeSurface ? "text-white/84 hover:text-white" : "text-cobam-dark-blue hover:text-cobam-water-blue",
-  );
 
   const closeSheet = () => {
     setSheetOpen(false);
     setProduitsOpen(false);
+    setMobileSocietyOpen(false);
     setMobileBrandsOpen(false);
   };
 
@@ -101,121 +80,110 @@ export default function NavBar({
     <>
       <header
         className={cn(
-          "left-0 z-50 w-full border-b transition-[transform,background-color,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
-          isHomePage
-            ? cn(
-                "fixed top-0",
-                isScrolled
-                  ? "border-white/10 bg-[#07111d]/82 shadow-[0_22px_80px_rgba(0,0,0,0.28)] backdrop-blur-xl"
-                  : "border-transparent bg-transparent",
-              )
-            : "sticky top-0 border-cobam-quill-grey/60 bg-white",
+          "sticky top-0 left-0 z-50 border-b border-cobam-quill-grey/60 bg-white transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
           isNavbarHidden ? "-translate-y-full" : "translate-y-0",
         )}
       >
-        <div className="mx-auto flex h-20 max-w-[1460px] items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="z-[100] shrink-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20 gap-6">
+          <Link href="/" className="flex-shrink-0 z-100">
             <Image
-              src={
-                homeSurface
-                  ? "/images/logos/cobam-group/logo-vector-white.svg"
-                  : "/images/logos/cobam-group/logo-vector.svg"
-              }
+              src="/images/logos/cobam-group/logo-vector.svg"
               alt="COBAM GROUP"
               width={843}
               height={289}
-              className="hidden h-10 w-auto object-contain lg:block"
+              className="hidden lg:block object-contain h-10 w-auto"
               priority
             />
             <Image
-              src={
-                homeSurface
-                  ? "/images/logos/cobam-group/logo-vector-emblem-white.svg"
-                  : "/images/logos/cobam-group/logo-vector-emblem.svg"
-              }
+              src="/images/logos/cobam-group/logo-vector-emblem.svg"
               alt="COBAM GROUP"
               width={48}
               height={48}
-              className="h-7 w-auto object-contain lg:hidden"
+              className="lg:hidden object-contain h-7 w-auto"
               priority
             />
           </Link>
 
-          <nav className="hidden items-center gap-6 lg:flex">
+          <nav className="hidden lg:flex items-center gap-6">
             {mainLinks.map((link) => {
               if (link.hasMega) {
                 return (
                   <MegaMenu
-                    key={link.label}
                     data={productCategories}
                     menuLabel={link.label}
-                    triggerClassName={
-                      homeSurface ? "text-white/78 hover:text-white focus:text-white" : undefined
-                    }
+                    key={link.label}
                   />
                 );
               }
 
               if (link.children) {
+                const isSociete = link.label === "SOCIÉTÉ";
+                const isOpen = isSociete ? societyOpen : brandsOpen;
+                const setOpen = isSociete ? setSocietyOpen : setBrandsOpen;
+
                 return (
                   <div
                     key={link.label}
                     className="relative"
-                    onMouseEnter={() => setBrandsOpen(true)}
-                    onMouseLeave={() => setBrandsOpen(false)}
+                    onMouseEnter={() => setOpen(true)}
+                    onMouseLeave={() => setOpen(false)}
                   >
-                    <button className={cn("flex items-center gap-1", desktopLinkClassName)}>
+                    <button className="flex items-center gap-1 text-cobam-dark-blue hover:text-cobam-water-blue font-semibold text-[13px] tracking-[0.18em] uppercase transition-colors">
                       {link.label}
                       <ChevronDown
                         size={13}
-                        className={cn(
-                          "transition-transform duration-200",
-                          brandsOpen ? "rotate-180 text-cobam-water-blue" : "",
-                        )}
+                        className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""
+                          }`}
                       />
                     </button>
 
                     <AnimatePresence>
-                      {brandsOpen ? (
+                      {isOpen && (
                         <motion.div
                           initial={{ opacity: 0, y: 10, scale: 0.98 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 10, scale: 0.98 }}
                           transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                          className="absolute left-0 top-full z-50 mt-1 w-64 rounded-lg border border-cobam-quill-grey/30 bg-white py-3 shadow-[0_20px_40px_rgba(20,32,46,0.08)]"
+                          className="absolute top-full left-0 bg-white shadow-[0_20px_40px_rgba(20,32,46,0.08)] border border-cobam-quill-grey/30 rounded-lg py-3 w-64 z-50 mt-1"
                         >
                           {link.children.map((child) => (
-                            <Link
+                            <a
                               key={child.label}
                               href={child.href}
-                              className="block px-5 py-3 text-sm text-[#5e5e5e] transition-all hover:bg-cobam-light-bg hover:font-medium hover:text-[#14202e]"
+                              className="block px-5 py-3 text-sm text-[#5e5e5e] hover:bg-cobam-light-bg hover:text-[#14202e] hover:font-medium transition-all"
                             >
                               {child.label}
-                            </Link>
+                            </a>
                           ))}
                         </motion.div>
-                      ) : null}
+                      )}
                     </AnimatePresence>
                   </div>
                 );
               }
 
               return (
-                <Link key={link.label} href={link.href} className={desktopLinkClassName}>
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className="text-cobam-dark-blue hover:text-cobam-water-blue font-semibold text-[13px] tracking-[0.18em] uppercase transition-colors whitespace-nowrap"
+                >
                   {link.label}
-                </Link>
+                </a>
               );
             })}
           </nav>
 
-          <div className="flex shrink-0 items-center gap-3">
-            <button
-              onClick={() => setSearchOpen(true)}
-              className={iconButtonClassName}
-              aria-label="Rechercher"
-            >
-              <Search size={18} />
-            </button>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="relative">
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="text-cobam-carbon-grey hover:text-cobam-water-blue transition-colors p-2"
+                aria-label="Rechercher"
+              >
+                <Search size={18} />
+              </button>
+            </div>
 
             <Sheet
               open={sheetOpen}
@@ -223,68 +191,82 @@ export default function NavBar({
                 setSheetOpen(value);
                 if (!value) {
                   setProduitsOpen(false);
+                  setMobileSocietyOpen(false);
                   setMobileBrandsOpen(false);
                 }
               }}
             >
               <SheetTrigger asChild>
-                <button className={mobileMenuClassName} aria-label="Menu">
+                <button
+                  className="lg:hidden text-cobam-dark-blue hover:text-cobam-water-blue transition-colors"
+                  aria-label="Menu"
+                >
                   <Menu size={20} />
                 </button>
               </SheetTrigger>
 
               <SheetContent
                 side="right"
-                className="w-[85vw] max-w-sm overflow-hidden border-l border-gray-100 bg-white p-0"
+                className="bg-white w-[85vw] max-w-sm p-0 overflow-hidden border-l border-gray-100"
               >
                 <VisuallyHidden>
                   <SheetTitle>Menu de navigation</SheetTitle>
                 </VisuallyHidden>
 
-                <div className="relative h-full w-full overflow-hidden">
+                <div className="relative w-full h-full overflow-hidden">
                   <div
                     className="absolute inset-0 flex flex-col transition-transform duration-300 ease-in-out"
                     style={{
-                      transform: produitsOpen ? "translateX(-100%)" : "translateX(0)",
+                      transform: produitsOpen
+                        ? "translateX(-100%)"
+                        : "translateX(0)",
                     }}
                   >
-                    <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-4 py-6">
+                    <nav className="flex-1 overflow-y-auto px-4 py-6 flex flex-col gap-1">
                       {mainLinks.map((link) => {
                         if (link.children) {
+                          const isSociete = link.label === "SOCIÉTÉ";
+                          const isOpen = isSociete
+                            ? mobileSocietyOpen
+                            : mobileBrandsOpen;
+                          const setOpen = isSociete
+                            ? setMobileSocietyOpen
+                            : setMobileBrandsOpen;
+
                           return (
                             <div key={link.label}>
                               <button
                                 onClick={(event) => {
                                   event.stopPropagation();
-                                  setMobileBrandsOpen(!mobileBrandsOpen);
+                                  setOpen(!isOpen);
                                 }}
-                                className="flex w-full items-center justify-between rounded-xl px-4 py-3.5 text-sm font-semibold text-cobam-dark-blue transition-all hover:bg-cobam-light-bg hover:text-cobam-water-blue"
+                                className="w-full flex items-center justify-between text-cobam-dark-blue hover:text-cobam-water-blue hover:bg-cobam-light-bg font-semibold text-sm py-3.5 px-4 rounded-xl transition-all"
                               >
                                 <span>{link.label}</span>
                                 <ChevronDown
                                   size={15}
-                                  className={cn(
-                                    "text-cobam-carbon-grey transition-transform duration-300",
-                                    mobileBrandsOpen ? "rotate-180 text-cobam-water-blue" : "",
-                                  )}
+                                  className={`transition-transform duration-300 text-cobam-carbon-grey ${isOpen
+                                    ? "rotate-180 text-cobam-water-blue"
+                                    : ""
+                                    }`}
                                 />
                               </button>
                               <div
-                                className={cn(
-                                  "overflow-hidden transition-all duration-300 ease-in-out",
-                                  mobileBrandsOpen ? "max-h-60 opacity-100" : "max-h-0 opacity-0",
-                                )}
+                                className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen
+                                  ? "max-h-60 opacity-100"
+                                  : "max-h-0 opacity-0"
+                                  }`}
                               >
-                                <div className="ml-4 flex flex-col gap-1 border-l-2 border-cobam-water-blue/20 py-1 pl-4">
+                                <div className="ml-4 border-l-2 border-cobam-water-blue/20 pl-4 py-1 flex flex-col gap-1">
                                   {link.children.map((child) => (
-                                    <Link
+                                    <a
                                       key={child.label}
                                       href={child.href}
                                       onClick={closeSheet}
-                                      className="block rounded-lg px-3 py-2.5 text-sm text-cobam-carbon-grey transition-all hover:bg-cobam-light-bg hover:text-cobam-water-blue"
+                                      className="text-cobam-carbon-grey hover:text-cobam-water-blue text-sm py-2.5 px-3 rounded-lg hover:bg-cobam-light-bg transition-all block"
                                     >
                                       {child.label}
-                                    </Link>
+                                    </a>
                                   ))}
                                 </div>
                               </div>
@@ -300,7 +282,7 @@ export default function NavBar({
                                 event.stopPropagation();
                                 setProduitsOpen(true);
                               }}
-                              className="flex w-full items-center justify-between rounded-xl border border-cobam-water-blue/20 bg-cobam-water-blue/5 px-4 py-3.5 text-sm font-semibold text-cobam-water-blue transition-all hover:bg-cobam-water-blue/10"
+                              className="flex items-center justify-between font-semibold text-sm py-3.5 px-4 rounded-xl transition-all bg-cobam-water-blue/5 text-cobam-water-blue hover:bg-cobam-water-blue/10 border border-cobam-water-blue/20 w-full"
                             >
                               {link.label}
                               <ChevronRight size={14} />
@@ -309,14 +291,14 @@ export default function NavBar({
                         }
 
                         return (
-                          <Link
+                          <a
                             key={link.label}
                             href={link.href}
                             onClick={closeSheet}
-                            className="flex items-center justify-between rounded-xl px-4 py-3.5 text-sm font-semibold text-cobam-dark-blue transition-all hover:bg-cobam-light-bg hover:text-cobam-water-blue"
+                            className="flex items-center justify-between font-semibold text-sm py-3.5 px-4 rounded-xl transition-all text-cobam-dark-blue hover:text-cobam-water-blue hover:bg-cobam-light-bg"
                           >
                             {link.label}
-                          </Link>
+                          </a>
                         );
                       })}
                     </nav>
@@ -325,28 +307,25 @@ export default function NavBar({
                   <div
                     className="absolute inset-0 flex flex-col bg-white transition-transform duration-300 ease-in-out"
                     style={{
-                      transform: produitsOpen ? "translateX(0)" : "translateX(100%)",
+                      transform: produitsOpen
+                        ? "translateX(0)"
+                        : "translateX(100%)",
                     }}
                   >
-                    <div className="flex shrink-0 items-center gap-3 border-b border-gray-100 bg-cobam-light-bg px-4 py-4">
+                    <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-100 bg-cobam-light-bg flex-shrink-0">
                       <button
                         onClick={() => setProduitsOpen(false)}
-                        className="rounded-lg p-1.5 text-cobam-dark-blue transition-colors hover:bg-white hover:text-cobam-water-blue"
-                        aria-label="Retour au menu principal"
+                        className="text-cobam-dark-blue hover:text-cobam-water-blue transition-colors p-1.5 rounded-lg hover:bg-white"
                       >
                         <ChevronLeft size={20} />
                       </button>
-                      <span className="text-base font-bold text-cobam-dark-blue">Produits</span>
+                      <span className="font-bold text-cobam-dark-blue text-base">
+                        Produits
+                      </span>
                     </div>
 
-                    <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
-                      <AnimatedUIButton
-                        variant="ghost"
-                        icon="arrow-right"
-                        className="flex p-3 text-sm font-bold"
-                        href="/produits"
-                        onClick={closeSheet}
-                      >
+                    <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
+                      <AnimatedUIButton variant="ghost" icon="arrow-right" className="p-3 text-sm flex font-bold" href="/produits" onClick={closeSheet}>
                         Tous nos produits
                       </AnimatedUIButton>
 
@@ -359,19 +338,19 @@ export default function NavBar({
 
                           return (
                             <div key={section.slug}>
-                              <p className="mb-2 px-2 text-xs font-bold uppercase tracking-widest text-cobam-water-blue">
+                              <p className="text-cobam-water-blue text-xs font-bold uppercase tracking-widest px-2 mb-2">
                                 {section.title}
                               </p>
                               <div className="flex flex-col gap-0.5">
                                 {subcategories.map((subcategory) => (
-                                  <Link
+                                  <a
                                     key={subcategory.slug}
                                     href={subcategory.href || "#"}
                                     onClick={closeSheet}
-                                    className="block rounded-lg px-3 py-2.5 text-sm text-cobam-dark-blue transition-all hover:bg-cobam-light-bg hover:text-cobam-water-blue"
+                                    className="text-cobam-dark-blue hover:text-cobam-water-blue hover:bg-cobam-light-bg text-sm py-2.5 px-3 rounded-lg transition-all block"
                                   >
                                     {subcategory.title}
-                                  </Link>
+                                  </a>
                                 ))}
                               </div>
                             </div>
@@ -385,8 +364,10 @@ export default function NavBar({
           </div>
         </div>
       </header>
-
-      <NavbarSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      <NavbarSearch
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
+      />
     </>
   );
 }

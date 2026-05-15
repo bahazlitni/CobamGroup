@@ -1,7 +1,6 @@
 "use client";
 
 import { UserCircle, Phone, BookUser, LucideProps } from "lucide-react";
-import { usePathname } from "next/navigation";
 import { COBAM_CONTACT_DETAILS, getPhoneHref } from "@/data/contact-details";
 import { cn } from "@/lib/utils";
 import { useNavbarVisibility } from "@/layout/navbar-visibility";
@@ -17,12 +16,6 @@ function TopBarLink({href, Icon, label}: {label:string, href: string, Icon: Forw
 
 export default function TopBar() {
   const { isNavbarHidden } = useNavbarVisibility();
-  const pathname = usePathname();
-
-  if (pathname === "/") {
-    return null;
-  }
-
   return (
     <div
       className={cn(
