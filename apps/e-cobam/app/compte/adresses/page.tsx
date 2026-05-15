@@ -110,7 +110,7 @@ export default async function CustomerAddressesPage() {
                 </select>
               </label>
               <label className="space-y-2">
-                <span className={labelClass}>Libelle</span>
+                <span className={labelClass}>Libellé</span>
                 <input name="label" placeholder="Maison, chantier, depot..." className={inputClass} />
               </label>
               <label className="space-y-2">

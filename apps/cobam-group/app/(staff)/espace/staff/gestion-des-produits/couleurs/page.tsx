@@ -165,7 +165,7 @@ export default function ProductColorsAdminPage() {
                 title="Détails"
               >
                 <form onSubmit={saveItem} className="grid gap-4">
-                  <PanelField id="product-color-label" label="Libellé">
+                  <PanelField id="product-color-label" label="">
                     <PanelInput
                       id="product-color-label"
                       fullWidth

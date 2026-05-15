@@ -30,7 +30,7 @@ export const paymentStatusLabels: Record<CommercePaymentStatus, string> = {
 
 export const fulfillmentStatusLabels: Record<CommerceFulfillmentStatus, string> = {
   PENDING: "A planifier",
-  SCHEDULED: "Planifie",
+  SCHEDULED: "Planifié",
   PREPARING: "En preparation",
   READY: "Pret",
   IN_TRANSIT: "En transit",

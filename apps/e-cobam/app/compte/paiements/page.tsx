@@ -95,7 +95,7 @@ export default async function CustomerPaymentsPage() {
                 </select>
               </label>
               <label className="space-y-2">
-                <span className={labelClass}>Libelle</span>
+                <span className={labelClass}>Libellé</span>
                 <input name="label" placeholder="Virement entreprise, retrait magasin..." className={inputClass} />
               </label>
               <label className="space-y-2 sm:col-span-2">

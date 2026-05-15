@@ -172,7 +172,7 @@ export default function ProductFinishesAdminPage() {
                 title="Détails"
               >
                 <form onSubmit={saveItem} className="grid gap-4">
-                  <PanelField id="product-finish-label" label="Libellé">
+                  <PanelField id="product-finish-label" label="">
                     <PanelInput
                       id="product-finish-label"
                       fullWidth

@@ -71,7 +71,7 @@ export default async function OrderConfirmationPage({ params }: PageProps) {
               {order.orderNumber}
             </h1>
             <p className="mt-4 text-sm font-semibold text-ec-muted">
-              Creee le {formatDate(order.placedAt)}
+              Créée le {formatDate(order.placedAt)}
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -188,9 +188,6 @@ export default async function OrderConfirmationPage({ params }: PageProps) {
           <div className="mt-5 flex justify-between border-t border-ec-line pt-5 text-base font-black text-ec-ink">
             <span>Total</span>
             <span>{formatPriceTnd(order.totalTtc) ?? "Sur devis"}</span>
-          </div>
-          <div className="mt-6 rounded-2xl bg-ec-paper p-4 text-sm leading-7 text-ec-muted">
-            COBAM confirmera la disponibilite, la livraison et les details de paiement.
           </div>
         </aside>
       </div>

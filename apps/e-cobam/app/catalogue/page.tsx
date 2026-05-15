@@ -15,7 +15,7 @@ type CatalogSearchParams = {
   categorie?: string | string[];
   marque?: string | string[];
   tri?: string | string[];
-  disponibilite?: string | string[];
+  disponibilité?: string | string[];
   sélection?: string | string[];
   page?: string | string[];
 };
@@ -66,7 +66,7 @@ function catalogHref(input: {
   if (input.category) params.set("categorie", input.category);
   if (input.brand) params.set("marque", input.brand);
   if (input.sort && input.sort !== "latest") params.set("tri", input.sort);
-  if (input.availability) params.set("disponibilite", input.availability);
+  if (input.availability) params.set("disponibilité", input.availability);
   if (input.promotedOnly) params.set("sélection", "promotion");
   if (input.page && input.page > 1) params.set("page", input.page.toString());
 
@@ -91,7 +91,7 @@ export default async function CatalogPage({
   const category = normalizeSearchParam(params.categorie);
   const brand = normalizeSearchParam(params.marque);
   const sort = normalizeSearchParam(params.tri) ?? "latest";
-  const availability = resolveAvailability(params.disponibilite);
+  const availability = resolveAvailability(params.disponibilité);
   const promotedOnly = normalizeSearchParam(params.sélection) === "promotion";
   const page = resolvePage(params.page);
   const result = await listCommerceProducts({
@@ -131,7 +131,7 @@ export default async function CatalogPage({
           <form action="/catalogue" className="rounded-full bg-white p-2 shadow-2xl shadow-black/10">
             {category ? <input type="hidden" name="categorie" value={category} /> : null}
             {brand ? <input type="hidden" name="marque" value={brand} /> : null}
-            {availability ? <input type="hidden" name="disponibilite" value={availability} /> : null}
+            {availability ? <input type="hidden" name="disponibilité" value={availability} /> : null}
             {promotedOnly ? <input type="hidden" name="sélection" value="promotion" /> : null}
             <div className="flex items-center gap-2">
               <Search className="ml-4 size-5 text-ec-muted" />
@@ -303,7 +303,7 @@ export default async function CatalogPage({
               {search ? <input type="hidden" name="search" value={search} /> : null}
               {category ? <input type="hidden" name="categorie" value={category} /> : null}
               {brand ? <input type="hidden" name="marque" value={brand} /> : null}
-              {availability ? <input type="hidden" name="disponibilite" value={availability} /> : null}
+              {availability ? <input type="hidden" name="disponibilité" value={availability} /> : null}
               {promotedOnly ? <input type="hidden" name="sélection" value="promotion" /> : null}
               <label className="text-sm text-ec-muted" htmlFor="tri">
                 Trier

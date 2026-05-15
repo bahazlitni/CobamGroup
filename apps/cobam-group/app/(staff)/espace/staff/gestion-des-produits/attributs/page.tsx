@@ -211,7 +211,7 @@ export default function ProductAttributeDefinitionsAdminPage() {
                 title="Définition"
               >
                 <form onSubmit={saveItem} className="grid gap-4">
-                  <PanelField id="product-attribute-label" label="Libellé">
+                  <PanelField id="product-attribute-label" label="">
                     <PanelInput
                       id="product-attribute-label"
                       fullWidth

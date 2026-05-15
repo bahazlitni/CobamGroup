@@ -400,15 +400,7 @@ export function CartPageClient() {
             <span>Total</span>
             <span>{cartTotalLabel(promotion?.totalTtc ?? cart.summary.totalTtc)}</span>
           </div>
-          {cart.summary.hasQuoteLines ? (
-            <div className="mt-6 rounded-2xl bg-amber-50 p-4 text-sm leading-7 text-amber-800">
-              Certaines lignes restent sur devis. Elles seront confirmees pendant le checkout.
-            </div>
-          ) : (
-            <div className="mt-6 rounded-2xl bg-ec-paper p-4 text-sm leading-7 text-ec-muted">
-              Les prix sont capturés dans le panier et revalidés à chaque modification de quantité.
-            </div>
-          )}
+
           <ButtonLink
             href="/checkout"
             className="mt-6 w-full"

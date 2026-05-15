@@ -1,9 +1,10 @@
 "use client";
 
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { BadgePercent, CreditCard, ReceiptText, Truck, UsersRound } from "lucide-react";
 import Loading from "@/components/staff/Loading";
 import Panel from "@/components/staff/ui/Panel";
+import PanelInput from "@/components/staff/ui/PanelInput";
 import PanelTable from "@/components/staff/ui/PanelTable";
 import {
   StaffBadge,
@@ -37,14 +38,18 @@ type Metric = {
   hint?: string;
 };
 
+const ALL_FILTER_VALUE = "__all__";
+
 const statusLabels: Record<string, string> = {
   ACTIVE: "Active",
   ARCHIVED: "Archivee",
   AUTHORIZED: "Autorise",
+  BANNED: "Banni",
   BANK_TRANSFER: "Virement",
   CANCELLED: "Annulée",
   CARD: "Carte",
   CASH_ON_DELIVERY: "Paiement livraison",
+  CLOSED: "Ferme",
   COMPANY: "Société",
   CONFIRMED: "Confirmée",
   DELIVERED: "Livrée",
@@ -69,6 +74,7 @@ const statusLabels: Record<string, string> = {
   REFUNDED: "Remboursée",
   SHIPPED: "Expediée",
   SCHEDULED: "Planifiée",
+  SUSPENDED: "Suspendu",
 };
 
 const statusColors: Record<string, string> = {
@@ -98,7 +104,7 @@ function statusOption(value: string): StaffSelectOption {
   return { value, label: formatStatus(value) };
 }
 
-const orderStatusOptions = [
+const orderStatusValues = [
   "PENDING",
   "CONFIRMED",
   "PREPARING",
@@ -107,9 +113,9 @@ const orderStatusOptions = [
   "DELIVERED",
   "CANCELLED",
   "REFUNDED",
-].map(statusOption);
+];
 
-const paymentStatusOptions = [
+const paymentStatusValues = [
   "PENDING",
   "AUTHORIZED",
   "PAID",
@@ -117,9 +123,9 @@ const paymentStatusOptions = [
   "CANCELLED",
   "REFUNDED",
   "PARTIALLY_REFUNDED",
-].map(statusOption);
+];
 
-const fulfillmentStatusOptions = [
+const fulfillmentStatusValues = [
   "PENDING",
   "SCHEDULED",
   "PREPARING",
@@ -128,7 +134,11 @@ const fulfillmentStatusOptions = [
   "DELIVERED",
   "FAILED",
   "CANCELLED",
-].map(statusOption);
+];
+
+const orderStatusOptions = orderStatusValues.map(statusOption);
+const paymentStatusOptions = paymentStatusValues.map(statusOption);
+const fulfillmentStatusOptions = fulfillmentStatusValues.map(statusOption);
 
 function formatStatus(value: string | null | undefined) {
   if (!value) return "-";
@@ -181,6 +191,98 @@ function MetricsGrid({ metrics }: { metrics: Metric[] }) {
           {metric.hint ? <p className="mt-1 text-xs text-slate-500">{metric.hint}</p> : null}
         </div>
       ))}
+    </div>
+  );
+}
+
+function normalizeText(value: string | number | null | undefined) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function matchesSearch(fields: Array<string | number | null | undefined>, query: string) {
+  const normalizedQuery = normalizeText(query.trim());
+
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  return fields.some((field) => normalizeText(field).includes(normalizedQuery));
+}
+
+function allOption(label = "Tous"): StaffSelectOption {
+  return { value: ALL_FILTER_VALUE, label };
+}
+
+function statusFilterOptions(values: string[], allLabel = "Tous les statuts") {
+  return [allOption(allLabel), ...values.map(statusOption)];
+}
+
+function SearchAndFilters({
+  search,
+  onSearchChange,
+  searchPlaceholder,
+  resultCount,
+  totalCount,
+  children,
+}: {
+  search: string;
+  onSearchChange: (value: string) => void;
+  searchPlaceholder: string;
+  resultCount: number;
+  totalCount: number;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+        <div className="min-w-0 flex-1">
+          <label className="text-xs font-semibold tracking-[0.16em] text-slate-400 uppercase">
+            Recherche
+          </label>
+          <PanelInput
+            fullWidth
+            value={search}
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder={searchPlaceholder}
+            className="mt-2"
+          />
+        </div>
+        {children ? (
+          <div className="grid gap-3 sm:grid-cols-2 xl:flex xl:items-end">{children}</div>
+        ) : null}
+      </div>
+      <p className="mt-3 text-xs font-semibold text-slate-500">
+        {resultCount} resultat(s) sur {totalCount}
+      </p>
+    </div>
+  );
+}
+
+function FilterSelect({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: StaffSelectOption[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div>
+      <label className="text-xs font-semibold tracking-[0.16em] text-slate-400 uppercase">
+        {label}
+      </label>
+      <StaffSelect
+        value={value}
+        options={options}
+        onValueChange={onChange}
+        triggerClassName="mt-2 min-w-44"
+      />
     </div>
   );
 }
@@ -339,8 +441,36 @@ export function EcommerceOrdersAdminPage() {
   const { data, isLoading, error, reload } = useAdminData<EcommerceOrdersAdminDto>(
     listEcommerceOrdersAdminClient,
   );
-  const items = data?.items ?? [];
+  const rawItems = data?.items ?? [];
+  const [search, setSearch] = useState("");
+  const [orderStatus, setOrderStatus] = useState(ALL_FILTER_VALUE);
+  const [paymentStatus, setPaymentStatus] = useState(ALL_FILTER_VALUE);
+  const [fulfillmentStatus, setFulfillmentStatus] = useState(ALL_FILTER_VALUE);
   const { pendingId, actionError, actionMessage, runAction } = useManagedAction(reload);
+  const items = useMemo(
+    () =>
+      rawItems.filter(
+        (order) =>
+          matchesSearch(
+            [
+              order.orderNumber,
+              order.customerLabel,
+              order.contact,
+              order.status,
+              order.paymentStatus,
+              order.fulfillmentStatus,
+              order.latestPaymentMethod,
+              order.latestFulfillmentMethod,
+              order.totalTtc,
+            ],
+            search,
+          ) &&
+          (orderStatus === ALL_FILTER_VALUE || order.status === orderStatus) &&
+          (paymentStatus === ALL_FILTER_VALUE || order.paymentStatus === paymentStatus) &&
+          (fulfillmentStatus === ALL_FILTER_VALUE || order.fulfillmentStatus === fulfillmentStatus),
+      ),
+    [fulfillmentStatus, orderStatus, paymentStatus, rawItems, search],
+  );
 
   return (
     <div className="space-y-6">
@@ -373,6 +503,33 @@ export function EcommerceOrdersAdminPage() {
           },
         ]}
       />
+
+      <SearchAndFilters
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Commande, client, email, telephone..."
+        resultCount={items.length}
+        totalCount={rawItems.length}
+      >
+        <FilterSelect
+          label="Commande"
+          value={orderStatus}
+          options={statusFilterOptions(orderStatusValues)}
+          onChange={setOrderStatus}
+        />
+        <FilterSelect
+          label="Paiement"
+          value={paymentStatus}
+          options={statusFilterOptions(paymentStatusValues)}
+          onChange={setPaymentStatus}
+        />
+        <FilterSelect
+          label="Livraison"
+          value={fulfillmentStatus}
+          options={statusFilterOptions(fulfillmentStatusValues)}
+          onChange={setFulfillmentStatus}
+        />
+      </SearchAndFilters>
 
       <PanelTable
         columns={[
@@ -442,7 +599,36 @@ export function EcommerceCustomersAdminPage() {
   const { data, isLoading, error, reload } = useAdminData<EcommerceCustomersAdminDto>(
     listEcommerceCustomersAdminClient,
   );
-  const items = data?.items ?? [];
+  const rawItems = data?.items ?? [];
+  const [search, setSearch] = useState("");
+  const [customerType, setCustomerType] = useState(ALL_FILTER_VALUE);
+  const [customerStatus, setCustomerStatus] = useState(ALL_FILTER_VALUE);
+  const [orderPresence, setOrderPresence] = useState(ALL_FILTER_VALUE);
+  const items = useMemo(
+    () =>
+      rawItems.filter(
+        (customer) =>
+          matchesSearch(
+            [
+              customer.label,
+              customer.email,
+              customer.phone,
+              customer.type,
+              customer.status,
+              customer.lastOrderNumber,
+              customer.totalSpentTtc,
+            ],
+            search,
+          ) &&
+          (customerType === ALL_FILTER_VALUE || customer.type === customerType) &&
+          (customerStatus === ALL_FILTER_VALUE || customer.status === customerStatus) &&
+          (orderPresence === ALL_FILTER_VALUE ||
+            (orderPresence === "WITH_ORDERS"
+              ? customer.orderCount > 0
+              : customer.orderCount === 0)),
+      ),
+    [customerStatus, customerType, orderPresence, rawItems, search],
+  );
 
   return (
     <div className="space-y-6">
@@ -463,6 +649,44 @@ export function EcommerceCustomersAdminPage() {
           { label: "Avec commandes", value: data?.stats.withOrders ?? 0 },
         ]}
       />
+
+      <SearchAndFilters
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Client, email, telephone, derniere commande..."
+        resultCount={items.length}
+        totalCount={rawItems.length}
+      >
+        <FilterSelect
+          label="Type"
+          value={customerType}
+          options={[
+            allOption("Tous les types"),
+            { value: "INDIVIDUAL", label: formatStatus("INDIVIDUAL") },
+            { value: "COMPANY", label: formatStatus("COMPANY") },
+          ]}
+          onChange={setCustomerType}
+        />
+        <FilterSelect
+          label="Statut"
+          value={customerStatus}
+          options={[
+            allOption("Tous les statuts"),
+            ...["ACTIVE", "SUSPENDED", "BANNED", "CLOSED"].map(statusOption),
+          ]}
+          onChange={setCustomerStatus}
+        />
+        <FilterSelect
+          label="Commandes"
+          value={orderPresence}
+          options={[
+            allOption("Tous les clients"),
+            { value: "WITH_ORDERS", label: "Avec commandes" },
+            { value: "WITHOUT_ORDERS", label: "Sans commande" },
+          ]}
+          onChange={setOrderPresence}
+        />
+      </SearchAndFilters>
 
       <PanelTable
         columns={[
@@ -595,8 +819,32 @@ export function EcommercePaymentsAdminPage() {
   const { data, isLoading, error, reload } = useAdminData<EcommercePaymentsAdminDto>(
     listEcommercePaymentsAdminClient,
   );
-  const items = data?.items ?? [];
+  const rawItems = data?.items ?? [];
+  const [search, setSearch] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState(ALL_FILTER_VALUE);
+  const [paymentMethod, setPaymentMethod] = useState(ALL_FILTER_VALUE);
   const { pendingId, actionError, actionMessage, runAction } = useManagedAction(reload);
+  const items = useMemo(
+    () =>
+      rawItems.filter(
+        (payment) =>
+          matchesSearch(
+            [
+              payment.orderNumber,
+              payment.customerLabel,
+              payment.provider,
+              payment.method,
+              payment.status,
+              payment.amount,
+              payment.transactionReference,
+            ],
+            search,
+          ) &&
+          (paymentStatus === ALL_FILTER_VALUE || payment.status === paymentStatus) &&
+          (paymentMethod === ALL_FILTER_VALUE || payment.method === paymentMethod),
+      ),
+    [paymentMethod, paymentStatus, rawItems, search],
+  );
 
   return (
     <div className="space-y-6">
@@ -622,6 +870,30 @@ export function EcommercePaymentsAdminPage() {
           },
         ]}
       />
+
+      <SearchAndFilters
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Commande, client, prestataire, reference..."
+        resultCount={items.length}
+        totalCount={rawItems.length}
+      >
+        <FilterSelect
+          label="Statut"
+          value={paymentStatus}
+          options={statusFilterOptions(paymentStatusValues)}
+          onChange={setPaymentStatus}
+        />
+        <FilterSelect
+          label="Methode"
+          value={paymentMethod}
+          options={[
+            allOption("Toutes les methodes"),
+            ...["CARD", "BANK_TRANSFER", "CASH_ON_DELIVERY", "PAY_IN_STORE"].map(statusOption),
+          ]}
+          onChange={setPaymentMethod}
+        />
+      </SearchAndFilters>
 
       <PanelTable
         columns={[
@@ -676,8 +948,32 @@ export function EcommerceFulfillmentsAdminPage() {
   const { data, isLoading, error, reload } = useAdminData<EcommerceFulfillmentsAdminDto>(
     listEcommerceFulfillmentsAdminClient,
   );
-  const items = data?.items ?? [];
+  const rawItems = data?.items ?? [];
+  const [search, setSearch] = useState("");
+  const [fulfillmentStatus, setFulfillmentStatus] = useState(ALL_FILTER_VALUE);
+  const [fulfillmentMethod, setFulfillmentMethod] = useState(ALL_FILTER_VALUE);
   const { pendingId, actionError, actionMessage, runAction } = useManagedAction(reload);
+  const items = useMemo(
+    () =>
+      rawItems.filter(
+        (fulfillment) =>
+          matchesSearch(
+            [
+              fulfillment.orderNumber,
+              fulfillment.customerLabel,
+              fulfillment.method,
+              fulfillment.status,
+              fulfillment.pickupLocation,
+              fulfillment.carrierName,
+              fulfillment.trackingNumber,
+            ],
+            search,
+          ) &&
+          (fulfillmentStatus === ALL_FILTER_VALUE || fulfillment.status === fulfillmentStatus) &&
+          (fulfillmentMethod === ALL_FILTER_VALUE || fulfillment.method === fulfillmentMethod),
+      ),
+    [fulfillmentMethod, fulfillmentStatus, rawItems, search],
+  );
 
   return (
     <div className="space-y-6">
@@ -699,6 +995,31 @@ export function EcommerceFulfillmentsAdminPage() {
           { label: "Livrees", value: data?.stats.delivered ?? 0 },
         ]}
       />
+
+      <SearchAndFilters
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Commande, client, tracking, transporteur..."
+        resultCount={items.length}
+        totalCount={rawItems.length}
+      >
+        <FilterSelect
+          label="Statut"
+          value={fulfillmentStatus}
+          options={statusFilterOptions(fulfillmentStatusValues)}
+          onChange={setFulfillmentStatus}
+        />
+        <FilterSelect
+          label="Methode"
+          value={fulfillmentMethod}
+          options={[
+            allOption("Toutes les methodes"),
+            { value: "DELIVERY", label: formatStatus("DELIVERY") },
+            { value: "PICKUP", label: formatStatus("PICKUP") },
+          ]}
+          onChange={setFulfillmentMethod}
+        />
+      </SearchAndFilters>
 
       <PanelTable
         columns={[

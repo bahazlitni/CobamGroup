@@ -1288,12 +1288,12 @@ export default function ProductTypesAdminPage() {
                       }
                     />
                   </PanelField>
-                  <PanelField id="attribute-label" label="Libellé">
+                  <PanelField id="attribute-label" label="">
                     <PanelInput
                       id="attribute-label"
                       fullWidth
                       value={attributeForm.label}
-                      placeholder={selectedAttributeDefinition?.label ?? "Libelle de la definition"}
+                      placeholder={selectedAttributeDefinition?.label ?? "Libellé de la definition"}
                       onChange={(event) =>
                         setAttributeForm((current) => ({
                           ...current,
