@@ -11,7 +11,7 @@ import MediaFolderBreadcrumbs from "@/components/staff/media/media-folder-breadc
 import MediaFolderCreateDialog from "@/components/staff/media/media-folder-create-dialog";
 import MediaGrid from "@/components/staff/media/media-grid";
 import MediaInspectorDialog from "@/components/staff/media/media-inspector-dialog";
-import MediaSelectionBar from "@/components/staff/media/media-sélection-bar";
+import MediaSelectionBar from "@/components/staff/media/media-selection-bar";
 import MediaStats from "@/components/staff/media/media-stats";
 import MediaToolbar from "@/components/staff/media/media-toolbar";
 import MediaUploadDialog from "@/components/staff/media/media-upload-dialog";

@@ -2,7 +2,7 @@
 
 import type { DragEvent } from "react";
 
-const DRAGGED_MEDIA_SELECTION_MIME = "application/x-cobam-media-sélection";
+const DRAGGED_MEDIA_SELECTION_MIME = "application/x-cobam-media-selection";
 
 export type DraggedMediaSelection = {
   mediaIds: number[];
