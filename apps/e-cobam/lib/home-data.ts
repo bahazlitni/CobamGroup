@@ -18,6 +18,14 @@ type RawSubcategoryRow = {
   product_count: bigint;
 };
 
+type RawBrandRow = {
+  name: string;
+  slug: string;
+  description: string | null;
+  logo_media_id: bigint | null;
+  product_count: bigint;
+};
+
 type RawProductRow = {
   id: bigint;
   sku: string;
@@ -91,6 +99,15 @@ export type LandingProduct = {
   updatedAt: string;
 };
 
+export type LandingBrand = {
+  name: string;
+  slug: string;
+  description: string | null;
+  logoUrl: string | null;
+  productCount: number;
+  href: string;
+};
+
 export type LandingProductsState =
   | { status: "ready"; items: LandingProduct[] }
   | { status: "empty"; items: [] }
@@ -99,6 +116,9 @@ export type LandingProductsState =
 export type LandingHomeData = {
   categories: LandingCategory[];
   products: LandingProductsState;
+  promotedProducts: LandingProductsState;
+  latestProducts: LandingProductsState;
+  brands: LandingBrand[];
   heroProduct: LandingProduct | null;
   diagnostics: {
     productCount: number | null;
@@ -277,6 +297,17 @@ function mapSubcategoryRow(row: RawSubcategoryRow) {
   };
 }
 
+function mapBrandRow(row: RawBrandRow): LandingBrand {
+  return {
+    name: row.name,
+    slug: row.slug,
+    description: row.description,
+    logoUrl: row.logo_media_id == null ? null : mediaUrl(row.logo_media_id, "thumbnail"),
+    productCount: Number(row.product_count),
+    href: `/catalogue?marque=${row.slug}`,
+  };
+}
+
 function mapProductRow(row: RawProductRow): LandingProduct {
   const stock = stockLabel(row.stock_availability, row.stock_available);
   const productName = row.display_name?.trim() || row.name;
@@ -409,11 +440,77 @@ async function fetchLandingCategories(hasVisibilityColumns: boolean) {
     .filter((category) => category.subcategories.length > 0);
 }
 
-async function fetchLandingProducts(hasVisibilityColumns: boolean) {
+async function fetchLandingBrands(hasVisibilityColumns: boolean) {
   const db = await getPrisma();
   const subcategoryVisibilityFilter = hasVisibilityColumns
     ? Prisma.sql`AND "s"."visible_ecommerce" = true`
     : Prisma.empty;
+
+  const rows = await db.$queryRaw<RawBrandRow[]>(Prisma.sql`
+    SELECT
+      "brand"."name",
+      "brand"."slug",
+      "brand"."description",
+      "brand"."logo_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "organizations" "brand"
+    JOIN "products" "p"
+      ON "p"."brand_id" = "brand"."id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "brand"."is_product_brand" = true
+      AND EXISTS (
+        SELECT 1
+        FROM "product_subcategory_links" "l"
+        JOIN "product_subcategories" "s"
+          ON "s"."id" = "l"."subcategory_id"
+          AND "s"."is_active" = true
+          ${subcategoryVisibilityFilter}
+        JOIN "product_types" "c"
+          ON "c"."id" = "s"."category_id"
+          AND "c"."is_active" = true
+        WHERE "l"."product_id" = "p"."id"
+      )
+    GROUP BY
+      "brand"."id",
+      "brand"."name",
+      "brand"."slug",
+      "brand"."description",
+      "brand"."logo_media_id"
+    ORDER BY COUNT(DISTINCT "p"."id") DESC, "brand"."name" ASC
+    LIMIT 16
+  `);
+
+  return rows.map(mapBrandRow);
+}
+
+async function fetchLandingProducts(
+  hasVisibilityColumns: boolean,
+  options: { limit?: number; promotedOnly?: boolean; latestFirst?: boolean } = {},
+) {
+  const db = await getPrisma();
+  const subcategoryVisibilityFilter = hasVisibilityColumns
+    ? Prisma.sql`AND "s"."visible_ecommerce" = true`
+    : Prisma.empty;
+  const promotedFilter = options.promotedOnly
+    ? Prisma.sql`AND ("p"."is_promoted" = true OR "p"."is_featured" = true)`
+    : Prisma.empty;
+  const orderBy = options.latestFirst
+    ? Prisma.sql`
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_new" DESC,
+      "p"."updated_at" DESC,
+      "p"."stock_available" DESC
+    `
+    : Prisma.sql`
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_featured" DESC,
+      "p"."is_promoted" DESC,
+      "p"."is_new" DESC,
+      "p"."stock_available" DESC,
+      "p"."updated_at" DESC
+    `;
+  const limit = options.limit ?? 8;
 
   const rows = await db.$queryRaw<RawProductRow[]>(Prisma.sql`
     SELECT
@@ -481,14 +578,9 @@ async function fetchLandingProducts(hasVisibilityColumns: boolean) {
     ) "image" ON true
     WHERE "p"."visible_ecommerce" = true
       AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
-    ORDER BY
-      ("image"."media_id" IS NOT NULL) DESC,
-      "p"."is_featured" DESC,
-      "p"."is_promoted" DESC,
-      "p"."is_new" DESC,
-      "p"."stock_available" DESC,
-      "p"."updated_at" DESC
-    LIMIT 8
+      ${promotedFilter}
+    ORDER BY ${orderBy}
+    LIMIT ${limit}
   `);
 
   return rows.map(mapProductRow);
@@ -581,17 +673,74 @@ export async function getLandingHomeData(): Promise<LandingHomeData> {
             } satisfies LandingProductsState;
           });
 
+  const promotedProductsPromise =
+    hasVisibilityColumns == null
+      ? Promise.resolve<LandingProductsState>({
+          status: "error",
+          items: [],
+          message: "Impossible de charger les promotions pour le moment.",
+        })
+      : fetchLandingProducts(hasVisibilityColumns, { limit: 8, promotedOnly: true })
+          .then<LandingProductsState>((items) =>
+            items.length > 0 ? { status: "ready", items } : { status: "empty", items: [] },
+          )
+          .catch((error) => {
+            logLandingDataError("promoted product query failed", error);
+            return {
+              status: "error",
+              items: [],
+              message: "Impossible de charger les promotions pour le moment.",
+            } satisfies LandingProductsState;
+          });
+
+  const latestProductsPromise =
+    hasVisibilityColumns == null
+      ? Promise.resolve<LandingProductsState>({
+          status: "error",
+          items: [],
+          message: "Impossible de charger les nouveautés pour le moment.",
+        })
+      : fetchLandingProducts(hasVisibilityColumns, { limit: 8, latestFirst: true })
+          .then<LandingProductsState>((items) =>
+            items.length > 0 ? { status: "ready", items } : { status: "empty", items: [] },
+          )
+          .catch((error) => {
+            logLandingDataError("latest product query failed", error);
+            return {
+              status: "error",
+              items: [],
+              message: "Impossible de charger les nouveautés pour le moment.",
+            } satisfies LandingProductsState;
+          });
+
+  const brandsPromise =
+    hasVisibilityColumns == null
+      ? Promise.resolve<LandingBrand[]>([])
+      : fetchLandingBrands(hasVisibilityColumns).catch((error) => {
+          logLandingDataError("brand query failed", error);
+          return [];
+        });
+
   const countPromise = fetchVisibleProductCount().catch((error) => {
     logLandingDataError("product count query failed", error);
     return null;
   });
 
-  const [categories, products] = await Promise.all([categoriesPromise, productsPromise]);
+  const [categories, products, promotedProducts, latestProducts, brands] = await Promise.all([
+    categoriesPromise,
+    productsPromise,
+    promotedProductsPromise,
+    latestProductsPromise,
+    brandsPromise,
+  ]);
   productCount = await countPromise;
 
   return {
     categories: categories.length > 0 ? categories : STATIC_CATEGORIES,
     products,
+    promotedProducts,
+    latestProducts,
+    brands,
     heroProduct: products.status === "ready" ? products.items.find((product) => product.image) ?? products.items[0] : null,
     diagnostics: {
       productCount,

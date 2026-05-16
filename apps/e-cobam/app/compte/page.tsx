@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, CreditCard, LogOut, MapPin, PackageCheck, UserRound } from "lucide-react";
+import { ArrowRight, CreditCard, MapPin, PackageCheck, UserRound } from "lucide-react";
 import { AccountNav } from "@/components/account/account-nav";
-import { Button } from "@/components/ui/button";
 import { getCustomerAccount } from "@/lib/customer-account";
 import { getCustomerSession } from "@/lib/customer-auth";
 import { formatPriceTnd } from "@/lib/format";
 import { orderStatusLabels, orderStatusTone } from "@/lib/order-labels";
-import { logoutCustomerAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Espace client",

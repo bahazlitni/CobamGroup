@@ -60,7 +60,7 @@
     font: inherit;
   }
 
-  ::sélection {
+  ::selection {
     background: color-mix(in srgb, var(--ec-blue) 25%, white);
   }
 }
@@ -73,5 +73,48 @@
 @media (min-width: 640px) {
   .commerce-container {
     width: min(92rem, calc(100vw - 3rem));
+  }
+}
+
+@keyframes storefrontHeroSlide {
+  0% {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+
+  8%,
+  31% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  39%,
+  100% {
+    opacity: 0;
+    transform: scale(1.03);
+  }
+}
+
+.storefront-hero-slide {
+  opacity: 0;
+  animation: storefrontHeroSlide 13.5s ease-in-out infinite;
+}
+
+.storefront-hero-slide:first-child {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .storefront-hero-slide {
+    animation: none;
+    opacity: 0;
+  }
+
+  .storefront-hero-slide:first-child {
+    opacity: 1;
   }
 }

@@ -397,7 +397,7 @@ export function CheckoutPageClient() {
               </div>
             ) : (
               <div className="mt-5 rounded-2xl bg-ec-paper p-4 text-sm font-semibold text-ec-muted">
-                Retrait au point COBAM confirmé avec l'équipe commerciale.
+                Retrait au point COBAM confirmé avec l&apos;équipe commerciale.
               </div>
             )}
           </div>
