@@ -2,23 +2,20 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, MapPin, Phone } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-import { HeroMotionShell } from "@/components/public/home/hero-motion";
+import { COBAM_SOCIAL_LINKS } from "@/data/contact-details";
+import { CategoryJourneyParallax } from "@/components/public/home/category-journey-parallax";
 
 export type JourneySubcategory = {
   label: string;
   href: string;
 };
 
-export type JourneyWorld = {
+export type JourneyCategory = {
   id: string;
   number: string;
-  world: string;
-  categoryTitle: string;
-  title: string;
+  name: string;
   subtitle: string;
   href: string;
-  cta: string;
   image: string;
   imageAlt: string;
   subcategories: JourneySubcategory[];
@@ -41,29 +38,61 @@ export type ShowroomLocation = {
   map: string;
 };
 
-export function LandingHero({ worlds }: { worlds: JourneyWorld[] }) {
-  const heroSlides = [
-    {
-      src: "/images/hero-section/3.jpg",
-      alt: "Composition architecturale sombre autour des matières COBAM",
-      label: "Architecture",
-    },
-    {
-      src: "/images/hero-section/2.jpg",
-      alt: "Salle de bain et matière premium COBAM",
-      label: "Eau",
-    },
-    ...worlds.slice(0, 2).map((world) => ({
-      src: world.image,
-      alt: world.imageAlt,
-      label: world.world,
-    })),
-  ].filter((slide, index, slides) => slides.findIndex((item) => item.src === slide.src) === index);
+const collections = [
+  {
+    title: "Marbre clair",
+    subtitle: "Surfaces lumineuses, grands formats et détails minéraux.",
+    image: "/images/collections/faedo-marbre-blanc-353x353.jpg",
+    href: "/produits?search=marbre",
+  },
+  {
+    title: "Salle de bain premium",
+    subtitle: "Vasques, colonnes de douche et robinetterie précise.",
+    image: "/images/collections/vasque-ovale-premium-353x353.jpg",
+    href: "/produits?search=vasque",
+  },
+  {
+    title: "Piscine & extérieur",
+    subtitle: "Mosaïques, margelles et matières fraîches pour espaces d'eau.",
+    image: "/images/collections/carrelage-piscine-353x353.jpg",
+    href: "/produits?search=piscine",
+  },
+  {
+    title: "Bois naturel",
+    subtitle: "Chaleur, portes et finitions bois pour transitions intérieures.",
+    image: "/images/collections/decor-bois-naturel-353x353.jpg",
+    href: "/produits?search=bois",
+  },
+  {
+    title: "Minéral urbain",
+    subtitle: "Gris, béton, textures sobres et surfaces techniques.",
+    image: "/images/collections/tessino-gris-353x353.jpg",
+    href: "/produits?search=gris",
+  },
+  {
+    title: "Eau & chrome",
+    subtitle: "Mitigeurs, reflets et équipements au geste quotidien.",
+    image: "/images/collections/mitigeur-cascade-353x353.jpg",
+    href: "/produits?search=mitigeur",
+  },
+];
 
+export function LandingHero({ categories }: { categories: JourneyCategory[] }) {
   return (
-    <HeroMotionShell slides={heroSlides}>
-      <div className="mx-auto grid min-h-[calc(100svh-7rem)] max-w-[1500px] gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:px-12 lg:py-20">
-        <div className="cobam-hero-copy relative z-10 flex flex-col justify-center">
+    <section className="cobam-catalog-hero relative min-h-[calc(100svh-7rem)] overflow-hidden bg-[#14202e] text-white">
+      <Image
+        src="/images/hero-section/3.jpg"
+        alt="Composition architecturale autour des matières COBAM Group"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover opacity-54"
+      />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,17,29,0.96),rgba(7,17,29,0.72)_45%,rgba(7,17,29,0.42)),radial-gradient(circle_at_82%_18%,rgba(10,141,193,0.26),transparent_34%)]" />
+      <div className="cobam-static-grid absolute inset-0 opacity-25" />
+
+      <div className="relative z-10 mx-auto grid min-h-[calc(100svh-7rem)] max-w-[1500px] gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:px-12 lg:py-20">
+        <div className="flex flex-col justify-center">
           <p className="cobam-section-kicker text-[#8fdcff]">Depuis 1994 / COBAM Group</p>
           <h1
             className="mt-6 max-w-5xl text-balance text-[clamp(4rem,8.5vw,8rem)] font-normal leading-[0.84]"
@@ -72,7 +101,7 @@ export function LandingHero({ worlds }: { worlds: JourneyWorld[] }) {
             L&apos;architecture des matières.
           </h1>
           <p className="mt-7 max-w-2xl text-pretty text-lg leading-8 text-white/74 md:text-xl">
-            Un parcours à travers les univers COBAM Group : de l&apos;eau à la surface, de la structure à la signature finale.
+            Un parcours à travers les catégories COBAM Group : des matériaux de construction aux finitions qui signent l&apos;espace final.
           </p>
           <div className="mt-10 flex flex-col gap-3 sm:flex-row">
             <Link href="#parcours" className="cobam-premium-button cobam-premium-button-light">
@@ -86,104 +115,96 @@ export function LandingHero({ worlds }: { worlds: JourneyWorld[] }) {
           </div>
         </div>
 
-      </div>
-
-
-    </HeroMotionShell>
-  );
-}
-
-export function JourneyIndex({ worlds }: { worlds: JourneyWorld[] }) {
-  return (
-    <section id="parcours" className="bg-[#f4f1eb] py-20 md:py-28">
-      <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">
-        <div className="grid gap-8 lg:grid-cols-[0.72fr_1fr] lg:items-end">
-          <div>
-            <p className="cobam-section-kicker text-[#0a8dc1]">Index du parcours</p>
-            <h2 className="cobam-editorial-title mt-4">Les sept univers.</h2>
+        <div className="hidden items-end justify-end lg:flex">
+          <div className="w-full max-w-md border border-white/14 bg-white/[0.06] p-5 backdrop-blur">
+            <p className="cobam-section-kicker text-[#8fdcff]">Catégories</p>
+            <div className="mt-5 max-h-[28rem] divide-y divide-white/10 overflow-y-auto pr-1">
+              {categories.map((category) => (
+                <Link key={category.id} href={category.href} className="group flex items-center justify-between gap-4 py-3 text-white/70 transition hover:text-white">
+                  <span>{category.name}</span>
+                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden="true" />
+                </Link>
+              ))}
+            </div>
           </div>
-          <p className="max-w-2xl text-lg leading-8 text-[#56606b]">
-            Une entrée plus naturelle dans le catalogue : partir d&apos;une sensation, puis rejoindre la bonne famille de produits.
-          </p>
-        </div>
-
-        <div className="mt-14 divide-y divide-[#14202e]/12 border-y border-[#14202e]/12">
-          {worlds.map((world) => (
-            <Link key={world.id} href={`#${world.id}`} className="cobam-journey-index-row group">
-              <span className="text-sm font-semibold text-[#0a8dc1]">{world.number}</span>
-              <strong>{world.world}</strong>
-              <em>{world.categoryTitle}</em>
-              <p>{world.subtitle}</p>
-              <ArrowRight className="h-5 w-5 transition duration-300 group-hover:translate-x-1" aria-hidden="true" />
-            </Link>
-          ))}
         </div>
       </div>
     </section>
   );
 }
 
-export function SubcategoryList({ items }: { items: JourneySubcategory[] }) {
+export function AboutNutshell() {
   return (
-    <ul className="grid gap-2 sm:grid-cols-2">
-      {items.map((item, index) => (
-        <li key={`${item.label}-${index}`}>
-          <Link href={item.href} className="cobam-subcategory-link">
-            <span>{String(index + 1).padStart(2, "0")}</span>
-            {item.label}
-          </Link>
-        </li>
-      ))}
-    </ul>
+    <section className="bg-[#f4f1eb] py-20 md:py-28">
+      <div className="mx-auto grid max-w-[1500px] gap-10 px-5 sm:px-8 lg:grid-cols-[0.78fr_1fr] lg:px-12">
+        <div>
+          <p className="cobam-section-kicker text-[#0a8dc1]">COBAM en bref</p>
+          <h2 className="cobam-editorial-title mt-4">Une maison de matières, depuis 1994.</h2>
+        </div>
+        <div className="grid gap-8">
+          <p className="max-w-3xl text-xl leading-9 text-[#56606b]">
+            COBAM Group accompagne les professionnels et les particuliers dans le choix de matériaux, revêtements, équipements et finitions capables de transformer un projet en espace durable, précis et élégant.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-4">
+            {[
+              ["30+", "années d'expertise"],
+              ["5,000+", "références produits"],
+              ["4", "showrooms en Tunisie"],
+              ["1994", "année de création"],
+            ].map(([value, label]) => (
+              <div key={label} className="border-t border-[#14202e]/14 pt-5">
+                <p className="text-4xl font-semibold text-[#14202e]">{value}</p>
+                <p className="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-[#59636e]">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
-export function CatalogChapter({
-  world,
-  reverse = false,
-  quiet = false,
-}: {
-  world: JourneyWorld;
-  reverse?: boolean;
-  quiet?: boolean;
-}) {
+export function CategoryJourneySection({ categories }: { categories: JourneyCategory[] }) {
+  return <CategoryJourneyParallax categories={categories} />;
+}
+
+export function CollectionsSection() {
   return (
-    <section id={world.id} className={cn("cobam-catalog-chapter", quiet ? "is-quiet" : "")}>
-      <div className={cn("mx-auto grid max-w-[1500px] gap-10 px-5 sm:px-8 lg:grid-cols-2 lg:px-12", reverse ? "lg:[&>*:first-child]:order-2" : "")}>
-        <div className="flex flex-col justify-center py-8 lg:py-16">
-          <p className="cobam-section-kicker text-[#0a8dc1]">{world.number} / {world.world}</p>
-          <h2 className="mt-5 max-w-3xl text-balance text-6xl font-normal leading-[0.9] md:text-8xl" style={{ fontFamily: "var(--font-playfair), serif" }}>
-            {world.title}
-          </h2>
-          <p className="mt-8 max-w-2xl text-lg leading-8 text-[#56606b] md:text-xl">{world.subtitle}</p>
-          <div className="mt-10">
-            <SubcategoryList items={world.subcategories} />
+    <section className="bg-[#f4f1eb] py-24 md:py-32">
+      <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">
+        <div className="grid gap-8 lg:grid-cols-[0.75fr_1fr] lg:items-end">
+          <div>
+            <p className="cobam-section-kicker text-[#0a8dc1]">Collections</p>
+            <h2 className="cobam-editorial-title mt-4">Inspirations prêtes à explorer.</h2>
           </div>
-          <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-            <Link href={world.href} className="cobam-premium-button cobam-premium-button-navy">
-              {world.cta}
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-            <Link href="/produits" className="cobam-premium-button cobam-premium-button-line">
-              Voir les produits
-            </Link>
-          </div>
+          <p className="max-w-2xl text-lg leading-8 text-[#56606b]">
+            Une sélection visuelle de matières et d&apos;équipements pour passer plus vite de l&apos;idée à la bonne famille de produits.
+          </p>
         </div>
 
-        <figure className="relative min-h-[520px] overflow-hidden bg-[#14202e] lg:min-h-[720px]">
-          <Image
-            src={world.image}
-            alt={world.imageAlt}
-            fill
-            sizes="(min-width: 1024px) 48vw, 100vw"
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#07111d]/54 via-transparent to-transparent" />
-          <figcaption className="absolute bottom-6 left-6 right-6 border-t border-white/24 pt-4 text-xs font-semibold uppercase tracking-[0.24em] text-white/78">
-            {world.categoryTitle}
-            {world.imageNeedsReplacement ? <span className="ml-3 text-[#8fdcff]">Image à remplacer</span> : null}
-          </figcaption>
-        </figure>
+        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {collections.map((collection, index) => (
+            <Link
+              key={collection.title}
+              href={collection.href}
+              className={index === 0 ? "group relative min-h-[30rem] overflow-hidden bg-[#14202e] lg:row-span-2" : "group relative min-h-[19rem] overflow-hidden bg-[#14202e]"}
+            >
+              <Image
+                src={collection.image}
+                alt={collection.title}
+                fill
+                sizes="(min-width: 1024px) 33vw, 100vw"
+                className="object-cover transition duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#07111d]/84 via-[#07111d]/16 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-6 text-white">
+                <p className="cobam-section-kicker text-[#8fdcff]">Collection</p>
+                <h3 className="mt-3 text-3xl font-semibold">{collection.title}</h3>
+                <p className="mt-3 max-w-sm text-sm leading-6 text-white/70">{collection.subtitle}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -299,18 +320,51 @@ export function FinalCTA() {
           Votre projet commence par la bonne matière.
         </h2>
         <p className="mt-8 max-w-2xl text-lg leading-8 text-white/72">
-          Parcourez le catalogue COBAM Group ou visitez nos showrooms pour construire, rénover et sublimer vos espaces.
+          Parcourez le catalogue COBAM Group ou contactez notre équipe pour construire, rénover et sublimer vos espaces.
         </p>
         <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Link href="/produits" className="cobam-premium-button cobam-premium-button-light">
             Explorer le catalogue
           </Link>
-          <Link href="/contact#showrooms" className="cobam-premium-button cobam-premium-button-ghost">
-            Trouver un showroom
-          </Link>
           <Link href="/contact" className="cobam-premium-button cobam-premium-button-ghost">
             Nous contacter
           </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function SocialLinksSection() {
+  return (
+    <section className="bg-[#07111d] py-16 text-white">
+      <div className="mx-auto grid max-w-[1500px] gap-8 px-5 sm:px-8 lg:grid-cols-[0.75fr_1fr] lg:items-center lg:px-12">
+        <div>
+          <p className="cobam-section-kicker text-[#8fdcff]">Réseaux sociaux</p>
+          <h2 className="mt-4 text-4xl font-normal leading-tight md:text-6xl" style={{ fontFamily: "var(--font-playfair), serif" }}>
+            Suivez les matières, les projets et les nouveautés.
+          </h2>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {COBAM_SOCIAL_LINKS.map((social) => {
+            const Icon = social.Icon;
+
+            return (
+              <a
+                key={social.label}
+                href={social.href}
+                target="_blank"
+                rel="noreferrer"
+                className="group flex items-center justify-between border border-white/12 bg-white/[0.04] p-4 transition hover:border-[#8fdcff]/60 hover:bg-white/[0.08]"
+              >
+                <span>
+                  <span className="block text-sm font-semibold">{social.label}</span>
+                  <span className="mt-1 block text-xs text-white/50">{social.handle}</span>
+                </span>
+                <Icon className="h-5 w-5 text-[#8fdcff] transition group-hover:scale-110" aria-hidden="true" />
+              </a>
+            );
+          })}
         </div>
       </div>
     </section>

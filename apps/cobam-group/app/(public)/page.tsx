@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 
 import {
+  AboutNutshell,
   BrandConstellation,
-  CatalogChapter,
+  CategoryJourneySection,
+  CollectionsSection,
   FinalCTA,
-  JourneyIndex,
   LandingHero,
   ShowroomSection,
+  SocialLinksSection,
   type BrandLogo,
-  type JourneyWorld,
+  type JourneyCategory,
   type ShowroomLocation,
 } from "@/components/public/home/catalog-journey";
 import { listPublicProductBrandOrganizations } from "@/features/organizations/public";
@@ -23,15 +25,12 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-type CatalogWorldBlueprint = {
+type CategoryBlueprint = {
   id: string;
   number: string;
-  world: string;
-  categoryTitle: string;
+  name: string;
   categoryTerms: string[];
-  title: string;
   subtitle: string;
-  cta: string;
   fallbackHref: string;
   fallbackImage: string;
   imageAlt: string;
@@ -39,32 +38,26 @@ type CatalogWorldBlueprint = {
   subcategories: string[];
 };
 
-const catalogWorldBlueprints: CatalogWorldBlueprint[] = [
+const categoryBlueprints: CategoryBlueprint[] = [
   {
-    id: "water",
+    id: "salle-bain-cuisine",
     number: "01",
-    world: "Eau",
-    categoryTitle: "Salle de bain et cuisine",
+    name: "Salle de bain et cuisine",
     categoryTerms: ["salle de bain", "cuisine", "sanitaire", "robinetterie"],
-    title: "L'eau comme point de départ.",
     subtitle:
       "Robinetterie, vasques, douches et équipements pour créer des espaces d'eau précis, élégants et durables.",
-    cta: "Découvrir l'univers salle de bain & cuisine",
     fallbackHref: "/produits/salle-de-bain-et-cuisine",
     fallbackImage: "/images/collections/mitigeur-cascade-353x353.jpg",
     imageAlt: "Robinetterie et eau dans un univers salle de bain premium",
     subcategories: ["Éviers de cuisine", "Robinetterie", "Baignoires", "Jacuzzis", "Lavabos et vasques", "Espace douche"],
   },
   {
-    id: "surface",
+    id: "revetements-sols-murs",
     number: "02",
-    world: "Surface",
-    categoryTitle: "Revêtements de sols et murs",
+    name: "Revêtements de sols et murs",
     categoryTerms: ["revetement", "sol", "mur", "carrelage"],
-    title: "La surface donne le caractère.",
     subtitle:
       "Sols, murs, dalles et textures définissent la lumière, le rythme et la personnalité d'un espace.",
-    cta: "Explorer les revêtements",
     fallbackHref: "/produits/revetements-de-sols-et-murs",
     fallbackImage: "/images/collections/faedo-marbre-blanc-353x353.jpg",
     imageAlt: "Surface minérale claire et revêtement architectural",
@@ -83,15 +76,12 @@ const catalogWorldBlueprints: CatalogWorldBlueprint[] = [
     ],
   },
   {
-    id: "structure",
+    id: "materiaux-construction",
     number: "03",
-    world: "Structure",
-    categoryTitle: "Matériaux de construction",
+    name: "Matériaux de construction",
     categoryTerms: ["construction", "materiaux", "materiel"],
-    title: "Avant l'esthétique, la base.",
     subtitle:
       "Matériaux de construction, ciments, briques et armatures donnent au projet sa solidité.",
-    cta: "Voir les matériaux de construction",
     fallbackHref: "/produits/materiaux-de-construction",
     fallbackImage: "/images/hero-section/3.jpg",
     imageAlt: "Matière brute et architecture pour représenter les bases de construction",
@@ -99,15 +89,12 @@ const catalogWorldBlueprints: CatalogWorldBlueprint[] = [
     subcategories: ["Sables et graviers", "Briques", "Treillis soudés et fers à béton", "Ciments et produits en béton", "Adjuvants"],
   },
   {
-    id: "protection",
+    id: "isolation-etancheite",
     number: "04",
-    world: "Protection",
-    categoryTitle: "Isolation et étanchéité",
+    name: "Isolation et étanchéité",
     categoryTerms: ["isolation", "etancheite", "etanche"],
-    title: "Protéger ce qui dure.",
     subtitle:
       "Étanchéité et isolation améliorent le confort, la performance et la durée de vie du bâtiment.",
-    cta: "Découvrir isolation & étanchéité",
     fallbackHref: "/produits/isolation-et-etancheite",
     fallbackImage: "/images/hero-section/1.jpg",
     imageAlt: "Couches architecturales et lumière pour représenter la protection du bâtiment",
@@ -115,45 +102,36 @@ const catalogWorldBlueprints: CatalogWorldBlueprint[] = [
     subcategories: ["Étanchéité", "Isolation thermique"],
   },
   {
-    id: "color",
+    id: "peintures-decoration",
     number: "05",
-    world: "Couleur",
-    categoryTitle: "Peintures et décoration",
+    name: "Peintures et décoration",
     categoryTerms: ["peinture", "decoration", "couleur"],
-    title: "La couleur transforme l'espace.",
     subtitle:
       "Peintures, béton ciré et finitions décoratives donnent une signature à chaque intérieur.",
-    cta: "Explorer peintures & décoration",
     fallbackHref: "/produits/peintures-et-decoration",
     fallbackImage: "/images/collections/amb-arenisca-perla-353x353.jpg",
     imageAlt: "Texture murale et finition décorative minérale",
     subcategories: ["Béton ciré", "Peintures d'intérieur", "Peintures d'extérieur"],
   },
   {
-    id: "outdoor",
+    id: "piscine",
     number: "06",
-    world: "Extérieur",
-    categoryTitle: "Piscine",
+    name: "Piscine",
     categoryTerms: ["piscine", "aquatique"],
-    title: "L'extérieur devient une expérience.",
     subtitle:
       "Pierres de Bali, margelles et mosaïques pour créer des espaces piscine élégants et durables.",
-    cta: "Découvrir l'univers piscine",
     fallbackHref: "/produits/piscine",
     fallbackImage: "/images/collections/carrelage-piscine-353x353.jpg",
     imageAlt: "Carrelage piscine et eau extérieure",
     subcategories: ["Pierres de Bali", "Margelles et finitions", "Mosaïques"],
   },
   {
-    id: "passage",
+    id: "portes-menuiserie",
     number: "07",
-    world: "Passage",
-    categoryTitle: "Portes et menuiserie",
+    name: "Portes et menuiserie",
     categoryTerms: ["porte", "menuiserie", "bois"],
-    title: "Chaque passage mérite une finition.",
     subtitle:
       "Portes, bois et menuiserie structurent les transitions avec chaleur et précision.",
-    cta: "Explorer portes & menuiserie",
     fallbackHref: "/produits/portes-et-menuiserie",
     fallbackImage: "/images/collections/decor-bois-naturel-353x353.jpg",
     imageAlt: "Texture bois et détail de menuiserie intérieure",
@@ -196,8 +174,8 @@ const showrooms: ShowroomLocation[] = [
   },
 ];
 
-function normalizeLabel(value: string) {
-  return value
+function normalizeLabel(value: string | null | undefined) {
+  return (value ?? "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/&/g, " ")
@@ -227,27 +205,24 @@ function resolveSubcategory(
   );
 }
 
-function buildJourneyWorlds(categories: PublicMegaMenuProductCategory[]): JourneyWorld[] {
+function buildJourneyCategories(categories: PublicMegaMenuProductCategory[]): JourneyCategory[] {
   const rootCategories = categories.filter((category) => !category.parent);
 
-  return catalogWorldBlueprints.map((world) => {
-    const category = findCategoryByTerms(rootCategories, [world.categoryTitle, ...world.categoryTerms]);
-    const href = category?.href ?? world.fallbackHref;
-    const image = category?.imageUrlHD || category?.imageUrl || world.fallbackImage;
+  return categoryBlueprints.map((item) => {
+    const category = findCategoryByTerms(rootCategories, [item.name, ...item.categoryTerms]);
+    const href = category?.href ?? item.fallbackHref;
+    const image = category?.imageUrlHD || category?.imageUrl || item.fallbackImage;
 
     return {
-      id: world.id,
-      number: world.number,
-      world: world.world,
-      categoryTitle: category?.title ?? world.categoryTitle,
-      title: world.title,
-      subtitle: world.subtitle,
+      id: item.id,
+      number: item.number,
+      name: category?.title ?? item.name,
+      subtitle: item.subtitle,
       href,
-      cta: world.cta,
       image,
-      imageAlt: world.imageAlt,
-      imageNeedsReplacement: Boolean(world.imageNeedsReplacement && !(category?.imageUrlHD || category?.imageUrl)),
-      subcategories: world.subcategories.map((label) => ({
+      imageAlt: item.imageAlt,
+      imageNeedsReplacement: Boolean(item.imageNeedsReplacement && !(category?.imageUrlHD || category?.imageUrl)),
+      subcategories: item.subcategories.map((label) => ({
         label,
         href: resolveSubcategory(categories, category, label)?.href ?? href,
       })),
@@ -272,24 +247,19 @@ export default async function HomePage() {
     listPublicProductBrandOrganizations(),
   ]);
 
-  const worlds = buildJourneyWorlds(categories);
+  const journeyCategories = buildJourneyCategories(categories);
   const brandLogos = buildBrandLogos(brands);
 
   return (
     <main className="cobam-catalog-landing bg-[#f4f1eb] text-[#14202e]">
-      <LandingHero worlds={worlds} />
-      <JourneyIndex worlds={worlds} />
-      {worlds.map((world, index) => (
-        <CatalogChapter
-          key={world.id}
-          world={world}
-          reverse={index % 2 === 1}
-          quiet={index === 2 || index === 5}
-        />
-      ))}
+      <LandingHero categories={journeyCategories} />
+      <AboutNutshell />
+      <CategoryJourneySection categories={journeyCategories} />
+      <CollectionsSection />
       <BrandConstellation brands={brandLogos} />
       <ShowroomSection showrooms={showrooms} />
       <FinalCTA />
+      <SocialLinksSection />
     </main>
   );
 }
