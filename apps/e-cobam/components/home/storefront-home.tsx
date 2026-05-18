@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import {
   ArrowRight,
   BadgePercent,
@@ -44,7 +45,7 @@ function productCountLabel(value: number | null) {
   }
 
   if (value === 0) {
-    return "Rayon";
+    return "Catégorie";
   }
 
   return `${formatCompactNumber(value)} produits`;
@@ -71,68 +72,59 @@ function StockPill({ stock }: { stock: LandingProduct["stock"] }) {
         : "bg-rose-50 text-rose-700";
 
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${tone}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black ${tone}`}>
       <PackageCheck className="size-3" />
       {stock.label}
     </span>
   );
 }
 
-function MiniProductCard({ product, priority = false }: { product: LandingProduct; priority?: boolean }) {
+function StoreProductCard({
+  product,
+  priority = false,
+  compact = false,
+}: {
+  product: LandingProduct;
+  priority?: boolean;
+  compact?: boolean;
+}) {
   const price = formatPriceTnd(product.price);
   const image = product.image?.thumbnailUrl ?? product.image?.url ?? null;
-  const kicker = product.brandName ?? product.subcategoryName ?? product.categoryName ?? "COBAM";
 
   return (
     <Link
       href={product.href}
-      className="group flex h-full min-w-[15.5rem] flex-col overflow-hidden rounded-2xl border border-ec-line bg-white shadow-[0_14px_38px_rgba(16,32,47,0.06)] transition duration-200 hover:-translate-y-1 hover:border-ec-blue/35 hover:shadow-[0_24px_58px_rgba(16,32,47,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ec-blue sm:min-w-0"
+      className="group flex h-full min-w-[13rem] flex-col overflow-hidden rounded-[1.25rem] border border-ec-line bg-white shadow-[0_10px_30px_rgba(20,32,46,0.045)] transition duration-200 hover:-translate-y-0.5 hover:border-ec-blue/35 hover:shadow-[0_18px_46px_rgba(20,32,46,0.1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ec-blue sm:min-w-0"
     >
-      <div className="relative aspect-[4/3.25] overflow-hidden bg-[#f3f5f6]">
+      <div className={`relative overflow-hidden bg-ec-stone ${compact ? "aspect-[4/3]" : "aspect-[4/3.08]"}`}>
         {image ? (
           <Image
             src={image}
             alt={product.image?.altText ?? product.name}
             fill
-            sizes="(min-width: 1280px) 20vw, (min-width: 768px) 33vw, 72vw"
+            sizes="(min-width: 1280px) 18vw, (min-width: 768px) 30vw, 72vw"
             priority={priority}
-            className="object-contain p-4 transition duration-300 group-hover:scale-[1.04]"
+            className="object-contain p-4 transition duration-300 group-hover:scale-[1.035]"
           />
         ) : (
-          <div className="grid h-full place-items-center bg-[linear-gradient(135deg,#f8f7f2,#e7edf2)] text-xs font-black uppercase tracking-[0.22em] text-ec-muted/45">
+          <div className="grid h-full place-items-center text-xs font-black uppercase tracking-[0.2em] text-ec-muted/45">
             COBAM
           </div>
         )}
-
-        <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
-          {product.badges.slice(0, 2).map((badge) => (
-            <span key={badge} className="rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-black text-ec-ink shadow-sm">
-              {badge}
-            </span>
-          ))}
-        </div>
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
-        <p className="line-clamp-1 text-[11px] font-bold uppercase tracking-[0.16em] text-ec-blue">
-          {kicker}
-        </p>
-        <h3 className="mt-2 line-clamp-2 min-h-[2.75rem] text-sm font-black leading-snug text-ec-ink">
+      <div className="flex flex-1 flex-col p-3.5">
+        {product.brandName ? (
+          <p className="mb-2 line-clamp-1 text-[11px] font-black uppercase tracking-[0.14em] text-ec-blue">
+            {product.brandName}
+          </p>
+        ) : null}
+        <h3 className="line-clamp-2 min-h-10 text-sm font-black leading-snug text-ec-ink">
           {product.name}
         </h3>
-        {product.summary ? (
-          <p className="mt-2 line-clamp-2 min-h-[2.5rem] text-xs leading-5 text-ec-muted">{product.summary}</p>
-        ) : (
-          <p className="mt-2 min-h-[2.5rem] text-xs leading-5 text-ec-muted">
-            Fiche produit disponible dans le catalogue.
-          </p>
-        )}
 
-        <div className="mt-auto flex items-end justify-between gap-3 pt-4">
-          <div>
-            <p className="text-[11px] text-ec-muted">Prix TTC</p>
-            <p className="mt-1 text-base font-black text-ec-ink">{price ?? "Sur devis"}</p>
-          </div>
+        <div className="mt-auto flex items-end justify-between gap-3 pt-3">
+          <p className="text-base font-black text-ec-ink">{price ?? "Sur devis"}</p>
           <StockPill stock={product.stock} />
         </div>
       </div>
@@ -140,12 +132,51 @@ function MiniProductCard({ product, priority = false }: { product: LandingProduc
   );
 }
 
-function HeroSlider({ products }: { products: LandingProduct[] }) {
+function DepartmentRail({ categories }: { categories: LandingCategory[] }) {
+  return (
+    <aside className="overflow-hidden rounded-[1.5rem] border border-ec-line bg-white shadow-[0_18px_46px_rgba(20,32,46,0.055)]">
+      <div className="border-b border-ec-line bg-ec-ink px-5 py-4 text-white">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-ec-blue">Catalogue</p>
+            <h2 className="mt-1 text-lg font-black">Catégories</h2>
+          </div>
+          <Boxes className="size-5 text-white/70" />
+        </div>
+      </div>
+
+      <div className="grid gap-1 p-2">
+        {categories.slice(0, 8).map((category) => (
+          <Link
+            key={category.slug}
+            href={category.href}
+            className="group rounded-2xl px-3 py-3 transition hover:bg-ec-stone focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ec-blue"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="line-clamp-1 text-sm font-black text-ec-ink group-hover:text-ec-blue">
+                  {category.name}
+                </p>
+                <p className="mt-1 line-clamp-1 text-xs font-semibold text-ec-muted">
+                  {category.subcategories.slice(0, 2).map((item) => item.name).join(" · ") ||
+                    productCountLabel(category.productCount)}
+                </p>
+              </div>
+              <ChevronRight className="mt-0.5 size-4 shrink-0 text-ec-muted transition group-hover:translate-x-0.5 group-hover:text-ec-blue" />
+            </div>
+          </Link>
+        ))}
+      </div>
+    </aside>
+  );
+}
+
+function HeroVisual({ products }: { products: LandingProduct[] }) {
   const slides = products.filter((product) => product.image?.url || product.image?.thumbnailUrl).slice(0, 3);
 
   if (slides.length === 0) {
     return (
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_22%,rgba(10,141,193,0.38),transparent_28%),linear-gradient(135deg,#14202e,#203247_48%,#f1eee8_49%,#d7dce0)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_18%,rgba(10,141,193,0.38),transparent_28%),linear-gradient(135deg,#14202e,#203247_48%,var(--ec-background)_49%,var(--ec-paper))]" />
     );
   }
 
@@ -167,45 +198,99 @@ function HeroSlider({ products }: { products: LandingProduct[] }) {
           />
         </div>
       ))}
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(20,32,46,0.94),rgba(20,32,46,0.76)_42%,rgba(20,32,46,0.2)),linear-gradient(0deg,rgba(20,32,46,0.76),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(20,32,46,0.96),rgba(20,32,46,0.78)_44%,rgba(20,32,46,0.28)),linear-gradient(0deg,rgba(20,32,46,0.72),transparent_50%)]" />
     </div>
   );
 }
 
-function CategoryMenu({ categories }: { categories: LandingCategory[] }) {
+function SearchPanel() {
   return (
-    <aside className="rounded-3xl border border-ec-line bg-white p-3 shadow-[0_18px_50px_rgba(16,32,47,0.07)]">
-      <div className="flex items-center justify-between gap-3 border-b border-ec-line px-2 pb-3">
-        <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-ec-blue">Rayons</p>
-          <h2 className="text-lg font-black text-ec-ink">Toutes les catégories</h2>
-        </div>
-        <Boxes className="size-5 text-ec-muted" />
-      </div>
+    <form
+      action="/catalogue"
+      className="mt-7 grid gap-2 rounded-[1.35rem] border border-white/12 bg-white p-2 shadow-[0_18px_60px_rgba(0,0,0,0.18)] sm:grid-cols-[1fr_auto]"
+    >
+      <label className="flex h-13 items-center gap-3 px-3">
+        <Search className="size-5 shrink-0 text-ec-muted" />
+        <input
+          name="search"
+          type="search"
+          placeholder="Rechercher un produit, une marque, une référence..."
+          className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-ec-ink outline-none placeholder:text-ec-muted/70"
+        />
+      </label>
+      <button className="inline-flex h-13 items-center justify-center gap-2 rounded-[1.05rem] bg-ec-blue px-5 text-sm font-black text-white transition hover:bg-ec-ink">
+        Rechercher
+        <ArrowRight className="size-4" />
+      </button>
+    </form>
+  );
+}
 
-      <div className="mt-2 grid gap-1">
-        {categories.slice(0, 7).map((category) => (
-          <Link
-            key={category.slug}
-            href={category.href}
-            className="group rounded-2xl px-3 py-3 transition hover:bg-ec-stone focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ec-blue"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="line-clamp-1 text-sm font-black text-ec-ink group-hover:text-ec-blue">
-                  {category.name}
-                </p>
-                <p className="mt-1 line-clamp-1 text-xs text-ec-muted">
-                  {category.subcategories.slice(0, 2).map((item) => item.name).join(" · ") ||
-                    productCountLabel(category.productCount)}
-                </p>
-              </div>
-              <ChevronRight className="mt-0.5 size-4 shrink-0 text-ec-muted transition group-hover:translate-x-0.5 group-hover:text-ec-blue" />
-            </div>
-          </Link>
-        ))}
+function ActionCard({
+  href,
+  icon,
+  title,
+  text,
+  action,
+}: {
+  href: string;
+  icon: ReactNode;
+  title: string;
+  text: string;
+  action: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group rounded-[1.5rem] border border-ec-line bg-white p-5 shadow-sm transition hover:border-ec-blue/35 hover:shadow-[0_18px_46px_rgba(20,32,46,0.08)]"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <span className="grid size-11 place-items-center rounded-full bg-ec-blue/10 text-ec-blue">
+          {icon}
+        </span>
+        <ArrowRight className="size-4 text-ec-muted transition group-hover:translate-x-1 group-hover:text-ec-blue" />
       </div>
-    </aside>
+      <h2 className="mt-5 text-lg font-black text-ec-ink">{title}</h2>
+      <p className="mt-2 text-sm leading-6 text-ec-muted">{text}</p>
+      <p className="mt-4 text-sm font-black text-ec-blue">{action}</p>
+    </Link>
+  );
+}
+
+function FeaturedProduct({ product }: { product: LandingProduct | null }) {
+  const price = formatPriceTnd(product?.price);
+
+  return (
+    <Link
+      href={product?.href ?? "/catalogue"}
+      className="group overflow-hidden rounded-[1.5rem] border border-ec-line bg-white shadow-sm transition hover:border-ec-blue/35 hover:shadow-[0_18px_46px_rgba(20,32,46,0.08)]"
+    >
+      <div className="relative aspect-[16/10] bg-ec-stone">
+        {product?.image?.thumbnailUrl || product?.image?.url ? (
+          <Image
+            src={product.image.thumbnailUrl ?? product.image.url}
+            alt={product.image.altText}
+            fill
+            sizes="(min-width: 1024px) 20rem, 92vw"
+            className="object-contain p-4 transition duration-300 group-hover:scale-[1.04]"
+          />
+        ) : (
+          <div className="grid h-full place-items-center text-xs font-black uppercase tracking-[0.2em] text-ec-muted/45">
+            Produit
+          </div>
+        )}
+      </div>
+      <div className="p-5">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-ec-blue">À la une</p>
+          {product ? <StockPill stock={product.stock} /> : null}
+        </div>
+        <h2 className="mt-3 line-clamp-2 text-base font-black leading-snug text-ec-ink">
+          {product?.name ?? "Sélection catalogue"}
+        </h2>
+        <p className="mt-3 text-lg font-black text-ec-ink">{price ?? "Prix sur devis"}</p>
+      </div>
+    </Link>
   );
 }
 
@@ -213,113 +298,82 @@ function StorefrontHero({ data }: { data: LandingHomeData }) {
   const readyProducts = data.products.status === "ready" ? data.products.items : [];
   const heroProducts = [data.heroProduct, ...readyProducts].filter((product): product is LandingProduct => Boolean(product));
   const heroProduct = data.heroProduct ?? readyProducts[0] ?? null;
-  const heroPrice = formatPriceTnd(heroProduct?.price);
 
   return (
-    <section className="border-b border-ec-line bg-[#f6f4ef] py-5 sm:py-7">
+    <section className="border-b border-ec-line bg-ec-paper py-5 sm:py-7">
       <div className="commerce-container">
-        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-ec-line bg-white px-4 py-3 text-sm shadow-sm">
+        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-[1.35rem] border border-ec-line bg-white px-4 py-3 text-sm shadow-sm">
           <span className="inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-xs font-black uppercase tracking-[0.12em] text-rose-700">
             <BadgePercent className="size-3.5" />
             Offres
           </span>
-          <span className="font-semibold text-ec-ink">Produits chantier, revêtements, sanitaires et piscine disponibles dans le catalogue e-cobam.</span>
+          <span className="font-semibold text-ec-ink">
+            Prix, stock, marques et fiches produits réunis dans le catalogue e-cobam.
+          </span>
           <Link href={promotionHref()} className="ml-auto inline-flex items-center gap-1 text-sm font-black text-ec-blue">
             Voir les sélections
             <ArrowRight className="size-4" />
           </Link>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[18rem_1fr_18rem]">
-          <CategoryMenu categories={data.categories} />
+        <div className="grid gap-5 xl:grid-cols-[18rem_minmax(0,1fr)_19rem]">
+          <DepartmentRail categories={data.categories} />
 
-          <div className="relative min-h-[30rem] overflow-hidden rounded-3xl bg-ec-ink text-white shadow-[0_22px_70px_rgba(16,32,47,0.18)]">
-            <HeroSlider products={heroProducts} />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_24%,rgba(10,141,193,0.26),transparent_28%)]" />
-
-            <div className="relative z-10 flex min-h-[30rem] flex-col justify-between p-6 sm:p-8 lg:p-10">
-              <div className="max-w-2xl">
+          <div className="relative min-h-[34rem] overflow-hidden rounded-[2rem] bg-ec-ink text-white shadow-[0_24px_80px_rgba(20,32,46,0.18)]">
+            <HeroVisual products={heroProducts} />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(10,141,193,0.28),transparent_28%)]" />
+            <div className="relative z-10 flex min-h-[34rem] flex-col justify-between p-6 sm:p-8 lg:p-10">
+              <div className="max-w-3xl">
                 <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-white/85">
                   <Sparkles className="size-3.5 text-ec-blue" />
                   Boutique officielle COBAM Group
                 </p>
-                <h1 className="mt-5 max-w-3xl text-4xl font-black leading-[0.96] tracking-tight sm:text-5xl lg:text-6xl">
-                  Achetez vos matériaux comme dans un vrai magasin.
+                <h1 className="mt-5 max-w-4xl text-4xl font-black leading-[0.95] tracking-tight sm:text-5xl lg:text-6xl">
+                  Le magasin COBAM, prêt pour vos achats techniques.
                 </h1>
-                <p className="mt-5 max-w-xl text-base leading-7 text-white/76">
-                  Parcourez les rayons, comparez les références, préparez votre panier et demandez un devis pour vos projets de construction, rénovation et finition.
+                <p className="mt-5 max-w-2xl text-base leading-7 text-white/76">
+                  Recherchez une référence, comparez les prix et stocks, ajoutez au panier et préparez vos commandes matériaux, sanitaires, revêtements et finitions.
                 </p>
+                <SearchPanel />
               </div>
 
-              <div className="mt-8 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
-                    <p className="text-2xl font-black">{data.diagnostics.productCount == null ? "400+" : formatCompactNumber(data.diagnostics.productCount)}</p>
-                    <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-white/58">Références</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
-                    <p className="text-2xl font-black">{formatCompactNumber(data.categories.length)}</p>
-                    <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-white/58">Rayons</p>
-                  </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
-                    <p className="text-2xl font-black">4</p>
-                    <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-white/58">Showrooms</p>
-                  </div>
+              <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+                  <p className="text-2xl font-black">
+                    {data.diagnostics.productCount == null
+                      ? "400+"
+                      : formatCompactNumber(data.diagnostics.productCount)}
+                  </p>
+                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-white/58">Références</p>
                 </div>
-
-                <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-                  <ButtonLink href="/catalogue" size="lg" className="bg-white text-ec-ink [color:#14202e] hover:bg-ec-blue hover:text-white hover:[color:#fff]" icon={<ShoppingBag className="size-5" />}>
-                    Explorer le catalogue
-                  </ButtonLink>
-                  <ButtonLink href="mailto:contact@cobamgroup.com?subject=Demande%20de%20devis%20e-cobam" variant="secondary" size="lg" className="border-white/20 bg-white/10 text-white [color:#fff] hover:bg-white/20" icon={<ClipboardList className="size-5" />}>
-                    Demander un devis
-                  </ButtonLink>
+                <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+                  <p className="text-2xl font-black">{formatCompactNumber(data.categories.length)}</p>
+                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-white/58">Catégories</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+                  <p className="text-2xl font-black">4</p>
+                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-white/58">Showrooms</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <aside className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-            <Link href="/compte" className="group rounded-3xl border border-ec-line bg-white p-5 shadow-sm transition hover:border-ec-blue/35 hover:shadow-[0_18px_46px_rgba(16,32,47,0.08)]">
-              <UserRound className="size-6 text-ec-blue" />
-              <h2 className="mt-5 text-lg font-black text-ec-ink">Espace client</h2>
-              <p className="mt-2 text-sm leading-6 text-ec-muted">Commandes, adresses, paiements et historique.</p>
-              <span className="mt-4 inline-flex items-center gap-1 text-sm font-black text-ec-blue">
-                Se connecter
-                <ArrowRight className="size-4 transition group-hover:translate-x-1" />
-              </span>
-            </Link>
-
-            <Link href="/suivi-commande" className="group rounded-3xl border border-ec-line bg-white p-5 shadow-sm transition hover:border-ec-blue/35 hover:shadow-[0_18px_46px_rgba(16,32,47,0.08)]">
-              <Truck className="size-6 text-ec-blue" />
-              <h2 className="mt-5 text-lg font-black text-ec-ink">Suivi commande</h2>
-              <p className="mt-2 text-sm leading-6 text-ec-muted">Consultez l’état de votre commande en quelques secondes.</p>
-              <span className="mt-4 inline-flex items-center gap-1 text-sm font-black text-ec-blue">
-                Suivre
-                <ArrowRight className="size-4 transition group-hover:translate-x-1" />
-              </span>
-            </Link>
-
-            <Link href={heroProduct?.href ?? "/catalogue"} className="group overflow-hidden rounded-3xl border border-ec-line bg-white shadow-sm transition hover:border-ec-blue/35 hover:shadow-[0_18px_46px_rgba(16,32,47,0.08)]">
-              <div className="relative aspect-[16/10] bg-ec-stone">
-                {heroProduct?.image?.thumbnailUrl || heroProduct?.image?.url ? (
-                  <Image
-                    src={heroProduct.image.thumbnailUrl ?? heroProduct.image.url}
-                    alt={heroProduct.image.altText}
-                    fill
-                    sizes="(min-width: 1024px) 18rem, 33vw"
-                    className="object-contain p-4 transition group-hover:scale-[1.04]"
-                  />
-                ) : (
-                  <div className="grid h-full place-items-center text-xs font-black uppercase tracking-[0.2em] text-ec-muted/45">Produit</div>
-                )}
-              </div>
-              <div className="p-5">
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-ec-blue">À la une</p>
-                <h2 className="mt-2 line-clamp-2 text-base font-black text-ec-ink">{heroProduct?.name ?? "Sélection catalogue"}</h2>
-                <p className="mt-2 text-sm font-black text-ec-ink">{heroPrice ?? "Prix sur devis"}</p>
-              </div>
-            </Link>
+          <aside className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+            <ActionCard
+              href="/compte"
+              icon={<UserRound className="size-5" />}
+              title="Espace client"
+              text="Profil, adresses, commandes, paiements et notifications."
+              action="Se connecter"
+            />
+            <ActionCard
+              href="/suivi-commande"
+              icon={<Truck className="size-5" />}
+              title="Suivi commande"
+              text="Consultez l'avancement d'une commande sans perdre de temps."
+              action="Suivre"
+            />
+            <FeaturedProduct product={heroProduct} />
           </aside>
         </div>
       </div>
@@ -331,22 +385,22 @@ const serviceItems = [
   {
     icon: Truck,
     title: "Retrait & livraison",
-    text: "Préparez vos achats en ligne puis confirmez la disponibilité avec l’équipe COBAM.",
+    text: "Préparez votre panier puis confirmez les modalités avec l'équipe.",
   },
   {
     icon: CreditCard,
     title: "Paiement maîtrisé",
-    text: "Modes de paiement suivis depuis l’espace client et adaptés aux commandes validées.",
+    text: "Vos préférences de règlement restent visibles dans l'espace client.",
   },
   {
     icon: ShieldCheck,
-    title: "Références vérifiées",
-    text: "Seuls les produits publiés pour l’e-commerce apparaissent dans les rayons.",
+    title: "Catalogue fiable",
+    text: "Chaque produit visible respecte les règles e-commerce COBAM.",
   },
   {
     icon: Headphones,
     title: "Conseil projet",
-    text: "Pour les quantités techniques, demandez un devis avant validation finale.",
+    text: "Demandez un devis pour les quantités techniques et chantiers.",
   },
 ];
 
@@ -355,7 +409,7 @@ function ServiceStrip() {
     <section className="border-b border-ec-line bg-white">
       <div className="commerce-container grid gap-3 py-5 sm:grid-cols-2 lg:grid-cols-4">
         {serviceItems.map((item) => (
-          <div key={item.title} className="flex gap-3 rounded-2xl border border-ec-line bg-[#fbfaf7] p-4">
+          <div key={item.title} className="flex gap-3 rounded-2xl border border-ec-line bg-white p-4 shadow-sm">
             <span className="grid size-11 shrink-0 place-items-center rounded-full bg-ec-blue/10 text-ec-blue">
               <item.icon className="size-5" />
             </span>
@@ -376,13 +430,13 @@ function CategoryDepartments({ categories }: { categories: LandingCategory[] }) 
       <div className="commerce-container">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-ec-blue">Acheter par rayon</p>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-ec-blue">Acheter par catégorie</p>
             <h2 className="mt-2 text-3xl font-black tracking-tight text-ec-ink sm:text-4xl">
-              Les univers COBAM, faciles à parcourir.
+              Les rayons les plus utiles, dès l&apos;accueil.
             </h2>
           </div>
           <Link href="/catalogue" className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-ec-line bg-white px-5 text-sm font-black text-ec-ink transition hover:border-ec-blue/35 hover:bg-ec-blue/5">
-            Tous les rayons
+            Toutes les catégories
             <ArrowRight className="size-4" />
           </Link>
         </div>
@@ -392,7 +446,7 @@ function CategoryDepartments({ categories }: { categories: LandingCategory[] }) 
             <Link
               key={category.slug}
               href={category.href}
-              className={`group overflow-hidden rounded-3xl border border-ec-line bg-white shadow-[0_14px_38px_rgba(16,32,47,0.05)] transition hover:-translate-y-1 hover:border-ec-blue/35 hover:shadow-[0_22px_58px_rgba(16,32,47,0.1)] ${
+              className={`group overflow-hidden rounded-[1.5rem] border border-ec-line bg-white shadow-[0_14px_38px_rgba(20,32,46,0.05)] transition hover:-translate-y-1 hover:border-ec-blue/35 hover:shadow-[0_22px_58px_rgba(20,32,46,0.1)] ${
                 index === 0 ? "lg:col-span-2" : ""
               }`}
             >
@@ -407,7 +461,7 @@ function CategoryDepartments({ categories }: { categories: LandingCategory[] }) 
                     className="object-cover transition duration-300 group-hover:scale-[1.04]"
                   />
                 ) : (
-                  <div className="grid h-full place-items-center bg-[linear-gradient(135deg,#f4f1eb,#e5edf2)] text-xs font-black uppercase tracking-[0.22em] text-ec-muted/45">
+                  <div className="grid h-full place-items-center bg-[linear-gradient(135deg,var(--ec-stone),var(--ec-paper))] text-xs font-black uppercase tracking-[0.22em] text-ec-muted/45">
                     COBAM
                   </div>
                 )}
@@ -441,54 +495,54 @@ function CategoryDepartments({ categories }: { categories: LandingCategory[] }) 
   );
 }
 
-function PromoBand({ categories }: { categories: LandingCategory[] }) {
+function ProjectShortcuts({ categories }: { categories: LandingCategory[] }) {
   const bathroom = findCategory(categories, ["bain", "cuisine", "robinet"]);
-  const surface = findCategory(categories, ["revêtement", "carrelage", "surface"]);
-  const chantier = findCategory(categories, ["construction", "ciment", "matériaux"]);
-  const promos = [
+  const surface = findCategory(categories, ["revêtement", "revetement", "carrelage", "surface"]);
+  const chantier = findCategory(categories, ["construction", "ciment", "matériaux", "materiaux"]);
+  const shortcuts = [
     {
-      label: "Projet salle de bain",
+      eyebrow: "Projet salle de bain",
       title: "Robinetterie, vasques, douches et équipements.",
       category: bathroom,
     },
     {
-      label: "Revêtements",
+      eyebrow: "Revêtements",
       title: "Carrelage, faïence, mosaïque et grandes dalles.",
       category: surface,
     },
     {
-      label: "Chantier",
+      eyebrow: "Chantier",
       title: "Briques, ciments, sables, graviers et armatures.",
       category: chantier,
     },
   ];
 
   return (
-    <section className="bg-[#f6f4ef] py-10">
+    <section className="bg-ec-paper py-10">
       <div className="commerce-container grid gap-4 lg:grid-cols-3">
-        {promos.map((promo) => (
+        {shortcuts.map((item) => (
           <Link
-            key={promo.label}
-            href={promo.category?.href ?? "/catalogue"}
-            className="group relative min-h-52 overflow-hidden rounded-3xl bg-ec-ink p-6 text-white shadow-[0_18px_52px_rgba(16,32,47,0.16)]"
+            key={item.eyebrow}
+            href={item.category?.href ?? "/catalogue"}
+            className="group relative min-h-56 overflow-hidden rounded-[1.65rem] bg-ec-ink p-6 text-white shadow-[0_18px_52px_rgba(20,32,46,0.16)]"
           >
-            {promo.category?.imageUrl ? (
+            {item.category?.imageUrl ? (
               <Image
-                src={promo.category.imageUrl}
-                alt={promo.category.name}
+                src={item.category.imageUrl}
+                alt={item.category.name}
                 fill
                 sizes="(min-width: 1024px) 31vw, 92vw"
                 className="object-cover opacity-42 transition duration-300 group-hover:scale-[1.04] group-hover:opacity-55"
               />
             ) : null}
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(20,32,46,0.92),rgba(20,32,46,0.42))]" />
-            <div className="relative z-10 flex min-h-40 flex-col justify-between">
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(20,32,46,0.94),rgba(20,32,46,0.48))]" />
+            <div className="relative z-10 flex min-h-44 flex-col justify-between">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-ec-blue">{promo.label}</p>
-                <h2 className="mt-3 max-w-sm text-2xl font-black leading-tight">{promo.title}</h2>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-ec-blue">{item.eyebrow}</p>
+                <h2 className="mt-3 max-w-sm text-2xl font-black leading-tight">{item.title}</h2>
               </div>
               <span className="mt-6 inline-flex items-center gap-2 text-sm font-black">
-                Voir le rayon
+                Voir la catégorie
                 <ArrowRight className="size-4 transition group-hover:translate-x-1" />
               </span>
             </div>
@@ -499,21 +553,23 @@ function PromoBand({ categories }: { categories: LandingCategory[] }) {
   );
 }
 
-function ProductRail({
+function ProductShelf({
   eyebrow,
   title,
   description,
   products,
   emptyText,
+  tone = "light",
 }: {
   eyebrow: string;
   title: string;
   description: string;
   products: LandingProduct[];
   emptyText: string;
+  tone?: "light" | "paper";
 }) {
   return (
-    <section className="bg-white py-10 sm:py-12">
+    <section className={`${tone === "paper" ? "bg-ec-paper" : "bg-white"} py-10 sm:py-12`}>
       <div className="commerce-container">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -528,17 +584,17 @@ function ProductRail({
         </div>
 
         {products.length > 0 ? (
-          <div className="mt-6 grid auto-cols-[15.5rem] grid-flow-col gap-4 overflow-x-auto pb-3 sm:grid-flow-row sm:grid-cols-2 sm:overflow-visible sm:pb-0 lg:grid-cols-4">
+          <div className="commerce-thin-scrollbar mt-6 grid auto-cols-[13.5rem] grid-flow-col gap-4 overflow-x-auto pb-3 sm:grid-flow-row sm:grid-cols-2 sm:overflow-visible sm:pb-0 lg:grid-cols-4">
             {products.slice(0, 8).map((product, index) => (
-              <MiniProductCard key={product.id} product={product} priority={index < 4} />
+              <StoreProductCard key={product.id} product={product} priority={index < 4} compact />
             ))}
           </div>
         ) : (
-          <div className="mt-6 rounded-3xl border border-dashed border-ec-line bg-[#fbfaf7] p-8 text-center">
+          <div className="mt-6 rounded-[1.5rem] border border-dashed border-ec-line bg-white p-8 text-center">
             <Search className="mx-auto size-9 text-ec-blue" />
             <h3 className="mt-4 text-lg font-black text-ec-ink">{emptyText}</h3>
             <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-ec-muted">
-              Le catalogue reste disponible. Vous pouvez rechercher une référence ou contacter l’équipe COBAM.
+              Le catalogue reste disponible. Vous pouvez rechercher une référence ou contacter l&apos;équipe COBAM.
             </p>
           </div>
         )}
@@ -553,13 +609,13 @@ function BrandSection({ brands }: { brands: LandingBrand[] }) {
   }
 
   return (
-    <section className="border-y border-ec-line bg-[#f6f4ef] py-10 sm:py-12">
+    <section className="border-y border-ec-line bg-white py-10 sm:py-12">
       <div className="commerce-container">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.2em] text-ec-blue">Marques</p>
             <h2 className="mt-2 text-3xl font-black tracking-tight text-ec-ink sm:text-4xl">
-              Les marques que vos clients demandent.
+              Des marques reconnues, prêtes à commander.
             </h2>
           </div>
           <Link href="/catalogue" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-ec-ink px-5 text-sm font-black text-white [color:#fff] transition hover:bg-ec-blue">
@@ -573,7 +629,7 @@ function BrandSection({ brands }: { brands: LandingBrand[] }) {
             <Link
               key={brand.slug}
               href={brand.href}
-              className="group flex min-h-28 flex-col justify-between rounded-2xl border border-ec-line bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-ec-blue/35 hover:shadow-[0_14px_38px_rgba(16,32,47,0.08)]"
+              className="group flex min-h-28 flex-col justify-between rounded-2xl border border-ec-line bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-ec-blue/35 hover:shadow-[0_14px_38px_rgba(20,32,46,0.08)]"
             >
               <div className="relative h-10">
                 {brand.logoUrl ? (
@@ -604,10 +660,10 @@ function FinalHelpSection() {
         <div>
           <p className="text-xs font-black uppercase tracking-[0.2em] text-ec-blue">Achat accompagné</p>
           <h2 className="mt-3 max-w-3xl text-4xl font-black tracking-tight sm:text-5xl">
-            Un panier technique mérite une validation claire.
+            Construisez votre panier, COBAM confirme le projet.
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-white/68">
-            Commencez par le catalogue, ajoutez vos références, puis confirmez les quantités, disponibilités et modalités avec COBAM Group.
+            Ajoutez vos références, comparez les disponibilités, puis validez les quantités et modalités avec l&apos;équipe commerciale.
           </p>
         </div>
 
@@ -636,20 +692,21 @@ export function StorefrontHome({ data }: { data: LandingHomeData }) {
       <StorefrontHero data={data} />
       <ServiceStrip />
       <CategoryDepartments categories={data.categories} />
-      <ProductRail
+      <ProductShelf
         eyebrow="Sélections"
-        title="Offres et produits à ne pas manquer."
-        description="Une vitrine courte, pensée comme une vraie page boutique : prix, stock, marques et accès direct aux fiches."
+        title="Les références à vérifier en premier."
+        description="Une vitrine courte avec prix, stock, marque et accès direct aux fiches produits."
         products={promotedProducts}
-        emptyText="Aucune sélection n’est publiée pour le moment."
+        emptyText="Aucune sélection n'est publiée pour le moment."
       />
-      <PromoBand categories={data.categories} />
-      <ProductRail
+      <ProjectShortcuts categories={data.categories} />
+      <ProductShelf
         eyebrow="Nouveautés"
-        title="Les dernières références du catalogue."
-        description="Gardez les références récentes à portée de main pour préparer vos achats et demandes de devis."
+        title="Les dernières références ajoutées au catalogue."
+        description="Gardez les arrivages et mises à jour à portée de main pour préparer vos demandes."
         products={latestProducts}
-        emptyText="Aucune nouveauté n’est publiée pour le moment."
+        emptyText="Aucune nouveauté n'est publiée pour le moment."
+        tone="paper"
       />
       <BrandSection brands={data.brands} />
       <FinalHelpSection />

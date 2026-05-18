@@ -49,7 +49,7 @@ export function SiteHeader({ categories }: { categories: LandingCategory[] }) {
   const navCategories = categories.filter((category) => category.subcategories.length > 0);
 
   return (
-    <header className="border-ec-line/80 sticky top-0 z-50 border-b bg-[#fbf9f5]/95 backdrop-blur-xl">
+    <header className="border-ec-line/80 sticky top-0 z-50 border-b bg-ec-paper/95 backdrop-blur-xl">
       <div className="mx-auto flex h-20 max-w-[92rem] items-center gap-5 px-4 sm:px-6 lg:px-8">
         <Logo />
 
@@ -146,7 +146,7 @@ export function SiteHeader({ categories }: { categories: LandingCategory[] }) {
           onClick={() => setMobileOpen(false)}
         >
           <aside
-            className="ml-auto flex h-full w-[min(420px,88vw)] flex-col bg-[#fbf9f5] p-5 shadow-2xl"
+            className="ml-auto flex h-full w-[min(420px,88vw)] flex-col bg-ec-paper p-5 shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between">

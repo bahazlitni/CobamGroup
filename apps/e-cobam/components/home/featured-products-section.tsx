@@ -27,7 +27,7 @@ function ProductSectionFallback({
 
 export function FeaturedProductsSection({ products }: { products: LandingProductsState }) {
   return (
-    <section className="border-y border-ec-line bg-[#faf8f3] py-14 sm:py-18 lg:py-24">
+    <section className="border-y border-ec-line bg-ec-paper py-14 sm:py-18 lg:py-24">
       <div className="commerce-container">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>

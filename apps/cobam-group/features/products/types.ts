@@ -263,6 +263,7 @@ export type PublicProductInspectorAttribute = {
   kind: string;
   name: string;
   value: string;
+  inputType: ProductTypeAttributeInputType;
   unit: string | null;
   groupName: string | null;
   groupSortOrder: number;

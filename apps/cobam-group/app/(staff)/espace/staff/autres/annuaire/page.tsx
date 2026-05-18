@@ -34,7 +34,7 @@ const PAGE_SIZE = 100;
 const LIST_CACHE_KEY = "annuaire";
 const COLUMNS = [
   "Nom",
-  "Prenom",
+  "Prénom",
   "Poste",
   "Adresse Email",
   "Site",
@@ -74,7 +74,7 @@ const EDITABLE_FIELDS: {
   placeholder: string;
 }[] = [
   { field: "lastName", placeholder: "Nom" },
-  { field: "firstName", placeholder: "Prenom" },
+  { field: "firstName", placeholder: "Prénom" },
   { field: "jobTitle", placeholder: "Poste" },
   { field: "email", placeholder: "email@cobamgroup.com" },
   { field: "site", placeholder: "Site" },

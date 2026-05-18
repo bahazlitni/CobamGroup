@@ -18,6 +18,7 @@ type ProductDetailRecord = Prisma.ProductGetPayload<{ select: typeof PRODUCT_DET
 type ProductFamilyDetailRecord = Prisma.ProductFamilyGetPayload<{
   select: typeof PRODUCT_FAMILY_DETAIL_SELECT;
 }>;
+type FilterValue<T extends string> = T | T[] | null | undefined;
 
 const MEDIA_SELECT = {
   id: true,
@@ -274,6 +275,10 @@ export type CommerceProductDetail = {
 export type CommerceCatalogResult = {
   items: CommerceProductCard[];
   total: number;
+  priceRange: {
+    min: number | null;
+    max: number | null;
+  };
   categories: CommerceCategory[];
   brands: CommerceBrand[];
   activeCategory: CommerceCategory | null;
@@ -571,7 +576,15 @@ function mapFamilyCard(record: ProductFamilyRecord): CommerceProductCard | null 
   };
 }
 
-function categoryWhere(categorySlug?: string | null) {
+function filterValues<T extends string>(value: FilterValue<T>) {
+  const values = Array.isArray(value) ? value : value ? [value] : [];
+
+  return Array.from(new Set(values.map((item) => item.trim()).filter(Boolean))) as T[];
+}
+
+function categoryWhere(categorySlug?: FilterValue<string>) {
+  const categorySlugs = filterValues(categorySlug);
+
   return {
     subcategories: {
       some: {
@@ -584,14 +597,14 @@ function categoryWhere(categorySlug?: string | null) {
                 isActive: true,
               },
             },
-            ...(categorySlug
+            ...(categorySlugs.length > 0
               ? {
                   OR: [
-                    { slug: categorySlug },
+                    { slug: { in: categorySlugs } },
                     {
                       category: {
                         is: {
-                          slug: categorySlug,
+                          slug: { in: categorySlugs },
                           isActive: true,
                         },
                       },
@@ -623,20 +636,24 @@ function productSearchWhere(search?: string | null) {
   } satisfies Prisma.ProductWhereInput;
 }
 
-function productAvailabilityWhere(availability?: ProductAvailability | null) {
-  if (!availability) {
-    return {};
-  }
+function productAvailabilityWhere(availability?: FilterValue<ProductAvailability>) {
+  const values = filterValues(availability);
 
-  if (availability === "IN_STOCK") {
-    return {
-      stockAvailability: "IN_STOCK",
-      stockAvailable: { gt: 0 },
-    } satisfies Prisma.ProductWhereInput;
+  if (values.length === 0) {
+    return null;
   }
 
   return {
-    stockAvailability: availability,
+    OR: values.map((value) =>
+      value === "IN_STOCK"
+        ? {
+            stockAvailability: "IN_STOCK",
+            stockAvailable: { gt: 0 },
+          }
+        : {
+            stockAvailability: value,
+          },
+    ),
   } satisfies Prisma.ProductWhereInput;
 }
 
@@ -667,50 +684,54 @@ function productAttributeFilterWhere(key: string, values: string[]): Prisma.Prod
 }
 
 function productBaseWhere(input: {
-  categorySlug?: string | null;
-  brandSlug?: string | null;
+  categorySlug?: FilterValue<string>;
+  brandSlug?: FilterValue<string>;
   productTypeSlug?: string | null;
   attributeFilters?: Record<string, string[]>;
   search?: string | null;
   standaloneOnly?: boolean;
-  availability?: ProductAvailability | null;
+  availability?: FilterValue<ProductAvailability>;
   promotedOnly?: boolean;
 }) {
+  const brandSlugs = filterValues(input.brandSlug);
+  const availabilityFilter = productAvailabilityWhere(input.availability);
   const attributeFilters = Object.entries(input.attributeFilters ?? {})
     .map(([key, values]) => productAttributeFilterWhere(key, values))
     .filter((filter): filter is Prisma.ProductWhereInput => filter != null);
   const andFilters: Prisma.ProductWhereInput[] = [
     ...(input.productTypeSlug ? [{ productType: { is: { slug: input.productTypeSlug } } }] : []),
+    ...(input.standaloneOnly
+      ? [
+          {
+            OR: [
+              { kind: { in: ["STANDARD", "SINGLE"] } },
+              { kind: "VARIANT", familyMembership: null },
+            ],
+          } satisfies Prisma.ProductWhereInput,
+        ]
+      : []),
     ...attributeFilters,
+    ...(availabilityFilter ? [availabilityFilter] : []),
   ];
 
   return {
     visibleEcommerce: true,
     kind: { in: ["STANDARD", "SINGLE", "VARIANT"] },
-    ...(input.standaloneOnly
-      ? {
-          OR: [
-            { kind: { in: ["STANDARD", "SINGLE"] } },
-            { kind: "VARIANT", familyMembership: null },
-          ],
-        }
-      : {}),
-    ...(input.brandSlug ? { brand: { is: { slug: input.brandSlug } } } : {}),
+    ...(brandSlugs.length > 0 ? { brand: { is: { slug: { in: brandSlugs } } } } : {}),
     ...(input.promotedOnly ? { isPromoted: true } : {}),
     ...(andFilters.length > 0 ? { AND: andFilters } : {}),
-    ...productAvailabilityWhere(input.availability),
     ...categoryWhere(input.categorySlug),
     ...productSearchWhere(input.search),
   } satisfies Prisma.ProductWhereInput;
 }
 
 function familyWhere(input: {
-  categorySlug?: string | null;
-  brandSlug?: string | null;
+  categorySlug?: FilterValue<string>;
+  brandSlug?: FilterValue<string>;
   productTypeSlug?: string | null;
   attributeFilters?: Record<string, string[]>;
   search?: string | null;
-  availability?: ProductAvailability | null;
+  availability?: FilterValue<ProductAvailability>;
   promotedOnly?: boolean;
 }) {
   const productFilter = productBaseWhere({
@@ -763,6 +784,69 @@ function sortCards(items: CommerceProductCard[], sort: string | null | undefined
   }
 
   return next.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+function cardPriceNumber(card: CommerceProductCard) {
+  if (card.price == null) {
+    return null;
+  }
+
+  const price = Number(card.price);
+  return Number.isFinite(price) ? price : null;
+}
+
+function cardPriceRange(items: CommerceProductCard[]) {
+  const prices = items
+    .map((card) => cardPriceNumber(card))
+    .filter((price): price is number => price != null);
+
+  if (prices.length === 0) {
+    return { min: null, max: null };
+  }
+
+  return {
+    min: Math.floor(Math.min(...prices)),
+    max: Math.ceil(Math.max(...prices)),
+  };
+}
+
+function filterCardsByPrice(
+  items: CommerceProductCard[],
+  minPrice: number | null | undefined,
+  maxPrice: number | null | undefined,
+) {
+  if (minPrice == null && maxPrice == null) {
+    return items;
+  }
+
+  return items.filter((card) => {
+    const price = cardPriceNumber(card);
+
+    if (price == null) {
+      return false;
+    }
+
+    if (minPrice != null && price < minPrice) {
+      return false;
+    }
+
+    if (maxPrice != null && price > maxPrice) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
+function normalizePriceFilterForRange(
+  price: number | null | undefined,
+  priceRange: { min: number | null; max: number | null },
+) {
+  if (price == null || priceRange.min == null || priceRange.max == null) {
+    return null;
+  }
+
+  return price >= priceRange.min && price <= priceRange.max ? price : null;
 }
 
 export async function getNavigationData() {
@@ -860,14 +944,16 @@ export async function getCommerceBrands(input: { productType?: string | null } =
 }
 
 export async function listCommerceProducts(input: {
-  category?: string | null;
-  brand?: string | null;
+  category?: FilterValue<string>;
+  brand?: FilterValue<string>;
   productType?: string | null;
   attributeFilters?: Record<string, string[]>;
   search?: string | null;
   sort?: string | null;
-  availability?: ProductAvailability | null;
+  availability?: FilterValue<ProductAvailability>;
   promotedOnly?: boolean;
+  minPrice?: number | null;
+  maxPrice?: number | null;
   page?: number;
   pageSize?: number;
 }): Promise<CommerceCatalogResult> {
@@ -912,19 +998,29 @@ export async function listCommerceProducts(input: {
     ...families.map(mapFamilyCard).filter((card): card is CommerceProductCard => card != null),
     ...products.map(mapProductCard),
   ];
-  const sorted = sortCards(cards, input.sort);
+  const priceRange = cardPriceRange(cards);
+  const filtered = filterCardsByPrice(
+    cards,
+    normalizePriceFilterForRange(input.minPrice, priceRange),
+    normalizePriceFilterForRange(input.maxPrice, priceRange),
+  );
+  const sorted = sortCards(filtered, input.sort);
   const offset = (page - 1) * pageSize;
   const items = sorted.slice(offset, offset + pageSize);
+  const selectedCategories = filterValues(input.category);
   const activeCategory =
-    categories.find((category) => category.slug === input.category) ??
-    categories.find((category) =>
-      category.subcategories.some((subcategory) => subcategory.slug === input.category),
-    ) ??
-    null;
+    selectedCategories.length === 1
+      ? (categories.find((category) => category.slug === selectedCategories[0]) ??
+        categories.find((category) =>
+          category.subcategories.some((subcategory) => subcategory.slug === selectedCategories[0]),
+        ) ??
+        null)
+      : null;
 
   return {
     items,
     total: sorted.length,
+    priceRange,
     categories,
     brands,
     activeCategory,

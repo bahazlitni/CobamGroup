@@ -1,20 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --ec-paper: #fafaf7;
+  --ec-primary: #14202e;
+  --ec-secondary: #0a8dc1;
+  --ec-background: #eeeeee;
+  --ec-border: #d3d3d3;
+  --ec-paper: var(--ec-background);
   --ec-ink: #14202e;
   --ec-muted: #647184;
-  --ec-line: #dbe2ea;
+  --ec-line: var(--ec-border);
   --ec-blue: #0a8dc1;
   --ec-brass: #b08a5a;
-  --ec-stone: #f1eee8;
-  --ec-stone-strong: #e5ded2;
+  --ec-stone: color-mix(in srgb, var(--ec-background) 86%, white);
+  --ec-stone-strong: color-mix(in srgb, var(--ec-background) 72%, var(--ec-primary));
   --ec-white: #ffffff;
   --font-sans: "Sora", "Aptos", "Segoe UI", Arial, sans-serif;
   --font-serif: "Source Serif 4", Georgia, serif;
 }
 
 @theme inline {
+  --color-ec-primary: var(--ec-primary);
+  --color-ec-secondary: var(--ec-secondary);
+  --color-ec-background: var(--ec-background);
+  --color-ec-border: var(--ec-border);
   --color-ec-paper: var(--ec-paper);
   --color-ec-ink: var(--ec-ink);
   --color-ec-muted: var(--ec-muted);
@@ -68,6 +76,28 @@
 .commerce-container {
   width: min(92rem, calc(100vw - 2rem));
   margin-inline: auto;
+}
+
+.commerce-thin-scrollbar {
+  scrollbar-color: color-mix(in srgb, var(--ec-ink) 34%, transparent) transparent;
+  scrollbar-width: thin;
+}
+
+.commerce-thin-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.commerce-thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.commerce-thin-scrollbar::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--ec-ink) 26%, transparent);
+  border-radius: 999px;
+}
+
+.commerce-thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--ec-blue) 55%, var(--ec-ink));
 }
 
 @media (min-width: 640px) {

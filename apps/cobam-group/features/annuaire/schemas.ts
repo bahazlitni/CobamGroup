@@ -74,7 +74,7 @@ export function parseAnnuairePersonInput(raw: unknown): AnnuairePersonInput {
     input.lastName = normalizeText(record.lastName, 150, "Nom");
   }
   if ("firstName" in record) {
-    input.firstName = normalizeText(record.firstName, 150, "Prenom");
+    input.firstName = normalizeText(record.firstName, 150, "Prénom");
   }
   if ("jobTitle" in record) {
     input.jobTitle = normalizeText(record.jobTitle, 200, "Poste");

@@ -167,7 +167,7 @@ export default async function CustomerAddressesPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Telephone</Label>
+                  <Label htmlFor="phone">Téléphone</Label>
                   <Input id="phone" name="phone" type="tel" defaultValue={account.phone ?? ""} />
                 </div>
                 <div className="space-y-2 sm:col-span-2">

@@ -1030,7 +1030,7 @@ export function EcommerceFulfillmentsAdminPage() {
           "Lieu / transport",
           "Tracking",
           "Planning",
-          "Creation",
+          "Création",
         ]}
         isLoading={isLoading}
         isEmpty={items.length === 0}

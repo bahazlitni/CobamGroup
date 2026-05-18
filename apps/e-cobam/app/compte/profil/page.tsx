@@ -68,7 +68,7 @@ export default async function CustomerProfilePage() {
                 <Input id="email" value={account.user.email} disabled />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="firstName">Prenom</Label>
+                <Label htmlFor="firstName">Prénom</Label>
                 <Input id="firstName" name="firstName" defaultValue={account.firstName ?? ""} />
               </div>
               <div className="space-y-2">
@@ -92,7 +92,7 @@ export default async function CustomerProfilePage() {
                 />
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="phone">Telephone</Label>
+                <Label htmlFor="phone">Téléphone</Label>
                 <Input id="phone" name="phone" type="tel" defaultValue={account.phone ?? ""} />
               </div>
             </CardContent>

@@ -493,6 +493,7 @@ function mapVariantAttributes(product: PublicProductRecord): PublicProductInspec
       kind: presentation.kind,
       name: presentation.name,
       value: formatAttributeValue(attribute),
+      inputType: attribute.inputType,
       unit: presentation.unit,
       groupName: attribute.groupName,
       groupSortOrder: attribute.groupSortOrder,

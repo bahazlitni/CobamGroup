@@ -98,7 +98,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   mode === "register" ? "bg-ec-ink text-white" : "text-ec-muted hover:text-ec-ink"
                 }`}
               >
-                Creation
+                Création
               </Link>
             </div>
 
@@ -113,7 +113,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 <input type="hidden" name="next" value={next} />
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="space-y-2">
-                    <span className={labelClass}>Prenom</span>
+                    <span className={labelClass}>Prénom</span>
                     <input name="firstName" autoComplete="given-name" required className={inputClass} />
                   </label>
                   <label className="space-y-2">

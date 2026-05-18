@@ -496,7 +496,7 @@ export default function PromotionEditorPage({ promotionId }: { promotionId?: str
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.72fr)]">
         <Panel
-          pretitle={isNew ? "Creation" : "Edition"}
+          pretitle={isNew ? "Création" : "Edition"}
           title={isNew ? "Creer une promotion" : "Parametres de promotion"}
           description="Definissez la remise, les dates et la portee. Une portee vide signifie tout le catalogue."
           className="max-w-none"

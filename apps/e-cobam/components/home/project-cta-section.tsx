@@ -3,7 +3,7 @@ import { ArrowRight, ClipboardList } from "lucide-react";
 
 export function ProjectCtaSection() {
   return (
-    <section className="bg-[#f6f2ea] py-14 sm:py-18 lg:py-24">
+    <section className="bg-ec-paper py-14 sm:py-18 lg:py-24">
       <div className="commerce-container">
         <div className="grid gap-8 rounded-[2rem] border border-ec-line bg-white p-6 shadow-[0_22px_70px_rgba(16,32,47,0.08)] sm:p-8 lg:grid-cols-[1.2fr_auto] lg:items-center lg:p-10">
           <div>

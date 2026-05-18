@@ -1,5 +1,52 @@
+import { CheckCircle2, XCircle } from "lucide-react";
 import type { PublicProductInspectorAttribute } from "@/features/products/types";
 import { buildNormalAttributeDisplayGroups } from "./utils";
+
+function parseBooleanAttributeValue(value: string) {
+  const normalized = value.trim().toLowerCase();
+
+  if (["true", "1", "yes", "oui"].includes(normalized)) {
+    return true;
+  }
+
+  if (["false", "0", "no", "non"].includes(normalized)) {
+    return false;
+  }
+
+  return null;
+}
+
+function AttributeValue({ attribute }: { attribute: PublicProductInspectorAttribute }) {
+  if (attribute.inputType === "BOOLEAN") {
+    const booleanValue = parseBooleanAttributeValue(attribute.value);
+
+    if (booleanValue != null) {
+      const Icon = booleanValue ? CheckCircle2 : XCircle;
+
+      return (
+        <span
+          className={
+            booleanValue
+              ? "inline-flex items-center gap-1.5 text-emerald-700"
+              : "inline-flex items-center gap-1.5 text-slate-500"
+          }
+        >
+          <Icon className="size-4" aria-hidden="true" />
+          <span>{booleanValue ? "Oui" : "Non"}</span>
+        </span>
+      );
+    }
+  }
+
+  return (
+    <>
+      <span>{attribute.value}</span>
+      {attribute.unit ? (
+        <span className="text-xs font-medium text-slate-500">{attribute.unit}</span>
+      ) : null}
+    </>
+  );
+}
 
 export default function NormalAttributesList({
   normalAttributes,
@@ -32,10 +79,7 @@ export default function NormalAttributesList({
                   {attribute.name}
                 </dt>
                 <dd className="text-cobam-dark-blue mt-1 flex flex-wrap items-baseline gap-1 text-sm font-semibold">
-                  <span>{attribute.value}</span>
-                  {attribute.unit ? (
-                    <span className="text-xs font-medium text-slate-500">{attribute.unit}</span>
-                  ) : null}
+                  <AttributeValue attribute={attribute} />
                 </dd>
               </div>
             ))}

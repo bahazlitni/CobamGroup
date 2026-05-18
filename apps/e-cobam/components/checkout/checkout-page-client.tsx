@@ -267,7 +267,7 @@ export function CheckoutPageClient() {
             <h2 className="text-xl font-black text-ec-ink">Contact</h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <label className="space-y-2">
-                <span className={labelClass}>Prenom</span>
+                <span className={labelClass}>Prénom</span>
                 <input
                   required
                   autoComplete="given-name"

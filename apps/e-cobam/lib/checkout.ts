@@ -223,7 +223,7 @@ function normalizeCheckoutInput(input: unknown): NormalizedCheckoutInput {
   const addressInput = objectValue(fulfillmentInput.address);
   const paymentInput = objectValue(body.payment);
 
-  const firstName = requireText(customerInput.firstName, "Prenom", 100);
+  const firstName = requireText(customerInput.firstName, "Prénom", 100);
   const lastName = requireText(customerInput.lastName, "Nom", 100);
   const email = requireEmail(customerInput.email);
   const phone = requireText(customerInput.phone, "Téléphone", 50);

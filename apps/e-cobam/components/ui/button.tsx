@@ -8,7 +8,7 @@ const variants: Record<ButtonVariant, string> = {
   primary:
     "bg-ec-ink text-white [color:#fff] shadow-[0_16px_35px_rgba(16,32,47,0.18)] hover:bg-ec-blue focus-visible:outline-ec-blue",
   secondary:
-    "border border-ec-ink/15 bg-white text-ec-ink hover:border-ec-blue/40 hover:bg-ec-blue/5 focus-visible:outline-ec-blue",
+    "border border-ec-blue bg-ec-blue text-white [color:#fff] shadow-[0_14px_30px_rgba(10,141,193,0.18)] hover:border-ec-ink hover:bg-ec-ink focus-visible:outline-ec-blue",
   ghost:
     "bg-transparent text-ec-ink hover:bg-ec-stone/70 focus-visible:outline-ec-blue",
   quiet:

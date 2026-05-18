@@ -30,7 +30,7 @@ export function HeroSection({
   const price = formatPriceTnd(heroProduct?.price);
 
   return (
-    <section className="relative overflow-hidden border-b border-ec-line bg-[#f6f2ea]">
+    <section className="relative overflow-hidden border-b border-ec-line bg-ec-paper">
       <div className="commerce-container grid min-h-[calc(100svh-5rem)] gap-10 py-10 sm:py-14 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:py-20">
         <div className="max-w-3xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-ec-line bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-ec-blue shadow-sm">
@@ -70,7 +70,7 @@ export function HeroSection({
             <div className="rounded-3xl border border-ec-line bg-white/78 p-5 shadow-sm">
               <p className="text-3xl font-black text-ec-ink">{formatCompactNumber(categories.length)}</p>
               <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-ec-muted">
-                rayons
+                catégories
               </p>
             </div>
             <div className="rounded-3xl border border-ec-line bg-white/78 p-5 shadow-sm">
@@ -95,7 +95,7 @@ export function HeroSection({
                   className="object-contain p-8"
                 />
               ) : (
-                <div className="flex h-full flex-col items-center justify-center gap-4 bg-[#f2eee6] px-8 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-4 bg-ec-stone px-8 text-center">
                   <PackageSearch className="size-12 text-ec-blue" />
                   <p className="max-w-sm text-lg font-semibold text-ec-ink">
                     Le catalogue e-cobam est prêt pour vos produits, images et fiches techniques.

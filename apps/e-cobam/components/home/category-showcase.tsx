@@ -10,7 +10,7 @@ function productCountLabel(value: number | null) {
   }
 
   if (value === 0) {
-    return "Rayon à découvrir";
+    return "Catégorie à découvrir";
   }
 
   return `${formatCompactNumber(value)} produits`;
@@ -23,7 +23,7 @@ export function CategoryShowcase({ categories }: { categories: LandingCategory[]
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-ec-blue">
-              Rayons
+              Catégories
             </p>
             <h2 className="mt-3 max-w-3xl text-3xl font-black tracking-tight text-ec-ink sm:text-5xl">
               Trouver vite le bon univers produit.
@@ -33,7 +33,7 @@ export function CategoryShowcase({ categories }: { categories: LandingCategory[]
             href="/catalogue"
             className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-ec-line bg-white px-5 text-sm font-semibold text-ec-ink transition hover:border-ec-blue/40 hover:bg-ec-blue/5"
           >
-            Tous les rayons
+            Toutes les catégories
             <ArrowRight className="size-4" />
           </Link>
         </div>
@@ -45,7 +45,7 @@ export function CategoryShowcase({ categories }: { categories: LandingCategory[]
               href={category.href}
               className="group overflow-hidden rounded-[1.4rem] border border-ec-line bg-white transition duration-300 hover:-translate-y-1 hover:border-ec-blue/30 hover:shadow-[0_20px_60px_rgba(16,32,47,0.10)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ec-blue"
             >
-              <div className="relative aspect-[4/2.75] bg-[#f3f0ea]">
+              <div className="relative aspect-[4/2.75] bg-ec-stone">
                 {category.imageUrl ? (
                   <Image
                     src={category.imageUrl}
