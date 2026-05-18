@@ -1,11 +1,53 @@
 "use client";
 
-import { PublicProductInspectorMedia, PublicProductInspectorVariant } from "@/features/products/types";
+import {
+  PublicProductInspectorMedia,
+  PublicProductInspectorVariant,
+} from "@/features/products/types";
 import { cn } from "@/lib/utils";
-import { getVariantMedia } from "./utils";
+import {
+  getVariantMedia,
+  getVariantSpecialValue,
+  normalizeComparableValue,
+} from "./utils";
 import MediaFrame from "./MediaFrame";
 import RailCarousel from "@/components/ui/custom/RailCarousel";
 import { useEffect, useMemo, useRef } from "react";
+
+function getVariantAttribute(
+  variant: PublicProductInspectorVariant,
+  keys: string[],
+) {
+  const wanted = new Set(keys.map((key) => normalizeComparableValue(key).replace(/\s+/g, "_")));
+
+  return variant.attributes.find((attribute) => {
+    const normalizedKeys = [
+      attribute.attributeId,
+      attribute.name,
+      attribute.kind,
+    ]
+      .filter(Boolean)
+      .map((value) => normalizeComparableValue(value).replace(/\s+/g, "_"));
+
+    return normalizedKeys.some((key) => wanted.has(key));
+  });
+}
+
+function formatOptionLabel(value: string, unit: string | null | undefined) {
+  const trimmedValue = value.trim();
+  if (!unit) {
+    return trimmedValue;
+  }
+
+  const normalizedValue = trimmedValue.toLowerCase();
+  const normalizedUnit = unit.toLowerCase();
+
+  if (normalizedValue.endsWith(normalizedUnit)) {
+    return trimmedValue;
+  }
+
+  return `${trimmedValue} ${unit}`;
+}
 
 function getVariantPreviewMedia(
   variant: PublicProductInspectorVariant,
@@ -30,25 +72,42 @@ function VariantRailCard({
   onClick,
 }: VariantRailCardProps) {
   const previewMedia = getVariantPreviewMedia(variant, coverMedia);
+  const color = getVariantSpecialValue(variant, "COLOR");
+  const packaging = getVariantAttribute(variant, ["packaging_weight_kg", "conditionnement"]);
 
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "w-[85vw] max-w-[18rem] min-w-[15rem] shrink-0 snap-start overflow-hidden rounded-[1.4rem] border bg-white text-left transition sm:w-72",
+        "w-[78vw] max-w-[17rem] min-w-[14rem] shrink-0 snap-start overflow-hidden rounded-[1.4rem] border bg-white text-left shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobam-water-blue/40 sm:w-64",
         isActive
-          ? "border-cobam-water-blue ring-2 ring-cobam-water-blue/25"
+          ? "border-cobam-dark-blue ring-2 ring-cobam-dark-blue/10"
           : "border-slate-200 hover:border-slate-300",
       )}
       data-variant-id={variant.id}
+      aria-pressed={isActive}
     >
-      <div className="relative aspect-square w-full overflow-hidden bg-slate-100">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-50">
         <MediaFrame isThumbnail={true} media={previewMedia} />
       </div>
-      <div className="p-4">
-        <p className="text-base font-semibold text-cobam-dark-blue">{variant.name}</p>
-        <p className="text-sm text-slate-500">{variant.sku}</p>
+      <div className="space-y-3 p-4">
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-slate-500">
+            {color?.label ?? "Variante"}
+          </span>
+          {packaging ? (
+            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-slate-500">
+              {formatOptionLabel(packaging.value, packaging.unit)}
+            </span>
+          ) : null}
+        </div>
+        <p className="line-clamp-2 min-h-12 text-base font-semibold leading-6 text-cobam-dark-blue">
+          {variant.name}
+        </p>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+          SKU {variant.sku}
+        </p>
       </div>
     </button>
   );
@@ -89,7 +148,18 @@ export default function VariantRail({
     }
 
     requestAnimationFrame(() => {
-      target.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+      const viewportRect = viewport.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const targetCenterOffset =
+        targetRect.left - viewportRect.left + targetRect.width / 2;
+      const nextLeft =
+        viewport.scrollLeft + targetCenterOffset - viewport.clientWidth / 2;
+      const maxLeft = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+
+      viewport.scrollTo({
+        left: Math.max(0, Math.min(maxLeft, nextLeft)),
+        behavior: "smooth",
+      });
     });
   }, [activeIndex, variants]);
 
@@ -98,10 +168,10 @@ export default function VariantRail({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-            Variantes
+            Variantes disponibles
           </p>
           <h2 className="mt-1 text-2xl font-semibold tracking-[-0.03em] text-cobam-dark-blue">
-            Choisir une variante
+            Meme gamme
           </h2>
         </div>
       </div>
@@ -116,8 +186,8 @@ export default function VariantRail({
         className="-mx-2 px-2"
         viewportClassName="p-2 pb-4 pr-1"
         trackClassName="gap-4"
-        previousButtonLabel="Variantes precedentes"
-        nextButtonLabel="Variantes suivantes"
+        previousButtonLabel="Produits de la meme gamme precedents"
+        nextButtonLabel="Produits de la meme gamme suivants"
       >
         {variants.map((variant) => (
           <VariantRailCard
@@ -125,7 +195,7 @@ export default function VariantRail({
             variant={variant}
             coverMedia={coverMedia}
             isActive={selectedVariantId !== null && variant.id === selectedVariantId}
-            onClick={() => { console.log("Hello!"); selectVariant(variant.id)}}
+            onClick={() => selectVariant(variant.id)}
           />
         ))}
       </RailCarousel>

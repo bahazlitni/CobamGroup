@@ -6,6 +6,7 @@ export interface BreadCrumbProps {
     categoryName?: string;
     subcategorySlug?: string;
     subcategoryName?: string;
+    currentName?: string;
 } 
 
 function DynamicLink({href, text} : { href?: string, text?: string}){
@@ -15,8 +16,14 @@ function DynamicLink({href, text} : { href?: string, text?: string}){
     return <Link href={href} className={cls}>{text}</Link>
 }
 
-export default function BreadCrumb({categorySlug, categoryName, subcategorySlug, subcategoryName}: BreadCrumbProps){
-    return <div className="inline-flex flex-wrap items-center gap-1.5 text-sm text-slate-500">
+export default function BreadCrumb({
+    categorySlug,
+    categoryName,
+    subcategorySlug,
+    subcategoryName,
+    currentName,
+}: BreadCrumbProps){
+    return <nav aria-label="Fil d'Ariane" className="inline-flex flex-wrap items-center gap-1.5 text-sm text-slate-500">
         <Link href="/produits" className="transition hover:text-cobam-water-blue">
             Produits
         </Link>
@@ -34,5 +41,14 @@ export default function BreadCrumb({categorySlug, categoryName, subcategorySlug,
                 <DynamicLink href={categorySlug && subcategorySlug ? `/produits/${categorySlug}/${subcategorySlug}` : undefined} text={subcategoryName}/>
             </>
         }
-    </div>
+        {
+            currentName &&
+            <>
+                <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+                <span className="max-w-[22rem] truncate font-medium text-cobam-dark-blue">
+                    {currentName}
+                </span>
+            </>
+        }
+    </nav>
 }

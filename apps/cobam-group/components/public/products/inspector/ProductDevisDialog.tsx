@@ -14,11 +14,19 @@ import {
 interface ProductDevisDialogProps {
   productName: string;
   sku: string;
+  triggerLabel?: string;
+  title?: string;
+  description?: string;
+  submitText?: string;
 }
 
 export default function ProductDevisDialog({
   productName,
   sku,
+  triggerLabel = "Demander un devis",
+  title = "Demande de devis produit",
+  description = "Le produit est deja renseigne. Ajoutez vos coordonnees pour recevoir un devis ou un retour de notre equipe.",
+  submitText = "Envoyer la demande de devis",
 }: ProductDevisDialogProps) {
   const [open, setOpen] = useState(false);
   const subject = `${productName} (SKU: ${sku})`;
@@ -32,24 +40,21 @@ export default function ProductDevisDialog({
         type="button"
         onClick={() => setOpen(true)}
       >
-        Demander
+        {triggerLabel}
       </AnimatedUIButton>
 
       <DialogContent className="max-h-[92vh] w-[min(94vw,760px)] overflow-y-auto rounded-[1.5rem] p-0">
         <DialogHeader className="border-b border-slate-200 px-6 py-6 pr-16">
-          <DialogTitle>Demande de devis</DialogTitle>
-          <DialogDescription>
-            Le produit est déjà renseigné. Ajoutez vos coordonnées pour recevoir
-            un retour de notre équipe.
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
         <div className="px-12 pb-6 pt-5">
           <PublicForm
             noHeader
             type="devis"
-            title="Demande de devis"
-            submitText="Envoyer la demande"
+            title={title}
+            submitText={submitText}
             submittingText="Envoi en cours..."
             initialValues={initialValues}
           />

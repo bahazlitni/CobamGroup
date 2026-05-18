@@ -26,7 +26,7 @@ type ProductTypeSearchParams = {
   search?: string | string[];
   marque?: string | string[];
   tri?: string | string[];
-  disponibilite?: string | string[];
+  disponibilité?: string | string[];
   selection?: string | string[];
   page?: string | string[];
   [key: string]: string | string[] | undefined;
@@ -124,7 +124,7 @@ function productTypeHref(
   if (input.search) params.set("search", input.search);
   if (input.brand) params.set("marque", input.brand);
   if (input.sort && input.sort !== "latest") params.set("tri", input.sort);
-  if (input.availability) params.set("disponibilite", input.availability);
+  if (input.availability) params.set("disponibilité", input.availability);
   if (input.promotedOnly) params.set("selection", "promotion");
   if (input.page && input.page > 1) params.set("page", input.page.toString());
 
@@ -190,7 +190,7 @@ export default async function ProductTypePage({ params, searchParams }: ProductT
   const search = normalizeSearchParam(query.search);
   const brand = normalizeSearchParam(query.marque);
   const sort = normalizeSearchParam(query.tri) ?? "latest";
-  const availability = resolveAvailability(query.disponibilite);
+  const availability = resolveAvailability(query.disponibilité);
   const promotedOnly = normalizeSearchParam(query.selection) === "promotion";
   const page = resolvePage(query.page);
   const attributeFilters = parseAttributeFilters(query);
@@ -291,7 +291,7 @@ export default async function ProductTypePage({ params, searchParams }: ProductT
             <CardContent>
               <form action={`/types-produits/${slug}`} className="space-y-3">
                 {brand ? <input type="hidden" name="marque" value={brand} /> : null}
-                {availability ? <input type="hidden" name="disponibilite" value={availability} /> : null}
+                {availability ? <input type="hidden" name="disponibilité" value={availability} /> : null}
                 {promotedOnly ? <input type="hidden" name="selection" value="promotion" /> : null}
                 {sort !== "latest" ? <input type="hidden" name="tri" value={sort} /> : null}
                 <HiddenFilterInputs filters={attributeFilters} />
@@ -469,7 +469,7 @@ export default async function ProductTypePage({ params, searchParams }: ProductT
                 <form action={`/types-produits/${slug}`} className="flex items-center gap-2">
                   {search ? <input type="hidden" name="search" value={search} /> : null}
                   {brand ? <input type="hidden" name="marque" value={brand} /> : null}
-                  {availability ? <input type="hidden" name="disponibilite" value={availability} /> : null}
+                  {availability ? <input type="hidden" name="disponibilité" value={availability} /> : null}
                   {promotedOnly ? <input type="hidden" name="selection" value="promotion" /> : null}
                   <HiddenFilterInputs filters={attributeFilters} />
                   <label className="text-sm text-ec-muted" htmlFor="tri">

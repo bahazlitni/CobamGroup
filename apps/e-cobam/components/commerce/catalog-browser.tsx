@@ -396,7 +396,7 @@ export function CatalogBrowser({ initialResult, initialFilters }: CatalogBrowser
             </div>
             <div className="space-y-1">
               {CATALOG_AVAILABILITY_OPTIONS.map((item) => {
-                const id = `disponibilite-${item.value}`;
+                const id = `disponibilité-${item.value}`;
 
                 return (
                   <FilterCheckbox

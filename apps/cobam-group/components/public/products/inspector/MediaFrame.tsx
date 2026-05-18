@@ -5,27 +5,23 @@ import Image from "next/image";
 export default function MediaFrame({
   media,
   isThumbnail = false,
-  highQuality = false
 }: {
   media: null | PublicProductInspectorMedia;
   priority?: boolean;
-  highQuality?: boolean;
   isThumbnail?: boolean;
 }) {
     if(media){
         const src = (isThumbnail ? media.thumbnailUrl : media.url) ?? media.url
-        const quality = isThumbnail ? 0 : 100
+        const quality = isThumbnail ? 60 : 100
 
         if (media.kind === "IMAGE") {
-            if(highQuality){
-                return <img draggable={false} src={media.url} alt={media.altText ?? media.title ?? "frame"} className="object-cover" />
-            }
             return (
             <Image
                 src={src}
                 alt={media.altText ?? media.title ?? "frame"}
                 fill
                 priority={!isThumbnail}
+                sizes={isThumbnail ? "272px" : "100vw"}
                 className="object-cover"
                 quality={quality}
                 draggable={false}
