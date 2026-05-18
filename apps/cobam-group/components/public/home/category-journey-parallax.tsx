@@ -57,7 +57,7 @@ export function CategoryJourneyParallax({ categories }: { categories: JourneyCat
       className="relative bg-[#14202e] text-white"
       style={{ minHeight: `${Math.max(categories.length * 82, 360)}vh` }}
     >
-      <div className="sticky top-0 flex min-h-screen items-center overflow-hidden">
+      <div className="sticky top-0 min-h-screen overflow-hidden">
         <div className="absolute inset-0" aria-hidden="true">
           {categories.map((category, index) => (
             <Image
@@ -77,8 +77,8 @@ export function CategoryJourneyParallax({ categories }: { categories: JourneyCat
           <div className="cobam-static-grid absolute inset-0 opacity-25" />
         </div>
 
-        <div className="relative z-10 mx-auto grid w-full max-w-[1500px] gap-10 px-5 py-24 sm:px-8 lg:grid-cols-[0.42fr_0.58fr] lg:px-12">
-          <div className="hidden lg:block">
+        <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-[1500px] gap-10 px-5 py-24 sm:px-8 lg:grid-cols-[0.42fr_0.58fr] lg:items-center lg:px-12">
+          <div className="hidden self-start lg:block lg:pt-8" data-landing-reveal>
             <p className="cobam-section-kicker text-[#8fdcff]">Parcours catalogue</p>
             <div className="mt-10 space-y-2">
               {categories.map((category, index) => {
@@ -88,21 +88,28 @@ export function CategoryJourneyParallax({ categories }: { categories: JourneyCat
                   <Link
                     key={category.id}
                     href={category.href}
-                    className={`group grid grid-cols-[3.5rem_1fr] items-center gap-4 border-b border-white/10 py-4 transition ${
+                    className={`cobam-journey-motion-link group grid grid-cols-[3.5rem_1fr] items-center gap-4 border-b border-white/10 py-4 transition ${
                       isActive ? "text-white" : "text-white/42 hover:text-white/72"
                     }`}
                   >
                     <span className="text-xs font-black tracking-[0.22em] text-[#8fdcff]">
                       {category.number}
                     </span>
-                    <span className="text-2xl font-semibold leading-none">{category.name}</span>
+                    <span className="flex flex-wrap items-center gap-2 text-2xl font-semibold leading-none">
+                      {category.name}
+                      {category.isPromoted ? (
+                        <span className="rounded-full border border-[#8fdcff]/40 bg-[#8fdcff]/12 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-[#8fdcff]">
+                          En promotion
+                        </span>
+                      ) : null}
+                    </span>
                   </Link>
                 );
               })}
             </div>
           </div>
 
-          <article className="max-w-4xl">
+          <article className="max-w-4xl" data-landing-reveal data-parallax-speed="0.035">
             <p className="cobam-section-kicker text-[#8fdcff]">
               {active.number} / Catégorie
             </p>
@@ -121,7 +128,7 @@ export function CategoryJourneyParallax({ categories }: { categories: JourneyCat
                 <Link
                   key={`${active.id}-${subcategory.label}`}
                   href={subcategory.href}
-                  className="rounded-full border border-white/14 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white/72 transition hover:border-[#8fdcff]/60 hover:text-white"
+                  className="cobam-motion-chip rounded-full border border-white/14 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white/72 transition hover:border-[#8fdcff]/60 hover:text-white"
                 >
                   {String(index + 1).padStart(2, "0")} {subcategory.label}
                 </Link>
@@ -144,9 +151,16 @@ export function CategoryJourneyParallax({ categories }: { categories: JourneyCat
       <div className="lg:hidden">
         <div className="mx-auto grid max-w-[1500px] gap-4 px-5 pb-14 sm:px-8">
           {categories.map((category) => (
-            <Link key={category.id} href={category.href} className="rounded-2xl border border-white/12 bg-white/[0.06] p-5">
+            <Link key={category.id} href={category.href} className="cobam-motion-card rounded-2xl border border-white/12 bg-white/[0.06] p-5" data-landing-reveal>
               <span className="text-xs font-black tracking-[0.22em] text-[#8fdcff]">{category.number}</span>
-              <h3 className="mt-3 text-2xl font-semibold">{category.name}</h3>
+              <h3 className="mt-3 flex flex-wrap items-center gap-2 text-2xl font-semibold">
+                {category.name}
+                {category.isPromoted ? (
+                  <span className="rounded-full border border-[#8fdcff]/40 bg-[#8fdcff]/12 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-[#8fdcff]">
+                    En promotion
+                  </span>
+                ) : null}
+              </h3>
               <p className="mt-2 text-sm leading-6 text-white/62">{category.subtitle}</p>
             </Link>
           ))}

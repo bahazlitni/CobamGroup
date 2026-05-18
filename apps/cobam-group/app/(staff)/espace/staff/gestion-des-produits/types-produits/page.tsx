@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { type StockUnit } from "@prisma/client";
 import { GripVertical, Layers3, Shapes, Tags } from "lucide-react";
 import { toast } from "sonner";
 import Loading from "@/components/staff/Loading";
+import ProductMediaGrid from "@/components/staff/products/ProductMediaGrid";
 import ProductSubcategoriesField from "@/components/staff/products/ProductSubcategoriesField";
 import Panel from "@/components/staff/ui/Panel";
 import PanelField from "@/components/staff/ui/PanelField";
@@ -38,6 +39,7 @@ import type {
   ProductTypesAdminDto,
 } from "@/features/product-taxonomy/types";
 import { STOCK_UNIT_VALUES } from "@/features/products/product-edit-fields";
+import type { ProductMediaDto } from "@/features/products/types";
 import formatEnumLabel from "@/lib/formatEnumLabel";
 import { slugify } from "@/lib/slugify";
 import { cn } from "@/lib/utils";
@@ -50,8 +52,13 @@ type GroupFormState = {
 type ProductTypeFormState = {
   groupId: string;
   name: string;
+  displayName: string;
   slug: string;
   description: string;
+  titleSeo: string;
+  descriptionSeo: string;
+  mediaImageId: string;
+  mediaImage: ProductMediaDto | null;
   presetTags: string;
   presetSubcategoryIds: string[];
   presetStockUnit: string;
@@ -59,6 +66,12 @@ type ProductTypeFormState = {
   presetGuaranteeMonths: string;
   hasColor: boolean;
   hasFinish: boolean;
+};
+
+type LinkedProductTypeFields = {
+  displayName: boolean;
+  slug: boolean;
+  titleSeo: boolean;
 };
 
 type AttributeGroupFormState = {
@@ -87,8 +100,13 @@ function emptyProductTypeForm(): ProductTypeFormState {
   return {
     groupId: "",
     name: "",
+    displayName: "",
     slug: "",
     description: "",
+    titleSeo: "",
+    descriptionSeo: "",
+    mediaImageId: "",
+    mediaImage: null,
     presetTags: "",
     presetSubcategoryIds: [],
     presetStockUnit: "",
@@ -121,6 +139,62 @@ function emptyAttributeForm(): AttributeFormState {
 function numberFromForm(value: string) {
   const parsed = Number(value);
   return Number.isInteger(parsed) ? parsed : 0;
+}
+
+const TITLE_SEO_MAX_LENGTH = 60;
+const DESCRIPTION_SEO_MAX_LENGTH = 160;
+const TITLE_SEO_SUFFIX = " | COBAM GROUP";
+
+function buildLinkedTitleSeo(name: string) {
+  const baseName = name.trim();
+
+  if (!baseName) {
+    return "";
+  }
+
+  const maxNameLength = TITLE_SEO_MAX_LENGTH - TITLE_SEO_SUFFIX.length;
+  return `${baseName.slice(0, maxNameLength).trimEnd()}${TITLE_SEO_SUFFIX}`;
+}
+
+function truncateTitleSeo(value: string) {
+  return value.slice(0, TITLE_SEO_MAX_LENGTH);
+}
+
+function truncateDescriptionSeo(value: string) {
+  return value.slice(0, DESCRIPTION_SEO_MAX_LENGTH);
+}
+
+function getLinkedProductTypeFields(form: ProductTypeFormState): LinkedProductTypeFields {
+  return {
+    displayName: form.displayName === form.name,
+    slug: form.slug === slugify(form.name),
+    titleSeo: form.titleSeo === buildLinkedTitleSeo(form.name),
+  };
+}
+
+function LinkedFieldControl({
+  isLinked,
+  onLink,
+  children,
+}: {
+  isLinked: boolean;
+  onLink: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      {isLinked ? null : (
+        <button
+          type="button"
+          className="border-cobam-water-blue/40 bg-cobam-water-blue/10 text-cobam-dark-blue hover:bg-cobam-water-blue/20 h-10 shrink-0 rounded-md border px-3 text-xs font-semibold transition"
+          onClick={onLink}
+        >
+          lier
+        </button>
+      )}
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  );
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -186,6 +260,11 @@ export default function ProductTypesAdminPage() {
   const [editingProductTypeId, setEditingProductTypeId] = useState<number | null>(null);
   const [productTypeForm, setProductTypeForm] =
     useState<ProductTypeFormState>(emptyProductTypeForm);
+  const [linkedProductTypeFields, setLinkedProductTypeFields] = useState<LinkedProductTypeFields>({
+    displayName: true,
+    slug: true,
+    titleSeo: true,
+  });
   const [editingAttributeGroupId, setEditingAttributeGroupId] = useState<number | null>(null);
   const [attributeGroupForm, setAttributeGroupForm] =
     useState<AttributeGroupFormState>(emptyAttributeGroupForm);
@@ -357,16 +436,24 @@ export default function ProductTypesAdminPage() {
   const resetProductTypeForm = () => {
     setEditingProductTypeId(null);
     setProductTypeForm(emptyProductTypeForm());
+    setLinkedProductTypeFields({
+      displayName: true,
+      slug: true,
+      titleSeo: true,
+    });
   };
 
   const editProductType = (productType: ProductTaxonomyTypeDto) => {
-    setEditingProductTypeId(productType.id);
-    setSelectedProductTypeId(productType.id);
-    setProductTypeForm({
+    const nextForm = {
       groupId: productType.groupId == null ? "" : String(productType.groupId),
       name: productType.name,
+      displayName: productType.displayName,
       slug: productType.slug,
       description: productType.description ?? "",
+      titleSeo: productType.titleSeo ?? "",
+      descriptionSeo: productType.descriptionSeo ?? "",
+      mediaImageId: productType.mediaImageId == null ? "" : String(productType.mediaImageId),
+      mediaImage: productType.mediaImage,
       presetTags: productType.presetTags,
       presetSubcategoryIds: productType.presetSubcategoryIds.map(String),
       presetStockUnit: productType.presetStockUnit ?? "",
@@ -375,7 +462,12 @@ export default function ProductTypesAdminPage() {
         productType.presetGuaranteeMonths == null ? "" : String(productType.presetGuaranteeMonths),
       hasColor: productType.hasColor,
       hasFinish: productType.hasFinish,
-    });
+    };
+
+    setEditingProductTypeId(productType.id);
+    setSelectedProductTypeId(productType.id);
+    setProductTypeForm(nextForm);
+    setLinkedProductTypeFields(getLinkedProductTypeFields(nextForm));
   };
 
   const resetAttributeGroupForm = () => {
@@ -408,6 +500,52 @@ export default function ProductTypesAdminPage() {
       isFilterable: attribute.isFilterable,
       sortOrder: String(attribute.sortOrder),
     });
+  };
+
+  const handleProductTypeNameChanged = (name: string) => {
+    setProductTypeForm((current) => ({
+      ...current,
+      name,
+      displayName: linkedProductTypeFields.displayName ? name : current.displayName,
+      slug: linkedProductTypeFields.slug ? slugify(name) : current.slug,
+      titleSeo: linkedProductTypeFields.titleSeo ? buildLinkedTitleSeo(name) : current.titleSeo,
+    }));
+  };
+
+  const handleProductTypeDisplayNameChanged = (displayName: string) => {
+    setLinkedProductTypeFields((current) => ({ ...current, displayName: false }));
+    setProductTypeForm((current) => ({ ...current, displayName }));
+  };
+
+  const handleProductTypeSlugChanged = (slug: string) => {
+    setLinkedProductTypeFields((current) => ({ ...current, slug: false }));
+    setProductTypeForm((current) => ({ ...current, slug }));
+  };
+
+  const handleProductTypeTitleSeoChanged = (titleSeo: string) => {
+    setLinkedProductTypeFields((current) => ({ ...current, titleSeo: false }));
+    setProductTypeForm((current) => ({
+      ...current,
+      titleSeo: truncateTitleSeo(titleSeo),
+    }));
+  };
+
+  const relinkProductTypeDisplayName = () => {
+    setLinkedProductTypeFields((current) => ({ ...current, displayName: true }));
+    setProductTypeForm((current) => ({ ...current, displayName: current.name }));
+  };
+
+  const relinkProductTypeSlug = () => {
+    setLinkedProductTypeFields((current) => ({ ...current, slug: true }));
+    setProductTypeForm((current) => ({ ...current, slug: slugify(current.name) }));
+  };
+
+  const relinkProductTypeTitleSeo = () => {
+    setLinkedProductTypeFields((current) => ({ ...current, titleSeo: true }));
+    setProductTypeForm((current) => ({
+      ...current,
+      titleSeo: buildLinkedTitleSeo(current.name),
+    }));
   };
 
   const saveGroup = async (event: FormEvent<HTMLFormElement>) => {
@@ -461,8 +599,12 @@ export default function ProductTypesAdminPage() {
       const payload = {
         groupId: newGroupId,
         name: productTypeForm.name,
+        displayName: productTypeForm.displayName,
         slug: productTypeForm.slug,
         description: productTypeForm.description || null,
+        titleSeo: productTypeForm.titleSeo || null,
+        descriptionSeo: productTypeForm.descriptionSeo || null,
+        mediaImageId: productTypeForm.mediaImageId ? numberFromForm(productTypeForm.mediaImageId) : null,
         sortOrder: existingProductType?.sortOrder ?? groupProductTypes.length,
         hasColor: productTypeForm.hasColor,
         hasFinish: productTypeForm.hasFinish,
@@ -853,31 +995,36 @@ export default function ProductTypesAdminPage() {
                     id="product-type-name"
                     fullWidth
                     value={productTypeForm.name}
-                    onChange={(event) => {
-                      const name = event.target.value;
-                      setProductTypeForm((current) => ({
-                        ...current,
-                        name,
-                        slug:
-                          current.slug === "" || current.slug === slugify(current.name)
-                            ? slugify(name)
-                            : current.slug,
-                      }));
-                    }}
+                    onChange={(event) => handleProductTypeNameChanged(event.target.value)}
                   />
                 </PanelField>
+                <PanelField id="product-type-display-name" label="Nom affiché">
+                  <LinkedFieldControl
+                    isLinked={linkedProductTypeFields.displayName}
+                    onLink={relinkProductTypeDisplayName}
+                  >
+                    <PanelInput
+                      id="product-type-display-name"
+                      fullWidth
+                      value={productTypeForm.displayName}
+                      onChange={(event) =>
+                        handleProductTypeDisplayNameChanged(event.target.value)
+                      }
+                    />
+                  </LinkedFieldControl>
+                </PanelField>
                 <PanelField id="product-type-slug" label="Slug">
-                  <PanelInput
-                    id="product-type-slug"
-                    fullWidth
-                    value={productTypeForm.slug}
-                    onChange={(event) =>
-                      setProductTypeForm((current) => ({
-                        ...current,
-                        slug: event.target.value,
-                      }))
-                    }
-                  />
+                  <LinkedFieldControl
+                    isLinked={linkedProductTypeFields.slug}
+                    onLink={relinkProductTypeSlug}
+                  >
+                    <PanelInput
+                      id="product-type-slug"
+                      fullWidth
+                      value={productTypeForm.slug}
+                      onChange={(event) => handleProductTypeSlugChanged(event.target.value)}
+                    />
+                  </LinkedFieldControl>
                 </PanelField>
                 <PanelField id="product-type-group" label="Groupe UI">
                   <StaffSelect
@@ -898,6 +1045,54 @@ export default function ProductTypesAdminPage() {
                   />
                 </PanelField>
                 <PanelField
+                  id="product-type-title-seo"
+                  label="Titre SEO"
+                  hint={`${productTypeForm.titleSeo.length}/${TITLE_SEO_MAX_LENGTH}`}
+                >
+                  <LinkedFieldControl
+                    isLinked={linkedProductTypeFields.titleSeo}
+                    onLink={relinkProductTypeTitleSeo}
+                  >
+                    <PanelInput
+                      id="product-type-title-seo"
+                      fullWidth
+                      maxLength={TITLE_SEO_MAX_LENGTH}
+                      value={productTypeForm.titleSeo}
+                      onChange={(event) =>
+                        handleProductTypeTitleSeoChanged(event.target.value)
+                      }
+                    />
+                  </LinkedFieldControl>
+                </PanelField>
+                <PanelField
+                  id="product-type-media-image"
+                  label="Image publique"
+                  className="lg:col-span-2"
+                >
+                  <ProductMediaGrid
+                    items={productTypeForm.mediaImage ? [productTypeForm.mediaImage] : []}
+                    maxItems={1}
+                    mediaKind="IMAGE"
+                    title="Image du type produit"
+                    description="Image utilisee dans l'exploration publique par type de produit."
+                    pickerTitle="Choisir l'image du type produit"
+                    pickerDescription="Choisissez une image existante ou importez-en une nouvelle depuis la mediatheque."
+                    addButtonLabel="Choisir une image"
+                    addButtonHint="Image publique du template"
+                    onChange={(items) =>
+                      setProductTypeForm((current) => {
+                        const media = items[0] ?? null;
+
+                        return {
+                          ...current,
+                          mediaImage: media,
+                          mediaImageId: media == null ? "" : String(media.id),
+                        };
+                      })
+                    }
+                  />
+                </PanelField>
+                <PanelField
                   id="product-type-description"
                   label="Description"
                   className="lg:col-span-2"
@@ -909,6 +1104,25 @@ export default function ProductTypesAdminPage() {
                       setProductTypeForm((current) => ({
                         ...current,
                         description: event.target.value,
+                      }))
+                    }
+                    className="rounded-md border-slate-300 bg-white"
+                  />
+                </PanelField>
+                <PanelField
+                  id="product-type-description-seo"
+                  label="Description SEO"
+                  hint={`${productTypeForm.descriptionSeo.length}/${DESCRIPTION_SEO_MAX_LENGTH}`}
+                  className="lg:col-span-2"
+                >
+                  <Textarea
+                    id="product-type-description-seo"
+                    maxLength={DESCRIPTION_SEO_MAX_LENGTH}
+                    value={productTypeForm.descriptionSeo}
+                    onChange={(event) =>
+                      setProductTypeForm((current) => ({
+                        ...current,
+                        descriptionSeo: truncateDescriptionSeo(event.target.value),
                       }))
                     }
                     className="rounded-md border-slate-300 bg-white"
@@ -1090,10 +1304,10 @@ export default function ProductTypesAdminPage() {
                             <span className="flex min-w-0 items-center gap-2">
                               <GripVertical className="h-4 w-4 shrink-0 text-slate-400" />
                               <span className="text-cobam-dark-blue font-semibold">
-                                {productType.name}
+                                {productType.displayName}
                               </span>
                               <span className="ml-2 text-xs text-slate-400">
-                                {productType.slug} · #{index + 1}
+                                {productType.name} · {productType.slug} · #{index + 1}
                               </span>
                             </span>
                             <span className="flex items-center gap-2">
@@ -1127,7 +1341,7 @@ export default function ProductTypesAdminPage() {
                                   void deleteEntity(
                                     "productType",
                                     productType.id,
-                                    productType.name,
+                                    productType.displayName,
                                   );
                                 }}
                               >
@@ -1145,7 +1359,7 @@ export default function ProductTypesAdminPage() {
           </div>
 
           <Panel
-            pretitle={selectedProductType?.name ?? "Attributs"}
+            pretitle={selectedProductType?.displayName ?? "Attributs"}
             title="Attributs préconfigurés"
             allowOverflow
           >

@@ -856,6 +856,10 @@ model CommerceFulfillmentEvent {
 model CommercePromotion {
   id                 BigInt                  @id @default(autoincrement())
   name               String                  @db.VarChar(255)
+  displayName        String                  @map("display_name") @db.VarChar(255)
+  slug               String                  @unique @db.VarChar(255)
+  description        String?                 @db.Text
+  bannerMediaId      BigInt?                 @map("banner_media_id")
   status             CommercePromotionStatus @default(DRAFT)
   discountType       CommerceDiscountType    @map("discount_type")
   discountValue      Decimal                 @map("discount_value") @db.Decimal(12, 3)
@@ -873,7 +877,9 @@ model CommercePromotion {
   categories  CommercePromotionCategory[]
   brands      CommercePromotionBrand[]
   redemptions CommercePromotionRedemption[]
+  bannerMedia Media?                         @relation("CommercePromotionBannerMedia", fields: [bannerMediaId], references: [id], onDelete: SetNull)
 
+  @@index([bannerMediaId])
   @@index([status])
   @@index([startsAt])
   @@index([endsAt])
@@ -1329,8 +1335,12 @@ model ProductType {
   id                    BigInt     @id @default(autoincrement())
   groupId               BigInt?    @map("group_id")
   name                  String     @db.VarChar(255)
+  displayName           String     @map("display_name") @db.VarChar(255)
   slug                  String     @unique @db.VarChar(255)
   description           String?    @db.Text
+  titleSeo              String?    @map("title_seo") @db.VarChar(60)
+  descriptionSeo        String?    @map("description_seo") @db.VarChar(160)
+  mediaImageId          BigInt?    @map("media_image_id")
   sortOrder             Int        @default(0) @map("sort_order")
   hasColor              Boolean    @default(false) @map("has_color")
   hasFinish             Boolean    @default(false) @map("has_finish")
@@ -1342,12 +1352,14 @@ model ProductType {
   updatedAt             DateTime   @updatedAt @map("updated_at")
 
   group              ProductTypeGroup?              @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  mediaImage         Media?                         @relation("ProductTypeMediaImage", fields: [mediaImageId], references: [id], onDelete: SetNull)
   attributeGroups    ProductAttributeGroup[]
   attributes         ProductTypeAttribute[]
   subcategoryPresets ProductTypeSubcategoryPreset[]
   products           Product[]
 
   @@index([groupId])
+  @@index([mediaImageId])
   @@index([sortOrder])
   @@map("product_type_templates")
 }
@@ -1632,10 +1644,12 @@ model Media {
   productLinks               ProductMedia[]
   productCategoryImageFor    ProductCategory[]    @relation("ProductCategoryImageMedia")
   productSubcategoryImageFor ProductSubcategory[] @relation("ProductSubcategoryImageMedia")
+  productTypeMediaImageFor   ProductType[]        @relation("ProductTypeMediaImage")
   staffProfileAvatarFor      StaffProfile[]       @relation("StaffProfileAvatarMedia")
   productFinishImageFor      ProductFinish[]      @relation("ProductFinishImageMedia")
   organizationLogoFor        Organization[]       @relation("OrganizationLogoMedia")
   commerceInvoicePdfs        CommerceInvoice[]    @relation("CommerceInvoicePdfMedia")
+  commercePromotionBanners   CommercePromotion[]  @relation("CommercePromotionBannerMedia")
   articleCoverFor            Article[]            @relation("ArticleCoverMedia")
   articleOgImageFor          Article[]            @relation("ArticleOgImageMedia")
   articleMediaLinks          ArticleMediaLink[]

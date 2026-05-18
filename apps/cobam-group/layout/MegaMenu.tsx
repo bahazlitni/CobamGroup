@@ -233,6 +233,11 @@ export default function MegaMenu({ menuLabel, data }: MegaMenuProps) {
                         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white drop-shadow-md">
                           {isPreviewingCategory ? "À la une" : "Sous-catégorie"}
                         </span>
+                        {previewItem.isPromoted ? (
+                          <span className="rounded-full bg-[#0a8dc1] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-white shadow-lg">
+                            En promotion
+                          </span>
+                        ) : null}
                       </div>
                     </div>
 
@@ -320,10 +325,15 @@ export default function MegaMenu({ menuLabel, data }: MegaMenuProps) {
                             className="group/link mb-5 block outline-none"
                           >
                             <h4
-                              className="text-sm font-semibold uppercase tracking-[0.1em] text-[#14202e] transition-colors"
+                              className="flex flex-wrap items-center gap-2 text-sm font-semibold uppercase tracking-[0.1em] text-[#14202e] transition-colors"
                               style={isCategoryActive ? { color: categoryThemeColor } : undefined}
                             >
                               {category.title || "Catégorie"}
+                              {category.isPromoted ? (
+                                <span className="rounded-full bg-[#0a8dc1]/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-[#0a8dc1]">
+                                  En promotion
+                                </span>
+                              ) : null}
                             </h4>
                             {category.subtitle ? (
                               <span className="mt-1 block text-[11px] text-[#5e5e5e]">

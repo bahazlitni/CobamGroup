@@ -20,7 +20,7 @@ export const orderStatusLabels: Record<CommerceOrderStatus, string> = {
 
 export const paymentStatusLabels: Record<CommercePaymentStatus, string> = {
   PENDING: "A confirmer",
-  AUTHORIZED: "Autorise",
+  AUTHORIZED: "Autorisé",
   PAID: "Paye",
   FAILED: "Echoue",
   CANCELLED: "Annule",

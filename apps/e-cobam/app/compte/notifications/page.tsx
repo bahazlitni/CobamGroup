@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { AccountNav } from "@/components/account/account-nav";
+import { AccountPageHeader, AccountPageShell } from "@/components/account/account-shell";
 import { NotificationsPanel } from "@/components/account/notifications-panel";
 import { getCustomerSession } from "@/lib/customer-auth";
 import { listCustomerNotifications } from "@/lib/customer-notifications";
@@ -20,19 +20,15 @@ export default async function CustomerNotificationsPage() {
 
   return (
     <main className="commerce-container py-8 sm:py-12">
-      <div className="mb-8">
-        <p className="text-ec-blue text-sm font-semibold tracking-[0.24em] uppercase">
-          Notifications
-        </p>
-        <h1 className="text-ec-ink mt-3 text-4xl font-black tracking-tight sm:text-6xl">
-          Suivi de vos commandes.
-        </h1>
-      </div>
+      <AccountPageHeader
+        eyebrow="Notifications"
+        title="Suivi de vos commandes."
+        description="Retrouvez les changements de statut et les messages importants lies a votre compte."
+      />
 
-      <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
-        <AccountNav active="/compte/notifications" />
+      <AccountPageShell active="/compte/notifications">
         <NotificationsPanel initialData={notifications} />
-      </div>
+      </AccountPageShell>
     </main>
   );
 }

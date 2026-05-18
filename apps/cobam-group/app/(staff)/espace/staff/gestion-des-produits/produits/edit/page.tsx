@@ -917,7 +917,7 @@ function SingleProductEditPageContent() {
         />
 
         {aiSuggestions.subcategoryIds?.length ? (
-          <PanelField id="product-subcategories-ai" label="Suggestion IA de sous-categories">
+          <PanelField id="product-subcategories-ai" label="Suggestion IA de sous-catégories">
             <div className="space-y-3">
               <div className="flex flex-wrap gap-2">
                 {options.productSubcategories
@@ -1235,7 +1235,7 @@ function SingleProductEditPageContent() {
 
       <Panel
         allowOverflow
-        pretitle={selectedProductType ? selectedProductType.name : "Attributs"}
+        pretitle={selectedProductType ? selectedProductType.displayName : "Attributs"}
         title="Valeurs du produit"
       >
         <AiPanelAttributesInput

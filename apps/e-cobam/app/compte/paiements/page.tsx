@@ -1,8 +1,30 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { CreditCard, Star, Trash2 } from "lucide-react";
-import { AccountNav } from "@/components/account/account-nav";
+
+import { AccountPageHeader, AccountPageShell } from "@/components/account/account-shell";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { getCustomerAccount } from "@/lib/customer-account";
 import { getCustomerSession } from "@/lib/customer-auth";
 import { paymentMethodLabels } from "@/lib/order-labels";
@@ -17,10 +39,6 @@ export const metadata: Metadata = {
   description: "Gerez vos preferences de paiement e-cobam.",
 };
 
-const inputClass =
-  "h-12 w-full rounded-2xl border border-ec-line bg-white px-4 text-sm font-semibold text-ec-ink outline-none transition focus:border-ec-blue";
-const labelClass = "text-xs font-bold uppercase tracking-[0.18em] text-ec-muted";
-
 export default async function CustomerPaymentsPage() {
   const session = await getCustomerSession();
   if (!session) {
@@ -34,85 +52,128 @@ export default async function CustomerPaymentsPage() {
 
   return (
     <main className="commerce-container py-8 sm:py-12">
-      <div className="mb-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-ec-blue">Paiements</p>
-        <h1 className="mt-3 text-4xl font-black tracking-tight text-ec-ink sm:text-6xl">
-          Preferences de paiement.
-        </h1>
-      </div>
+      <AccountPageHeader
+        eyebrow="Paiements"
+        title="Preferences de paiement."
+        description="Enregistrez vos preferences de reglement manuel. Aucun numero de carte n'est stocke."
+      />
 
-      <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
-        <AccountNav active="/compte/paiements" />
-
+      <AccountPageShell active="/compte/paiements">
         <div className="space-y-8">
-          <section className="grid gap-4 md:grid-cols-2">
-            {account.paymentMethods.map((method) => (
-              <article key={method.id} className="rounded-[1.5rem] border border-ec-line bg-white p-5">
-                <p className="flex items-center gap-2 text-sm font-black text-ec-ink">
-                  <CreditCard className="size-4 text-ec-blue" />
-                  {method.label || paymentMethodLabels[method.method]}
-                </p>
-                <p className="mt-3 text-sm font-semibold text-ec-muted">
-                  {paymentMethodLabels[method.method]}
-                  {method.holderName ? ` - ${method.holderName}` : ""}
-                </p>
-                {method.isDefault ? (
-                  <span className="mt-4 inline-flex rounded-full bg-ec-blue/10 px-3 py-1 text-xs font-black text-ec-blue">
-                    Paiement par defaut
-                  </span>
-                ) : null}
-                <div className="mt-5 flex flex-wrap gap-2">
-                  <form action={setDefaultCustomerPaymentMethodAction}>
-                    <input type="hidden" name="paymentMethodId" value={method.id} />
-                    <Button type="submit" variant="quiet" size="sm" icon={<Star className="size-4" />}>
-                      Defaut
-                    </Button>
-                  </form>
-                  <form action={deleteCustomerPaymentMethodAction}>
-                    <input type="hidden" name="paymentMethodId" value={method.id} />
-                    <Button type="submit" variant="secondary" size="sm" icon={<Trash2 className="size-4" />}>
-                      Supprimer
-                    </Button>
-                  </form>
-                </div>
-              </article>
-            ))}
-          </section>
+          {account.paymentMethods.length > 0 ? (
+            <section className="grid gap-4 md:grid-cols-2">
+              {account.paymentMethods.map((method) => (
+                <Card key={method.id}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <CreditCard className="text-ec-blue size-4" />
+                      {method.label || paymentMethodLabels[method.method]}
+                    </CardTitle>
+                    <CardDescription>
+                      {paymentMethodLabels[method.method]}
+                      {method.holderName ? ` - ${method.holderName}` : ""}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {method.isDefault ? (
+                      <Badge variant="blue">Paiement par defaut</Badge>
+                    ) : (
+                      <Badge variant="outline">Preference</Badge>
+                    )}
+                  </CardContent>
+                  <CardFooter className="flex flex-wrap gap-2">
+                    <form action={setDefaultCustomerPaymentMethodAction}>
+                      <input type="hidden" name="paymentMethodId" value={method.id} />
+                      <Button
+                        type="submit"
+                        variant="quiet"
+                        size="sm"
+                        icon={<Star className="size-4" />}
+                      >
+                        Defaut
+                      </Button>
+                    </form>
+                    <form action={deleteCustomerPaymentMethodAction}>
+                      <input type="hidden" name="paymentMethodId" value={method.id} />
+                      <Button
+                        type="submit"
+                        variant="secondary"
+                        size="sm"
+                        icon={<Trash2 className="size-4" />}
+                      >
+                        Supprimer
+                      </Button>
+                    </form>
+                  </CardFooter>
+                </Card>
+              ))}
+            </section>
+          ) : (
+            <Alert variant="muted">
+              <CreditCard />
+              <div>
+                <AlertTitle>Aucune preference de paiement</AlertTitle>
+                <AlertDescription>
+                  Ajoutez une preference pour simplifier la validation de vos prochaines commandes.
+                </AlertDescription>
+              </div>
+            </Alert>
+          )}
 
-          <form action={addCustomerPaymentMethodAction} className="rounded-[1.5rem] border border-ec-line bg-white p-5 sm:p-6">
-            <h2 className="text-xl font-black text-ec-ink">Ajouter une preference</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-7 text-ec-muted">
-              Pour l&apos;instant, e-cobam enregistre uniquement des preferences de paiement manuel.
-              Aucun numero de carte n&apos;est stocke.
-            </p>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <label className="space-y-2">
-                <span className={labelClass}>Methode</span>
-                <select name="method" defaultValue="BANK_TRANSFER" className={inputClass}>
-                  <option value="BANK_TRANSFER">Virement bancaire</option>
-                  <option value="CASH_ON_DELIVERY">Paiement a la livraison</option>
-                  <option value="PAY_IN_STORE">Paiement en magasin</option>
-                </select>
-              </label>
-              <label className="space-y-2">
-                <span className={labelClass}>Libellé</span>
-                <input name="label" placeholder="Virement entreprise, retrait magasin..." className={inputClass} />
-              </label>
-              <label className="space-y-2 sm:col-span-2">
-                <span className={labelClass}>Nom du titulaire</span>
-                <input name="holderName" defaultValue={account.companyName || ""} className={inputClass} />
-              </label>
-            </div>
-            <label className="mt-5 flex items-center gap-3 rounded-2xl border border-ec-line p-4 text-sm font-semibold text-ec-ink">
-              <input name="isDefault" type="checkbox" defaultChecked={account.paymentMethods.length === 0} />
-              Utiliser par defaut
-            </label>
-            <Button type="submit" className="mt-6">
-              Ajouter la preference
-            </Button>
+          <form action={addCustomerPaymentMethodAction}>
+            <Card>
+              <CardHeader>
+                <CardTitle>Ajouter une preference</CardTitle>
+                <CardDescription>
+                  e-cobam enregistre uniquement des preferences de paiement manuel.
+                </CardDescription>
+              </CardHeader>
+              <Separator />
+              <CardContent className="grid gap-4 pt-5 sm:grid-cols-2 sm:pt-6">
+                <div className="space-y-2">
+                  <Label htmlFor="method">Methode</Label>
+                  <Select name="method" defaultValue="BANK_TRANSFER">
+                    <SelectTrigger id="method">
+                      <SelectValue placeholder="Methode de paiement" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BANK_TRANSFER">Virement bancaire</SelectItem>
+                      <SelectItem value="CASH_ON_DELIVERY">Paiement a la livraison</SelectItem>
+                      <SelectItem value="PAY_IN_STORE">Paiement en magasin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="label">Libelle</Label>
+                  <Input
+                    id="label"
+                    name="label"
+                    placeholder="Virement entreprise, retrait magasin..."
+                  />
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="holderName">Nom du titulaire</Label>
+                  <Input
+                    id="holderName"
+                    name="holderName"
+                    defaultValue={account.companyName || ""}
+                  />
+                </div>
+              </CardContent>
+              <Separator />
+              <CardContent className="pt-5 sm:pt-6">
+                <Label className="border-ec-line text-ec-ink flex min-h-16 items-center gap-3 rounded-2xl border p-4 text-sm font-semibold tracking-normal normal-case">
+                  <Checkbox name="isDefault" defaultChecked={account.paymentMethods.length === 0} />
+                  Utiliser par defaut
+                </Label>
+              </CardContent>
+              <CardFooter>
+                <Button type="submit">Ajouter la preference</Button>
+              </CardFooter>
+            </Card>
           </form>
         </div>
-      </div>
+      </AccountPageShell>
     </main>
   );
 }

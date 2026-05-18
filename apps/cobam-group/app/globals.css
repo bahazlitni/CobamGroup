@@ -540,6 +540,7 @@ body:has(.cobam-catalog-landing) header > div {
 }
 
 .cobam-premium-button {
+  position: relative;
   display: inline-flex;
   min-height: 3.5rem;
   align-items: center;
@@ -553,16 +554,26 @@ body:has(.cobam-catalog-landing) header > div {
   line-height: 1.2;
   text-align: center;
   text-transform: uppercase;
+  isolation: isolate;
+  overflow: hidden;
+  transform: translate3d(var(--magnet-x, 0px), var(--magnet-y, 0px), 0);
   transition:
     background-color 220ms ease,
     border-color 220ms ease,
     color 220ms ease,
-    transform 220ms ease;
+    transform 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.cobam-premium-button > * {
+  position: relative;
+  z-index: 1;
 }
 
 .cobam-premium-button:hover,
 .cobam-premium-button:focus-visible {
-  transform: translateY(-2px);
+  box-shadow: 0 18px 50px rgba(10, 141, 193, 0.18);
+  transform: translate3d(var(--magnet-x, 0px), calc(var(--magnet-y, 0px) - 2px), 0);
 }
 
 .cobam-premium-button-light {
@@ -617,6 +628,132 @@ body:has(.cobam-catalog-landing) header > div {
   background: linear-gradient(to top, rgba(7, 17, 29, 0.72), transparent);
   content: "";
   pointer-events: none;
+}
+
+.cobam-parallax-layer {
+  transform: translate3d(0, var(--parallax-y, 0px), 0) scale(1.06);
+  transform-origin: center;
+  will-change: transform;
+}
+
+.cobam-sequence-journey canvas {
+  display: block;
+  background: #07111d;
+}
+
+.cobam-sequence-copy {
+  animation: cobam-sequence-copy-in 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes cobam-sequence-copy-in {
+  from {
+    opacity: 0;
+    filter: blur(12px);
+    transform: translate3d(0, 28px, 0);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+[data-landing-reveal] {
+  --reveal-y: 34px;
+  --reveal-scale: 0.985;
+  opacity: 0;
+  filter: blur(12px);
+  transform: translate3d(0, calc(var(--reveal-y) + var(--parallax-y, 0px)), 0) scale(var(--reveal-scale));
+  transition:
+    opacity 820ms cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms),
+    filter 820ms cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms),
+    transform 920ms cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms);
+  will-change: opacity, filter, transform;
+}
+
+[data-landing-reveal][data-visible="true"] {
+  --reveal-y: 0px;
+  --reveal-scale: 1;
+  opacity: 1;
+  filter: blur(0);
+}
+
+.cobam-motion-card {
+  --card-lift: 0px;
+  position: relative;
+  transform: translate3d(0, calc(var(--reveal-y, 0px) + var(--parallax-y, 0px) + var(--card-lift)), 0)
+    scale(var(--reveal-scale, 1));
+  transition:
+    border-color 260ms ease,
+    background-color 260ms ease,
+    box-shadow 320ms ease,
+    opacity 820ms cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms),
+    filter 820ms cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms),
+    transform 920ms cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms);
+}
+
+.cobam-motion-card:hover,
+.cobam-motion-card:focus-visible {
+  --card-lift: -7px;
+  box-shadow: 0 28px 80px rgba(20, 32, 46, 0.16);
+}
+
+.cobam-motion-chip {
+  position: relative;
+  transform: translateZ(0);
+}
+
+.cobam-journey-motion-link {
+  position: relative;
+  overflow: hidden;
+}
+
+.cobam-journey-motion-link::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: #8fdcff;
+  content: "";
+  opacity: 0;
+  transform: translateY(-50%) scale(0.4);
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
+}
+
+.cobam-journey-motion-link:hover::before,
+.cobam-journey-motion-link:focus-visible::before {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cobam-premium-button,
+  .cobam-parallax-layer,
+  [data-landing-reveal],
+  .cobam-motion-card,
+  .cobam-motion-chip,
+  .cobam-journey-motion-link {
+    transition: none;
+    transform: none;
+  }
+
+  .cobam-sequence-copy {
+    animation: none;
+  }
+
+  [data-landing-reveal] {
+    opacity: 1;
+    filter: none;
+  }
+
+  .cobam-journey-motion-link::before {
+    display: none;
+  }
 }
 
 .cobam-catalog-hero-live {

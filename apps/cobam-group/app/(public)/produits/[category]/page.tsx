@@ -66,6 +66,13 @@ export default async function ProductCategoryPage({ params }: CategoryPageProps)
         }
         themeColor={categoryData.themeColor}
       />
+      {categoryData.isPromoted ? (
+        <div className="mx-auto mt-8 max-w-7xl px-6 md:px-12">
+          <span className="inline-flex rounded-full border border-[#0a8dc1]/25 bg-[#0a8dc1]/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#0a8dc1]">
+            En promotion
+          </span>
+        </div>
+      ) : null}
 
       <section className="py-16 sm:py-24 lg:py-32">
         <div className="mx-auto max-w-7xl px-6 md:px-12">
@@ -74,13 +81,13 @@ export default async function ProductCategoryPage({ params }: CategoryPageProps)
               className="text-[10px] font-semibold uppercase tracking-[0.4em]"
               style={{ color: categoryData.themeColor ?? undefined }}
             >
-              Explorez les sous-categories
+              Explorez les sous-catégories
             </p>
             <h2
               className="text-3xl font-light text-cobam-dark-blue sm:text-4xl"
               style={{ fontFamily: "var(--font-playfair), serif" }}
             >
-              Toutes les sous-categories
+              Toutes les sous-catégories
             </h2>
             <div
               className="h-[1px] w-16"

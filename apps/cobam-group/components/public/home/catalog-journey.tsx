@@ -1,9 +1,11 @@
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, MapPin, Phone } from "lucide-react";
 
 import { COBAM_SOCIAL_LINKS } from "@/data/contact-details";
 import { CategoryJourneyParallax } from "@/components/public/home/category-journey-parallax";
+import type { PublicArticleSummary } from "@/features/articles/public";
 
 export type JourneySubcategory = {
   label: string;
@@ -20,6 +22,7 @@ export type JourneyCategory = {
   imageAlt: string;
   subcategories: JourneySubcategory[];
   imageNeedsReplacement?: boolean;
+  isPromoted?: boolean;
 };
 
 export type BrandLogo = {
@@ -77,6 +80,19 @@ const collections = [
   },
 ];
 
+function revealDelay(ms: number): CSSProperties {
+  return { "--reveal-delay": `${ms}ms` } as CSSProperties;
+}
+
+function formatArticleDate(value: string) {
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Africa/Tunis",
+  }).format(new Date(value));
+}
+
 export function LandingHero({ categories }: { categories: JourneyCategory[] }) {
   return (
     <section className="cobam-catalog-hero relative min-h-[calc(100svh-7rem)] overflow-hidden bg-[#14202e] text-white">
@@ -86,13 +102,14 @@ export function LandingHero({ categories }: { categories: JourneyCategory[] }) {
         fill
         priority
         sizes="100vw"
-        className="object-cover opacity-54"
+        data-parallax-speed="-0.035"
+        className="cobam-parallax-layer object-cover opacity-54"
       />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,17,29,0.96),rgba(7,17,29,0.72)_45%,rgba(7,17,29,0.42)),radial-gradient(circle_at_82%_18%,rgba(10,141,193,0.26),transparent_34%)]" />
       <div className="cobam-static-grid absolute inset-0 opacity-25" />
 
       <div className="relative z-10 mx-auto grid min-h-[calc(100svh-7rem)] max-w-[1500px] gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:px-12 lg:py-20">
-        <div className="flex flex-col justify-center">
+        <div className="flex flex-col justify-center" data-landing-reveal>
           <p className="cobam-section-kicker text-[#8fdcff]">Depuis 1994 / COBAM Group</p>
           <h1
             className="mt-6 max-w-5xl text-balance text-[clamp(4rem,8.5vw,8rem)] font-normal leading-[0.84]"
@@ -116,12 +133,23 @@ export function LandingHero({ categories }: { categories: JourneyCategory[] }) {
         </div>
 
         <div className="hidden items-end justify-end lg:flex">
-          <div className="w-full max-w-md border border-white/14 bg-white/[0.06] p-5 backdrop-blur">
+          <div
+            className="cobam-motion-card w-full max-w-md border border-white/14 bg-white/[0.06] p-5 backdrop-blur"
+            data-landing-reveal
+            data-parallax-speed="0.055"
+          >
             <p className="cobam-section-kicker text-[#8fdcff]">Catégories</p>
             <div className="mt-5 max-h-[28rem] divide-y divide-white/10 overflow-y-auto pr-1">
               {categories.map((category) => (
                 <Link key={category.id} href={category.href} className="group flex items-center justify-between gap-4 py-3 text-white/70 transition hover:text-white">
-                  <span>{category.name}</span>
+                  <span className="flex items-center gap-2">
+                    {category.name}
+                    {category.isPromoted ? (
+                      <span className="rounded-full border border-[#8fdcff]/40 bg-[#8fdcff]/12 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.16em] text-[#8fdcff]">
+                        En promotion
+                      </span>
+                    ) : null}
+                  </span>
                   <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden="true" />
                 </Link>
               ))}
@@ -137,11 +165,11 @@ export function AboutNutshell() {
   return (
     <section className="bg-[#f4f1eb] py-20 md:py-28">
       <div className="mx-auto grid max-w-[1500px] gap-10 px-5 sm:px-8 lg:grid-cols-[0.78fr_1fr] lg:px-12">
-        <div>
+        <div data-landing-reveal>
           <p className="cobam-section-kicker text-[#0a8dc1]">COBAM en bref</p>
           <h2 className="cobam-editorial-title mt-4">Une maison de matières, depuis 1994.</h2>
         </div>
-        <div className="grid gap-8">
+        <div className="grid gap-8" data-landing-reveal>
           <p className="max-w-3xl text-xl leading-9 text-[#56606b]">
             COBAM Group accompagne les professionnels et les particuliers dans le choix de matériaux, revêtements, équipements et finitions capables de transformer un projet en espace durable, précis et élégant.
           </p>
@@ -151,8 +179,13 @@ export function AboutNutshell() {
               ["5,000+", "références produits"],
               ["4", "showrooms en Tunisie"],
               ["1994", "année de création"],
-            ].map(([value, label]) => (
-              <div key={label} className="border-t border-[#14202e]/14 pt-5">
+            ].map(([value, label], index) => (
+              <div
+                key={label}
+                className="cobam-motion-card border-t border-[#14202e]/14 pt-5"
+                data-landing-reveal
+                style={revealDelay(index * 70)}
+              >
                 <p className="text-4xl font-semibold text-[#14202e]">{value}</p>
                 <p className="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-[#59636e]">{label}</p>
               </div>
@@ -172,7 +205,7 @@ export function CollectionsSection() {
   return (
     <section className="bg-[#f4f1eb] py-24 md:py-32">
       <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">
-        <div className="grid gap-8 lg:grid-cols-[0.75fr_1fr] lg:items-end">
+        <div className="grid gap-8 lg:grid-cols-[0.75fr_1fr] lg:items-end" data-landing-reveal>
           <div>
             <p className="cobam-section-kicker text-[#0a8dc1]">Collections</p>
             <h2 className="cobam-editorial-title mt-4">Inspirations prêtes à explorer.</h2>
@@ -187,7 +220,10 @@ export function CollectionsSection() {
             <Link
               key={collection.title}
               href={collection.href}
-              className={index === 0 ? "group relative min-h-[30rem] overflow-hidden bg-[#14202e] lg:row-span-2" : "group relative min-h-[19rem] overflow-hidden bg-[#14202e]"}
+              className={index === 0 ? "cobam-motion-card group relative min-h-[30rem] overflow-hidden bg-[#14202e] lg:row-span-2" : "cobam-motion-card group relative min-h-[19rem] overflow-hidden bg-[#14202e]"}
+              data-landing-reveal
+              data-parallax-speed={index % 2 === 0 ? "0.025" : "-0.018"}
+              style={revealDelay(index * 55)}
             >
               <Image
                 src={collection.image}
@@ -210,13 +246,92 @@ export function CollectionsSection() {
   );
 }
 
+export function NewsSection({ articles }: { articles: PublicArticleSummary[] }) {
+  const latestArticles = articles.slice(0, 3);
+
+  if (latestArticles.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="bg-[#f4f1eb] py-24 md:py-32">
+      <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">
+        <div className="grid gap-8 lg:grid-cols-[0.75fr_1fr] lg:items-end" data-landing-reveal>
+          <div>
+            <p className="cobam-section-kicker text-[#0a8dc1]">Actualités</p>
+            <h2 className="cobam-editorial-title mt-4">Nos actualités.</h2>
+          </div>
+          <div className="flex flex-col gap-6 lg:items-end">
+            <p className="max-w-2xl text-lg leading-8 text-[#56606b]">
+              Conseils, inspirations et nouveautés pour choisir les bonnes matières et accompagner vos projets.
+            </p>
+            <Link href="/actualites" className="cobam-premium-button cobam-premium-button-line">
+              Voir toutes les actualités
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-14 grid gap-5 lg:grid-cols-3">
+          {latestArticles.map((article, index) => {
+            const imageUrl = article.coverImageThumbnailUrl ?? article.coverImageUrl;
+
+            return (
+              <Link
+                key={article.id}
+                href={`/actualites/${article.slug}`}
+                className="cobam-motion-card group flex min-h-[31rem] flex-col overflow-hidden border border-[#14202e]/10 bg-white/62 shadow-sm transition duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-xl"
+                data-landing-reveal
+                style={revealDelay(index * 65)}
+              >
+                <div className="relative aspect-[16/10] overflow-hidden bg-[#14202e]">
+                  {imageUrl ? (
+                    <Image
+                      src={imageUrl}
+                      alt={article.coverImageAlt ?? article.title}
+                      fill
+                      sizes="(min-width: 1024px) 33vw, 100vw"
+                      className="object-cover transition duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center px-8 text-center text-sm font-semibold text-white/55">
+                      {article.title}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#07111d]/58 via-transparent to-transparent" />
+                </div>
+
+                <div className="flex flex-1 flex-col p-6">
+                  <p className="cobam-section-kicker text-[#0a8dc1]">
+                    {formatArticleDate(article.publishedAt ?? article.createdAt)}
+                  </p>
+                  <h3 className="mt-4 text-3xl font-semibold leading-tight text-[#14202e]">
+                    {article.title}
+                  </h3>
+                  <p className="mt-4 line-clamp-3 text-sm leading-7 text-[#56606b]">
+                    {article.excerpt}
+                  </p>
+                  <span className="mt-auto inline-flex items-center gap-2 pt-8 text-xs font-black uppercase tracking-[0.16em] text-[#14202e] transition group-hover:text-[#0a8dc1]">
+                    Lire l&apos;article
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function BrandConstellation({ brands }: { brands: BrandLogo[] }) {
   if (!brands.length) return null;
 
   return (
     <section className="bg-[#f4f1eb] py-24 md:py-32">
       <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">
-        <div className="grid gap-8 lg:grid-cols-[0.75fr_1fr] lg:items-end">
+        <div className="grid gap-8 lg:grid-cols-[0.75fr_1fr] lg:items-end" data-landing-reveal>
           <div>
             <p className="cobam-section-kicker text-[#0a8dc1]">Marques</p>
             <h2 className="cobam-editorial-title mt-4">Une constellation de marques</h2>
@@ -236,7 +351,12 @@ export function BrandConstellation({ brands }: { brands: BrandLogo[] }) {
 
         <div className="mt-14 grid grid-cols-2 border-l border-t border-[#14202e]/10 sm:grid-cols-3 lg:grid-cols-6">
           {brands.slice(0, 24).map((brand) => (
-            <Link key={brand.id} href={brand.href} className="group flex h-32 items-center justify-center border-b border-r border-[#14202e]/10 bg-white/42 p-6 transition duration-300 hover:bg-white">
+            <Link
+              key={brand.id}
+              href={brand.href}
+              className="cobam-motion-card group flex h-32 items-center justify-center border-b border-r border-[#14202e]/10 bg-white/42 p-6 transition duration-300 hover:bg-white"
+              data-landing-reveal
+            >
               <Image
                 src={brand.image}
                 alt={brand.name}
@@ -256,26 +376,32 @@ export function ShowroomSection({ showrooms }: { showrooms: ShowroomLocation[] }
   return (
     <section id="showrooms" className="bg-[#e8e1d7] py-24 md:py-32">
       <div className="mx-auto grid max-w-[1500px] gap-10 px-5 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:px-12">
-        <div className="relative min-h-[560px] overflow-hidden bg-[#14202e]">
+        <div className="cobam-motion-card relative min-h-[560px] overflow-hidden bg-[#14202e]" data-landing-reveal data-parallax-speed="0.035">
           <Image
             src="/images/showrooms/siege.png"
             alt="Showroom COBAM Group"
             fill
             sizes="(min-width: 1024px) 45vw, 100vw"
-            className="object-cover"
+            className="cobam-parallax-layer object-cover"
+            data-parallax-speed="-0.025"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#07111d]/72 via-transparent to-transparent" />
         </div>
 
-        <div className="flex flex-col justify-center">
+        <div className="flex flex-col justify-center" data-landing-reveal>
           <p className="cobam-section-kicker text-[#0a8dc1]">Showrooms</p>
           <h2 className="cobam-editorial-title mt-4">Voir, toucher, comparer.</h2>
           <p className="mt-7 max-w-2xl text-lg leading-8 text-[#56606b]">
             Nos showrooms vous accueillent pour transformer l&apos;inspiration en choix concret.
           </p>
           <div className="mt-10 divide-y divide-[#14202e]/12 border-y border-[#14202e]/12">
-            {showrooms.map((showroom) => (
-              <article key={showroom.name} className="py-6">
+            {showrooms.map((showroom, index) => (
+              <article
+                key={showroom.name}
+                className="cobam-motion-card py-6"
+                data-landing-reveal
+                style={revealDelay(index * 60)}
+              >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="cobam-section-kicker text-[#0a8dc1]">{showroom.label}</p>
@@ -311,10 +437,11 @@ export function FinalCTA() {
         alt="Ambiance matière et lumière COBAM Group"
         fill
         sizes="100vw"
-        className="object-cover opacity-34"
+        className="cobam-parallax-layer object-cover opacity-34"
+        data-parallax-speed="-0.03"
       />
       <div className="absolute inset-0 bg-[#07111d]/78" />
-      <div className="relative mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">
+      <div className="relative mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12" data-landing-reveal>
         <p className="cobam-section-kicker text-[#8fdcff]">Projet</p>
         <h2 className="mt-5 max-w-5xl text-balance text-6xl font-normal leading-[0.9] md:text-9xl" style={{ fontFamily: "var(--font-playfair), serif" }}>
           Votre projet commence par la bonne matière.
@@ -339,14 +466,14 @@ export function SocialLinksSection() {
   return (
     <section className="bg-[#07111d] py-16 text-white">
       <div className="mx-auto grid max-w-[1500px] gap-8 px-5 sm:px-8 lg:grid-cols-[0.75fr_1fr] lg:items-center lg:px-12">
-        <div>
+        <div data-landing-reveal>
           <p className="cobam-section-kicker text-[#8fdcff]">Réseaux sociaux</p>
           <h2 className="mt-4 text-4xl font-normal leading-tight md:text-6xl" style={{ fontFamily: "var(--font-playfair), serif" }}>
             Suivez les matières, les projets et les nouveautés.
           </h2>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {COBAM_SOCIAL_LINKS.map((social) => {
+          {COBAM_SOCIAL_LINKS.map((social, index) => {
             const Icon = social.Icon;
 
             return (
@@ -355,7 +482,9 @@ export function SocialLinksSection() {
                 href={social.href}
                 target="_blank"
                 rel="noreferrer"
-                className="group flex items-center justify-between border border-white/12 bg-white/[0.04] p-4 transition hover:border-[#8fdcff]/60 hover:bg-white/[0.08]"
+                className="cobam-motion-card group flex items-center justify-between border border-white/12 bg-white/[0.04] p-4 transition hover:border-[#8fdcff]/60 hover:bg-white/[0.08]"
+                data-landing-reveal
+                style={revealDelay(index * 55)}
               >
                 <span>
                   <span className="block text-sm font-semibold">{social.label}</span>

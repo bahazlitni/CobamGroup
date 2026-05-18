@@ -7,14 +7,19 @@ import {
   CollectionsSection,
   FinalCTA,
   LandingHero,
+  NewsSection,
   ShowroomSection,
   SocialLinksSection,
   type BrandLogo,
   type JourneyCategory,
   type ShowroomLocation,
 } from "@/components/public/home/catalog-journey";
+import { LandingEffects } from "@/components/public/home/landing-effects";
+import { PromotionBannerCarousel } from "@/components/public/promotions/promotion-showcase";
+import { listLatestPublicArticles } from "@/features/articles/public";
 import { listPublicProductBrandOrganizations } from "@/features/organizations/public";
 import { listPublicMegaMenuProductCategories } from "@/features/product-categories/public";
+import { listPublicPromotionBanners } from "@/features/promotions/public";
 import type { PublicMegaMenuProductCategory } from "@/features/product-categories/public-types";
 
 export const metadata: Metadata = {
@@ -222,6 +227,7 @@ function buildJourneyCategories(categories: PublicMegaMenuProductCategory[]): Jo
       image,
       imageAlt: item.imageAlt,
       imageNeedsReplacement: Boolean(item.imageNeedsReplacement && !(category?.imageUrlHD || category?.imageUrl)),
+      isPromoted: category?.isPromoted ?? false,
       subcategories: item.subcategories.map((label) => ({
         label,
         href: resolveSubcategory(categories, category, label)?.href ?? href,
@@ -242,9 +248,11 @@ function buildBrandLogos(brands: Awaited<ReturnType<typeof listPublicProductBran
 }
 
 export default async function HomePage() {
-  const [categories, brands] = await Promise.all([
+  const [categories, brands, promotionBanners, latestArticles] = await Promise.all([
     listPublicMegaMenuProductCategories(),
     listPublicProductBrandOrganizations(),
+    listPublicPromotionBanners(),
+    listLatestPublicArticles(3),
   ]);
 
   const journeyCategories = buildJourneyCategories(categories);
@@ -252,12 +260,15 @@ export default async function HomePage() {
 
   return (
     <main className="cobam-catalog-landing bg-[#f4f1eb] text-[#14202e]">
+      <LandingEffects />
       <LandingHero categories={journeyCategories} />
-      <AboutNutshell />
       <CategoryJourneySection categories={journeyCategories} />
+      <PromotionBannerCarousel promotions={promotionBanners} />
+      <AboutNutshell />
       <CollectionsSection />
       <BrandConstellation brands={brandLogos} />
       <ShowroomSection showrooms={showrooms} />
+      <NewsSection articles={latestArticles} />
       <FinalCTA />
       <SocialLinksSection />
     </main>

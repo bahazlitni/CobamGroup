@@ -23,6 +23,7 @@ import {
 } from "@/features/product-taxonomy/client";
 import type { ProductFinishDto } from "@/features/product-taxonomy/types";
 import { slugify } from "@/lib/slugify";
+import TwoColumnsLayout from "@/components/staff/ui/TwoColumnsLayout";
 
 type FinishFormState = {
   key: string;
@@ -157,15 +158,8 @@ export default function ProductFinishesAdminPage() {
       ) : null}
 
       {!isLoading && !error ? (
-        <div
-          className={
-            canManageFinishes
-              ? "grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)] xl:items-start"
-              : "grid gap-6"
-          }
-        >
+        <TwoColumnsLayout>
           {canManageFinishes ? (
-            <div className="xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)] xl:self-start xl:overflow-y-auto xl:overscroll-contain xl:pr-1">
               <Panel
                 className="max-w-none"
                 pretitle={editingId == null ? "Nouvelle finition" : "Modification"}
@@ -245,7 +239,6 @@ export default function ProductFinishesAdminPage() {
                   </div>
                 </form>
               </Panel>
-            </div>
           ) : null}
 
           <Panel
@@ -307,7 +300,7 @@ export default function ProductFinishesAdminPage() {
               })}
             </div>
           </Panel>
-        </div>
+        </TwoColumnsLayout>
       ) : null}
     </div>
   );

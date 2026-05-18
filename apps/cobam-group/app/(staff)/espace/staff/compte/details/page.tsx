@@ -189,12 +189,12 @@ export default function PersonalDetailsPage() {
       setCurrentUser(nextUser);
       setTwoStepVerificationEnabled(updated.twoStepVerificationEnabled);
       localStorage.setItem("staff_auth_user", JSON.stringify(nextUser));
-      toast.success("Verification en deux etapes mise a jour");
+      toast.success("Verification en deux etapes mise à jour");
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Erreur inconnue";
       setError(message);
-      toast.error("Erreur lors de la mise a jour", {
+      toast.error("Erreur lors de la mise à jour", {
         description: message || "Veuillez reessayer plus tard.",
       });
     } finally {

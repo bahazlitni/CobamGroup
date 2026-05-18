@@ -9,6 +9,7 @@ export type PublicMegaMenuProductCategory = {
   slug: string;
   parent: string | null;
   themeColor: string | null;
+  isPromoted: boolean;
 };
 
 export type PublicProductCategoryPageData = {
@@ -24,6 +25,7 @@ export type PublicProductCategoryPageData = {
   parentName: string | null;
   imageUrl: string | null;
   imageThumbnailUrl: string | null;
+  isPromoted: boolean;
 };
 
 export type PublicProductSubcategoryCardData = {

@@ -1,3 +1,5 @@
+import type { ProductMediaDto } from "@/features/products/types";
+
 export type EcommerceAdminStatusStat = {
   label: string;
   count: number;
@@ -61,6 +63,10 @@ export type EcommerceCustomersAdminDto = {
 export type EcommercePromotionAdminItem = {
   id: string;
   name: string;
+  displayName: string;
+  slug: string;
+  description: string | null;
+  bannerMedia: ProductMediaDto | null;
   status: string;
   discountType: string;
   discountValue: string;
@@ -116,6 +122,10 @@ export type EcommercePromotionsAdminDto = {
 
 export type EcommercePromotionInput = {
   name: string;
+  displayName: string;
+  slug: string;
+  description?: string | null;
+  bannerMediaId?: number | null;
   status: string;
   discountType: string;
   discountValue: string;

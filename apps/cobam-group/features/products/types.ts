@@ -90,6 +90,7 @@ export type ProductTypeOptionDto = {
   groupName: string | null;
   groupSlug: string | null;
   name: string;
+  displayName: string;
   slug: string;
   description: string | null;
   sortOrder: number;
@@ -202,6 +203,7 @@ export type PublicProductIndexCategory = {
   subtitle: string | null;
   themeColor: string | null;
   sortOrder: number;
+  isPromoted: boolean;
 };
 
 export type PublicProductIndexSubcategory = {

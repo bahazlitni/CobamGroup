@@ -108,7 +108,7 @@ export default function NewProductFamilyPage() {
                         <span>
                           <span className="text-cobam-dark-blue flex items-center gap-2 text-base font-semibold">
                             <Shapes className="text-cobam-water-blue h-4 w-4" />
-                            {productType.name}
+                            {productType.displayName}
                           </span>
                           {productType.description ? (
                             <span className="mt-2 block text-sm leading-6 text-slate-500">

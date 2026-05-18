@@ -111,7 +111,7 @@ export async function updateAnnuaireClient(
 
   if (!res.ok || !data?.ok || !data.person) {
     throw new AnnuaireClientError(
-      getErrorMessage(data) || "Erreur lors de la mise a jour du contact.",
+      getErrorMessage(data) || "Erreur lors de la mise à jour du contact.",
       res.status,
     );
   }

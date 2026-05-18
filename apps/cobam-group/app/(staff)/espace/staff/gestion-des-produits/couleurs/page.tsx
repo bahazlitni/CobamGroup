@@ -21,6 +21,7 @@ import {
 } from "@/features/product-taxonomy/client";
 import type { ProductColorDto } from "@/features/product-taxonomy/types";
 import { slugify } from "@/lib/slugify";
+import TwoColumnsLayout from "@/components/staff/ui/TwoColumnsLayout";
 
 type ColorFormState = {
   key: string;
@@ -150,81 +151,70 @@ export default function ProductColorsAdminPage() {
       ) : null}
 
       {!isLoading && !error ? (
-        <div
-          className={
-            canManageColors
-              ? "grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)] xl:items-start"
-              : "grid gap-6"
-          }
-        >
-          {canManageColors ? (
-            <div className="xl:sticky xl:top-6 xl:max-h-[calc(100vh-3rem)] xl:self-start xl:overflow-y-auto xl:overscroll-contain xl:pr-1">
-              <Panel
-                className="max-w-none"
-                pretitle={editingId == null ? "Nouvelle couleur" : "Modification"}
-                title="Détails"
-              >
-                <form onSubmit={saveItem} className="grid gap-4">
-                  <PanelField id="product-color-label" label="">
-                    <PanelInput
-                      id="product-color-label"
-                      fullWidth
-                      value={form.label}
-                      onChange={(event) => {
-                        const label = event.target.value;
-                        setForm((current) => ({
-                          ...current,
-                          label,
-                          key:
-                            current.key === "" || current.key === slugify(current.label)
-                              ? slugify(label)
-                              : current.key,
-                        }));
-                      }}
-                    />
-                  </PanelField>
-                  <PanelField id="product-color-key" label="Clé">
-                    <PanelInput
-                      id="product-color-key"
-                      fullWidth
-                      value={form.key}
-                      onChange={(event) =>
-                        setForm((current) => ({ ...current, key: event.target.value }))
-                      }
-                    />
-                  </PanelField>
-                  <PanelField id="product-color-value" label="Valeur">
-                    <ColorHexField
-                      id="product-color-value"
-                      value={form.value}
-                      onChange={(value) =>
-                        setForm((current) => ({
-                          ...current,
-                          value,
-                        }))
-                      }
-                    />
-                  </PanelField>
-                  <div className="flex flex-wrap gap-2">
-                    <AnimatedUIButton type="submit" icon="save" loading={isSaving}>
-                      {editingId == null ? "Ajouter" : "Enregistrer"}
-                    </AnimatedUIButton>
-                    {editingId != null ? (
-                      <AnimatedUIButton
-                        type="button"
-                        variant="ghost"
-                        icon="close"
-                        onClick={resetForm}
-                      >
-                        Annuler
-                      </AnimatedUIButton>
-                    ) : null}
-                  </div>
-                </form>
-              </Panel>
-            </div>
-          ) : null}
-
+        <TwoColumnsLayout>
+          <Panel
+            className="max-w-none"
+            pretitle={editingId == null ? "Nouvelle couleur" : "Modification"}
+            title="Détails"
+          >
+            <form onSubmit={saveItem} className="grid gap-4">
+              <PanelField id="product-color-label" label="">
+                <PanelInput
+                  id="product-color-label"
+                  fullWidth
+                  value={form.label}
+                  onChange={(event) => {
+                    const label = event.target.value;
+                    setForm((current) => ({
+                      ...current,
+                      label,
+                      key:
+                        current.key === "" || current.key === slugify(current.label)
+                          ? slugify(label)
+                          : current.key,
+                    }));
+                  }}
+                />
+              </PanelField>
+              <PanelField id="product-color-key" label="Clé">
+                <PanelInput
+                  id="product-color-key"
+                  fullWidth
+                  value={form.key}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, key: event.target.value }))
+                  }
+                />
+              </PanelField>
+              <PanelField id="product-color-value" label="Valeur">
+                <ColorHexField
+                  id="product-color-value"
+                  value={form.value}
+                  onChange={(value) =>
+                    setForm((current) => ({
+                      ...current,
+                      value,
+                    }))
+                  }
+                />
+              </PanelField>
+              <div className="flex flex-wrap gap-2">
+                <AnimatedUIButton type="submit" icon="save" loading={isSaving}>
+                  {editingId == null ? "Ajouter" : "Enregistrer"}
+                </AnimatedUIButton>
+                {editingId != null ? (
+                  <AnimatedUIButton
+                    type="button"
+                    variant="ghost"
+                    icon="close"
+                    onClick={resetForm}
+                  >
+                    Annuler
+                  </AnimatedUIButton>
+                ) : null}
+              </div>
+            </form>
+          </Panel>
           <Panel
             className="max-w-none min-w-0"
             pretitle={`${items.length} entrées`}
@@ -271,7 +261,7 @@ export default function ProductColorsAdminPage() {
               ))}
             </div>
           </Panel>
-        </div>
+        </TwoColumnsLayout>
       ) : null}
     </div>
   );

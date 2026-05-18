@@ -23,6 +23,7 @@ type PublicProductsIndexProps = {
   initialSearch?: string | null;
   categorySlug?: string | null;
   subcategorySlug?: string | null;
+  promoSlug?: string | null;
 };
 
 type PublicProductsIndexApiResponse =
@@ -68,6 +69,7 @@ function groupIndexItems(items: PublicProductIndexItem[]) {
       subtitle: string | null;
       themeColor: string | null;
       sortOrder: number;
+      isPromoted: boolean;
       subcategories: Map<
         string,
         {
@@ -189,6 +191,7 @@ export default function PublicProductsIndex({
   initialSearch,
   categorySlug,
   subcategorySlug,
+  promoSlug,
 }: PublicProductsIndexProps) {
   const [items, setItems] = useState(initialResult.items);
   const [page, setPage] = useState(initialResult.page);
@@ -261,6 +264,9 @@ export default function PublicProductsIndex({
       if (subcategorySlug) {
         searchParams.set("subcategory", subcategorySlug);
       }
+      if (promoSlug) {
+        searchParams.set("promo", promoSlug);
+      }
       if (query) {
         searchParams.set("search", query);
       }
@@ -281,7 +287,7 @@ export default function PublicProductsIndex({
 
       return payload;
     },
-    [categorySlug, initialResult.pageSize, subcategorySlug],
+    [categorySlug, initialResult.pageSize, promoSlug, subcategorySlug],
   );
 
   const resetToInitialResult = useCallback(() => {
@@ -304,7 +310,7 @@ export default function PublicProductsIndex({
     hasMountedSearchEffectRef.current = false;
     setSearchRefreshToken(0);
     resetToInitialResult();
-  }, [categorySlug, subcategorySlug, initialResult, resetToInitialResult]);
+  }, [categorySlug, promoSlug, subcategorySlug, initialResult, resetToInitialResult]);
 
   useEffect(() => {
     if (!hasMountedSearchEffectRef.current) {
@@ -673,10 +679,15 @@ export default function PublicProductsIndex({
                   {category.subtitle ?? "Categorie"}
                 </p>
                 <h2
-                  className="text-3xl font-light text-cobam-dark-blue sm:text-4xl"
+                  className="flex flex-wrap items-center gap-3 text-3xl font-light text-cobam-dark-blue sm:text-4xl"
                   style={{ fontFamily: "var(--font-playfair), serif" }}
                 >
                   {category.name}
+                  {category.isPromoted ? (
+                    <span className="rounded-full border border-[#0a8dc1]/25 bg-[#0a8dc1]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#0a8dc1]">
+                      En promotion
+                    </span>
+                  ) : null}
                 </h2>
                 <div className="h-[1px] w-14" style={{ backgroundColor: themeColor }} />
               </div>

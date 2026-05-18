@@ -187,6 +187,40 @@ function publicCategoryCardSelectFor(
   };
 }
 
+function activePublicPromotionWhere(now = new Date()): Prisma.CommercePromotionWhereInput {
+  return {
+    status: "ACTIVE",
+    AND: [
+      {
+        OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+      },
+      {
+        OR: [{ endsAt: null }, { endsAt: { gte: now } }],
+      },
+    ],
+    coupons: {
+      none: {
+        customers: {
+          some: {},
+        },
+      },
+    },
+  };
+}
+
+async function getPublicPromotedCategoryIds() {
+  const links = await prisma.commercePromotionCategory.findMany({
+    where: {
+      promotion: activePublicPromotionWhere(),
+    },
+    select: {
+      categoryId: true,
+    },
+  });
+
+  return new Set(links.map((link) => link.categoryId.toString()));
+}
+
 const publicSubcategorySelect = {
   id: true,
   categoryId: true,
@@ -287,6 +321,7 @@ async function ensurePublicSubcategoryImage(record: PublicProductSubcategoryReco
 
 function mapRootCategoryToMenuItem(
   category: PublicProductCategoryRecord,
+  promotedCategoryIds: Set<string>,
 ): PublicMegaMenuProductCategory {
   const images = getPublicImageUrls(category);
 
@@ -302,12 +337,14 @@ function mapRootCategoryToMenuItem(
     slug: category.slug,
     parent: null,
     themeColor: resolveColorHex(category.themeColor),
+    isPromoted: promotedCategoryIds.has(category.id.toString()),
   };
 }
 
 function mapSubcategoryToMenuItem(
   category: Pick<PublicProductCategoryRecord, "slug" | "themeColor">,
   subcategory: PublicProductCategoryRecord["subcategories"][number],
+  promotedCategoryIds: Set<string>,
 ): PublicMegaMenuProductCategory {
   const images = getPublicImageUrls(subcategory);
 
@@ -325,11 +362,13 @@ function mapSubcategoryToMenuItem(
     slug: subcategory.slug,
     parent: category.slug,
     themeColor: resolveColorHex(category.themeColor),
+    isPromoted: promotedCategoryIds.has(subcategory.categoryId.toString()),
   };
 }
 
 function mapCategoryToPageData(
   category: PublicProductCategoryRecord,
+  isPromoted = false,
 ): PublicProductCategoryPageData {
   const images = getPublicImageUrls(category);
 
@@ -347,6 +386,7 @@ function mapCategoryToPageData(
     parentName: null,
     imageUrl: images.imageOriginalUrl,
     imageThumbnailUrl: images.imageThumbnailUrl,
+    isPromoted,
   };
 }
 
@@ -369,6 +409,7 @@ function mapSubcategoryToPageData(
     parentName: subcategory.category.name,
     imageUrl: images.imageOriginalUrl,
     imageThumbnailUrl: images.imageThumbnailUrl,
+    isPromoted: false,
   };
 }
 
@@ -410,12 +451,13 @@ export async function listPublicMegaMenuProductCategories(): Promise<
     select: publicCategorySelectFor(hasVisibilityColumns),
   })) as unknown as PublicProductCategoryRecord[];
 
+  const [promotedCategoryIds] = await Promise.all([getPublicPromotedCategoryIds()]);
   await ensurePublicCategoryImages(categories);
 
   return categories.flatMap((category) => [
-    mapRootCategoryToMenuItem(category),
+    mapRootCategoryToMenuItem(category, promotedCategoryIds),
     ...category.subcategories.map((subcategory) =>
-      mapSubcategoryToMenuItem(category, subcategory),
+      mapSubcategoryToMenuItem(category, subcategory, promotedCategoryIds),
     ),
   ]);
 }
@@ -439,8 +481,9 @@ export async function findPublicRootProductCategoryBySlug(
     return null;
   }
 
+  const [promotedCategoryIds] = await Promise.all([getPublicPromotedCategoryIds()]);
   await ensurePublicCategoryImages([category]);
-  return mapCategoryToPageData(category);
+  return mapCategoryToPageData(category, promotedCategoryIds.has(category.id.toString()));
 }
 
 export async function findPublicProductSubcategoryBySlugs(input: {

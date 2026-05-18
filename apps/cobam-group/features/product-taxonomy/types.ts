@@ -1,5 +1,5 @@
 import type { ProductTypeAttributeInputType, StockUnit } from "@prisma/client";
-import type { ProductSubcategoryOptionDto } from "@/features/products/types";
+import type { ProductMediaDto, ProductSubcategoryOptionDto } from "@/features/products/types";
 
 export type ProductTaxonomyGroupDto = {
   id: number;
@@ -56,8 +56,13 @@ export type ProductTaxonomyTypeDto = {
   groupId: number | null;
   groupName: string | null;
   name: string;
+  displayName: string;
   slug: string;
   description: string | null;
+  titleSeo: string | null;
+  descriptionSeo: string | null;
+  mediaImageId: number | null;
+  mediaImage: ProductMediaDto | null;
   sortOrder: number;
   hasColor: boolean;
   hasFinish: boolean;
@@ -86,8 +91,12 @@ export type ProductTaxonomyGroupInput = {
 export type ProductTaxonomyTypeInput = {
   groupId: number | null;
   name: string;
+  displayName: string;
   slug: string;
   description: string | null;
+  titleSeo: string | null;
+  descriptionSeo: string | null;
+  mediaImageId: number | null;
   sortOrder?: number;
   hasColor?: boolean;
   hasFinish?: boolean;

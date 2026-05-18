@@ -29,6 +29,7 @@ import type {
   ProductTaxonomyTypeInput,
   ProductTypesAdminDto,
 } from "./types";
+import type { ProductMediaDto } from "@/features/products/types";
 
 export class ProductTaxonomyServiceError extends Error {
   status: number;
@@ -37,6 +38,48 @@ export class ProductTaxonomyServiceError extends Error {
     super(message);
     this.status = status;
   }
+}
+
+const STAFF_MEDIA_SELECT = {
+  id: true,
+  kind: true,
+  title: true,
+  originalFilename: true,
+  mimeType: true,
+  altText: true,
+  widthPx: true,
+  heightPx: true,
+  durationSeconds: true,
+  sizeBytes: true,
+} satisfies Prisma.MediaSelect;
+
+function buildMediaUrl(mediaId: bigint | number, variant: "original" | "thumbnail" = "original") {
+  const query = variant === "thumbnail" ? "?variant=thumbnail" : "";
+  return `/api/media/${mediaId.toString()}/file${query}`;
+}
+
+function mapMedia(
+  media: Prisma.MediaGetPayload<{ select: typeof STAFF_MEDIA_SELECT }> | null,
+): ProductMediaDto | null {
+  if (!media) {
+    return null;
+  }
+
+  return {
+    id: Number(media.id),
+    role: "GALLERY",
+    kind: media.kind,
+    title: media.title,
+    originalFilename: media.originalFilename,
+    mimeType: media.mimeType,
+    altText: media.altText,
+    widthPx: media.widthPx,
+    heightPx: media.heightPx,
+    durationSeconds: media.durationSeconds?.toString() ?? null,
+    sizeBytes: media.sizeBytes?.toString() ?? null,
+    url: buildMediaUrl(media.id, "original"),
+    thumbnailUrl: media.kind === "IMAGE" ? buildMediaUrl(media.id, "thumbnail") : null,
+  };
 }
 
 function assertAccess(allowed: boolean) {
@@ -97,6 +140,26 @@ async function assertFinishImageMedia(mediaId: number | null) {
   }
 }
 
+async function assertProductTypeMediaImage(mediaId: number | null) {
+  if (mediaId == null) {
+    return;
+  }
+
+  const media = await prisma.media.findFirst({
+    where: {
+      id: BigInt(mediaId),
+      deletedAt: null,
+    },
+    select: {
+      kind: true,
+    },
+  });
+
+  if (!media || media.kind !== "IMAGE") {
+    throw new ProductTaxonomyServiceError("L'image publique du modele produit est invalide.");
+  }
+}
+
 function requiredString(value: unknown, fieldName: string) {
   const text = typeof value === "string" ? value.trim() : "";
 
@@ -110,6 +173,30 @@ function requiredString(value: unknown, fieldName: string) {
 function optionalString(value: unknown) {
   const text = typeof value === "string" ? value.trim() : "";
   return text || null;
+}
+
+function requiredLimitedString(value: unknown, fieldName: string, maxLength: number) {
+  const text = requiredString(value, fieldName);
+
+  if (text.length > maxLength) {
+    throw new ProductTaxonomyServiceError(
+      `${fieldName} doit contenir ${maxLength} caracteres ou moins.`,
+    );
+  }
+
+  return text;
+}
+
+function optionalLimitedString(value: unknown, fieldName: string, maxLength: number) {
+  const text = optionalString(value);
+
+  if (text != null && text.length > maxLength) {
+    throw new ProductTaxonomyServiceError(
+      `${fieldName} doit contenir ${maxLength} caracteres ou moins.`,
+    );
+  }
+
+  return text;
 }
 
 function integerValue(value: unknown, fieldName: string, fallback = 0) {
@@ -282,15 +369,19 @@ export function parseProductTypeInput(value: unknown): ProductTaxonomyTypeInput 
   return {
     groupId: nullablePositiveIntegerValue(record.groupId, "Le groupe"),
     name: requiredString(record.name, "Le nom"),
+    displayName: requiredLimitedString(record.displayName ?? record.name, "Le nom affiche", 255),
     slug: requiredString(record.slug, "Le slug"),
     description: optionalString(record.description),
+    titleSeo: optionalLimitedString(record.titleSeo, "Le titre SEO", 60),
+    descriptionSeo: optionalLimitedString(record.descriptionSeo, "La description SEO", 160),
+    mediaImageId: nullablePositiveIntegerValue(record.mediaImageId, "L'image publique"),
     sortOrder: integerValue(record.sortOrder, "L'ordre"),
     hasColor: booleanValue(record.hasColor),
     hasFinish: booleanValue(record.hasFinish),
     presetTags: optionalString(record.presetTags) ?? "",
     presetSubcategoryIds: positiveIntegerArrayValue(
       record.presetSubcategoryIds,
-      "Les sous-categories",
+      "Les sous-catégories",
     ),
     presetStockUnit: stockUnitValue(record.presetStockUnit),
     presetVatRate: decimalStringValue(record.presetVatRate, "La TVA"),
@@ -458,8 +549,13 @@ function mapProductType(record: {
   id: bigint;
   groupId: bigint | null;
   name: string;
+  displayName: string;
   slug: string;
   description: string | null;
+  titleSeo: string | null;
+  descriptionSeo: string | null;
+  mediaImageId: bigint | null;
+  mediaImage: Prisma.MediaGetPayload<{ select: typeof STAFF_MEDIA_SELECT }> | null;
   sortOrder: number;
   hasColor: boolean;
   hasFinish: boolean;
@@ -477,8 +573,13 @@ function mapProductType(record: {
     groupId: record.groupId == null ? null : Number(record.groupId),
     groupName: record.group?.name ?? null,
     name: record.name,
+    displayName: record.displayName,
     slug: record.slug,
     description: record.description,
+    titleSeo: record.titleSeo,
+    descriptionSeo: record.descriptionSeo,
+    mediaImageId: record.mediaImageId == null ? null : Number(record.mediaImageId),
+    mediaImage: mapMedia(record.mediaImage),
     sortOrder: record.sortOrder,
     hasColor: record.hasColor,
     hasFinish: record.hasFinish,
@@ -598,6 +699,9 @@ export async function listProductTypesAdminService(
             name: true,
           },
         },
+        mediaImage: {
+          select: STAFF_MEDIA_SELECT,
+        },
         subcategoryPresets: {
           select: {
             subcategoryId: true,
@@ -699,6 +803,7 @@ export async function deleteTaxonomyGroupService(session: StaffSession, id: numb
 
 const productTypeInclude = {
   group: { select: { name: true } },
+  mediaImage: { select: STAFF_MEDIA_SELECT },
   subcategoryPresets: { select: { subcategoryId: true } },
   attributeGroups: true,
   attributes: {
@@ -713,8 +818,12 @@ function getProductTypeData(input: ProductTaxonomyTypeInput) {
   return {
     groupId: input.groupId == null ? null : BigInt(input.groupId),
     name: input.name,
+    displayName: input.displayName,
     slug: input.slug,
     description: input.description,
+    titleSeo: input.titleSeo,
+    descriptionSeo: input.descriptionSeo,
+    mediaImageId: input.mediaImageId == null ? null : BigInt(input.mediaImageId),
     sortOrder: input.sortOrder ?? 0,
     hasColor: input.hasColor ?? false,
     hasFinish: input.hasFinish ?? false,
@@ -838,6 +947,7 @@ export async function createTaxonomyProductTypeService(
   input: ProductTaxonomyTypeInput,
 ) {
   assertCanManageProductTemplates(session);
+  await assertProductTypeMediaImage(input.mediaImageId);
 
   const productType = await prisma.$transaction(async (tx) => {
     const created = await tx.productType.create({
@@ -863,6 +973,7 @@ export async function updateTaxonomyProductTypeService(
   input: ProductTaxonomyTypeInput,
 ) {
   assertCanManageProductTemplates(session);
+  await assertProductTypeMediaImage(input.mediaImageId);
 
   const productType = await prisma.$transaction(async (tx) => {
     await tx.productType.update({

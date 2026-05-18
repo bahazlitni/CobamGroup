@@ -97,6 +97,12 @@ export function SiteHeader({ categories }: { categories: LandingCategory[] }) {
           >
             Catalogue
           </Link>
+          <Link
+            href="/types-produits"
+            className="text-ec-ink hover:bg-ec-stone hover:text-ec-blue inline-flex h-10 items-center rounded-full px-4 text-sm font-semibold transition"
+          >
+            Types de produits
+          </Link>
 
           {navCategories.map((category) => (
             <div key={category.slug} className="group relative">
@@ -166,6 +172,13 @@ export function SiteHeader({ categories }: { categories: LandingCategory[] }) {
                 className="text-ec-ink rounded-2xl bg-white px-4 py-4 text-base font-semibold"
               >
                 Tous les produits
+              </Link>
+              <Link
+                href="/types-produits"
+                onClick={() => setMobileOpen(false)}
+                className="text-ec-ink rounded-2xl bg-white px-4 py-4 text-base font-semibold"
+              >
+                Explorer par type
               </Link>
               {navCategories.map((category) => (
                 <details key={category.slug} className="rounded-2xl bg-white/60 px-4 py-2">

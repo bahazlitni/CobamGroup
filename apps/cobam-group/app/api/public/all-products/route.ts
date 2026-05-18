@@ -33,6 +33,7 @@ export async function GET(req: Request) {
     const searchParams = new URL(req.url).searchParams;
     const categorySlug = parseOptionalSlug(searchParams.get("category"));
     const subcategorySlug = parseOptionalSlug(searchParams.get("subcategory"));
+    const promoSlug = parseOptionalSlug(searchParams.get("promo"));
     const page = parsePositiveInteger(searchParams.get("page"), 1);
     const pageSize = parsePositiveInteger(
       searchParams.get("pageSize"),
@@ -48,6 +49,7 @@ export async function GET(req: Request) {
       page,
       pageSize,
       q,
+      promoSlug,
     });
 
     return NextResponse.json(

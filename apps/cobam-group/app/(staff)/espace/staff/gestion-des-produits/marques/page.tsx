@@ -23,6 +23,7 @@ import {
 import type { OrganizationDto, OrganizationInput } from "@/features/organizations/types";
 import { cn } from "@/lib/utils";
 import { slugify } from "@/lib/slugify";
+import TwoColumnsLayout from "@/components/staff/ui/TwoColumnsLayout";
 
 type OrganizationFormState = {
   slug: string;
@@ -203,7 +204,7 @@ export default function ProductBrandsAdminPage() {
       ) : null}
 
       {!isLoading && !error ? (
-        <div className="grid gap-6 xl:grid-cols-[460px_minmax(0,1fr)]">
+      <TwoColumnsLayout reversed>
           <Panel pretitle={editingId == null ? "Nouvelle marque" : "Modification"} title="Details">
             <form onSubmit={saveItem} className="grid gap-4">
               <PanelField id="organization-name" label="Nom">
@@ -325,7 +326,7 @@ export default function ProductBrandsAdminPage() {
             </form>
           </Panel>
 
-          <Panel pretitle={`${items.length} entrees`} title="Marques disponibles">
+          <Panel className="max-w-none min-w-0" pretitle={`${items.length} entrees`} title="Marques disponibles">
             <div className="grid gap-2">
               {items.map((item) => (
                 <div
@@ -377,7 +378,7 @@ export default function ProductBrandsAdminPage() {
               ))}
             </div>
           </Panel>
-        </div>
+      </TwoColumnsLayout>
       ) : null}
     </div>
   );

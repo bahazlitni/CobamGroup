@@ -131,7 +131,7 @@ export default function PromotionManagementPage() {
     void load();
   }, [load]);
 
-  const rawItems = data?.items ?? [];
+  const rawItems = useMemo(() => data?.items ?? [], [data?.items]);
   const items = useMemo(
     () =>
       rawItems.filter((promotion) => {
@@ -143,6 +143,9 @@ export default function PromotionManagementPage() {
           matchesSearch(
             [
               promotion.name,
+              promotion.displayName,
+              promotion.slug,
+              promotion.description,
               promotion.status,
               promotion.discountType,
               promotion.discountValue,
@@ -295,9 +298,11 @@ export default function PromotionManagementPage() {
           {items.map((promotion) => (
             <tr key={promotion.id} className="align-top">
               <td className="px-4 py-4">
-                <p className="text-cobam-dark-blue font-semibold">{promotion.name}</p>
+                <p className="text-cobam-dark-blue font-semibold">{promotion.displayName}</p>
+                <p className="text-xs text-slate-500">{promotion.slug}</p>
                 <p className="text-xs text-slate-500">
                   Minimum {promotion.minimumSubtotalTtc ?? "-"} TND
+                  {promotion.bannerMedia ? " - banniere active" : ""}
                 </p>
               </td>
               <td className="px-4 py-4">

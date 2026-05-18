@@ -2,8 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight, PackageCheck } from "lucide-react";
-import { AccountNav } from "@/components/account/account-nav";
+
+import { AccountPageHeader, AccountPageShell } from "@/components/account/account-shell";
+import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { getCustomerAccount } from "@/lib/customer-account";
 import { getCustomerSession } from "@/lib/customer-auth";
 import { formatPriceTnd } from "@/lib/format";
@@ -32,65 +43,111 @@ export default async function CustomerOrdersPage() {
 
   return (
     <main className="commerce-container py-8 sm:py-12">
-      <div className="mb-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-ec-blue">Commandes</p>
-        <h1 className="mt-3 text-4xl font-black tracking-tight text-ec-ink sm:text-6xl">
-          Historique et statuts.
-        </h1>
-      </div>
+      <AccountPageHeader
+        eyebrow="Commandes"
+        title="Historique et statuts."
+        description="Consultez les commandes rattachees a votre compte et suivez leur avancement."
+      />
 
-      <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
-        <AccountNav active="/compte/commandes" />
-
-        <section className="rounded-[1.5rem] border border-ec-line bg-white">
+      <AccountPageShell active="/compte/commandes">
+        <Card>
           {account.orders.length > 0 ? (
-            <div className="divide-y divide-ec-line">
-              {account.orders.map((order) => (
-                <Link
-                  key={order.orderNumber}
-                  href={`/commande/${encodeURIComponent(order.orderNumber)}`}
-                  className="grid gap-4 p-5 transition hover:bg-ec-paper/70 md:grid-cols-[1fr_auto] md:items-center"
-                >
-                  <div>
+            <>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead>Commande</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead>Paiement</TableHead>
+                      <TableHead>Livraison</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {account.orders.map((order) => (
+                      <TableRow key={order.orderNumber}>
+                        <TableCell>
+                          <Link
+                            href={`/commande/${encodeURIComponent(order.orderNumber)}`}
+                            className="text-ec-ink hover:text-ec-blue font-black"
+                          >
+                            {order.orderNumber}
+                          </Link>
+                          <p className="text-ec-muted mt-1 text-xs font-semibold">
+                            {new Intl.DateTimeFormat("fr-TN", { dateStyle: "medium" }).format(
+                              new Date(order.placedAt),
+                            )}
+                          </p>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={orderStatusTone(order.status)}>
+                            {orderStatusLabels[order.status]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-ec-muted font-semibold">
+                          {paymentStatusLabels[order.paymentStatus]}
+                        </TableCell>
+                        <TableCell className="text-ec-muted font-semibold">
+                          {fulfillmentStatusLabels[order.fulfillmentStatus]}
+                        </TableCell>
+                        <TableCell className="text-ec-ink text-right font-black">
+                          {formatPriceTnd(order.totalTtc) ?? "Sur devis"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="divide-ec-line divide-y md:hidden">
+                {account.orders.map((order) => (
+                  <Link
+                    key={order.orderNumber}
+                    href={`/commande/${encodeURIComponent(order.orderNumber)}`}
+                    className="hover:bg-ec-paper/70 block p-5 transition"
+                  >
                     <div className="flex flex-wrap items-center gap-3">
-                      <span className={`rounded-full px-3 py-1 text-xs font-black ${orderStatusTone(order.status)}`}>
+                      <Badge className={orderStatusTone(order.status)}>
                         {orderStatusLabels[order.status]}
-                      </span>
-                      <span className="text-xs font-bold uppercase tracking-[0.18em] text-ec-muted">
-                        {new Intl.DateTimeFormat("fr-TN", { dateStyle: "medium" }).format(new Date(order.placedAt))}
+                      </Badge>
+                      <span className="text-ec-muted text-xs font-bold tracking-[0.18em] uppercase">
+                        {new Intl.DateTimeFormat("fr-TN", { dateStyle: "medium" }).format(
+                          new Date(order.placedAt),
+                        )}
                       </span>
                     </div>
-                    <h2 className="mt-3 text-xl font-black text-ec-ink">{order.orderNumber}</h2>
-                    <p className="mt-2 text-sm font-semibold text-ec-muted">
-                      Paiement: {paymentStatusLabels[order.paymentStatus]} · Livraison:{" "}
-                      {fulfillmentStatusLabels[order.fulfillmentStatus]} · {order.itemCount} article(s)
+                    <h2 className="text-ec-ink mt-3 text-xl font-black">{order.orderNumber}</h2>
+                    <p className="text-ec-muted mt-2 text-sm font-semibold">
+                      Paiement: {paymentStatusLabels[order.paymentStatus]} - Livraison:{" "}
+                      {fulfillmentStatusLabels[order.fulfillmentStatus]} - {order.itemCount}{" "}
+                      article(s)
                     </p>
-                  </div>
-                  <div className="text-left md:text-right">
-                    <p className="text-lg font-black text-ec-ink">
+                    <p className="text-ec-ink mt-3 text-lg font-black">
                       {formatPriceTnd(order.totalTtc) ?? "Sur devis"}
                     </p>
-                    <p className="mt-2 inline-flex items-center gap-2 text-sm font-black text-ec-blue">
-                      Detail <ArrowRight className="size-4" />
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                  </Link>
+                ))}
+              </div>
+            </>
           ) : (
-            <div className="p-10 text-center">
-              <PackageCheck className="mx-auto size-10 text-ec-blue" />
-              <h2 className="mt-4 text-2xl font-black text-ec-ink">Aucune commande</h2>
-              <p className="mx-auto mt-2 max-w-lg text-sm leading-7 text-ec-muted">
+            <CardContent className="p-10 text-center sm:p-10">
+              <PackageCheck className="text-ec-blue mx-auto size-10" />
+              <h2 className="text-ec-ink mt-4 text-2xl font-black">Aucune commande</h2>
+              <p className="text-ec-muted mx-auto mt-2 max-w-lg text-sm leading-7">
                 Vos futures commandes apparaitront ici des que vous finalisez un checkout connecte.
               </p>
-              <ButtonLink href="/catalogue" className="mt-6" icon={<ArrowRight className="size-4" />}>
+              <ButtonLink
+                href="/catalogue"
+                className="mt-6"
+                icon={<ArrowRight className="size-4" />}
+              >
                 Explorer le catalogue
               </ButtonLink>
-            </div>
+            </CardContent>
           )}
-        </section>
-      </div>
+        </Card>
+      </AccountPageShell>
     </main>
   );
 }

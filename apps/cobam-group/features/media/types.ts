@@ -81,6 +81,7 @@ export type MediaUsageDto = {
   productVariants: number;
   brandLogos: number;
   productCategoryImages: number;
+  productTypeImages: number;
   productFinishImages: number;
   productSubcategoryImages: number;
   staffAvatars: number;

@@ -259,7 +259,7 @@ export async function updateUserTwoStepVerificationClient(
   if (!res.ok || !data?.ok || !data.user) {
     throw new UsersClientError(
       getErrorMessage(data) ||
-        "Erreur lors de la mise a jour de la verification en deux etapes",
+        "Erreur lors de la mise à jour de la verification en deux etapes",
       res.status,
     );
   }

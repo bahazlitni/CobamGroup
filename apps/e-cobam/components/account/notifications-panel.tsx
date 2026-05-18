@@ -3,7 +3,10 @@
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import { Bell, CheckCheck } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 type NotificationItem = {
   id: string;
@@ -62,10 +65,10 @@ export function NotificationsPanel({ initialData }: { initialData: Notifications
   );
 
   return (
-    <section className="border-ec-line rounded-[1.5rem] border bg-white">
-      <div className="border-ec-line flex flex-col gap-4 border-b p-5 sm:flex-row sm:items-center sm:justify-between">
+    <Card>
+      <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-ec-ink text-xl font-black">Centre de notifications</h2>
+          <CardTitle>Centre de notifications</CardTitle>
           <p className="text-ec-muted mt-1 text-sm font-semibold">
             {data.unreadCount} notification(s) non lue(s)
           </p>
@@ -79,7 +82,8 @@ export function NotificationsPanel({ initialData }: { initialData: Notifications
           <CheckCheck className="size-4" />
           Tout marquer comme lu
         </Button>
-      </div>
+      </CardHeader>
+      <Separator />
 
       {data.items.length > 0 ? (
         <div className="divide-ec-line divide-y">
@@ -88,9 +92,9 @@ export function NotificationsPanel({ initialData }: { initialData: Notifications
               <>
                 <div className="flex flex-wrap items-center gap-3">
                   {!item.readAt ? (
-                    <span className="bg-ec-blue rounded-full px-3 py-1 text-[11px] font-black tracking-[0.16em] text-white uppercase">
+                    <Badge variant="blue" className="tracking-[0.16em] uppercase">
                       Nouveau
-                    </span>
+                    </Badge>
                   ) : null}
                   <span className="text-ec-muted text-xs font-bold tracking-[0.18em] uppercase">
                     {formatDate(item.createdAt)}
@@ -135,14 +139,14 @@ export function NotificationsPanel({ initialData }: { initialData: Notifications
           })}
         </div>
       ) : (
-        <div className="p-10 text-center">
+        <CardContent className="p-10 text-center sm:p-10">
           <Bell className="text-ec-blue mx-auto size-10" />
           <h2 className="text-ec-ink mt-4 text-2xl font-black">Aucune notification</h2>
           <p className="text-ec-muted mx-auto mt-2 max-w-lg text-sm leading-7">
             Les changements de statut de vos commandes apparaitront ici.
           </p>
-        </div>
+        </CardContent>
       )}
-    </section>
+    </Card>
   );
 }

@@ -305,7 +305,7 @@ export function useUserDetail(userId: string | null) {
         setAccess(toAccessState(updated));
         setTwoStepVerificationEnabled(updated.twoStepVerificationEnabled);
         setCredentials((prev) => ({ ...prev, email: updated.email }));
-        setNotice("Verification en deux etapes mise a jour.");
+        setNotice("Verification en deux etapes mise à jour.");
         return updated;
       } catch (err: unknown) {
         const message =
@@ -313,7 +313,7 @@ export function useUserDetail(userId: string | null) {
             ? err.message
             : err instanceof Error
               ? err.message
-              : "Erreur lors de la mise a jour de la verification en deux etapes";
+              : "Erreur lors de la mise à jour de la verification en deux etapes";
         setError(message);
         return null;
       } finally {

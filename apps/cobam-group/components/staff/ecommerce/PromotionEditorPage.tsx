@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BadgePercent, TicketPercent } from "lucide-react";
+import ProductMediaGrid from "@/components/staff/products/ProductMediaGrid";
 import Panel from "@/components/staff/ui/Panel";
 import PanelField from "@/components/staff/ui/PanelField";
 import PanelInput from "@/components/staff/ui/PanelInput";
@@ -17,6 +18,7 @@ import {
   updateEcommerceCouponAdminClient,
   updateEcommercePromotionAdminClient,
 } from "@/features/ecommerce-admin/client";
+import type { ProductMediaDto } from "@/features/products/types";
 import type {
   EcommerceCouponAdminItem,
   EcommerceCouponInput,
@@ -25,9 +27,14 @@ import type {
   EcommercePromotionScopeOption,
   EcommercePromotionsAdminDto,
 } from "@/features/ecommerce-admin/types";
+import { slugify } from "@/lib/slugify";
 
 type PromotionFormState = {
   name: string;
+  displayName: string;
+  slug: string;
+  description: string;
+  bannerMedia: ProductMediaDto | null;
   status: string;
   discountType: string;
   discountValue: string;
@@ -55,6 +62,10 @@ const promotionsBasePath = "/espace/staff/e-commerce/promotions";
 
 const emptyPromotionForm: PromotionFormState = {
   name: "",
+  displayName: "",
+  slug: "",
+  description: "",
+  bannerMedia: null,
   status: "DRAFT",
   discountType: "PERCENT",
   discountValue: "10",
@@ -109,6 +120,10 @@ function nullableNumber(value: string) {
 function promotionToForm(promotion: EcommercePromotionAdminItem): PromotionFormState {
   return {
     name: promotion.name,
+    displayName: promotion.displayName,
+    slug: promotion.slug,
+    description: promotion.description ?? "",
+    bannerMedia: promotion.bannerMedia,
     status: promotion.status,
     discountType: promotion.discountType,
     discountValue: promotion.discountValue,
@@ -125,6 +140,10 @@ function promotionToForm(promotion: EcommercePromotionAdminItem): PromotionFormS
 function formToPromotionInput(form: PromotionFormState): EcommercePromotionInput {
   return {
     name: form.name,
+    displayName: form.displayName || form.name,
+    slug: form.slug || slugify(form.displayName || form.name),
+    description: form.description || null,
+    bannerMediaId: form.bannerMedia?.id ?? null,
     status: form.status,
     discountType: form.discountType,
     discountValue: form.discountType === "FREE_SHIPPING" ? "0" : form.discountValue,
@@ -303,7 +322,7 @@ export default function PromotionEditorPage({ promotionId }: { promotionId?: str
 
       if (selectedPromotion) {
         await updateEcommercePromotionAdminClient(selectedPromotion.id, input);
-        setActionMessage("Promotion mise a jour.");
+        setActionMessage("Promotion mise à jour.");
         await load();
       } else {
         const created = await createEcommercePromotionAdminClient(input);
@@ -383,6 +402,38 @@ export default function PromotionEditorPage({ promotionId }: { promotionId?: str
   const isNew = !promotionId;
   const notFound = !isNew && !isLoading && !loadError && !selectedPromotion;
 
+  const updatePromotionName = (name: string) => {
+    setPromotionForm((current) => {
+      const shouldSyncDisplayName =
+        current.displayName === "" || current.displayName === current.name;
+      const previousSlugBase = current.displayName || current.name;
+      const shouldSyncSlug =
+        current.slug === "" || current.slug === slugify(previousSlugBase);
+      const displayName = shouldSyncDisplayName ? name : current.displayName;
+
+      return {
+        ...current,
+        name,
+        displayName,
+        slug: shouldSyncSlug ? slugify(displayName || name) : current.slug,
+      };
+    });
+  };
+
+  const updatePromotionDisplayName = (displayName: string) => {
+    setPromotionForm((current) => {
+      const previousSlugBase = current.displayName || current.name;
+      const shouldSyncSlug =
+        current.slug === "" || current.slug === slugify(previousSlugBase);
+
+      return {
+        ...current,
+        displayName,
+        slug: shouldSyncSlug ? slugify(displayName || current.name) : current.slug,
+      };
+    });
+  };
+
   return (
     <div className="space-y-6">
       <StaffPageHeader
@@ -457,11 +508,48 @@ export default function PromotionEditorPage({ promotionId }: { promotionId?: str
                 id="promotion-name"
                 fullWidth
                 value={promotionForm.name}
-                onChange={(event) =>
-                  setPromotionForm((current) => ({ ...current, name: event.target.value }))
-                }
+                onChange={(event) => updatePromotionName(event.target.value)}
                 placeholder="Promo showroom ete"
               />
+            </PanelField>
+            <PanelField id="promotion-display-name" label="Nom public">
+              <PanelInput
+                id="promotion-display-name"
+                fullWidth
+                value={promotionForm.displayName}
+                onChange={(event) => updatePromotionDisplayName(event.target.value)}
+                placeholder="Offres showroom ete"
+              />
+            </PanelField>
+            <PanelField id="promotion-slug" label="Slug public">
+              <div className="flex gap-2">
+                <PanelInput
+                  id="promotion-slug"
+                  fullWidth
+                  value={promotionForm.slug}
+                  onChange={(event) =>
+                    setPromotionForm((current) => ({
+                      ...current,
+                      slug: slugify(event.target.value),
+                    }))
+                  }
+                  placeholder="offres-showroom-ete"
+                />
+                <AnimatedUIButton
+                  type="button"
+                  variant="outline"
+                  icon="restart"
+                  className="shrink-0"
+                  onClick={() =>
+                    setPromotionForm((current) => ({
+                      ...current,
+                      slug: slugify(current.displayName || current.name),
+                    }))
+                  }
+                >
+                  Générer
+                </AnimatedUIButton>
+              </div>
             </PanelField>
             <PanelField id="promotion-status" label="Statut">
               <StaffSelect
@@ -574,6 +662,37 @@ export default function PromotionEditorPage({ promotionId }: { promotionId?: str
             </PanelField>
           </div>
 
+          <PanelField id="promotion-description" label="Description publique">
+            <textarea
+              id="promotion-description"
+              value={promotionForm.description}
+              onChange={(event) =>
+                setPromotionForm((current) => ({
+                  ...current,
+                  description: event.target.value,
+                }))
+              }
+              rows={4}
+              className="focus:border-cobam-water-blue focus:ring-cobam-water-blue/20 min-h-28 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition focus:ring-4"
+              placeholder="Texte court pour la page promotions et les bannieres publiques."
+            />
+          </PanelField>
+
+          <ProductMediaGrid
+            title="Banniere publique"
+            description="Optionnel : si une image est ajoutee, cette promotion apparait dans le carousel des bannieres publiques."
+            pickerTitle="Choisir une banniere de promotion"
+            pickerDescription="Choisissez une image existante ou importez une nouvelle banniere."
+            addButtonLabel="Ajouter une banniere"
+            addButtonHint="Image uniquement"
+            mediaKind="IMAGE"
+            maxItems={1}
+            items={promotionForm.bannerMedia ? [promotionForm.bannerMedia] : []}
+            onChange={(items) =>
+              setPromotionForm((current) => ({ ...current, bannerMedia: items[0] ?? null }))
+            }
+          />
+
           <div className="grid gap-4">
             <ScopeSelector
               title="Categories"
@@ -659,7 +778,7 @@ export default function PromotionEditorPage({ promotionId }: { promotionId?: str
                       </p>
                       <p className="mt-1 text-xs font-medium text-slate-600">
                         {coupon.customerCount > 0
-                          ? `${coupon.customerCount} client(s) autorise(s)`
+                          ? `${coupon.customerCount} client(s) autorisé(s)`
                           : "Coupon public"}
                       </p>
                     </div>
@@ -789,8 +908,8 @@ export default function PromotionEditorPage({ promotionId }: { promotionId?: str
                   />
                 </PanelField>
                 <ScopeSelector
-                  title="Clients autorises"
-                  hint="Vide = coupon public. Avec une selection, le client doit etre connecte avec un compte autorise."
+                  title="Clients autorisés"
+                  hint="Vide = coupon public. Avec une selection, le client doit etre connecte avec un compte autorisé."
                   options={options.customers}
                   selectedIds={couponForm.customerIds}
                   onChange={(customerIds) =>

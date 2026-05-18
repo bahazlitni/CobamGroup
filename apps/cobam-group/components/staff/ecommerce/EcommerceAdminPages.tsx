@@ -43,7 +43,7 @@ const ALL_FILTER_VALUE = "__all__";
 const statusLabels: Record<string, string> = {
   ACTIVE: "Active",
   ARCHIVED: "Archivee",
-  AUTHORIZED: "Autorise",
+  AUTHORIZED: "Autorisé",
   BANNED: "Banni",
   BANK_TRANSFER: "Virement",
   CANCELLED: "Annulée",

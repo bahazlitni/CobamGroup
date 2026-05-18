@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import {
   Search,
@@ -9,7 +8,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ArrowRight,
+  BadgePercent,
 } from "lucide-react";
 
 import {
@@ -19,7 +18,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import MegaMenu from "@/layout/MegaMenu";
@@ -57,8 +55,10 @@ const mainLinks = [
 
 export default function NavBar({
   productCategories,
+  hasPromotions,
 }: {
   productCategories: PublicMegaMenuProductCategory[];
+  hasPromotions: boolean;
 }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [societyOpen, setSocietyOpen] = useState(false);
@@ -175,6 +175,18 @@ export default function NavBar({
           </nav>
 
           <div className="flex items-center gap-3 flex-shrink-0">
+            {hasPromotions ? (
+              <Link
+                href="/promotions"
+                className="group relative inline-flex h-10 items-center gap-2 overflow-hidden rounded-full border border-[#0a8dc1]/35 bg-[#14202e] px-3 text-[11px] font-black uppercase tracking-[0.14em] text-white shadow-[0_12px_30px_rgba(20,32,46,0.18)] transition hover:border-[#0a8dc1] hover:bg-[#0a8dc1] sm:px-4 sm:text-[12px]"
+                aria-label="Voir les promotions"
+              >
+                <span className="absolute inset-y-0 -left-8 w-8 rotate-12 bg-white/30 blur-sm transition-transform duration-700 group-hover:translate-x-40" />
+                <BadgePercent className="relative h-4 w-4" aria-hidden="true" />
+                <span className="relative hidden sm:inline">Promotions</span>
+                <span className="relative sm:hidden">Offres</span>
+              </Link>
+            ) : null}
             <div className="relative">
               <button
                 onClick={() => setSearchOpen(true)}

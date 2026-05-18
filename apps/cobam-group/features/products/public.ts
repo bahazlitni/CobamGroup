@@ -5,6 +5,10 @@ import {
   replaceArticleImageSources,
 } from "@/features/articles/document";
 import { makeMediaPublicMany } from "@/features/media/repository";
+import {
+  resolvePublicPromotionScopeBySlug,
+  type PublicPromotionScope,
+} from "@/features/promotions/public";
 import { prisma } from "@/lib/server/db/prisma";
 import {
   formatProductAttributeKind,
@@ -183,6 +187,7 @@ type PublicIndexRow = {
   category_description_seo: string | null;
   category_theme_color: string | null;
   category_sort: number | null;
+  category_is_promoted: boolean;
   subcategory_id: bigint;
   subcategory_name: string;
   subcategory_slug: string;
@@ -423,6 +428,7 @@ function mapIndexCategory(record: {
   subtitle: string | null;
   themeColor: string | null;
   sortOrder: number | null;
+  isPromoted?: boolean | null;
 }): PublicProductIndexCategory {
   return {
     id: Number(record.id),
@@ -431,6 +437,7 @@ function mapIndexCategory(record: {
     subtitle: record.subtitle ?? null,
     themeColor: record.themeColor ?? null,
     sortOrder: record.sortOrder ?? 0,
+    isPromoted: Boolean(record.isPromoted),
   };
 }
 
@@ -892,6 +899,55 @@ function buildSqlFromAst(node: AdvancedSearchAst): import("@prisma/client").Pris
   return Prisma.empty;
 }
 
+function joinSqlWithOr(clauses: Prisma.Sql[]) {
+  return clauses.reduce<Prisma.Sql | null>(
+    (current, clause) => (current ? Prisma.sql`${current} OR ${clause}` : clause),
+    null,
+  );
+}
+
+function buildPromotionSqlCondition(scope: PublicPromotionScope | null) {
+  if (!scope || scope.isGlobal) {
+    return Prisma.empty;
+  }
+
+  const clauses: Prisma.Sql[] = [];
+
+  if (scope.productIds.length > 0) {
+    clauses.push(Prisma.sql`p.id IN (${Prisma.join(scope.productIds)})`);
+  }
+
+  if (scope.brandIds.length > 0) {
+    clauses.push(Prisma.sql`p.brand_id IN (${Prisma.join(scope.brandIds)})`);
+  }
+
+  if (scope.categoryIds.length > 0) {
+    clauses.push(Prisma.sql`c.id IN (${Prisma.join(scope.categoryIds)})`);
+  }
+
+  const joined = joinSqlWithOr(clauses);
+
+  return joined ? Prisma.sql`AND (${joined})` : Prisma.empty;
+}
+
+const publicCategoryPromotionSql = Prisma.sql`
+  EXISTS (
+    SELECT 1
+    FROM commerce_promotion_categories pc
+    JOIN commerce_promotions cp ON cp.id = pc.promotion_id
+    WHERE pc.category_id = c.id
+      AND cp.status = 'ACTIVE'
+      AND (cp.starts_at IS NULL OR cp.starts_at <= NOW())
+      AND (cp.ends_at IS NULL OR cp.ends_at >= NOW())
+      AND NOT EXISTS (
+        SELECT 1
+        FROM commerce_coupons cc
+        JOIN commerce_coupon_customers ccc ON ccc.coupon_id = cc.id
+        WHERE cc.promotion_id = cp.id
+      )
+  )
+`;
+
 export async function listPublicProductsIndex(input: {
   categorySlug?: string | null;
   subcategorySlug?: string | null;
@@ -899,15 +955,29 @@ export async function listPublicProductsIndex(input: {
   page: number;
   pageSize?: number;
   q?: string | null;
+  promoSlug?: string | null;
 }): Promise<PublicProductIndexResult> {
   const pageSize = input.pageSize ?? PUBLIC_PRODUCTS_INDEX_PAGE_SIZE;
   const offset = (input.page - 1) * pageSize;
   const advancedSearchAst = input.q ? buildAdvancedSearchAst(input.q) : null;
   const normalSearchQuery = input.q?.trim() && !advancedSearchAst ? input.q.trim() : null;
+  const promotionScope = input.promoSlug
+    ? await resolvePublicPromotionScopeBySlug(input.promoSlug)
+    : null;
+
+  if (input.promoSlug && !promotionScope) {
+    return {
+      items: [],
+      total: 0,
+      page: input.page,
+      pageSize,
+    };
+  }
 
   const advancedSearchCondition = advancedSearchAst
     ? Prisma.sql`AND (${buildSqlFromAst(advancedSearchAst)})`
     : Prisma.empty;
+  const promotionCondition = buildPromotionSqlCondition(promotionScope);
 
   const includeFamilies = input.includeFamilies ?? false;
 
@@ -962,6 +1032,7 @@ export async function listPublicProductsIndex(input: {
       c.description_seo AS category_description_seo,
       c.theme_color AS category_theme_color,
       c.sort_order AS category_sort,
+      ${publicCategoryPromotionSql} AS category_is_promoted,
       s.id AS subcategory_id,
       s.name AS subcategory_name,
       s.slug AS subcategory_slug,
@@ -978,6 +1049,7 @@ export async function listPublicProductsIndex(input: {
     JOIN product_types c ON c.id = s.category_id AND c.is_active = true
     WHERE p.kind = 'VARIANT' AND p.visible_vitrine = true
     ${advancedSearchCondition}
+    ${promotionCondition}
     ${input.categorySlug ? Prisma.sql`AND "c".slug = ${input.categorySlug}` : Prisma.empty}
     ${input.subcategorySlug ? Prisma.sql`AND "s".slug = ${input.subcategorySlug}` : Prisma.empty}
     ORDER BY f.id, c.sort_order ASC, s.sort_order ASC, f.slug ASC
@@ -1009,6 +1081,7 @@ export async function listPublicProductsIndex(input: {
         NULL::text AS category_description_seo,
         NULL::text AS category_theme_color,
         NULL::integer AS category_sort,
+        FALSE::boolean AS category_is_promoted,
         NULL::bigint AS subcategory_id,
         NULL::text AS subcategory_name,
         NULL::text AS subcategory_slug,
@@ -1053,6 +1126,7 @@ export async function listPublicProductsIndex(input: {
       c.description_seo AS category_description_seo,
       c.theme_color AS category_theme_color,
       c.sort_order AS category_sort,
+      ${publicCategoryPromotionSql} AS category_is_promoted,
       s.id AS subcategory_id,
       s.name AS subcategory_name,
       s.slug AS subcategory_slug,
@@ -1072,6 +1146,7 @@ export async function listPublicProductsIndex(input: {
         : Prisma.sql`p.kind IN ('STANDARD', 'SINGLE', 'VARIANT')`
     } AND p.visible_vitrine = true
     ${advancedSearchCondition}
+    ${promotionCondition}
     ${input.categorySlug ? Prisma.sql`AND "c".slug = ${input.categorySlug}` : Prisma.empty}
     ${input.subcategorySlug ? Prisma.sql`AND "s".slug = ${input.subcategorySlug}` : Prisma.empty}
     ORDER BY p.id, c.sort_order ASC, s.sort_order ASC, p.slug ASC
@@ -1177,6 +1252,7 @@ export async function listPublicProductsIndex(input: {
         subtitle: row.category_subtitle,
         themeColor: row.category_theme_color,
         sortOrder: row.category_sort,
+        isPromoted: row.category_is_promoted,
       });
       const subcategory = mapIndexSubcategory({
         id: row.subcategory_id,

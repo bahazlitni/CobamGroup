@@ -154,6 +154,7 @@ type MediaUsageCounts = {
   productVariantLinks: number;
   brandLogoFor: number;
   productCategoryImageFor: number;
+  productTypeMediaImageFor: number;
   productFinishImageFor: number;
   productSubcategoryImageFor: number;
   staffProfileAvatarFor: number;
@@ -167,6 +168,7 @@ export type DetachedMediaReferenceCounts = {
   productVariantLinks: number;
   brandLogos: number;
   productCategoryImages: number;
+  productTypeImages: number;
   productFinishImages: number;
   productSubcategoryImages: number;
   staffAvatars: number;
@@ -237,6 +239,7 @@ function createEmptyMediaUsageCounts(): MediaUsageCounts {
     productVariantLinks: 0,
     brandLogoFor: 0,
     productCategoryImageFor: 0,
+    productTypeMediaImageFor: 0,
     productFinishImageFor: 0,
     productSubcategoryImageFor: 0,
     staffProfileAvatarFor: 0,
@@ -282,6 +285,7 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
     productVariantLinks,
     productCategoryImages,
     productSubcategoryImages,
+    productTypeImages,
     staffAvatars,
     articleAttachments,
     articleCovers,
@@ -325,6 +329,16 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
       },
       select: {
         imageMediaId: true,
+      },
+    }),
+    prisma.productType.findMany({
+      where: {
+        mediaImageId: {
+          in: mediaIds,
+        },
+      },
+      select: {
+        mediaImageId: true,
       },
     }),
     prisma.staffProfile.findMany({
@@ -388,6 +402,10 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
 
   for (const subcategory of productSubcategoryImages) {
     incrementUsageCount(countsByMediaId, subcategory.imageMediaId, "productSubcategoryImageFor");
+  }
+
+  for (const productType of productTypeImages) {
+    incrementUsageCount(countsByMediaId, productType.mediaImageId, "productTypeMediaImageFor");
   }
 
   for (const profile of staffAvatars) {
@@ -947,6 +965,14 @@ export async function detachMediaReferencesAndDeleteMediaRecord(mediaId: number)
         imageMediaId: null,
       },
     });
+    const productTypeImages = await tx.productType.updateMany({
+      where: {
+        mediaImageId: mediaIdValue,
+      },
+      data: {
+        mediaImageId: null,
+      },
+    });
     const staffAvatars = await tx.staffProfile.updateMany({
       where: {
         avatarMediaId: mediaIdValue,
@@ -986,6 +1012,7 @@ export async function detachMediaReferencesAndDeleteMediaRecord(mediaId: number)
       productVariantLinks: productVariantLinks.count,
       brandLogos: 0,
       productCategoryImages: productCategoryImages.count,
+      productTypeImages: productTypeImages.count,
       productFinishImages: 0,
       productSubcategoryImages: productSubcategoryImages.count,
       staffAvatars: staffAvatars.count,
@@ -996,6 +1023,7 @@ export async function detachMediaReferencesAndDeleteMediaRecord(mediaId: number)
         productFamilyLinks.count +
         productVariantLinks.count +
         productCategoryImages.count +
+        productTypeImages.count +
         productSubcategoryImages.count +
         staffAvatars.count +
         articleAttachments.count +

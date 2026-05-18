@@ -7,6 +7,9 @@ import type {
   Prisma,
 } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
+import { findImageMediaById } from "@/features/media/repository";
+import type { ProductMediaDto } from "@/features/products/types";
+import { slugify } from "@/lib/slugify";
 import { prisma } from "@/lib/server/db/prisma";
 import {
   canAccessEcommerceCustomers,
@@ -95,6 +98,11 @@ function decimalToString(value: { toString(): string } | number | string | null 
 function decimalToNumber(value: { toString(): string } | number | string | null | undefined) {
   const numberValue = Number(decimalToString(value));
   return Number.isFinite(numberValue) ? numberValue : 0;
+}
+
+function buildMediaUrl(mediaId: bigint | number, variant: "original" | "thumbnail" = "original") {
+  const query = variant === "thumbnail" ? "?variant=thumbnail" : "";
+  return `/api/media/${mediaId.toString()}/file${query}`;
 }
 
 function parseObject(raw: unknown) {
@@ -234,6 +242,43 @@ function parseIdList(record: Record<string, unknown>, key: string) {
   return [...new Set(value.map((item) => parseId(item).toString()))];
 }
 
+const PROMOTION_BANNER_MEDIA_SELECT = {
+  id: true,
+  kind: true,
+  title: true,
+  originalFilename: true,
+  mimeType: true,
+  altText: true,
+  widthPx: true,
+  heightPx: true,
+  durationSeconds: true,
+  sizeBytes: true,
+} satisfies Prisma.MediaSelect;
+
+function mapPromotionBannerMedia(
+  media: Prisma.MediaGetPayload<{ select: typeof PROMOTION_BANNER_MEDIA_SELECT }> | null,
+): ProductMediaDto | null {
+  if (!media) {
+    return null;
+  }
+
+  return {
+    id: Number(media.id),
+    role: "GALLERY",
+    kind: media.kind,
+    title: media.title,
+    originalFilename: media.originalFilename,
+    mimeType: media.mimeType,
+    altText: media.altText,
+    widthPx: media.widthPx,
+    heightPx: media.heightPx,
+    durationSeconds: media.durationSeconds?.toString() ?? null,
+    sizeBytes: media.sizeBytes?.toString() ?? null,
+    url: buildMediaUrl(media.id, "original"),
+    thumbnailUrl: media.kind === "IMAGE" ? buildMediaUrl(media.id, "thumbnail") : null,
+  };
+}
+
 const PROMOTION_STATUSES = new Set<CommercePromotionStatus>([
   "DRAFT",
   "ACTIVE",
@@ -365,6 +410,13 @@ export function parseEcommerceFulfillmentStatusInput(
 export function parseEcommercePromotionInput(raw: unknown): EcommercePromotionInput {
   const record = parseObject(raw);
   const name = parseStringField(record, "name", { required: true, maxLength: 255 });
+  const displayName =
+    parseStringField(record, "displayName", { maxLength: 255 }) || name;
+  const slug =
+    parseStringField(record, "slug", { maxLength: 255 }) || slugify(displayName || name);
+  const normalizedSlug = slugify(slug);
+  const description = parseStringField(record, "description");
+  const bannerMediaId = parseOptionalPositiveIntegerField(record, "bannerMediaId");
   const status = parsePromotionStatus(parseStringField(record, "status", { required: true }));
   const discountType = parseDiscountType(
     parseStringField(record, "discountType", { required: true }),
@@ -382,8 +434,16 @@ export function parseEcommercePromotionInput(raw: unknown): EcommercePromotionIn
     throw new EcommerceAdminServiceError("La date de debut doit preceder la date de fin.", 400);
   }
 
+  if (!normalizedSlug) {
+    throw new EcommerceAdminServiceError("Le slug de promotion est obligatoire.", 400);
+  }
+
   return {
     name,
+    displayName,
+    slug: normalizedSlug,
+    description: description || null,
+    bannerMediaId,
     status,
     discountType,
     discountValue: discountValue ?? "0",
@@ -482,7 +542,7 @@ const customerOrderStatusLabels: Record<string, string> = {
 
 const customerPaymentStatusLabels: Record<string, string> = {
   PENDING: "en attente",
-  AUTHORIZED: "autorise",
+  AUTHORIZED: "autorisé",
   PAID: "paye",
   FAILED: "echoue",
   CANCELLED: "annule",
@@ -677,7 +737,7 @@ export async function updateEcommerceOrderStatusAdminService(
 
       await createOrderCustomerNotification(tx, current, {
         type: "ORDER_STATUS",
-        title: `Commande ${current.orderNumber} mise a jour`,
+        title: `Commande ${current.orderNumber} mise à jour`,
         body: `Votre commande est maintenant ${customerStatusLabel(customerOrderStatusLabels, status)}.`,
       });
     }
@@ -793,6 +853,12 @@ export async function listEcommercePromotionsAdminService(
         select: {
           id: true,
           name: true,
+          displayName: true,
+          slug: true,
+          description: true,
+          bannerMedia: {
+            select: PROMOTION_BANNER_MEDIA_SELECT,
+          },
           status: true,
           discountType: true,
           discountValue: true,
@@ -906,6 +972,10 @@ export async function listEcommercePromotionsAdminService(
     items: items.map<EcommercePromotionAdminItem>((promotion) => ({
       id: toId(promotion.id),
       name: promotion.name,
+      displayName: promotion.displayName,
+      slug: promotion.slug,
+      description: promotion.description,
+      bannerMedia: mapPromotionBannerMedia(promotion.bannerMedia),
       status: promotion.status,
       discountType: promotion.discountType,
       discountValue: decimalToString(promotion.discountValue),
@@ -1003,6 +1073,10 @@ async function syncPromotionScopes(
 function promotionWriteData(input: EcommercePromotionInput) {
   return {
     name: input.name,
+    displayName: input.displayName,
+    slug: input.slug,
+    description: input.description || null,
+    bannerMediaId: input.bannerMediaId == null ? null : BigInt(input.bannerMediaId),
     status: input.status as CommercePromotionStatus,
     discountType: input.discountType as CommerceDiscountType,
     discountValue: input.discountValue,
@@ -1013,11 +1087,24 @@ function promotionWriteData(input: EcommercePromotionInput) {
   };
 }
 
+async function assertPromotionBannerMedia(mediaId: number | null | undefined) {
+  if (mediaId == null) {
+    return;
+  }
+
+  const media = await findImageMediaById(mediaId);
+
+  if (!media) {
+    throw new EcommerceAdminServiceError("Image de banniere introuvable.", 400);
+  }
+}
+
 export async function createEcommercePromotionAdminService(
   session: StaffSession,
   input: EcommercePromotionInput,
 ) {
   assertManagePromotions(session);
+  await assertPromotionBannerMedia(input.bannerMediaId);
 
   try {
     return await prisma.$transaction(async (tx) => {
@@ -1042,6 +1129,7 @@ export async function updateEcommercePromotionAdminService(
   input: EcommercePromotionInput,
 ) {
   assertManagePromotions(session);
+  await assertPromotionBannerMedia(input.bannerMediaId);
 
   try {
     return await prisma.$transaction(async (tx) => {
@@ -1493,7 +1581,7 @@ export async function updateEcommerceFulfillmentStatusAdminService(
 
       await createOrderCustomerNotification(tx, fulfillment.order, {
         type: "FULFILLMENT_STATUS",
-        title: `Livraison de ${fulfillment.order.orderNumber} mise a jour`,
+        title: `Livraison de ${fulfillment.order.orderNumber} mise à jour`,
         body: `La livraison de votre commande est maintenant ${customerStatusLabel(
           customerFulfillmentStatusLabels,
           status,

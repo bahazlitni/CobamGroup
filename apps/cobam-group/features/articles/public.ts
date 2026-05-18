@@ -238,7 +238,7 @@ function getPublicArticleSelect() {
   });
 }
 
-export async function listPublicArticles(): Promise<PublicArticleSummary[]> {
+async function listPublicArticleSummaries(options: { take?: number } = {}): Promise<PublicArticleSummary[]> {
   const articleSelect = getPublicArticleSelect();
   const articles = await prisma.article.findMany({
     where: {
@@ -246,6 +246,7 @@ export async function listPublicArticles(): Promise<PublicArticleSummary[]> {
       status: ArticleStatus.PUBLISHED,
     },
     orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }, { id: "desc" }],
+    take: options.take,
     select: {
       ...articleSelect,
       ogImageMediaId: true,
@@ -267,6 +268,14 @@ export async function listPublicArticles(): Promise<PublicArticleSummary[]> {
   );
 
   return articles.map((article) => mapPublicArticleSummary(article));
+}
+
+export async function listPublicArticles(): Promise<PublicArticleSummary[]> {
+  return listPublicArticleSummaries();
+}
+
+export async function listLatestPublicArticles(take = 3): Promise<PublicArticleSummary[]> {
+  return listPublicArticleSummaries({ take });
 }
 
 async function listPublicArticleSuggestions(input: {

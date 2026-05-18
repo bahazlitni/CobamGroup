@@ -1,4 +1,9 @@
-import { Prisma, type ProductAvailability, type StockUnit } from "@prisma/client";
+import {
+  Prisma,
+  type ProductAvailability,
+  type ProductTypeAttributeInputType,
+  type StockUnit,
+} from "@prisma/client";
 
 export const CATALOG_PAGE_SIZE = 36;
 
@@ -272,6 +277,43 @@ export type CommerceCatalogResult = {
   categories: CommerceCategory[];
   brands: CommerceBrand[];
   activeCategory: CommerceCategory | null;
+};
+
+export type CommerceProductTypeSummary = {
+  id: number;
+  name: string;
+  displayName: string;
+  slug: string;
+  description: string | null;
+  titleSeo: string | null;
+  descriptionSeo: string | null;
+  image: CommerceMedia | null;
+  group: { name: string; slug: string } | null;
+  productCount: number;
+  filterableAttributeCount: number;
+};
+
+export type CommerceProductTypeGroup = {
+  id: number | null;
+  name: string;
+  slug: string;
+  productTypes: CommerceProductTypeSummary[];
+};
+
+export type CommerceProductTypeFilter = {
+  key: string;
+  label: string;
+  unit: string | null;
+  inputType: ProductTypeAttributeInputType;
+  options: Array<{ value: string; label: string; count: number; active: boolean }>;
+};
+
+export type CommerceProductTypeDetailResult = {
+  productType: CommerceProductTypeSummary;
+  items: CommerceProductCard[];
+  total: number;
+  brands: CommerceBrand[];
+  filters: CommerceProductTypeFilter[];
 };
 
 export type CommerceHomeData = {
@@ -598,14 +640,50 @@ function productAvailabilityWhere(availability?: ProductAvailability | null) {
   } satisfies Prisma.ProductWhereInput;
 }
 
+function productAttributeFilterWhere(key: string, values: string[]): Prisma.ProductWhereInput | null {
+  const cleanedValues = Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)));
+
+  if (cleanedValues.length === 0) {
+    return null;
+  }
+
+  return {
+    attributes: {
+      some: {
+        OR: cleanedValues.map((value) => ({
+          value: { equals: value, mode: "insensitive" },
+        })),
+        AND: [
+          {
+            OR: [
+              { name: { equals: key, mode: "insensitive" } },
+              { attributeDef: { is: { key } } },
+            ],
+          },
+        ],
+      },
+    },
+  } satisfies Prisma.ProductWhereInput;
+}
+
 function productBaseWhere(input: {
   categorySlug?: string | null;
   brandSlug?: string | null;
+  productTypeSlug?: string | null;
+  attributeFilters?: Record<string, string[]>;
   search?: string | null;
   standaloneOnly?: boolean;
   availability?: ProductAvailability | null;
   promotedOnly?: boolean;
 }) {
+  const attributeFilters = Object.entries(input.attributeFilters ?? {})
+    .map(([key, values]) => productAttributeFilterWhere(key, values))
+    .filter((filter): filter is Prisma.ProductWhereInput => filter != null);
+  const andFilters: Prisma.ProductWhereInput[] = [
+    ...(input.productTypeSlug ? [{ productType: { is: { slug: input.productTypeSlug } } }] : []),
+    ...attributeFilters,
+  ];
+
   return {
     visibleEcommerce: true,
     kind: { in: ["STANDARD", "SINGLE", "VARIANT"] },
@@ -619,6 +697,7 @@ function productBaseWhere(input: {
       : {}),
     ...(input.brandSlug ? { brand: { is: { slug: input.brandSlug } } } : {}),
     ...(input.promotedOnly ? { isPromoted: true } : {}),
+    ...(andFilters.length > 0 ? { AND: andFilters } : {}),
     ...productAvailabilityWhere(input.availability),
     ...categoryWhere(input.categorySlug),
     ...productSearchWhere(input.search),
@@ -628,6 +707,8 @@ function productBaseWhere(input: {
 function familyWhere(input: {
   categorySlug?: string | null;
   brandSlug?: string | null;
+  productTypeSlug?: string | null;
+  attributeFilters?: Record<string, string[]>;
   search?: string | null;
   availability?: ProductAvailability | null;
   promotedOnly?: boolean;
@@ -635,6 +716,8 @@ function familyWhere(input: {
   const productFilter = productBaseWhere({
     categorySlug: input.categorySlug,
     brandSlug: input.brandSlug,
+    productTypeSlug: input.productTypeSlug,
+    attributeFilters: input.attributeFilters,
     search: input.search,
     availability: input.availability,
     promotedOnly: input.promotedOnly,
@@ -749,12 +832,12 @@ export async function getCommerceCategories(): Promise<CommerceCategory[]> {
   });
 }
 
-export async function getCommerceBrands(): Promise<CommerceBrand[]> {
+export async function getCommerceBrands(input: { productType?: string | null } = {}): Promise<CommerceBrand[]> {
   const db = await getPrisma();
   const brands = await db.organization.findMany({
     where: {
       isProductBrand: true,
-      products: { some: productBaseWhere({}) },
+      products: { some: productBaseWhere({ productTypeSlug: input.productType }) },
     },
     orderBy: { name: "asc" },
     select: {
@@ -779,6 +862,8 @@ export async function getCommerceBrands(): Promise<CommerceBrand[]> {
 export async function listCommerceProducts(input: {
   category?: string | null;
   brand?: string | null;
+  productType?: string | null;
+  attributeFilters?: Record<string, string[]>;
   search?: string | null;
   sort?: string | null;
   availability?: ProductAvailability | null;
@@ -794,6 +879,8 @@ export async function listCommerceProducts(input: {
       where: familyWhere({
         categorySlug: input.category,
         brandSlug: input.brand,
+        productTypeSlug: input.productType,
+        attributeFilters: input.attributeFilters,
         search: input.search,
         availability: input.availability,
         promotedOnly: input.promotedOnly,
@@ -806,6 +893,8 @@ export async function listCommerceProducts(input: {
       where: productBaseWhere({
         categorySlug: input.category,
         brandSlug: input.brand,
+        productTypeSlug: input.productType,
+        attributeFilters: input.attributeFilters,
         search: input.search,
         availability: input.availability,
         promotedOnly: input.promotedOnly,
@@ -816,7 +905,7 @@ export async function listCommerceProducts(input: {
       orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
     }),
     getCommerceCategories(),
-    getCommerceBrands(),
+    getCommerceBrands({ productType: input.productType }),
   ]);
 
   const cards = [
@@ -839,6 +928,272 @@ export async function listCommerceProducts(input: {
     categories,
     brands,
     activeCategory,
+  };
+}
+
+function mapProductTypeSummary(
+  productType: {
+    id: bigint;
+    name: string;
+    displayName: string;
+    slug: string;
+    description: string | null;
+    titleSeo: string | null;
+    descriptionSeo: string | null;
+    mediaImage: ProductFamilyRecord["mainImage"];
+    group: { name: string; slug: string } | null;
+    attributes: unknown[];
+  },
+  productCount: number,
+): CommerceProductTypeSummary {
+  return {
+    id: Number(productType.id),
+    name: productType.name,
+    displayName: productType.displayName,
+    slug: productType.slug,
+    description: productType.description,
+    titleSeo: productType.titleSeo,
+    descriptionSeo: productType.descriptionSeo,
+    image: mapMedia(productType.mediaImage),
+    group: productType.group,
+    productCount,
+    filterableAttributeCount: productType.attributes.length,
+  };
+}
+
+export async function listCommerceProductTypes(): Promise<CommerceProductTypeGroup[]> {
+  const db = await getPrisma();
+  const [productTypes, countRows] = await Promise.all([
+    db.productType.findMany({
+      where: {
+        products: {
+          some: productBaseWhere({}),
+        },
+      },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        displayName: true,
+        slug: true,
+        description: true,
+        titleSeo: true,
+        descriptionSeo: true,
+        sortOrder: true,
+        mediaImage: { select: MEDIA_SELECT },
+        group: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            sortOrder: true,
+          },
+        },
+        attributes: {
+          where: { isFilterable: true },
+          select: { id: true },
+        },
+      },
+    }),
+    db.product.groupBy({
+      by: ["productTypeId"],
+      where: {
+        ...productBaseWhere({}),
+        productTypeId: { not: null },
+      },
+      _count: { _all: true },
+    }),
+  ]);
+  const counts = new Map(
+    countRows
+      .filter((row) => row.productTypeId != null)
+      .map((row) => [row.productTypeId!.toString(), row._count._all]),
+  );
+  const groups = new Map<string, CommerceProductTypeGroup>();
+
+  for (const productType of productTypes) {
+    const productCount = counts.get(productType.id.toString()) ?? 0;
+
+    if (productCount <= 0) continue;
+
+    const groupKey = productType.group?.slug ?? "autres";
+    const group =
+      groups.get(groupKey) ??
+      {
+        id: productType.group ? Number(productType.group.id) : null,
+        name: productType.group?.name ?? "Autres types",
+        slug: groupKey,
+        productTypes: [],
+      };
+
+    group.productTypes.push(mapProductTypeSummary(productType, productCount));
+    groups.set(groupKey, group);
+  }
+
+  return Array.from(groups.values()).filter((group) => group.productTypes.length > 0);
+}
+
+function selectedFilterValues(input: Record<string, string[]> | undefined, key: string) {
+  return new Set((input?.[key] ?? []).map((value) => value.trim()).filter(Boolean));
+}
+
+function optionLabel(value: string, inputType: ProductTypeAttributeInputType) {
+  if (inputType !== "BOOLEAN") {
+    return value;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (["true", "1", "yes", "oui"].includes(normalized)) return "Oui";
+  if (["false", "0", "no", "non"].includes(normalized)) return "Non";
+
+  return value;
+}
+
+async function buildProductTypeFilters(
+  productType: {
+    slug: string;
+    attributes: Array<{
+      label: string;
+      sortOrder: number;
+      attributeDefinition: {
+        id: bigint;
+        key: string;
+        label: string;
+        unit: string | null;
+        inputType: ProductTypeAttributeInputType;
+        selectOptions: string[];
+      };
+    }>;
+  },
+  selectedFilters: Record<string, string[]> | undefined,
+): Promise<CommerceProductTypeFilter[]> {
+  const db = await getPrisma();
+
+  return Promise.all(
+    productType.attributes.map(async (attribute) => {
+      const definition = attribute.attributeDefinition;
+      const rows = await db.productAttribute.groupBy({
+        by: ["value"],
+        where: {
+          product: {
+            is: productBaseWhere({ productTypeSlug: productType.slug }),
+          },
+          OR: [
+            { attributeDefId: definition.id },
+            { name: { equals: definition.key, mode: "insensitive" } },
+          ],
+          NOT: { value: "" },
+        },
+        _count: { _all: true },
+        orderBy: { value: "asc" },
+      });
+      const counts = new Map(rows.map((row) => [row.value, row._count._all]));
+      const values = [
+        ...definition.selectOptions.filter((value) => counts.has(value)),
+        ...rows.map((row) => row.value).filter((value) => !definition.selectOptions.includes(value)),
+      ];
+      const selected = selectedFilterValues(selectedFilters, definition.key);
+
+      return {
+        key: definition.key,
+        label: attribute.label || definition.label,
+        unit: definition.unit,
+        inputType: definition.inputType,
+        options: values.map((value) => ({
+          value,
+          label: optionLabel(value, definition.inputType),
+          count: counts.get(value) ?? 0,
+          active: selected.has(value),
+        })),
+      };
+    }),
+  );
+}
+
+export async function getCommerceProductTypeDetail(input: {
+  slug: string;
+  brand?: string | null;
+  search?: string | null;
+  sort?: string | null;
+  availability?: ProductAvailability | null;
+  promotedOnly?: boolean;
+  attributeFilters?: Record<string, string[]>;
+  page?: number;
+  pageSize?: number;
+}): Promise<CommerceProductTypeDetailResult | null> {
+  const db = await getPrisma();
+  const productType = await db.productType.findFirst({
+    where: {
+      slug: input.slug,
+      products: {
+        some: productBaseWhere({ productTypeSlug: input.slug }),
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+      displayName: true,
+      slug: true,
+      description: true,
+      titleSeo: true,
+      descriptionSeo: true,
+      mediaImage: { select: MEDIA_SELECT },
+      group: {
+        select: {
+          name: true,
+          slug: true,
+        },
+      },
+      attributes: {
+        where: { isFilterable: true },
+        orderBy: [{ sortOrder: "asc" }],
+        select: {
+          label: true,
+          sortOrder: true,
+          attributeDefinition: {
+            select: {
+              id: true,
+              key: true,
+              label: true,
+              unit: true,
+              inputType: true,
+              selectOptions: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!productType) {
+    return null;
+  }
+
+  const [baseProductCount, products, filters] = await Promise.all([
+    db.product.count({
+      where: productBaseWhere({ productTypeSlug: input.slug }),
+    }),
+    listCommerceProducts({
+      productType: input.slug,
+      brand: input.brand,
+      search: input.search,
+      sort: input.sort,
+      availability: input.availability,
+      promotedOnly: input.promotedOnly,
+      attributeFilters: input.attributeFilters,
+      page: input.page,
+      pageSize: input.pageSize,
+    }),
+    buildProductTypeFilters(productType, input.attributeFilters),
+  ]);
+
+  return {
+    productType: mapProductTypeSummary(productType, baseProductCount),
+    items: products.items,
+    total: products.total,
+    brands: products.brands,
+    filters: filters.filter((filter) => filter.options.length > 0),
   };
 }
 

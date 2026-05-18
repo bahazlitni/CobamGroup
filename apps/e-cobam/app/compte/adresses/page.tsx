@@ -1,8 +1,23 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { MapPin, Star, Trash2 } from "lucide-react";
-import { AccountNav } from "@/components/account/account-nav";
+
+import { AccountPageHeader, AccountPageShell } from "@/components/account/account-shell";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { getCustomerAccount } from "@/lib/customer-account";
 import { getCustomerSession } from "@/lib/customer-auth";
 import {
@@ -15,10 +30,6 @@ export const metadata: Metadata = {
   title: "Adresses client",
   description: "Gerez vos adresses e-cobam.",
 };
-
-const inputClass =
-  "h-12 w-full rounded-2xl border border-ec-line bg-white px-4 text-sm font-semibold text-ec-ink outline-none transition focus:border-ec-blue";
-const labelClass = "text-xs font-bold uppercase tracking-[0.18em] text-ec-muted";
 
 export default async function CustomerAddressesPage() {
   const session = await getCustomerSession();
@@ -33,27 +44,26 @@ export default async function CustomerAddressesPage() {
 
   return (
     <main className="commerce-container py-8 sm:py-12">
-      <div className="mb-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-ec-blue">Adresses</p>
-        <h1 className="mt-3 text-4xl font-black tracking-tight text-ec-ink sm:text-6xl">
-          Chantiers, livraison, facturation.
-        </h1>
-      </div>
+      <AccountPageHeader
+        eyebrow="Adresses"
+        title="Chantiers, livraison, facturation."
+        description="Enregistrez vos adresses utiles et choisissez les destinations par defaut pour vos commandes."
+      />
 
-      <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
-        <AccountNav active="/compte/adresses" />
-
+      <AccountPageShell active="/compte/adresses">
         <div className="space-y-8">
-          <section className="grid gap-4 md:grid-cols-2">
-            {account.addresses.map((address) => (
-              <article key={address.id} className="rounded-[1.5rem] border border-ec-line bg-white p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="flex items-center gap-2 text-sm font-black text-ec-ink">
-                      <MapPin className="size-4 text-ec-blue" />
+          {account.addresses.length > 0 ? (
+            <section className="grid gap-4 md:grid-cols-2">
+              {account.addresses.map((address) => (
+                <Card key={address.id}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <MapPin className="text-ec-blue size-4" />
                       {address.label || address.fullName}
-                    </p>
-                    <p className="mt-3 text-sm leading-7 text-ec-muted">
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-ec-muted text-sm leading-7">
                       {address.addressLine1}
                       {address.addressLine2 ? `, ${address.addressLine2}` : ""}
                       <br />
@@ -61,103 +71,144 @@ export default async function CustomerAddressesPage() {
                       {address.governorate ? `, ${address.governorate}` : ""}
                       {address.postalCode ? ` ${address.postalCode}` : ""}
                     </p>
-                    <div className="mt-4 flex flex-wrap gap-2 text-xs font-black">
+                    <div className="mt-4 flex flex-wrap gap-2">
                       {address.isDefaultShipping ? (
-                        <span className="rounded-full bg-ec-blue/10 px-3 py-1 text-ec-blue">Livraison par defaut</span>
+                        <Badge variant="blue">Livraison par defaut</Badge>
                       ) : null}
                       {address.isDefaultBilling ? (
-                        <span className="rounded-full bg-ec-stone px-3 py-1 text-ec-ink">Facturation par defaut</span>
+                        <Badge variant="secondary">Facturation par defaut</Badge>
                       ) : null}
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                  <CardFooter className="flex flex-wrap gap-2">
+                    <form action={setDefaultCustomerAddressAction}>
+                      <input type="hidden" name="addressId" value={address.id} />
+                      <input type="hidden" name="kind" value="shipping" />
+                      <Button
+                        type="submit"
+                        variant="quiet"
+                        size="sm"
+                        icon={<Star className="size-4" />}
+                      >
+                        Livraison
+                      </Button>
+                    </form>
+                    <form action={setDefaultCustomerAddressAction}>
+                      <input type="hidden" name="addressId" value={address.id} />
+                      <input type="hidden" name="kind" value="billing" />
+                      <Button
+                        type="submit"
+                        variant="quiet"
+                        size="sm"
+                        icon={<Star className="size-4" />}
+                      >
+                        Facturation
+                      </Button>
+                    </form>
+                    <form action={deleteCustomerAddressAction}>
+                      <input type="hidden" name="addressId" value={address.id} />
+                      <Button
+                        type="submit"
+                        variant="secondary"
+                        size="sm"
+                        icon={<Trash2 className="size-4" />}
+                      >
+                        Supprimer
+                      </Button>
+                    </form>
+                  </CardFooter>
+                </Card>
+              ))}
+            </section>
+          ) : (
+            <Alert variant="muted">
+              <MapPin />
+              <div>
+                <AlertTitle>Aucune adresse enregistree</AlertTitle>
+                <AlertDescription>
+                  Ajoutez une adresse de livraison ou de facturation pour accelerer vos prochaines
+                  commandes.
+                </AlertDescription>
+              </div>
+            </Alert>
+          )}
 
-                <div className="mt-5 flex flex-wrap gap-2">
-                  <form action={setDefaultCustomerAddressAction}>
-                    <input type="hidden" name="addressId" value={address.id} />
-                    <input type="hidden" name="kind" value="shipping" />
-                    <Button type="submit" variant="quiet" size="sm" icon={<Star className="size-4" />}>
-                      Livraison
-                    </Button>
-                  </form>
-                  <form action={setDefaultCustomerAddressAction}>
-                    <input type="hidden" name="addressId" value={address.id} />
-                    <input type="hidden" name="kind" value="billing" />
-                    <Button type="submit" variant="quiet" size="sm" icon={<Star className="size-4" />}>
-                      Facturation
-                    </Button>
-                  </form>
-                  <form action={deleteCustomerAddressAction}>
-                    <input type="hidden" name="addressId" value={address.id} />
-                    <Button type="submit" variant="secondary" size="sm" icon={<Trash2 className="size-4" />}>
-                      Supprimer
-                    </Button>
-                  </form>
+          <form action={addCustomerAddressAction}>
+            <Card>
+              <CardHeader>
+                <CardTitle>Ajouter une adresse</CardTitle>
+              </CardHeader>
+              <Separator />
+              <CardContent className="grid gap-4 pt-5 sm:grid-cols-2 sm:pt-6">
+                <div className="space-y-2">
+                  <Label htmlFor="type">Type</Label>
+                  <Select name="type" defaultValue="BOTH">
+                    <SelectTrigger id="type">
+                      <SelectValue placeholder="Type d'adresse" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BOTH">Livraison et facturation</SelectItem>
+                      <SelectItem value="SHIPPING">Livraison</SelectItem>
+                      <SelectItem value="BILLING">Facturation</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </article>
-            ))}
-          </section>
-
-          <form action={addCustomerAddressAction} className="rounded-[1.5rem] border border-ec-line bg-white p-5 sm:p-6">
-            <h2 className="text-xl font-black text-ec-ink">Ajouter une adresse</h2>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <label className="space-y-2">
-                <span className={labelClass}>Type</span>
-                <select name="type" defaultValue="BOTH" className={inputClass}>
-                  <option value="BOTH">Livraison et facturation</option>
-                  <option value="SHIPPING">Livraison</option>
-                  <option value="BILLING">Facturation</option>
-                </select>
-              </label>
-              <label className="space-y-2">
-                <span className={labelClass}>Libellé</span>
-                <input name="label" placeholder="Maison, chantier, depot..." className={inputClass} />
-              </label>
-              <label className="space-y-2">
-                <span className={labelClass}>Nom complet</span>
-                <input name="fullName" required defaultValue={[account.firstName, account.lastName].filter(Boolean).join(" ")} className={inputClass} />
-              </label>
-              <label className="space-y-2">
-                <span className={labelClass}>Téléphone</span>
-                <input name="phone" type="tel" defaultValue={account.phone ?? ""} className={inputClass} />
-              </label>
-              <label className="space-y-2 sm:col-span-2">
-                <span className={labelClass}>Adresse</span>
-                <input name="addressLine1" required className={inputClass} />
-              </label>
-              <label className="space-y-2 sm:col-span-2">
-                <span className={labelClass}>Complement</span>
-                <input name="addressLine2" className={inputClass} />
-              </label>
-              <label className="space-y-2">
-                <span className={labelClass}>Ville</span>
-                <input name="city" required className={inputClass} />
-              </label>
-              <label className="space-y-2">
-                <span className={labelClass}>Gouvernorat</span>
-                <input name="governorate" className={inputClass} />
-              </label>
-              <label className="space-y-2">
-                <span className={labelClass}>Code postal</span>
-                <input name="postalCode" className={inputClass} />
-              </label>
-            </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <label className="flex items-center gap-3 rounded-2xl border border-ec-line p-4 text-sm font-semibold text-ec-ink">
-                <input name="isDefaultShipping" type="checkbox" />
-                Adresse de livraison par defaut
-              </label>
-              <label className="flex items-center gap-3 rounded-2xl border border-ec-line p-4 text-sm font-semibold text-ec-ink">
-                <input name="isDefaultBilling" type="checkbox" />
-                Adresse de facturation par defaut
-              </label>
-            </div>
-            <Button type="submit" className="mt-6">
-              Ajouter l&apos;adresse
-            </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="label">Libelle</Label>
+                  <Input id="label" name="label" placeholder="Maison, chantier, depot..." />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Nom complet</Label>
+                  <Input
+                    id="fullName"
+                    name="fullName"
+                    required
+                    defaultValue={[account.firstName, account.lastName].filter(Boolean).join(" ")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Telephone</Label>
+                  <Input id="phone" name="phone" type="tel" defaultValue={account.phone ?? ""} />
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="addressLine1">Adresse</Label>
+                  <Input id="addressLine1" name="addressLine1" required />
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="addressLine2">Complement</Label>
+                  <Input id="addressLine2" name="addressLine2" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="city">Ville</Label>
+                  <Input id="city" name="city" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="governorate">Gouvernorat</Label>
+                  <Input id="governorate" name="governorate" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="postalCode">Code postal</Label>
+                  <Input id="postalCode" name="postalCode" />
+                </div>
+              </CardContent>
+              <Separator />
+              <CardContent className="grid gap-3 pt-5 sm:grid-cols-2 sm:pt-6">
+                <Label className="border-ec-line text-ec-ink flex min-h-16 items-center gap-3 rounded-2xl border p-4 text-sm font-semibold tracking-normal normal-case">
+                  <Checkbox name="isDefaultShipping" />
+                  Adresse de livraison par defaut
+                </Label>
+                <Label className="border-ec-line text-ec-ink flex min-h-16 items-center gap-3 rounded-2xl border p-4 text-sm font-semibold tracking-normal normal-case">
+                  <Checkbox name="isDefaultBilling" />
+                  Adresse de facturation par defaut
+                </Label>
+              </CardContent>
+              <CardFooter>
+                <Button type="submit">Ajouter l&apos;adresse</Button>
+              </CardFooter>
+            </Card>
           </form>
         </div>
-      </div>
+      </AccountPageShell>
     </main>
   );
 }

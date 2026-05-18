@@ -166,6 +166,139 @@ const nextConfig: NextConfig = {
         destination: "/produits/revetements-de-sols-et-murs/carrelage-interieur",
         permanent: true,
       },
+
+
+      {
+        source: "/services/:slash?",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/produit-de-finition-en-tunisie/page/2/:slash?",
+        destination: "/produits/revetements-de-sols-et-murs/produits-de-pose-finition",
+        permanent: true,
+      },
+      {
+        source: "/produit-de-base-en-tunisie/produits-carriere/:slash?",
+        destination: "/produits/materiaux-de-construction",
+        permanent: true,
+      },
+      {
+        source: "/produit-de-base-en-tunisie/ciment/:slash?",
+        destination: "/produits/materiaux-de-construction/ciments-et-produits-en-beton",
+        permanent: true,
+      },
+      {
+        source: "/product/thin-rim-table-top-basin-organic-white-matt/:slash?",
+        destination: "/produits",
+        permanent: true,
+      },
+      {
+        source: "/produit-de-base-en-tunisie/:slash?",
+        destination: "/produits/materiaux-de-construction",
+        permanent: true,
+      },
+      {
+        source: "/product/pierre-de-bali-pamesa/:slash?",
+        destination: "/produits/piscine/pierres-de-bali",
+        permanent: true,
+      },
+      {
+        source: "/product/niagara-paroi-fixe-avec-bras-de-soutien/:slash?",
+        destination: "/produits",
+        permanent: true,
+      },
+      {
+        source: "/product/meuble-eclat/:slash?",
+        destination: "/produits",
+        permanent: true,
+      },
+      {
+        source: "/product/meuble-perla/:slash?",
+        destination: "/produits",
+        permanent: true,
+      },
+      {
+        source: "/product/meuble-bora/:slash?",
+        destination: "/produits",
+        permanent: true,
+      },
+      {
+        source: "/product/colonne-de-douche-avec-inverseur-zarzis/:slash?",
+        destination: "/produits/salle-de-bain-et-cuisine/espace-douche/sopal-colonne-de-douche-carre-avec-inverseur-zarzis",
+        permanent: true,
+      },
+     {
+        source: "/product/ciment-colle/:slash?",
+        destination: "/produits?search=ciment%20colle",
+        permanent: true,
+      },
+      {
+        source: "/product/ciment/:slash?",
+        destination: "/produits/materiaux-de-construction/ciments-et-produits-en-beton",
+        permanent: true,
+      },
+      {
+        source: "/product/briques-rouges-platriere/:slash?",
+        destination: "/produits/materiaux-de-construction/briques",
+        permanent: true,
+      },
+      {
+        source: "/product/celer/:slash?",
+        destination: "/produits",
+        permanent: true,
+      },
+     {
+        source: "/product-category/produit-de-finition/robinetterie/sopal/:slash?",
+        destination: "/produits?search=brand%3A2%3DSopal",
+        permanent: true,
+      },
+      {
+        source: "/product-category/produit-de-finition/robinetterie/jaquar/sanitaire-jaquar/jdr/:slash?",
+        destination: "/produits?search=brand%3A2%3DJaquar",
+        permanent: true,
+      },
+      {
+        source: "/product-category/produit-de-finition/robinetterie/jaquar/sanitaire-jaquar/:slash?",
+        destination: "/produits?search=brand%3A2%3DJaquar",
+        permanent: true,
+      },
+      {
+        source: "/product-category/produit-de-finition/robinetterie/jaquar/:slash?",
+        destination: "/produits?search=brand%3A2%3DJaquar",
+        permanent: true,
+      },
+      {
+        source: "/product-category/produit-de-finition/robinetterie/jaquar/robinets/:slash?",
+        destination: "/produits?search=brand%3A2%3DJaquar",
+        permanent: true,
+      },
+      {
+        source: "/product-category/produit-de-base/produits-carriere/:slash?",
+        destination: "/produits",
+        permanent: true,
+      },
+      {
+        source: "/product-category/produit-de-finition/robinetterie/:slash?",
+        destination: "/produits/salle-de-bain-et-cuisine/robinetterie",
+        permanent: true,
+      },
+      {
+        source: "/nos-histoire/:slash?",
+        destination: "/a-propos",
+        permanent: true,
+      },
+      {
+        source: "/category/materiaux-de-construction/:slash?",
+        destination: "/produits/materiaux-de-construction",
+        permanent: true,
+      },
+      {
+        source: "/about/:slash?",
+        destination: "/a-propos",
+        permanent: true,
+      },
+
     ];
   },
 };

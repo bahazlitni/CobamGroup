@@ -113,7 +113,7 @@ export default function NewSingleProductPage() {
                         <span>
                           <span className="flex items-center gap-2 text-base font-semibold text-cobam-dark-blue">
                             <Shapes className="h-4 w-4 text-cobam-water-blue" />
-                            {productType.name}
+                            {productType.displayName}
                           </span>
                           {productType.description ? (
                             <span className="mt-2 block text-sm leading-6 text-slate-500">
