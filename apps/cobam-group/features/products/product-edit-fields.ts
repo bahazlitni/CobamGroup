@@ -43,13 +43,11 @@ export const PRODUCT_PRICING_VISIBILITY_VALUES = [
 
 export type ProductEditFieldsDto = {
   displayName: string;
-  shortDescription: string | null;
   titleSeo: string | null;
   guaranteeMonths: number;
   visibleEcommerce: boolean;
   visibleVitrine: boolean;
   isFeatured: boolean;
-  isPromoted: boolean;
   isNew: boolean;
   stockAvailable: string;
   stockAlertThreshold: string;
@@ -67,13 +65,11 @@ export function createDefaultProductEditFields(
 ): ProductEditFieldsDto {
   return {
     displayName: "",
-    shortDescription: null,
     titleSeo: null,
     guaranteeMonths: 0,
     visibleEcommerce: true,
     visibleVitrine: true,
     isFeatured: false,
-    isPromoted: false,
     isNew: false,
     stockAvailable: "0",
     stockAlertThreshold: "0",

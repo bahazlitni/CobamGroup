@@ -32,7 +32,6 @@ type RawProductRow = {
   slug: string;
   name: string;
   display_name: string | null;
-  short_description: string | null;
   current_price_ttc_tnd: Prisma.Decimal | string | number | null;
   base_price_ttc_tnd: Prisma.Decimal | string | number | null;
   price_visibility: string;
@@ -40,7 +39,6 @@ type RawProductRow = {
   stock_availability: string;
   stock_unit: string;
   is_featured: boolean;
-  is_promoted: boolean;
   is_new: boolean;
   updated_at: Date;
   brand_name: string | null;
@@ -269,7 +267,6 @@ function productPrice(row: RawProductRow) {
 function productBadges(row: RawProductRow) {
   return [
     row.is_new ? "Nouveau" : null,
-    row.is_promoted ? "Sélection" : null,
     row.is_featured ? "Premium" : null,
   ].filter((badge): badge is string => badge != null);
 }
@@ -319,7 +316,7 @@ function mapProductRow(row: RawProductRow): LandingProduct {
     slug: row.slug,
     href: `/produits/${row.slug}`,
     name: productName,
-    summary: row.short_description,
+    summary: null,
     brandName: row.brand_name,
     categoryName: row.category_name,
     categorySlug: row.category_slug,
@@ -492,8 +489,44 @@ async function fetchLandingProducts(
   const subcategoryVisibilityFilter = hasVisibilityColumns
     ? Prisma.sql`AND "s"."visible_ecommerce" = true`
     : Prisma.empty;
+  const activePromotionFilter = Prisma.sql`
+    EXISTS (
+      SELECT 1
+      FROM "commerce_promotions" "promotion"
+      WHERE "promotion"."status" = 'ACTIVE'
+        AND ("promotion"."starts_at" IS NULL OR "promotion"."starts_at" <= NOW())
+        AND ("promotion"."ends_at" IS NULL OR "promotion"."ends_at" >= NOW())
+        AND (
+          EXISTS (
+            SELECT 1
+            FROM "commerce_promotion_products" "promotion_product"
+            WHERE "promotion_product"."promotion_id" = "promotion"."id"
+              AND "promotion_product"."product_id" = "p"."id"
+          )
+          OR (
+            "p"."brand_id" IS NOT NULL
+            AND EXISTS (
+              SELECT 1
+              FROM "commerce_promotion_brands" "promotion_brand"
+              WHERE "promotion_brand"."promotion_id" = "promotion"."id"
+                AND "promotion_brand"."brand_id" = "p"."brand_id"
+            )
+          )
+          OR EXISTS (
+            SELECT 1
+            FROM "commerce_promotion_categories" "promotion_category"
+            JOIN "product_subcategory_links" "promotion_link"
+              ON "promotion_link"."product_id" = "p"."id"
+            JOIN "product_subcategories" "promotion_subcategory"
+              ON "promotion_subcategory"."id" = "promotion_link"."subcategory_id"
+            WHERE "promotion_category"."promotion_id" = "promotion"."id"
+              AND "promotion_category"."category_id" = "promotion_subcategory"."category_id"
+          )
+        )
+    )
+  `;
   const promotedFilter = options.promotedOnly
-    ? Prisma.sql`AND ("p"."is_promoted" = true OR "p"."is_featured" = true)`
+    ? Prisma.sql`AND ${activePromotionFilter}`
     : Prisma.empty;
   const orderBy = options.latestFirst
     ? Prisma.sql`
@@ -505,7 +538,6 @@ async function fetchLandingProducts(
     : Prisma.sql`
       ("image"."media_id" IS NOT NULL) DESC,
       "p"."is_featured" DESC,
-      "p"."is_promoted" DESC,
       "p"."is_new" DESC,
       "p"."stock_available" DESC,
       "p"."updated_at" DESC
@@ -519,7 +551,6 @@ async function fetchLandingProducts(
       "p"."slug",
       "p"."name",
       "p"."display_name",
-      "p"."short_description",
       "p"."current_price_ttc_tnd",
       "p"."base_price_ttc_tnd",
       "p"."price_visibility"::text,
@@ -527,7 +558,6 @@ async function fetchLandingProducts(
       "p"."stock_availability"::text,
       "p"."stock_unit"::text,
       "p"."is_featured",
-      "p"."is_promoted",
       "p"."is_new",
       "p"."updated_at",
       "brand"."name" AS "brand_name",

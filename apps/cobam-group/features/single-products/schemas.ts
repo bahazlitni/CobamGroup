@@ -257,7 +257,6 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
     name,
     displayName: parseRequiredLimitedString(record.displayName ?? name, "displayName", 255),
     description: parseOptionalString(record.description),
-    shortDescription: parseOptionalLimitedString(record.shortDescription, "shortDescription", 500),
     titleSeo: parseOptionalLimitedString(record.titleSeo, "titleSeo", 60),
     descriptionSeo: parseOptionalDescriptionSeo(record.descriptionSeo, "descriptionSeo"),
     guaranteeMonths: parseNonNegativeInteger(record.guaranteeMonths, "guaranteeMonths"),
@@ -266,7 +265,6 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
     visibleEcommerce: parseOptionalBoolean(record.visibleEcommerce, defaultVisible),
     visibleVitrine: parseOptionalBoolean(record.visibleVitrine, defaultVisible),
     isFeatured: parseOptionalBoolean(record.isFeatured),
-    isPromoted: parseOptionalBoolean(record.isPromoted),
     isNew: parseOptionalBoolean(record.isNew),
     stockAvailable: parseDecimalString(record.stockAvailable, "stockAvailable", "0") ?? "0",
     stockAlertThreshold:

@@ -33,7 +33,6 @@ const ALL_PRODUCTS_LIST_SELECT = {
   slug: true,
   name: true,
   richTextDescription: true,
-  shortDescription: true,
   brand: { select: { name: true } },
   stockAvailable: true,
   stockUnit: true,
@@ -112,7 +111,7 @@ function mapAllProductsListItem(record: AllProductsListRecord): AllProductsListI
     sku: record.sku,
     slug: record.slug,
     name: record.name,
-    description: record.shortDescription ?? richTextDescriptionToString(record.richTextDescription),
+    description: richTextDescriptionToString(record.richTextDescription),
     brand: formatAllProductBrand(record),
     stockAvailable: record.stockAvailable.toString(),
     stockUnit: record.stockUnit,
@@ -685,7 +684,6 @@ export async function listAllProductsService(
           { slug: { contains: query.q, mode: "insensitive" } },
           { name: { contains: query.q, mode: "insensitive" } },
           { displayName: { contains: query.q, mode: "insensitive" } },
-          { shortDescription: { contains: query.q, mode: "insensitive" } },
           {
             familyMembership: {
               is: {

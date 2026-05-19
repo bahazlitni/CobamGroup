@@ -58,7 +58,6 @@ import { getArticlePlainText } from "@/features/articles/document";
 import { cn } from "@/lib/utils";
 import formatEnumLabel from "@/lib/formatEnumLabel";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
 
 type SimpleProductAiSuggestions = {
   descriptionPreview: string | null;
@@ -221,7 +220,6 @@ function mapProductToForm(product: SingleProductDetailDto): SingleProductUpsertI
     name: product.name,
     displayName: product.displayName,
     description: product.description,
-    shortDescription: product.shortDescription,
     titleSeo: product.titleSeo,
     descriptionSeo: product.descriptionSeo,
     guaranteeMonths: product.guaranteeMonths,
@@ -230,7 +228,6 @@ function mapProductToForm(product: SingleProductDetailDto): SingleProductUpsertI
     visibleEcommerce: product.visibleEcommerce,
     visibleVitrine: product.visibleVitrine,
     isFeatured: product.isFeatured,
-    isPromoted: product.isPromoted,
     isNew: product.isNew,
     stockAvailable: product.stockAvailable,
     stockAlertThreshold: product.stockAlertThreshold,
@@ -884,25 +881,6 @@ function SingleProductEditPageContent() {
               onRejectAiSuggestion={() => rejectAiSuggestion("tags")}
             />
           </PanelField>
-
-          <PanelField
-            className="md:col-span-2 xl:col-span-3"
-            id="product-short-description"
-            label="Description courte"
-          >
-            <Textarea
-              id="product-short-description"
-              value={form.shortDescription ?? ""}
-              maxLength={500}
-              className="min-h-24 rounded-md border-slate-300 bg-white text-sm"
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  shortDescription: event.target.value || null,
-                }))
-              }
-            />
-          </PanelField>
         </div>
 
         <ProductSubcategoriesField
@@ -1012,12 +990,6 @@ function SingleProductEditPageContent() {
             label="Mis en avant"
             checked={form.isFeatured}
             onCheckedChange={(isFeatured) => setForm((current) => ({ ...current, isFeatured }))}
-          />
-          <ProductFlagCheckbox
-            id="product-promoted"
-            label="En promotion"
-            checked={form.isPromoted}
-            onCheckedChange={(isPromoted) => setForm((current) => ({ ...current, isPromoted }))}
           />
           <ProductFlagCheckbox
             id="product-new"

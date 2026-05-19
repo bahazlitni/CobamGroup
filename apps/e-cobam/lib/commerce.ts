@@ -62,7 +62,6 @@ const PRODUCT_CARD_SELECT = {
   slug: true,
   name: true,
   displayName: true,
-  shortDescription: true,
   richTextDescription: true,
   currentPriceTtcTnd: true,
   basePriceTtcTnd: true,
@@ -72,7 +71,6 @@ const PRODUCT_CARD_SELECT = {
   stockAvailability: true,
   stockUnit: true,
   isFeatured: true,
-  isPromoted: true,
   isNew: true,
   updatedAt: true,
   brand: {
@@ -469,8 +467,8 @@ function richTextJson(value: Prisma.JsonValue | null | undefined) {
   return value == null ? null : JSON.stringify(value);
 }
 
-function productSummary(record: Pick<ProductCardRecord, "shortDescription" | "richTextDescription">) {
-  return record.shortDescription ?? richTextPlainText(record.richTextDescription);
+function productSummary(record: Pick<ProductCardRecord, "richTextDescription">) {
+  return richTextPlainText(record.richTextDescription);
 }
 
 function firstSubcategory(record: Pick<ProductCardRecord, "subcategories">) {
@@ -498,10 +496,9 @@ function mapStock(record: Pick<ProductCardRecord, "stockAvailable" | "stockAvail
   };
 }
 
-function productBadges(record: Pick<ProductCardRecord, "isNew" | "isPromoted" | "isFeatured">) {
+function productBadges(record: Pick<ProductCardRecord, "isNew" | "isFeatured">) {
   return [
     record.isNew ? "Nouveau" : null,
-    record.isPromoted ? "Sélection" : null,
     record.isFeatured ? "Premium" : null,
   ].filter((badge): badge is string => badge != null);
 }
@@ -683,6 +680,62 @@ function productAttributeFilterWhere(key: string, values: string[]): Prisma.Prod
   } satisfies Prisma.ProductWhereInput;
 }
 
+function activePromotionWhere(now = new Date()): Prisma.CommercePromotionWhereInput {
+  return {
+    status: "ACTIVE",
+    AND: [
+      { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
+      { OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
+    ],
+  };
+}
+
+function productPromotionWhere(now = new Date()): Prisma.ProductWhereInput {
+  const promotion = activePromotionWhere(now);
+
+  return {
+    OR: [
+      {
+        promotionLinks: {
+          some: {
+            promotion,
+          },
+        },
+      },
+      {
+        brand: {
+          is: {
+            promotionBrandLinks: {
+              some: {
+                promotion,
+              },
+            },
+          },
+        },
+      },
+      {
+        subcategories: {
+          some: {
+            subcategory: {
+              is: {
+                category: {
+                  is: {
+                    promotionLinks: {
+                      some: {
+                        promotion,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    ],
+  };
+}
+
 function productBaseWhere(input: {
   categorySlug?: FilterValue<string>;
   brandSlug?: FilterValue<string>;
@@ -712,13 +765,13 @@ function productBaseWhere(input: {
       : []),
     ...attributeFilters,
     ...(availabilityFilter ? [availabilityFilter] : []),
+    ...(input.promotedOnly ? [productPromotionWhere()] : []),
   ];
 
   return {
     visibleEcommerce: true,
     kind: { in: ["STANDARD", "SINGLE", "VARIANT"] },
     ...(brandSlugs.length > 0 ? { brand: { is: { slug: { in: brandSlugs } } } } : {}),
-    ...(input.promotedOnly ? { isPromoted: true } : {}),
     ...(andFilters.length > 0 ? { AND: andFilters } : {}),
     ...categoryWhere(input.categorySlug),
     ...productSearchWhere(input.search),

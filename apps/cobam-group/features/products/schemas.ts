@@ -261,11 +261,6 @@ function parseVariant(input: unknown): ProductVariantInputDto {
     name,
     displayName: parseRequiredLimitedString(record.displayName ?? name, "variant.displayName", 255),
     description: parseOptionalString(record.description),
-    shortDescription: parseOptionalLimitedString(
-      record.shortDescription,
-      "variant.shortDescription",
-      500,
-    ),
     titleSeo: parseOptionalLimitedString(record.titleSeo, "variant.titleSeo", 60),
     descriptionSeo: parseOptionalDescriptionSeo(record.descriptionSeo, "variant.descriptionSeo"),
     guaranteeMonths: parseNonNegativeInteger(record.guaranteeMonths, "variant.guaranteeMonths"),
@@ -274,7 +269,6 @@ function parseVariant(input: unknown): ProductVariantInputDto {
     visibleEcommerce: parseOptionalBoolean(record.visibleEcommerce, defaultVisible),
     visibleVitrine: parseOptionalBoolean(record.visibleVitrine, defaultVisible),
     isFeatured: parseOptionalBoolean(record.isFeatured),
-    isPromoted: parseOptionalBoolean(record.isPromoted),
     isNew: parseOptionalBoolean(record.isNew),
     stockAvailable: parseDecimalString(record.stockAvailable, "variant.stockAvailable", "0") ?? "0",
     stockAlertThreshold:

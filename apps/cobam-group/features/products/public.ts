@@ -71,7 +71,6 @@ const PUBLIC_PRODUCT_SELECT = {
   kind: true,
   name: true,
   displayName: true,
-  shortDescription: true,
   richTextDescription: true,
   descriptionSeo: true,
   brand: { select: { name: true, description: true } },
@@ -330,10 +329,9 @@ function mapProductBrand(
 }
 
 function getProductDescription(record: {
-  shortDescription: string | null;
   richTextDescription: Prisma.JsonValue | null;
 }) {
-  return record.shortDescription ?? richTextDescriptionToString(record.richTextDescription);
+  return richTextDescriptionToString(record.richTextDescription);
 }
 
 function serializeProductRichDescription(value: Prisma.JsonValue | null) {
@@ -993,7 +991,7 @@ export async function listPublicProductsIndex(input: {
       p.name AS product_name,
       p_brand.name AS product_brand,
       p.tags AS product_tags,
-      COALESCE(p.short_description, p.rich_text_description::text) AS product_description,
+      p.rich_text_description::text AS product_description,
       p.description_seo AS product_description_seo,
       (
         SELECT COALESCE(string_agg(pa.name || ' ' || pa.value, ' '), '')
@@ -1012,7 +1010,7 @@ export async function listPublicProductsIndex(input: {
           fp.name,
           fp.tags,
           fp_brand.name,
-          COALESCE(fp.short_description, fp.rich_text_description::text),
+          fp.rich_text_description::text,
           fp.description_seo,
           (
             SELECT COALESCE(string_agg(fpa.name || ' ' || fpa.value, ' '), '')
@@ -1106,7 +1104,7 @@ export async function listPublicProductsIndex(input: {
       p.name AS product_name,
       p_brand.name AS product_brand,
       p.tags AS product_tags,
-      COALESCE(p.short_description, p.rich_text_description::text) AS product_description,
+      p.rich_text_description::text AS product_description,
       p.description_seo AS product_description_seo,
       (
         SELECT COALESCE(string_agg(pa.name || ' ' || pa.value, ' '), '')

@@ -1321,27 +1321,6 @@ function ProductEditPageContent() {
                     }
                   />
                 </PanelField>
-
-                <PanelField
-                  className="md:col-span-2 xl:col-span-4"
-                  id={`${variant.formKey}-short-description`}
-                  label="Description courte"
-                >
-                  <Textarea
-                    id={`${variant.formKey}-short-description`}
-                    value={variant.shortDescription ?? ""}
-                    maxLength={500}
-                    className="min-h-24 rounded-md border-slate-300 bg-white text-sm"
-                    onChange={(event) =>
-                      setForm((current) =>
-                        updateVariantState(current, variant.formKey, (entry) => ({
-                          ...entry,
-                          shortDescription: event.target.value || null,
-                        })),
-                      )
-                    }
-                  />
-                </PanelField>
               </div>
 
               <div className="grid gap-6">
@@ -1373,19 +1352,6 @@ function ProductEditPageContent() {
                           updateVariantState(current, variant.formKey, (entry) => ({
                             ...entry,
                             isFeatured,
-                          })),
-                        )
-                      }
-                    />
-                    <ProductFlagCheckbox
-                      id={`${variant.formKey}-promoted`}
-                      label="En promotion"
-                      checked={variant.isPromoted}
-                      onCheckedChange={(isPromoted) =>
-                        setForm((current) =>
-                          updateVariantState(current, variant.formKey, (entry) => ({
-                            ...entry,
-                            isPromoted,
                           })),
                         )
                       }

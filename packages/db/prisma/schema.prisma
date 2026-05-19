@@ -1169,8 +1169,7 @@ model Product {
   name        String      @db.VarChar(255)
   displayName String      @map("display_name") @db.VarChar(255)
 
-  richTextDescription Json?   @map("rich_text_description") @db.Json
-  shortDescription    String? @map("short_description") @db.VarChar(500)
+  richTextDescription Json? @map("rich_text_description") @db.Json
 
   titleSeo       String? @map("title_seo") @db.VarChar(60)
   descriptionSeo String? @map("description_seo") @db.VarChar(160)
@@ -1181,7 +1180,6 @@ model Product {
   visibleEcommerce Boolean @default(true) @map("visible_ecommerce")
   visibleVitrine   Boolean @default(true) @map("visible_vitrine")
   isFeatured       Boolean @default(false) @map("is_featured")
-  isPromoted       Boolean @default(false) @map("is_promoted")
   isNew            Boolean @default(false) @map("is_new")
 
   stockAvailable      Decimal                    @default(0) @map("stock_available") @db.Decimal(12, 3)
@@ -1217,7 +1215,6 @@ model Product {
   @@index([productTypeId])
   @@index([visibleEcommerce])
   @@index([visibleVitrine])
-  @@index([isPromoted])
   @@index([isFeatured])
   @@map("products")
 }

@@ -47,7 +47,6 @@ const PROMOTION_PRODUCT_CARD_SELECT = {
   slug: true,
   name: true,
   displayName: true,
-  shortDescription: true,
   brand: {
     select: {
       name: true,
@@ -263,7 +262,7 @@ function mapProductCard(product: PromotionProductRecord): PublicPromotionTargetC
     id: product.id.toString(),
     kind: "product",
     title: product.displayName || product.name,
-    subtitle: product.brand?.name ?? product.shortDescription ?? null,
+    subtitle: product.brand?.name ?? null,
     imageUrl: imageMediaId == null ? null : buildMediaUrl(imageMediaId, "thumbnail"),
     href: getProductCardHref(product),
   };
@@ -364,7 +363,7 @@ async function loadConcernedProductCards(promotion: PublicPromotionRecord) {
       categoryIds: promotion.categories.map((link) => link.categoryId),
       brandIds: promotion.brands.map((link) => link.brandId),
     }),
-    orderBy: [{ isPromoted: "desc" }, { updatedAt: "desc" }, { name: "asc" }],
+    orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
     take: 12,
     select: PROMOTION_PRODUCT_CARD_SELECT,
   });
