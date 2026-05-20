@@ -1064,3 +1064,212 @@ body:has(.cobam-catalog-landing) header > div {
     transform: none;
   }
 }
+
+/* -------------------------------------------------- */
+/* COBAM cinematic landing refresh                     */
+/* -------------------------------------------------- */
+
+.cobam-cinematic-landing {
+  --cinematic-dark-blue: #14202e;
+  --cinematic-water-blue: #0a8dc1;
+  --cinematic-carbon-grey: #5e5e5e;
+  --cinematic-quill-grey: #d3d3d3;
+  --cinematic-light-bg: #fafaf9;
+  overflow-x: clip;
+}
+
+body:has(.cobam-cinematic-landing) header {
+  border-bottom-color: rgba(20, 32, 46, 0.12);
+  background: rgba(250, 250, 249, 0.88);
+  backdrop-filter: blur(18px);
+}
+
+.cobam-cinematic-hero {
+  --hero-x: 0px;
+  --hero-y: 0px;
+  --spotlight-x: 70%;
+  --spotlight-y: 38%;
+}
+
+.cobam-cinematic-hero-image {
+  transform: translate3d(var(--hero-x), calc(var(--hero-y) + var(--parallax-y, 0px)), 0) scale(1.07);
+  transform-origin: center;
+  will-change: opacity, transform;
+}
+
+.cobam-cinematic-parallax {
+  transform: translate3d(0, var(--parallax-y, 0px), 0);
+  transition: transform 160ms linear;
+  will-change: transform;
+}
+
+.cobam-atlas-grid {
+  background:
+    linear-gradient(90deg, rgba(250, 250, 249, 0.08) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(250, 250, 249, 0.06) 1px, transparent 1px);
+  background-size: 8rem 8rem;
+  mask-image: linear-gradient(90deg, #000, transparent 78%);
+  opacity: 0.34;
+}
+
+.cobam-atlas-title-fill {
+  background-image:
+    linear-gradient(90deg, rgba(250, 250, 249, 0.86), rgba(250, 250, 249, 0.2)),
+    var(--atlas-title-image);
+  background-position: center;
+  background-size: cover;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.cobam-atlas-orbit {
+  border: 1px solid rgba(250, 250, 249, 0.12);
+  transform: rotate(-8deg);
+}
+
+.cobam-atlas-orbit::before,
+.cobam-atlas-orbit::after {
+  position: absolute;
+  border: 1px solid rgba(10, 141, 193, 0.34);
+  content: "";
+}
+
+.cobam-atlas-orbit::before {
+  inset: 3rem 5rem;
+}
+
+.cobam-atlas-orbit::after {
+  inset: 7rem 10rem;
+}
+
+.cobam-atlas-plane {
+  border-radius: 0.5rem;
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.28);
+  transform: translate3d(var(--hero-x), calc(var(--hero-y) + var(--parallax-y, 0px)), 0) rotate(-4deg);
+  transform-origin: center;
+  transition: transform 160ms linear;
+  will-change: transform;
+}
+
+.cobam-atlas-plane > img {
+  transform: rotate(4deg) scale(1.12);
+  transform-origin: center;
+}
+
+.cobam-atlas-plane::after {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent, rgba(10, 141, 193, 0.18), transparent),
+    linear-gradient(180deg, rgba(250, 250, 249, 0.08) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 4.5rem;
+  content: "";
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: cobam-atlas-scan 5.6s ease-in-out infinite;
+}
+
+.cobam-cinematic-parallax-scale {
+  transform: translate3d(0, var(--parallax-y, 0px), 0) scale(1.04);
+  transition: transform 160ms linear;
+  will-change: transform;
+}
+
+.cobam-cinematic-spotlight {
+  background:
+    linear-gradient(
+      110deg,
+      transparent 0%,
+      rgba(10, 141, 193, 0.12) 45%,
+      rgba(211, 211, 211, 0.1) 52%,
+      transparent 70%
+    );
+  mix-blend-mode: screen;
+}
+
+.cobam-cinematic-action {
+  display: inline-flex;
+  min-height: 3.1rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  border-radius: 0.5rem;
+  padding: 0 1rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  transition:
+    border-color 220ms ease,
+    background-color 220ms ease,
+    color 220ms ease,
+    transform 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.cobam-cinematic-action:hover,
+.cobam-cinematic-action:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 46px rgba(10, 141, 193, 0.18);
+}
+
+.cobam-cinematic-marquee {
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.cobam-cinematic-marquee-track {
+  display: inline-flex;
+  width: max-content;
+  gap: 1rem;
+  padding-inline: 1rem;
+  animation: cobam-cinematic-marquee 34s linear infinite;
+}
+
+.cobam-cinematic-marquee:hover .cobam-cinematic-marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes cobam-cinematic-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes cobam-atlas-scan {
+  0%,
+  100% {
+    opacity: 0.14;
+    transform: translateX(-32%);
+  }
+
+  48% {
+    opacity: 0.54;
+    transform: translateX(32%);
+  }
+}
+
+@media (max-width: 640px) {
+  .cobam-cinematic-action {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cobam-cinematic-hero-image,
+  .cobam-atlas-plane,
+  .cobam-atlas-plane > img,
+  .cobam-atlas-plane::after,
+  .cobam-cinematic-parallax,
+  .cobam-cinematic-parallax-scale,
+  .cobam-cinematic-action,
+  .cobam-cinematic-marquee-track {
+    animation: none;
+    transition: none;
+    transform: none;
+  }
+}

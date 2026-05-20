@@ -6,6 +6,7 @@ import { ArrowRight, MapPin, Phone } from "lucide-react";
 import { COBAM_SOCIAL_LINKS } from "@/data/contact-details";
 import { CategoryJourneyParallax } from "@/components/public/home/category-journey-parallax";
 import type { PublicArticleSummary } from "@/features/articles/public";
+import { LiquidHero } from "./liquid-hero";
 
 export type JourneySubcategory = {
   label: string;
@@ -94,72 +95,9 @@ function formatArticleDate(value: string) {
 }
 
 export function LandingHero({ categories }: { categories: JourneyCategory[] }) {
-  return (
-    <section className="cobam-catalog-hero relative min-h-[calc(100svh-7rem)] overflow-hidden bg-[#14202e] text-white">
-      <Image
-        src="/images/hero-section/3.jpg"
-        alt="Composition architecturale autour des matières COBAM Group"
-        fill
-        priority
-        sizes="100vw"
-        data-parallax-speed="-0.035"
-        className="cobam-parallax-layer object-cover opacity-54"
-      />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,17,29,0.96),rgba(7,17,29,0.72)_45%,rgba(7,17,29,0.42)),radial-gradient(circle_at_82%_18%,rgba(10,141,193,0.26),transparent_34%)]" />
-      <div className="cobam-static-grid absolute inset-0 opacity-25" />
-
-      <div className="relative z-10 mx-auto grid min-h-[calc(100svh-7rem)] max-w-[1500px] gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:px-12 lg:py-20">
-        <div className="flex flex-col justify-center" data-landing-reveal>
-          <p className="cobam-section-kicker text-[#8fdcff]">Depuis 1994 / COBAM Group</p>
-          <h1
-            className="mt-6 max-w-5xl text-balance text-[clamp(4rem,8.5vw,8rem)] font-normal leading-[0.84]"
-            style={{ fontFamily: "var(--font-playfair), serif" }}
-          >
-            L&apos;architecture des matières.
-          </h1>
-          <p className="mt-7 max-w-2xl text-pretty text-lg leading-8 text-white/74 md:text-xl">
-            Un parcours à travers les catégories COBAM Group : des matériaux de construction aux finitions qui signent l&apos;espace final.
-          </p>
-          <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-            <Link href="#parcours" className="cobam-premium-button cobam-premium-button-light">
-              Commencer le parcours
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-            <Link href="/produits" className="cobam-premium-button cobam-premium-button-ghost">
-              Explorer le catalogue
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
-
-        <div className="hidden items-end justify-end lg:flex">
-          <div
-            className="cobam-motion-card w-full max-w-md border border-white/14 bg-white/[0.06] p-5 backdrop-blur"
-            data-landing-reveal
-            data-parallax-speed="0.055"
-          >
-            <p className="cobam-section-kicker text-[#8fdcff]">Catégories</p>
-            <div className="mt-5 max-h-[28rem] divide-y divide-white/10 overflow-y-auto pr-1">
-              {categories.map((category) => (
-                <Link key={category.id} href={category.href} className="group flex items-center justify-between gap-4 py-3 text-white/70 transition hover:text-white">
-                  <span className="flex items-center gap-2">
-                    {category.name}
-                    {category.isPromoted ? (
-                      <span className="rounded-full border border-[#8fdcff]/40 bg-[#8fdcff]/12 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.16em] text-[#8fdcff]">
-                        En promotion
-                      </span>
-                    ) : null}
-                  </span>
-                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" aria-hidden="true" />
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+  return <LiquidHero categories={categories} />;
 }
+
 
 export function AboutNutshell() {
   return (

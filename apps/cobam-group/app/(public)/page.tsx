@@ -1,25 +1,11 @@
 import type { Metadata } from "next";
 
-import {
-  AboutNutshell,
-  BrandConstellation,
-  CategoryJourneySection,
-  CollectionsSection,
-  FinalCTA,
-  LandingHero,
-  NewsSection,
-  ShowroomSection,
-  SocialLinksSection,
-  type BrandLogo,
-  type JourneyCategory,
-  type ShowroomLocation,
-} from "@/components/public/home/catalog-journey";
+import { RedesignedHome } from "@/components/public/home/redesigned-home";
 import { LandingEffects } from "@/components/public/home/landing-effects";
-import { PromotionBannerCarousel } from "@/components/public/promotions/promotion-showcase";
+import type { JourneyCategory, BrandLogo, ShowroomLocation } from "@/components/public/home/catalog-journey";
 import { listLatestPublicArticles } from "@/features/articles/public";
 import { listPublicProductBrandOrganizations } from "@/features/organizations/public";
 import { listPublicMegaMenuProductCategories } from "@/features/product-categories/public";
-import { listPublicPromotionBanners } from "@/features/promotions/public";
 import type { PublicMegaMenuProductCategory } from "@/features/product-categories/public-types";
 
 export const metadata: Metadata = {
@@ -248,10 +234,9 @@ function buildBrandLogos(brands: Awaited<ReturnType<typeof listPublicProductBran
 }
 
 export default async function HomePage() {
-  const [categories, brands, promotionBanners, latestArticles] = await Promise.all([
+  const [categories, brands, latestArticles] = await Promise.all([
     listPublicMegaMenuProductCategories(),
     listPublicProductBrandOrganizations(),
-    listPublicPromotionBanners(),
     listLatestPublicArticles(3),
   ]);
 
@@ -259,18 +244,14 @@ export default async function HomePage() {
   const brandLogos = buildBrandLogos(brands);
 
   return (
-    <main className="cobam-catalog-landing bg-[#f4f1eb] text-[#14202e]">
+    <main className="cobam-catalog-landing bg-[#fafaf9] text-[#14202e]">
       <LandingEffects />
-      <LandingHero categories={journeyCategories} />
-      <CategoryJourneySection categories={journeyCategories} />
-      <PromotionBannerCarousel promotions={promotionBanners} />
-      <AboutNutshell />
-      <CollectionsSection />
-      <BrandConstellation brands={brandLogos} />
-      <ShowroomSection showrooms={showrooms} />
-      <NewsSection articles={latestArticles} />
-      <FinalCTA />
-      <SocialLinksSection />
+      <RedesignedHome
+        categories={journeyCategories}
+        brands={brandLogos}
+        articles={latestArticles}
+        showrooms={showrooms}
+      />
     </main>
   );
 }

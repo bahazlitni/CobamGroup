@@ -396,7 +396,7 @@ export default function ProductsListPage() {
     }
 
     const confirmed = window.confirm(
-      `Supprimer ${selectedIds.length} famille(s) selectionnee(s) ?`,
+      `Supprimer ${selectedIds.length} famille(s) sélectionnée(s) ?`,
     );
     if (!confirmed) {
       return;
@@ -486,7 +486,7 @@ export default function ProductsListPage() {
 
       {selectedIds.length > 0 ? (
         <div className="fixed right-6 bottom-6 z-30 flex w-[min(560px,calc(100vw-3rem))] flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-lg">
-          <p className="text-sm text-slate-600">{selectedIds.length} famille(s) selectionnee(s)</p>
+          <p className="text-sm text-slate-600">{selectedIds.length} famille(s) sélectionnée(s)</p>
           <div className="flex flex-wrap gap-2">
             <AnimatedUIButton
               type="button"
@@ -611,7 +611,7 @@ export default function ProductsListPage() {
                 <DialogTitle>Modifier les familles</DialogTitle>
                 <DialogDescription>
                   Ces valeurs communes seront appliquees a toutes les variantes des familles
-                  selectionnees.
+                  sélectionnées.
                 </DialogDescription>
               </div>
               <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500">

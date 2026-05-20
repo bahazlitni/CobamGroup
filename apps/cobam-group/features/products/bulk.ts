@@ -22,7 +22,7 @@ export async function updateProductFamiliesBulkService(
   }
 
   if (familyIds.length === 0) {
-    throw new ProductServiceError("Aucune famille selectionnee.", 400);
+    throw new ProductServiceError("Aucune famille sélectionnée.", 400);
   }
 
   if ((input.sku || input.name) && familyIds.length > 1) {
@@ -90,7 +90,7 @@ export async function deleteProductFamiliesBulkService(
   }
 
   if (familyIds.length === 0) {
-    throw new ProductServiceError("Aucune famille selectionnee.", 400);
+    throw new ProductServiceError("Aucune famille sélectionnée.", 400);
   }
 
   for (const familyId of familyIds) {

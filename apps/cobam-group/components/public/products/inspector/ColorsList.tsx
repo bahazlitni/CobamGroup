@@ -56,8 +56,6 @@ function ColorBlob({
 
 interface ColorsListProps {
   activeKey?: string;
-  selectedLabel?: string | null;
-  selectedCode?: string | null;
   colors: DerivedColorOption[];
   colorCodesByKey?: Record<string, string | null | undefined>;
   onSelect?: (colorKey: string) => void;
@@ -66,8 +64,6 @@ interface ColorsListProps {
 export default function ColorsList({
   onSelect,
   activeKey,
-  selectedLabel,
-  selectedCode,
   colors,
   colorCodesByKey = {},
 }: ColorsListProps) {
@@ -86,10 +82,6 @@ export default function ColorsList({
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
             Palette
-          </p>
-          <p className="mt-1 text-sm font-semibold text-cobam-dark-blue">
-            Couleur selectionnee: {selectedLabel ?? "A confirmer"}
-            {selectedCode ? <span className="text-slate-500"> - Code {selectedCode}</span> : null}
           </p>
         </div>
         <p className="text-xs font-medium text-slate-500">
@@ -115,7 +107,7 @@ export default function ColorsList({
           onClick={() => setShowAll((value) => !value)}
           className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-cobam-water-blue transition hover:text-cobam-dark-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobam-water-blue/40"
         >
-          {showAll ? "Reduire la palette" : "Voir toutes les couleurs"}
+          {showAll ? "Réduire la palette" : "Voir toutes les couleurs"}
         </button>
       ) : null}
     </section>

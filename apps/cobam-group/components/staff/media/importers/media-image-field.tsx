@@ -47,7 +47,7 @@ export default function MediaImageField({
   dialogDescription,
   mediaId,
   onChange,
-  emptyLabel = "Aucune image selectionnee.",
+  emptyLabel = "Aucune image sélectionnée.",
   previewClassName,
   previewImageClassName,
   fallback,

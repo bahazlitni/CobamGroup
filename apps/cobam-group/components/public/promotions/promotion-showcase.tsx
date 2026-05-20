@@ -5,7 +5,7 @@ import RailCarousel from "@/components/ui/custom/RailCarousel";
 import type { PublicPromotion, PublicPromotionTargetCard } from "@/features/promotions/public";
 
 const promotionTypeLabels: Record<PublicPromotion["kind"], string> = {
-  PRODUCT: "Produits selectionnes",
+  PRODUCT: "Produits sélectionnés",
   BRAND: "Produits de marques en promotion",
   CATEGORY: "Produits de categories en promotion",
   GENERAL: "Selection catalogue",

@@ -24,7 +24,7 @@ export default function PromotionsPage() {
     <main className="min-h-screen bg-[#f4f1eb] text-[#14202e]">
       <PageHeader
         subtitle="Promotions COBAM Group"
-        title="Des offres selectionnees pour vos projets."
+        title="Des offres sélectionnées pour vos projets."
         description="Retrouvez les promotions publiques actives sur les produits du catalogue COBAM Group, avec des selections liees aux marques, categories et univers concernes."
         className="!border-b-0 !bg-[#f4f1eb]"
       />

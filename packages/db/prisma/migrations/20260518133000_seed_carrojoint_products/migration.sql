@@ -8,7 +8,7 @@ INSERT INTO "organizations" (
   "slug", "name", "description", "is_product_brand", "is_reference", "is_partner", "created_at", "updated_at"
 )
 VALUES
-  ('deutsch-color', 'Deutsch Color', 'Marque de joints de carrelage et produits de finition selectionnee par COBAM GROUP.', true, false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('deutsch-color', 'Deutsch Color', 'Marque de joints de carrelage et produits de finition sélectionnée par COBAM GROUP.', true, false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('sika', 'Sika', 'Marque technique pour mortiers, joints, etancheite et solutions de construction.', true, false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('vitrafix', 'VitraFix', 'Marque de produits de pose et joints flexibles pour carrelage.', true, false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('derbigum', 'Derbigum', 'Marque de produits techniques pour pose, etancheite et finitions.', true, false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
@@ -379,7 +379,7 @@ SELECT
       ),
       jsonb_build_object(
         'type', 'paragraph',
-        'content', jsonb_build_array(jsonb_build_object('type', 'text', 'text', "seeded"."display_name" || ' est un joint de carrelage selectionne pour le catalogue COBAM GROUP.'))
+        'content', jsonb_build_array(jsonb_build_object('type', 'text', 'text', "seeded"."display_name" || ' est un joint de carrelage sélectionné pour le catalogue COBAM GROUP.'))
       ),
       jsonb_build_object(
         'type', 'bulletList',

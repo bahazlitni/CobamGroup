@@ -13,7 +13,7 @@ FROM (
       'deutsch-color',
       'Carrojoint Deutsch Color',
       'Mortiers de jointoiement cimentaires Deutsch Color pour joints fins de carrelage.',
-      'Les Carrojoint Deutsch Color sont des mortiers de jointoiement a base de ciment, charges minerales selectionnees, resines, additifs hydrophobes et pigments. La gamme est adaptee aux joints fins des revetements ceramiques, gres, faience, porcelaine et pierres naturelles, avec une finition lisse et facile a nettoyer.',
+      'Les Carrojoint Deutsch Color sont des mortiers de jointoiement a base de ciment, charges minerales sélectionnées, resines, additifs hydrophobes et pigments. La gamme est adaptee aux joints fins des revetements ceramiques, gres, faience, porcelaine et pierres naturelles, avec une finition lisse et facile a nettoyer.',
       'Finition de joints de sols et murs, interieurs et exterieurs selon la gamme, pour projets residentiels, showrooms, salles d''eau, terrasses et zones soumises aux variations de temperature.',
       'Bonne maniabilite, nettoyage aise, rendu lisse, resistance a l''eau, aux UV, aux detergents et aux alcalis. Les variantes Intense renforcent le profil technique pour les zones humides et les usages exigeants.',
       'Joint de carrelage Deutsch Color pour sols et murs, disponible en plusieurs teintes et conditionnements chez COBAM GROUP.'
@@ -22,7 +22,7 @@ FROM (
       'sika',
       'Carrojoint Sika',
       'SikaCeram CleanGrout, mortier de jointoiement cimentaire hautes performances.',
-      'Les Carrojoint Sika correspondent a la famille SikaCeram CleanGrout : un mortier de jointoiement premelange a base de ciment, sable de quartz selectionne et additifs specifiques pour joints de 1 a 8 mm. La formulation vise une finition hydrofuge, stable en couleur et adaptee aux carreaux techniques.',
+      'Les Carrojoint Sika correspondent a la famille SikaCeram CleanGrout : un mortier de jointoiement premelange a base de ciment, sable de quartz sélectionné et additifs specifiques pour joints de 1 a 8 mm. La formulation vise une finition hydrofuge, stable en couleur et adaptee aux carreaux techniques.',
       'Jointoiement de carreaux ceramiques, terre cuite, mosaique de verre, marbre, pierres naturelles et gres. Convient aussi aux pieces humides, piscines, sols chauffants, facades et locaux soumis a de fortes sollicitations.',
       'Classe CG2 WA selon EN 13888, absorption d''eau limitee, haute resistance a l''usure, durete elevee, resistance aux UV et au gel, protection contre moisissures, bacteries et champignons.',
       'SikaCeram CleanGrout en sac de 5 kg pour joints de carrelage 1 a 8 mm, sols et murs, chez COBAM GROUP.'
@@ -176,7 +176,7 @@ SET
       CASE WHEN "copy"."color_label" IS NULL THEN '' ELSE ' ' || "copy"."color_label" END ||
       ' : mortier de jointoiement pour carrelage sols et murs' ||
       CASE WHEN "copy"."packaging_weight_kg" IS NULL THEN '' ELSE ', sac ' || "copy"."packaging_weight_kg" || ' kg' END ||
-      ', selectionne par COBAM GROUP.'
+      ', sélectionné par COBAM GROUP.'
     ),
     160
   ),

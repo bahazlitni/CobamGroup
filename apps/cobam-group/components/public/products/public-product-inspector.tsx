@@ -230,13 +230,11 @@ function TechnicalRows({ rows }: { rows: DetailRow[] }) {
 
 function VariantOptionSelector({
   title,
-  selectedText,
   group,
   selectedVariant,
   onSelect,
 }: {
   title: string;
-  selectedText: string | null;
   group: ReturnType<typeof buildNormalAttributeGroups>[number];
   selectedVariant: PublicProductInspectorVariant;
   onSelect: (attributeId: string, valueKey: string) => void;
@@ -252,11 +250,6 @@ function VariantOptionSelector({
     <section className="space-y-3">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{title}</p>
-        {selectedText ? (
-          <p className="mt-1 text-sm font-semibold text-cobam-dark-blue">
-            {title} selectionne: {selectedText}
-          </p>
-        ) : null}
       </div>
       <div className="flex flex-wrap gap-2.5">
         {group.options.map((option) => {
@@ -643,8 +636,6 @@ export default function PublicProductInspectorView({
               {colorOptions.length > 0 ? (
                 <ColorsList
                   activeKey={selectedColor?.key}
-                  selectedLabel={selectedColor?.label ?? null}
-                  selectedCode={colorCodeAttr?.value ?? null}
                   colors={colorOptions}
                   colorCodesByKey={colorCodesByKey}
                   onSelect={handleColorSelect}
@@ -665,11 +656,6 @@ export default function PublicProductInspectorView({
                   title={normalizeComparableValue(group.attributeId).includes("packaging")
                     ? "Conditionnement"
                     : group.name}
-                  selectedText={
-                    normalizeComparableValue(group.attributeId).includes("packaging")
-                      ? packagingText
-                      : (getVariantAttributeValue(selectedVariant, group.attributeId)?.value ?? null)
-                  }
                   group={group}
                   selectedVariant={selectedVariant}
                   onSelect={handleNormalAttributeSelect}
