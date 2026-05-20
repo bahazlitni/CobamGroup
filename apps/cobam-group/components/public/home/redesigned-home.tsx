@@ -4,11 +4,17 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
+  BadgeCheck,
   ChevronRight,
   Compass,
+  Layers,
   MapPin,
+  Newspaper,
   Phone,
+  Sparkles,
+  Store,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   useEffect,
   useMemo,
@@ -30,13 +36,27 @@ interface RedesignedHomeProps {
   showrooms: ShowroomLocation[];
 }
 
-type HeroSlide = {
+type HeroPanel = {
   id: string;
-  eyebrow: string;
+  label: string;
   title: string;
   text: string;
   image: string;
   href: string;
+};
+
+type Metric = {
+  value: number;
+  suffix?: string;
+  label: string;
+  note: string;
+  format?: "standard" | "comma";
+};
+
+type ValuePillar = {
+  title: string;
+  text: string;
+  Icon: LucideIcon;
 };
 
 const fallbackCategories: JourneyCategory[] = [
@@ -60,8 +80,8 @@ const fallbackCategories: JourneyCategory[] = [
     name: "Salle de bain et cuisine",
     subtitle: "Robinetterie, vasques, douches et équipements d'eau.",
     href: "/produits",
-    image: "/images/collections/mitigeur-cascade-353x353.jpg",
-    imageAlt: "Robinetterie premium",
+    image: "/images/collections/vasque-ovale-premium-353x353.jpg",
+    imageAlt: "Vasque premium",
     subcategories: [
       { label: "Robinetterie", href: "/produits" },
       { label: "Vasques", href: "/produits" },
@@ -84,22 +104,47 @@ const fallbackCategories: JourneyCategory[] = [
   },
 ];
 
-const companyRecognition = [
+const companyMetrics: Metric[] = [
   {
-    value: "30+",
+    value: 30,
+    suffix: "+",
     label: "années d'expertise",
+    note: "Une présence installée dans les projets tunisiens depuis 1994.",
   },
   {
-    value: "5,000+",
+    value: 5000,
+    suffix: "+",
     label: "références produits",
+    note: "Des familles de produits pensées pour comparer vite et juste.",
+    format: "comma",
   },
   {
-    value: "4",
+    value: 4,
     label: "showrooms en Tunisie",
+    note: "Des lieux physiques pour voir, toucher et confirmer les choix.",
   },
   {
-    value: "1994",
+    value: 1994,
     label: "année de création",
+    note: "Une culture du chantier, du conseil et de la matière durable.",
+  },
+];
+
+const valuePillars: ValuePillar[] = [
+  {
+    title: "Sélection",
+    text: "Des marques, formats et finitions organisés pour passer de l'idée au produit.",
+    Icon: Layers,
+  },
+  {
+    title: "Validation",
+    text: "Des showrooms qui replacent la matière dans la lumière, le toucher et l'usage.",
+    Icon: Store,
+  },
+  {
+    title: "Accompagnement",
+    text: "Une équipe habituée aux contraintes réelles: pose, délais, entretien et cohérence.",
+    Icon: BadgeCheck,
   },
 ];
 
@@ -116,7 +161,80 @@ function formatArticleDate(value: string) {
   }).format(new Date(value));
 }
 
-function SignalCanvas() {
+function formatMetricValue(value: number, format: Metric["format"]) {
+  if (format === "comma") {
+    return new Intl.NumberFormat("en-US").format(value);
+  }
+
+  return new Intl.NumberFormat("fr-FR").format(value);
+}
+
+function AnimatedMetricValue({ metric }: { metric: Metric }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) {
+      return;
+    }
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let animationFrame = 0;
+
+    if (reducedMotion) {
+      animationFrame = window.requestAnimationFrame(() => setValue(metric.value));
+      return () => {
+        if (animationFrame) {
+          window.cancelAnimationFrame(animationFrame);
+        }
+      };
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) {
+          return;
+        }
+
+        const start = performance.now();
+        const duration = metric.value > 1000 ? 1850 : 1350;
+
+        const tick = (time: number) => {
+          const progress = Math.min(1, (time - start) / duration);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          setValue(Math.round(metric.value * eased));
+
+          if (progress < 1) {
+            animationFrame = window.requestAnimationFrame(tick);
+          }
+        };
+
+        animationFrame = window.requestAnimationFrame(tick);
+        observer.disconnect();
+      },
+      { rootMargin: "0px 0px -18% 0px", threshold: 0.2 },
+    );
+
+    observer.observe(node);
+
+    return () => {
+      observer.disconnect();
+      if (animationFrame) {
+        window.cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, [metric]);
+
+  return (
+    <span ref={ref}>
+      {formatMetricValue(value, metric.format)}
+      {metric.suffix}
+    </span>
+  );
+}
+
+function HeroAtmosphereCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -135,12 +253,13 @@ function SignalCanvas() {
     let height = 0;
     let frame = 0;
 
-    const particles = Array.from({ length: 78 }, (_, index) => ({
+    const particles = Array.from({ length: 68 }, (_, index) => ({
       x: Math.random(),
       y: Math.random(),
-      phase: index * 0.33,
-      size: 0.8 + Math.random() * 1.9,
-      alpha: 0.18 + Math.random() * 0.5,
+      radius: 0.8 + Math.random() * 2.2,
+      alpha: 0.18 + Math.random() * 0.38,
+      phase: index * 0.37,
+      speed: 0.000035 + Math.random() * 0.00005,
     }));
 
     const resize = () => {
@@ -156,43 +275,51 @@ function SignalCanvas() {
     const draw = (time: number) => {
       context.clearRect(0, 0, width, height);
 
-      const gradient = context.createLinearGradient(0, 0, width, height);
-      gradient.addColorStop(0, "rgba(20, 32, 46, 0.96)");
-      gradient.addColorStop(0.46, "rgba(10, 141, 193, 0.92)");
-      gradient.addColorStop(1, "rgba(20, 32, 46, 0.96)");
-      context.fillStyle = gradient;
+      const field = context.createLinearGradient(0, 0, width, height);
+      field.addColorStop(0, "rgba(20, 32, 46, 0.2)");
+      field.addColorStop(0.45, "rgba(10, 141, 193, 0.18)");
+      field.addColorStop(1, "rgba(250, 250, 249, 0.04)");
+      context.fillStyle = field;
       context.fillRect(0, 0, width, height);
 
-      for (let line = 0; line < 7; line += 1) {
+      for (let line = 0; line < 9; line += 1) {
         context.beginPath();
-        for (let x = -40; x <= width + 40; x += 18) {
+        for (let x = -60; x <= width + 60; x += 20) {
           const progress = x / Math.max(width, 1);
-          const drift = reducedMotion ? 0 : time * 0.00022;
+          const drift = reducedMotion ? 0 : time * 0.00014;
           const y =
-            height * (0.2 + line * 0.1) +
-            Math.sin(progress * 8 + line + drift * (2 + line)) * (16 + line * 4);
+            height * (0.14 + line * 0.09) +
+            Math.sin(progress * 10 + line * 0.8 + drift * (2.2 + line)) * (14 + line * 4);
 
-          if (x === -40) {
+          if (x === -60) {
             context.moveTo(x, y);
           } else {
             context.lineTo(x, y);
           }
         }
-        context.strokeStyle = `rgba(10, 141, 193, ${0.05 + line * 0.012})`;
-        context.lineWidth = 1;
+
+        context.strokeStyle = `rgba(250, 250, 249, ${0.026 + line * 0.006})`;
+        context.lineWidth = line % 3 === 0 ? 1.2 : 0.8;
         context.stroke();
       }
 
       for (const particle of particles) {
-        const drift = reducedMotion ? 0 : time * 0.00007;
+        const drift = reducedMotion ? 0 : time * particle.speed;
         const x = ((particle.x + drift) % 1) * width;
-        const wave = Math.sin(time * 0.001 + particle.phase) * 24;
-        const y = particle.y * height + wave;
+        const y = particle.y * height + Math.sin(time * 0.001 + particle.phase) * 18;
+
         context.beginPath();
-        context.arc(x, y, particle.size, 0, Math.PI * 2);
+        context.arc(x, y, particle.radius, 0, Math.PI * 2);
         context.fillStyle = `rgba(250, 250, 249, ${particle.alpha})`;
         context.fill();
       }
+
+      const light = context.createRadialGradient(width * 0.66, height * 0.34, 0, width * 0.66, height * 0.34, width * 0.5);
+      light.addColorStop(0, "rgba(10, 141, 193, 0.22)");
+      light.addColorStop(0.5, "rgba(10, 141, 193, 0.06)");
+      light.addColorStop(1, "rgba(10, 141, 193, 0)");
+      context.fillStyle = light;
+      context.fillRect(0, 0, width, height);
 
       if (!reducedMotion) {
         frame = window.requestAnimationFrame(draw);
@@ -215,34 +342,7 @@ function SignalCanvas() {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" aria-hidden="true" />;
-}
-
-function MetricDial() {
-  return (
-    <div className="relative mx-auto grid size-64 place-items-center sm:size-80" aria-hidden="true">
-      <div className="absolute inset-8 rounded-full border border-[#fafaf9]/12" />
-      {Array.from({ length: 36 }, (_, index) => (
-        <span
-          key={index}
-          className={cn(
-            "absolute left-1/2 top-1/2 size-1 rounded-full bg-[#fafaf9]",
-            index % 6 === 0 ? "opacity-95" : "opacity-35",
-            index % 9 === 0 ? "bg-[#0a8dc1]" : "",
-          )}
-          style={{
-            transform: `rotate(${index * 10}deg) translateY(-8rem)`,
-            transformOrigin: "0 0",
-          }}
-        />
-      ))}
-      <div className="absolute left-1/2 top-4 h-28 w-px -translate-x-1/2 bg-[#fafaf9]/24 sm:h-36" />
-      <div className="relative text-center">
-        <p className="text-7xl font-semibold text-[#fafaf9] sm:text-8xl">30</p>
-        <p className="mt-2 text-sm text-[#fafaf9]/62">ans de matière et chantier</p>
-      </div>
-    </div>
-  );
+  return <canvas ref={canvasRef} className="cobam-material-canvas absolute inset-0 h-full w-full" aria-hidden="true" />;
 }
 
 export function RedesignedHome({ categories, brands, articles, showrooms }: RedesignedHomeProps) {
@@ -250,56 +350,60 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
     () => (categories.length > 0 ? categories : fallbackCategories),
     [categories],
   );
-  const heroSlides = useMemo<HeroSlide[]>(
+
+  const heroPanels = useMemo<HeroPanel[]>(
     () => [
       {
-        id: "cobam",
-        eyebrow: "Maison de matières",
-        title: "Matières, bains et chantiers en scène",
-        text: "Un parcours plus clair pour choisir les surfaces, les équipements et les finitions qui donnent forme au projet.",
+        id: "catalogue",
+        label: "Catalogue",
+        title: "Surfaces, bains et finitions",
+        text: "Des familles lisibles pour choisir vite sans perdre la qualité du détail.",
         image: displayCategories[0]?.image ?? "/images/collections/faedo-marbre-blanc-353x353.jpg",
         href: "/produits",
       },
       {
         id: "showrooms",
-        eyebrow: "Validation terrain",
-        title: "Voir, toucher, décider",
-        text: "Des showrooms pour comparer les matières, confirmer les détails et avancer avec une équipe qui connaît le chantier.",
-        image: showrooms[0]?.image ?? "/images/showrooms/siege.png",
+        label: "Showrooms",
+        title: "Voir la matière en vrai",
+        text: "Quatre lieux pour comparer les textures, la lumière et les usages.",
+        image: showrooms[0]?.image ?? "/images/showrooms/houmt-souk.png",
         href: "/contact",
       },
       {
-        id: "exterieur",
-        eyebrow: "Projet complet",
-        title: "Du sol au dernier détail",
-        text: "Carrelage, salle de bain, piscine, peinture, portes et construction: le catalogue reste lisible même quand le projet grandit.",
-        image: displayCategories[1]?.image ?? "/images/collections/carrelage-piscine-353x353.jpg",
-        href: "/produits",
+        id: "expertise",
+        label: "Depuis 1994",
+        title: "Le bon choix avant chantier",
+        text: "Une culture du produit et du terrain pour sécuriser chaque projet.",
+        image: displayCategories[1]?.image ?? "/images/collections/vasque-ovale-premium-353x353.jpg",
+        href: "/a-propos",
       },
     ],
     [displayCategories, showrooms],
   );
 
   const [heroIndex, setHeroIndex] = useState(0);
+  const [focusedCategoryId, setFocusedCategoryId] = useState<string | null>(null);
   const [activeShowroomName, setActiveShowroomName] = useState(showrooms[0]?.name ?? "");
   const heroRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (heroSlides.length <= 1) {
+    if (heroPanels.length <= 1) {
       return;
     }
 
     const timer = window.setInterval(() => {
-      setHeroIndex((current) => (current + 1) % heroSlides.length);
-    }, 6200);
+      setHeroIndex((current) => (current + 1) % heroPanels.length);
+    }, 5200);
 
     return () => window.clearInterval(timer);
-  }, [heroSlides.length]);
+  }, [heroPanels.length]);
 
-  const activeHero = heroSlides[heroIndex] ?? heroSlides[0];
+  const activeHero = heroPanels[heroIndex] ?? heroPanels[0];
+  const focusedCategory =
+    displayCategories.find((category) => category.id === focusedCategoryId) ?? displayCategories[0];
   const activeShowroom =
     showrooms.find((showroom) => showroom.name === activeShowroomName) ?? showrooms[0] ?? null;
-  const visibleBrands = brands.slice(0, 12);
+  const visibleBrands = brands.slice(0, 14);
   const latestArticles = articles.slice(0, 3);
 
   const handleHeroMove = (event: ReactPointerEvent<HTMLElement>) => {
@@ -311,10 +415,11 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
     const rect = section.getBoundingClientRect();
     const x = (event.clientX - rect.left) / rect.width - 0.5;
     const y = (event.clientY - rect.top) / rect.height - 0.5;
-    section.style.setProperty("--hero-x", `${x * 22}px`);
-    section.style.setProperty("--hero-y", `${y * 18}px`);
-    section.style.setProperty("--spotlight-x", `${event.clientX - rect.left}px`);
-    section.style.setProperty("--spotlight-y", `${event.clientY - rect.top}px`);
+    section.style.setProperty("--hero-x", `${x * 26}px`);
+    section.style.setProperty("--hero-y", `${y * 22}px`);
+    section.style.setProperty("--hero-tilt", `${x * 3.8}deg`);
+    section.style.setProperty("--hero-light-x", `${event.clientX - rect.left}px`);
+    section.style.setProperty("--hero-light-y", `${event.clientY - rect.top}px`);
   };
 
   const resetHeroMove = () => {
@@ -325,6 +430,7 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
 
     section.style.setProperty("--hero-x", "0px");
     section.style.setProperty("--hero-y", "0px");
+    section.style.setProperty("--hero-tilt", "0deg");
   };
 
   return (
@@ -333,210 +439,255 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
         ref={heroRef}
         onPointerMove={handleHeroMove}
         onPointerLeave={resetHeroMove}
-        className="cobam-cinematic-hero cobam-atlas-hero relative isolate min-h-[calc(94svh-5rem)] overflow-hidden bg-[#14202e] text-[#fafaf9]"
-        style={{ "--atlas-title-image": `url("${activeHero.image}")` } as CSSProperties}
+        className="cobam-cinematic-hero relative isolate min-h-[calc(100svh-5rem)] overflow-hidden bg-[#14202e] text-[#fafaf9]"
+        data-hero-section
       >
+        <HeroAtmosphereCanvas />
         <div className="absolute inset-0">
-          <div className="absolute inset-y-0 right-0 w-full lg:w-[68%]">
-            {heroSlides.map((slide, index) => (
-              <Image
-                key={slide.id}
-                src={slide.image}
-                alt=""
-                fill
-                priority={index === 0}
-                sizes="(min-width: 1024px) 70vw, 100vw"
-                data-parallax-speed="-0.032"
-                className={cn(
-                  "cobam-cinematic-hero-image object-cover opacity-0 transition duration-1000",
-                  index === heroIndex ? "opacity-100" : "",
-                )}
-              />
-            ))}
-          </div>
-          <div className="absolute inset-0 bg-[#14202e]/50" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(20,32,46,0.98),rgba(20,32,46,0.88)_38%,rgba(20,32,46,0.2)_100%)]" />
-          <div className="cobam-atlas-grid absolute inset-0" aria-hidden="true" />
-          <div className="absolute inset-x-0 bottom-0 h-44 bg-[linear-gradient(180deg,transparent,rgba(20,32,46,0.92))]" />
+          {heroPanels.map((panel, index) => (
+            <Image
+              key={panel.id}
+              src={panel.image}
+              alt=""
+              fill
+              priority={index === 0}
+              sizes="100vw"
+              className={cn(
+                "cobam-hero-wash object-cover opacity-0 transition duration-1000",
+                index === heroIndex ? "opacity-100" : "",
+              )}
+            />
+          ))}
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(20,32,46,0.98),rgba(20,32,46,0.86)_42%,rgba(20,32,46,0.42)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_var(--hero-light-x,70%)_var(--hero-light-y,38%),rgba(10,141,193,0.3),transparent_34rem)]" />
+          <div className="cobam-luxury-grid absolute inset-0" aria-hidden="true" />
+          <div className="cobam-grain absolute inset-0" aria-hidden="true" />
         </div>
 
-        <div className="relative z-10 mx-auto grid min-h-[calc(94svh-5rem)] max-w-[1500px] gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[0.54fr_0.46fr] lg:px-12">
-          <div className="flex flex-col justify-center py-14 lg:py-20" data-landing-reveal>
-            <div className="flex items-center gap-4">
-              <span className="h-px w-14 bg-[#0a8dc1]" aria-hidden="true" />
-              <p className="text-sm font-semibold text-[#0a8dc1]">Atlas des matières</p>
+        <div className="relative z-10 mx-auto grid min-h-[calc(100svh-5rem)] max-w-[1500px] gap-10 px-5 pb-32 pt-10 sm:px-8 lg:grid-cols-[0.88fr_1.12fr] lg:px-12 lg:pb-24 lg:pt-12">
+          <div className="flex flex-col justify-center py-10 lg:py-16" data-landing-reveal>
+            <div className="inline-flex w-fit items-center gap-3 border border-[#fafaf9]/14 bg-[#fafaf9]/7 px-3 py-2 text-xs font-semibold text-[#fafaf9]/72 backdrop-blur-md">
+              <Sparkles className="size-4 text-[#0a8dc1]" aria-hidden="true" />
+              Depuis 1994 / Architecture des matières
             </div>
 
-            <h1 className="mt-7 max-w-4xl text-6xl font-semibold leading-none sm:text-7xl lg:text-8xl">
-              <span className="cobam-atlas-title-fill block">Matières</span>
-              {" "}
-              <span className="block text-[#fafaf9]">d&apos;architecture</span>
+            <h1 className="cobam-display mt-8 max-w-5xl text-[clamp(4.6rem,11vw,11.5rem)] font-semibold leading-[0.82] text-[#fafaf9]">
+              COBAM{" "}
+              <span className="block text-[#0a8dc1]">Group</span>
             </h1>
 
-            <p className="mt-7 max-w-2xl text-2xl font-medium leading-tight text-[#fafaf9] sm:text-3xl lg:text-4xl">
-              {activeHero.title}
+            <p className="mt-8 max-w-2xl text-2xl font-semibold leading-tight text-[#fafaf9] sm:text-3xl lg:text-4xl">
+              L&apos;expérience showroom transformée en parcours digital premium.
             </p>
-            <p className="mt-6 max-w-xl text-base leading-7 text-[#fafaf9]/72 sm:text-lg sm:leading-8">
-              {activeHero.text}
+            <p className="mt-6 max-w-2xl text-base leading-7 text-[#fafaf9]/70 sm:text-lg sm:leading-8">
+              Matériaux, revêtements, bains, piscines et finitions: COBAM organise la découverte,
+              la comparaison et la validation des choix avec la précision d&apos;un groupe établi.
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-9 flex max-w-[calc(100%-4.75rem)] flex-col gap-3 sm:max-w-none sm:flex-row">
               <Link
-                href={activeHero.href}
-                className="cobam-cinematic-action bg-[#fafaf9] text-[#14202e] hover:bg-[#0a8dc1]"
+                href="/produits"
+                className="cobam-cinematic-action bg-[#0a8dc1] text-[#fafaf9] hover:bg-[#fafaf9] hover:text-[#14202e]"
+                data-magnetic
               >
                 Explorer le catalogue
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
               <Link
                 href="/contact"
-                className="cobam-cinematic-action border border-[#fafaf9]/20 text-[#fafaf9] hover:border-[#0a8dc1]/70 hover:text-[#0a8dc1]"
+                className="cobam-cinematic-action border border-[#fafaf9]/22 text-[#fafaf9] hover:border-[#0a8dc1] hover:text-[#0a8dc1]"
+                data-magnetic
               >
-                Trouver un showroom
+                Contacter nous
                 <ChevronRight className="size-4" aria-hidden="true" />
               </Link>
             </div>
+
           </div>
 
           <div
-            className="relative hidden h-[42rem] lg:block"
+            className="relative hidden min-h-[34rem] items-center lg:flex"
             data-landing-reveal
-            style={revealDelay(120)}
+            style={revealDelay(130)}
           >
-            <div className="cobam-atlas-orbit absolute inset-0" aria-hidden="true" />
-            <div className="cobam-atlas-plane absolute right-0 top-10 h-[30rem] w-[min(44rem,100%)] overflow-hidden border border-[#fafaf9]/18 bg-[#fafaf9]/8">
-              {heroSlides.map((slide, index) => (
-                <Image
-                  key={slide.id}
-                  src={slide.image}
-                  alt=""
-                  fill
-                  sizes="(min-width: 1024px) 48vw, 100vw"
+            <div className="cobam-material-stage relative h-[32rem] w-full" data-parallax-speed="-0.026">
+              {heroPanels.map((panel, index) => (
+                <Link
+                  key={panel.id}
+                  href={panel.href}
                   className={cn(
-                    "object-cover opacity-0 transition duration-1000",
-                    index === heroIndex ? "opacity-100" : "",
+                    "cobam-material-slab group absolute overflow-hidden border border-[#fafaf9]/14 bg-[#fafaf9]/8 shadow-[0_32px_90px_rgba(0,0,0,0.22)] outline-none transition duration-700",
+                    index === 0 ? "left-[4%] top-[2%] h-[21rem] w-[50%]" : "",
+                    index === 1 ? "right-[2%] top-[12%] h-[27rem] w-[52%]" : "",
+                    index === 2 ? "bottom-[2%] left-[20%] h-[15rem] w-[52%]" : "",
+                    index === heroIndex ? "z-20 border-[#0a8dc1]/70 opacity-100" : "z-10 opacity-70",
                   )}
-                />
-              ))}
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,32,46,0.02),rgba(20,32,46,0.72))]" />
-            </div>
-
-            <div className="absolute bottom-0 left-0 w-[24rem] border border-[#fafaf9]/14 bg-[#14202e]/76 p-5 backdrop-blur-xl">
-              <p className="text-sm font-semibold text-[#0a8dc1]">Séquence active</p>
-              <div className="mt-5 flex items-end gap-4">
-                <span className="text-7xl font-semibold leading-none text-[#fafaf9]">
-                  {String(heroIndex + 1).padStart(2, "0")}
-                </span>
-                <span className="pb-2 text-sm font-semibold text-[#fafaf9]/50">
-                  / {String(heroSlides.length).padStart(2, "0")}
-                </span>
-              </div>
-              <p className="mt-5 text-sm leading-6 text-[#fafaf9]/66">{activeHero.eyebrow}</p>
-            </div>
-          </div>
-
-          <div className="self-end border-t border-[#fafaf9]/14 pt-5 lg:col-span-2">
-            <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
-              <div className="flex flex-wrap items-center gap-3" aria-label="Sélection du visuel">
-                {heroSlides.map((slide, index) => (
-                  <button
-                    key={slide.id}
-                    type="button"
-                    onClick={() => setHeroIndex(index)}
-                    className={cn(
-                      "group flex min-h-11 items-center gap-3 rounded-md border px-3 text-left transition",
-                      index === heroIndex
-                        ? "border-[#0a8dc1]/70 bg-[#0a8dc1]/14 text-[#fafaf9]"
-                        : "border-[#fafaf9]/14 bg-[#fafaf9]/6 text-[#fafaf9]/54 hover:border-[#fafaf9]/38 hover:text-[#fafaf9]",
-                    )}
-                    aria-label={`Afficher ${slide.eyebrow}`}
-                  >
-                    <span className="text-sm font-semibold">
-                      {String(index + 1).padStart(2, "0")}
+                  onMouseEnter={() => setHeroIndex(index)}
+                >
+                  <Image
+                    src={panel.image}
+                    alt={panel.title}
+                    fill
+                    loading={index === 0 ? "eager" : "lazy"}
+                    sizes="(min-width: 1024px) 42vw, 100vw"
+                    className="object-cover transition duration-700 group-hover:scale-105"
+                  />
+                  <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,32,46,0.02),rgba(20,32,46,0.76))]" />
+                  <span className="cobam-material-scan absolute inset-0" aria-hidden="true" />
+                  <span className="absolute bottom-0 left-0 right-0 p-5">
+                    <span className="block text-xs font-semibold text-[#0a8dc1]">{panel.label}</span>
+                    <span
+                      className={cn(
+                        "mt-2 block text-2xl font-semibold leading-tight text-[#fafaf9]",
+                        index === heroIndex ? "" : "hidden",
+                      )}
+                    >
+                      {panel.title}
                     </span>
-                    <span className="hidden text-sm font-semibold sm:inline">{slide.title}</span>
-                  </button>
-                ))}
-              </div>
-              <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold text-[#fafaf9]/64 lg:justify-end">
-                <span>Depuis 1994</span>
-                <span className="hidden text-[#0a8dc1] sm:inline">/</span>
-                <span>4 showrooms en Tunisie</span>
+                    <span
+                      className={cn(
+                        "mt-3 block max-w-sm text-sm leading-6 text-[#fafaf9]/68",
+                        index === heroIndex ? "" : "hidden",
+                      )}
+                    >
+                      {panel.text}
+                    </span>
+                  </span>
+                </Link>
+              ))}
+
+              <div className="absolute right-8 top-8 z-30 w-64 border border-[#fafaf9]/14 bg-[#14202e]/72 p-4 text-[#fafaf9] backdrop-blur-xl">
+                <p className="text-xs font-semibold text-[#0a8dc1]">Séquence active</p>
+                <p className="mt-3 text-4xl font-semibold leading-none">
+                  {String(heroIndex + 1).padStart(2, "0")}
+                  <span className="ml-2 text-sm text-[#fafaf9]/42">
+                    / {String(heroPanels.length).padStart(2, "0")}
+                  </span>
+                </p>
+                <p className="mt-4 text-sm leading-6 text-[#fafaf9]/62">{activeHero.text}</p>
               </div>
             </div>
           </div>
+
         </div>
+
+       
       </section>
 
-      <section className="bg-[#fafaf9] py-16 text-[#14202e] sm:py-20">
-        <div className="mx-auto grid max-w-[1500px] gap-10 px-5 sm:px-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-end lg:px-12">
+      <section className="relative bg-[#fafaf9] py-16 text-[#14202e] sm:py-20" aria-labelledby="numbers-title">
+        <div className="mx-auto grid max-w-[1500px] gap-10 px-5 sm:px-8 lg:grid-cols-[0.74fr_1.26fr] lg:items-end lg:px-12">
           <div data-landing-reveal>
-            <p className="text-sm font-semibold text-[#0a8dc1]">COBAM en chiffres</p>
-            <h2 className="mt-5 max-w-xl text-4xl font-semibold leading-none sm:text-5xl">
+            <p className="cobam-section-kicker text-[#0a8dc1]">COBAM en chiffres</p>
+            <h2 id="numbers-title" className="cobam-display mt-5 max-w-xl text-5xl font-semibold leading-none sm:text-6xl">
               Une présence reconnue, construite dans la durée.
             </h2>
           </div>
 
           <div className="grid border-l border-t border-[#14202e]/12 sm:grid-cols-2 lg:grid-cols-4">
-            {companyRecognition.map((metric, index) => (
-              <div
+            {companyMetrics.map((metric, index) => (
+              <article
                 key={metric.label}
-                className="min-h-44 border-b border-r border-[#14202e]/12 bg-[#fafaf9] p-5 transition hover:bg-[#0a8dc1]/8"
+                className="cobam-metric-card min-h-56 border-b border-r border-[#14202e]/12 bg-[#fafaf9] p-5 transition"
                 data-landing-reveal
                 style={revealDelay(index * 60)}
               >
                 <p className="text-5xl font-semibold leading-none text-[#14202e] sm:text-6xl">
-                  {metric.value}
+                  <AnimatedMetricValue metric={metric} />
                 </p>
-                <p className="mt-4 max-w-40 text-sm font-semibold leading-6 text-[#5e5e5e]">
+                <h3 className="mt-4 max-w-40 text-sm font-semibold leading-6 text-[#14202e]">
                   {metric.label}
-                </p>
-              </div>
+                </h3>
+                <p className="mt-5 text-sm leading-6 text-[#5e5e5e]">{metric.note}</p>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="relative isolate overflow-hidden bg-[#14202e] py-24 text-[#fafaf9] sm:py-32">
-        <SignalCanvas />
-        <div className="relative z-10 mx-auto grid max-w-[1500px] gap-14 px-5 sm:px-8 lg:grid-cols-[0.88fr_1.12fr] lg:items-center lg:px-12">
+      <section className="relative isolate overflow-hidden bg-[#f2f4f5] py-20 text-[#14202e] sm:py-28" aria-labelledby="about-title">
+        <div className="absolute inset-0 opacity-70 [background-image:linear-gradient(90deg,rgba(20,32,46,0.08)_1px,transparent_1px),linear-gradient(180deg,rgba(20,32,46,0.06)_1px,transparent_1px)] [background-size:8rem_8rem]" />
+        <div className="relative mx-auto grid max-w-[1500px] gap-12 px-5 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-12">
           <div data-landing-reveal>
-            <p className="text-sm font-semibold text-[#0a8dc1]">Méthode COBAM</p>
-            <h2 className="mt-5 max-w-3xl text-5xl font-semibold leading-none sm:text-6xl">
-              La matière devient lisible avant le chantier.
+            <p className="cobam-section-kicker text-[#0a8dc1]">À propos</p>
+            <h2 id="about-title" className="cobam-display mt-5 max-w-3xl text-5xl font-semibold leading-none sm:text-7xl">
+              Un groupe de matières, de lieux et de conseils.
             </h2>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-[#fafaf9]/66">
-              La page d&apos;accueil doit agir comme un showroom digital: elle montre les choix,
-              compare les familles et donne un chemin net vers les produits.
+            <p className="mt-7 max-w-2xl text-lg leading-8 text-[#5e5e5e]">
+              COBAM Group accompagne les professionnels et les particuliers dans le choix de
+              matériaux, revêtements, équipements et finitions capables de transformer un projet en
+              espace durable, précis et élégant.
             </p>
-          </div>
-          <div data-landing-reveal style={revealDelay(100)}>
-            <div className="cobam-cinematic-parallax" data-parallax-speed="-0.04">
-              <MetricDial />
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <Link href="/a-propos" className="cobam-cinematic-action bg-[#14202e] text-[#fafaf9]" data-magnetic>
+                Découvrir le groupe
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+              <Link
+                href="/contact"
+                className="cobam-cinematic-action border border-[#14202e]/18 text-[#14202e] hover:border-[#0a8dc1] hover:text-[#0a8dc1]"
+                data-magnetic
+              >
+                Parler à l&apos;équipe
+                <Phone className="size-4" aria-hidden="true" />
+              </Link>
             </div>
+          </div>
+
+          <div className="grid gap-4" data-landing-reveal style={revealDelay(120)}>
+            {valuePillars.map(({ title, text, Icon }, index) => (
+              <article
+                key={title}
+                className="group grid gap-5 border border-[#14202e]/10 bg-[#fafaf9]/78 p-5 shadow-[0_20px_70px_rgba(20,32,46,0.07)] backdrop-blur-md transition hover:-translate-y-1 hover:border-[#0a8dc1]/40 sm:grid-cols-[3.5rem_1fr]"
+                style={revealDelay(index * 70)}
+                data-landing-reveal
+              >
+                <span className="grid size-14 place-items-center border border-[#0a8dc1]/24 bg-[#0a8dc1]/10 text-[#0a8dc1] transition group-hover:bg-[#0a8dc1] group-hover:text-[#fafaf9]">
+                  <Icon className="size-6" aria-hidden="true" />
+                </span>
+                <span>
+                  <span className="block text-2xl font-semibold text-[#14202e]">{title}</span>
+                  <span className="mt-3 block text-sm leading-6 text-[#5e5e5e]">{text}</span>
+                </span>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
-      <section
-        className="relative isolate bg-[#14202e] py-20 text-[#fafaf9] sm:py-28"
-        data-choice-sequence
-      >
-        <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-28 [background-image:linear-gradient(90deg,rgba(250,250,249,0.1)_1px,transparent_1px),linear-gradient(180deg,rgba(250,250,249,0.08)_1px,transparent_1px)] [background-size:9rem_9rem]" />
+      <section className="relative isolate bg-[#14202e] py-20 text-[#fafaf9] sm:py-28" aria-labelledby="categories-title">
+        <div className="pointer-events-none absolute inset-0 opacity-24 [background-image:linear-gradient(90deg,rgba(250,250,249,0.11)_1px,transparent_1px),linear-gradient(180deg,rgba(250,250,249,0.08)_1px,transparent_1px)] [background-size:9rem_9rem]" />
         <div className="relative mx-auto grid max-w-[1500px] gap-14 px-5 sm:px-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-start lg:px-12">
-          <div className="lg:sticky lg:top-28 lg:self-start" data-choice-sticky>
+          <div className="lg:sticky lg:top-28 lg:self-start">
             <div data-landing-reveal>
-              <p className="text-sm font-semibold text-[#0a8dc1]">Catalogue COBAM</p>
-              <h2 className="mt-5 text-5xl font-semibold leading-none sm:text-6xl">
+              <p className="cobam-section-kicker text-[#0a8dc1]">Catalogue COBAM</p>
+              <h2 id="categories-title" className="cobam-display mt-5 text-5xl font-semibold leading-none sm:text-7xl">
                 Les familles produits, comme une visite guidée.
               </h2>
-              <p className="mt-6 max-w-xl text-lg leading-8 text-[#fafaf9]/66">
-                Chaque univers garde son image, ses usages et ses entrées rapides. Le visiteur peut
-                parcourir le catalogue sans perdre le fil du projet.
+              <p className="mt-6 max-w-xl text-lg leading-8 text-[#fafaf9]/68">
+                Chaque univers garde son image, ses usages et ses entrées rapides. Le visiteur
+                parcourt le catalogue sans perdre le fil du projet.
               </p>
 
-              <div className="mt-9 grid grid-cols-2 border-y border-[#fafaf9]/14">
-                {["Explorer", "Comparer", "Choisir", "Visiter"].map((step) => (
+              {focusedCategory ? (
+                <div className="cobam-category-preview mt-9 overflow-hidden border border-[#fafaf9]/14 bg-[#fafaf9]/7">
+                  <div className="relative aspect-[16/10]">
+                    <Image
+                      src={focusedCategory.image}
+                      alt={focusedCategory.imageAlt}
+                      fill
+                      sizes="(min-width: 1024px) 34vw, 100vw"
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(20,32,46,0.74))]" />
+                    <p className="absolute bottom-4 left-4 text-sm font-semibold text-[#0a8dc1]">
+                      {focusedCategory.number} / {focusedCategory.name}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="mt-8 grid grid-cols-2 border-y border-[#fafaf9]/14">
+                {["Voir", "Comparer", "Valider", "Situer"].map((step) => (
                   <div key={step} className="border-[#fafaf9]/14 py-4 odd:border-r">
                     <p className="text-3xl font-semibold text-[#fafaf9]">{step}</p>
                   </div>
@@ -550,18 +701,20 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
               <article
                 key={category.id}
                 className={cn(
-                  "group grid overflow-hidden rounded-lg border border-[#fafaf9]/12 bg-[#fafaf9]/6 transition hover:border-[#0a8dc1]/55 hover:bg-[#fafaf9]/8 hover:shadow-[0_30px_90px_rgba(0,0,0,0.22)] lg:grid-cols-[0.92fr_1.08fr]",
+                  "group grid overflow-hidden border border-[#fafaf9]/12 bg-[#fafaf9]/6 transition hover:border-[#0a8dc1]/55 hover:bg-[#fafaf9]/8 hover:shadow-[0_30px_90px_rgba(0,0,0,0.24)] lg:grid-cols-[0.92fr_1.08fr]",
                   index % 2 === 0 ? "lg:mr-12" : "lg:ml-12",
                 )}
+                onMouseEnter={() => setFocusedCategoryId(category.id)}
+                onFocus={() => setFocusedCategoryId(category.id)}
                 data-landing-reveal
-                style={revealDelay(index * 75)}
-                >
+                style={revealDelay(index * 65)}
+              >
                 <div
                   className={cn(
                     "cobam-cinematic-parallax relative min-h-[18rem] overflow-hidden bg-[#14202e]",
                     index % 2 === 1 ? "lg:order-2" : "",
                   )}
-                  data-parallax-speed={index % 2 === 0 ? "-0.034" : "0.042"}
+                  data-parallax-speed={index % 2 === 0 ? "-0.03" : "0.034"}
                 >
                   <Image
                     src={category.image}
@@ -570,14 +723,14 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
                     sizes="(min-width: 1024px) 42vw, 100vw"
                     className="object-cover transition duration-700 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,32,46,0.02),rgba(20,32,46,0.62))]" />
-                  <p className="absolute bottom-4 left-4 rounded-md border border-[#fafaf9]/18 bg-[#14202e]/72 px-3 py-2 text-sm font-semibold text-[#fafaf9]">
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,32,46,0.02),rgba(20,32,46,0.68))]" />
+                  <p className="absolute bottom-4 left-4 border border-[#fafaf9]/18 bg-[#14202e]/72 px-3 py-2 text-sm font-semibold text-[#fafaf9]">
                     {category.number}
                   </p>
                 </div>
 
                 <div className="flex min-h-[18rem] flex-col justify-center p-6 sm:p-8">
-                  <div className="grid size-12 place-items-center rounded-md border border-[#fafaf9]/16 bg-[#fafaf9]/8">
+                  <div className="grid size-12 place-items-center border border-[#fafaf9]/16 bg-[#fafaf9]/8">
                     <span className="text-sm font-semibold text-[#0a8dc1]">{category.number}</span>
                   </div>
                   <p className="mt-6 text-sm font-semibold text-[#0a8dc1]">Catégorie</p>
@@ -593,7 +746,7 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
                         <Link
                           key={subcategory.label}
                           href={subcategory.href}
-                          className="rounded-md border border-[#fafaf9]/12 bg-[#fafaf9]/7 px-3 py-2 text-sm font-semibold text-[#fafaf9]/74 transition hover:border-[#0a8dc1]/70 hover:text-[#0a8dc1]"
+                          className="border border-[#fafaf9]/12 bg-[#fafaf9]/7 px-3 py-2 text-sm font-semibold text-[#fafaf9]/74 transition hover:border-[#0a8dc1]/70 hover:text-[#0a8dc1]"
                         >
                           {subcategory.label}
                         </Link>
@@ -614,15 +767,15 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
         </div>
       </section>
 
-      <section className="bg-[#fafaf9] py-20 sm:py-28" id="nos-agences">
+      <section className="bg-[#fafaf9] py-20 text-[#14202e] sm:py-28" id="nos-agences" aria-labelledby="showrooms-title">
         <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">
           <div className="grid gap-10 lg:grid-cols-[0.78fr_1.22fr]">
             <div data-landing-reveal>
-              <p className="text-sm font-semibold text-[#0a8dc1]">Showrooms</p>
-              <h2 className="mt-5 text-5xl font-semibold leading-none sm:text-6xl">
+              <p className="cobam-section-kicker text-[#0a8dc1]">Showrooms</p>
+              <h2 id="showrooms-title" className="cobam-display mt-5 text-5xl font-semibold leading-none sm:text-7xl">
                 Le digital mène à la matière réelle.
               </h2>
-              <p className="mt-6 text-lg leading-8 text-[#5e5e5e]">
+              <p className="mt-6 max-w-xl text-lg leading-8 text-[#5e5e5e]">
                 Les points de vente deviennent une suite logique de la page: voir une famille,
                 comprendre son usage, puis savoir où la confirmer.
               </p>
@@ -636,15 +789,17 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
                       type="button"
                       onClick={() => setActiveShowroomName(showroom.name)}
                       className={cn(
-                        "flex min-h-16 items-center justify-between rounded-lg border px-4 text-left transition",
+                        "group flex min-h-16 items-center justify-between border px-4 text-left transition",
                         active
-                          ? "border-[#0a8dc1] bg-[#fafaf9] text-[#14202e] shadow-sm"
-                          : "border-[#14202e]/10 bg-transparent text-[#5e5e5e] hover:border-[#0a8dc1]/50",
+                          ? "border-[#0a8dc1] bg-[#14202e] text-[#fafaf9] shadow-sm"
+                          : "border-[#14202e]/10 bg-transparent text-[#5e5e5e] hover:border-[#0a8dc1]/50 hover:text-[#14202e]",
                       )}
                     >
                       <span>
                         <span className="block font-semibold">{showroom.name}</span>
-                        <span className="mt-1 block text-sm">{showroom.address}</span>
+                        <span className={cn("mt-1 block text-sm", active ? "text-[#fafaf9]/62" : "")}>
+                          {showroom.address}
+                        </span>
                       </span>
                       <MapPin className="size-5 text-[#0a8dc1]" aria-hidden="true" />
                     </button>
@@ -654,8 +809,10 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
             </div>
 
             <div
-              className="cobam-cinematic-parallax relative min-h-[38rem] overflow-hidden rounded-lg bg-[#14202e] text-[#fafaf9] shadow-[0_32px_90px_rgba(20,32,46,0.16)]"
+              className="cobam-cinematic-parallax relative min-h-[38rem] overflow-hidden bg-[#14202e] text-[#fafaf9] shadow-[0_32px_90px_rgba(20,32,46,0.16)]"
               data-parallax-speed="0.028"
+              data-landing-reveal
+              style={revealDelay(100)}
             >
               {activeShowroom ? (
                 <>
@@ -664,20 +821,24 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
                     alt={activeShowroom.name}
                     fill
                     sizes="(min-width: 1024px) 60vw, 100vw"
-                    className="object-cover"
+                    className="object-cover transition duration-700"
                   />
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,32,46,0.02),rgba(20,32,46,0.76))]" />
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,32,46,0.02),rgba(20,32,46,0.78))]" />
                   <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
                     <p className="text-sm font-semibold text-[#0a8dc1]">{activeShowroom.label}</p>
-                    <h3 className="mt-3 text-5xl font-semibold leading-none">
+                    <h3 className="cobam-display mt-3 text-5xl font-semibold leading-none sm:text-7xl">
                       {activeShowroom.name}
                     </h3>
+                    <p className="mt-4 max-w-xl text-base leading-7 text-[#fafaf9]/70">
+                      {activeShowroom.address}
+                    </p>
                     <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                       <a
                         href={activeShowroom.map}
                         target="_blank"
                         rel="noreferrer"
                         className="cobam-cinematic-action bg-[#fafaf9] text-[#14202e]"
+                        data-magnetic
                       >
                         Itinéraire
                         <ArrowRight className="size-4" aria-hidden="true" />
@@ -685,6 +846,7 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
                       <a
                         href={`tel:${activeShowroom.phone.replace(/\s/g, "")}`}
                         className="cobam-cinematic-action border border-[#fafaf9]/24 text-[#fafaf9]"
+                        data-magnetic
                       >
                         <Phone className="size-4" aria-hidden="true" />
                         {activeShowroom.phone}
@@ -699,24 +861,33 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
       </section>
 
       {visibleBrands.length > 0 ? (
-        <section className="overflow-hidden bg-[#fafaf9] py-16">
-          <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12" data-landing-reveal>
-            <p className="text-sm font-semibold text-[#0a8dc1]">Marques et références</p>
+        <section className="overflow-hidden bg-[#f2f4f5] py-16 text-[#14202e]" aria-labelledby="brands-title">
+          <div className="mx-auto grid max-w-[1500px] gap-5 px-5 sm:px-8 lg:grid-cols-[0.65fr_1fr] lg:items-end lg:px-12" data-landing-reveal>
+            <div>
+              <p className="cobam-section-kicker text-[#0a8dc1]">Marques et références</p>
+              <h2 id="brands-title" className="cobam-display mt-4 text-4xl font-semibold leading-none sm:text-5xl">
+                Des partenaires visibles, des choix vérifiables.
+              </h2>
+            </div>
+            <p className="max-w-2xl text-sm leading-6 text-[#5e5e5e] lg:justify-self-end">
+              Les logos gardent leur présence sans surcharger la page; le mouvement reste fluide et
+              s&apos;arrête au survol.
+            </p>
           </div>
-          <div className="cobam-cinematic-marquee mt-8">
+          <div className="cobam-cinematic-marquee mt-10">
             <div className="cobam-cinematic-marquee-track">
               {[...visibleBrands, ...visibleBrands].map((brand, index) => (
                 <Link
                   key={`${brand.id}-${index}`}
                   href={brand.href}
-                  className="inline-flex h-24 min-w-56 items-center justify-center rounded-lg border border-[#14202e]/10 bg-[#fafaf9] px-8 transition hover:border-[#0a8dc1]/50"
+                  className="group inline-flex h-24 min-w-56 items-center justify-center border border-[#14202e]/10 bg-[#fafaf9] px-8 transition hover:border-[#0a8dc1]/50 hover:shadow-[0_18px_50px_rgba(20,32,46,0.1)]"
                 >
                   <Image
                     src={brand.image}
                     alt={brand.name}
                     width={150}
                     height={72}
-                    className="max-h-14 w-auto object-contain"
+                    className="max-h-14 w-auto object-contain grayscale transition duration-300 group-hover:grayscale-0"
                   />
                 </Link>
               ))}
@@ -726,19 +897,19 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
       ) : null}
 
       {latestArticles.length > 0 ? (
-        <section className="bg-[#fafaf9] pb-24 sm:pb-32">
+        <section className="bg-[#fafaf9] py-20 text-[#14202e] sm:py-28" aria-labelledby="articles-title">
           <div className="mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">
             <div className="grid gap-8 lg:grid-cols-[0.7fr_1fr] lg:items-end">
               <div data-landing-reveal>
-                <p className="text-sm font-semibold text-[#0a8dc1]">Actualités</p>
-                <h2 className="mt-5 text-5xl font-semibold leading-none sm:text-6xl">
+                <p className="cobam-section-kicker text-[#0a8dc1]">Actualités</p>
+                <h2 id="articles-title" className="cobam-display mt-5 text-5xl font-semibold leading-none sm:text-7xl">
                   Des idées à garder sous la main.
                 </h2>
               </div>
               <div className="lg:text-right" data-landing-reveal>
-                <Link href="/actualites" className="cobam-cinematic-action border border-[#14202e]/18">
+                <Link href="/actualites" className="cobam-cinematic-action border border-[#14202e]/18 text-[#14202e] hover:border-[#0a8dc1] hover:text-[#0a8dc1]" data-magnetic>
                   Toutes les actualités
-                  <ArrowRight className="size-4" aria-hidden="true" />
+                  <Newspaper className="size-4" aria-hidden="true" />
                 </Link>
               </div>
             </div>
@@ -746,15 +917,15 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
             <div className="mt-12 grid gap-5 lg:grid-cols-3">
               {latestArticles.map((article, index) => {
                 const imageUrl =
-                  article.coverImageThumbnailUrl ??
                   article.coverImageUrl ??
+                  article.coverImageThumbnailUrl ??
                   "/images/collections/tessino-gris-353x353.jpg";
 
                 return (
                   <Link
                     key={article.id}
                     href={`/actualites/${article.slug}`}
-                    className="group overflow-hidden rounded-lg border border-[#14202e]/10 bg-[#fafaf9] transition hover:-translate-y-1 hover:border-[#0a8dc1]/40 hover:shadow-[0_24px_80px_rgba(20,32,46,0.13)]"
+                    className="group overflow-hidden border border-[#14202e]/10 bg-[#fafaf9] transition hover:-translate-y-1 hover:border-[#0a8dc1]/40 hover:shadow-[0_24px_80px_rgba(20,32,46,0.13)]"
                     data-landing-reveal
                     style={revealDelay(index * 80)}
                   >
@@ -786,14 +957,15 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
         </section>
       ) : null}
 
-      <section className="relative overflow-hidden bg-[#fafaf9] py-20 text-[#14202e] sm:py-28">
-        <div className="mx-auto grid max-w-[1500px] gap-10 px-5 sm:px-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-center lg:px-12">
+      <section className="relative overflow-hidden bg-[#14202e] py-20 text-[#fafaf9] sm:py-28" aria-labelledby="social-title">
+        <div className="absolute inset-0 opacity-25 [background-image:linear-gradient(90deg,rgba(250,250,249,0.12)_1px,transparent_1px),linear-gradient(180deg,rgba(250,250,249,0.08)_1px,transparent_1px)] [background-size:8rem_8rem]" />
+        <div className="relative mx-auto grid max-w-[1500px] gap-10 px-5 sm:px-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-center lg:px-12">
           <div data-landing-reveal>
-            <p className="text-sm font-semibold text-[#0a8dc1]">Réseaux sociaux</p>
-            <h2 className="mt-5 text-5xl font-semibold leading-none sm:text-6xl">
+            <p className="cobam-section-kicker text-[#0a8dc1]">Réseaux sociaux</p>
+            <h2 id="social-title" className="cobam-display mt-5 text-5xl font-semibold leading-none sm:text-7xl">
               Suivez nous
             </h2>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-[#5e5e5e]">
+            <p className="mt-6 max-w-xl text-lg leading-8 text-[#fafaf9]/68">
               Suivez les matières, les projets et les nouveautés.
             </p>
           </div>
@@ -805,16 +977,16 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
                 href={social.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex min-h-28 items-center justify-between rounded-lg border border-[#14202e]/10 bg-[#fafaf9] p-5 text-[#14202e] transition hover:-translate-y-1 hover:border-[#0a8dc1]/50 hover:shadow-[0_24px_70px_rgba(20,32,46,0.12)]"
+                className="cobam-social-card group flex min-h-28 items-center justify-between border border-[#fafaf9]/12 bg-[#fafaf9]/7 p-5 text-[#fafaf9] transition hover:-translate-y-1 hover:border-[#0a8dc1]/60"
                 data-landing-reveal
                 style={revealDelay(index * 45)}
                 aria-label={`Suivre COBAM sur ${social.label}`}
               >
                 <span>
                   <span className="block text-lg font-semibold">{social.label}</span>
-                  <span className="mt-2 block text-sm text-[#5e5e5e]">{social.handle}</span>
+                  <span className="mt-2 block text-sm text-[#fafaf9]/54">{social.handle}</span>
                 </span>
-                <span className="grid size-12 place-items-center rounded-md border border-[#0a8dc1]/24 bg-[#0a8dc1]/10 text-[#0a8dc1] transition group-hover:bg-[#0a8dc1] group-hover:text-[#14202e]">
+                <span className="grid size-12 place-items-center border border-[#0a8dc1]/28 bg-[#0a8dc1]/12 text-[#0a8dc1] transition group-hover:bg-[#0a8dc1] group-hover:text-[#fafaf9]">
                   <social.Icon className="size-5" aria-hidden="true" />
                 </span>
               </a>
@@ -823,8 +995,8 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
         </div>
       </section>
 
-      <section className="relative overflow-hidden bg-[#14202e] py-20 text-[#fafaf9] sm:py-28">
-        <div className="absolute inset-0 opacity-45">
+      <section className="relative overflow-hidden bg-[#14202e] py-20 text-[#fafaf9] sm:py-32" aria-labelledby="final-cta-title">
+        <div className="absolute inset-0 opacity-52">
           <Image
             src="/images/random-images/bathroom-blue-tiles-texture-background.jpg"
             alt=""
@@ -833,21 +1005,25 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
             data-parallax-speed="-0.025"
             className="cobam-cinematic-parallax-scale object-cover"
           />
-          <div className="absolute inset-0 bg-[#14202e]/74" />
+          <div className="absolute inset-0 bg-[#14202e]/76" />
         </div>
         <div className="relative z-10 mx-auto grid max-w-[1500px] gap-8 px-5 sm:px-8 lg:grid-cols-[1fr_auto] lg:items-end lg:px-12">
           <div data-landing-reveal>
-            <p className="text-sm font-semibold text-[#0a8dc1]">Prochaine étape</p>
-            <h2 className="mt-5 max-w-4xl text-5xl font-semibold leading-none sm:text-7xl">
+            <p className="cobam-section-kicker text-[#0a8dc1]">Prochaine étape</p>
+            <h2 id="final-cta-title" className="cobam-display mt-5 max-w-4xl text-5xl font-semibold leading-none sm:text-7xl">
               Construire le bon choix commence ici.
             </h2>
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-[#fafaf9]/66">
+              Ouvrez le catalogue, préparez votre visite ou contactez l&apos;équipe pour donner un cadre
+              clair à votre projet.
+            </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row lg:justify-end" data-landing-reveal>
-            <Link href="/produits" className="cobam-cinematic-action bg-[#0a8dc1] text-[#14202e]">
+            <Link href="/produits" className="cobam-cinematic-action bg-[#0a8dc1] text-[#fafaf9]" data-magnetic>
               Ouvrir le catalogue
               <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
-            <Link href="/contact" className="cobam-cinematic-action border border-[#fafaf9]/24 text-[#fafaf9]">
+            <Link href="/contact" className="cobam-cinematic-action border border-[#fafaf9]/24 text-[#fafaf9]" data-magnetic>
               Nous contacter
               <Compass className="size-4" aria-hidden="true" />
             </Link>
