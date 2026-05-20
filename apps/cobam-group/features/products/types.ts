@@ -92,6 +92,7 @@ export type ProductTypeOptionDto = {
   name: string;
   displayName: string;
   slug: string;
+  hint: string | null;
   description: string | null;
   sortOrder: number;
   hasColor?: boolean;

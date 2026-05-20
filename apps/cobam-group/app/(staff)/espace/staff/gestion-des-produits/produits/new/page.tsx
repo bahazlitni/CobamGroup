@@ -115,9 +115,9 @@ export default function NewSingleProductPage() {
                             <Shapes className="h-4 w-4 text-cobam-water-blue" />
                             {productType.displayName}
                           </span>
-                          {productType.description ? (
+                          {productType.hint ? (
                             <span className="mt-2 block text-sm leading-6 text-slate-500">
-                              {productType.description}
+                              {productType.hint}
                             </span>
                           ) : null}
                         </span>

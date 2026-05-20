@@ -110,9 +110,9 @@ export default function NewProductFamilyPage() {
                             <Shapes className="text-cobam-water-blue h-4 w-4" />
                             {productType.displayName}
                           </span>
-                          {productType.description ? (
+                          {productType.hint ? (
                             <span className="mt-2 block text-sm leading-6 text-slate-500">
-                              {productType.description}
+                              {productType.hint}
                             </span>
                           ) : null}
                         </span>

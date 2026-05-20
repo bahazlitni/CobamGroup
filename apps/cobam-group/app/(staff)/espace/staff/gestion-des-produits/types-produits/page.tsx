@@ -54,6 +54,7 @@ type ProductTypeFormState = {
   name: string;
   displayName: string;
   slug: string;
+  hint: string;
   description: string;
   titleSeo: string;
   descriptionSeo: string;
@@ -102,6 +103,7 @@ function emptyProductTypeForm(): ProductTypeFormState {
     name: "",
     displayName: "",
     slug: "",
+    hint: "",
     description: "",
     titleSeo: "",
     descriptionSeo: "",
@@ -449,6 +451,7 @@ export default function ProductTypesAdminPage() {
       name: productType.name,
       displayName: productType.displayName,
       slug: productType.slug,
+      hint: productType.hint ?? "",
       description: productType.description ?? "",
       titleSeo: productType.titleSeo ?? "",
       descriptionSeo: productType.descriptionSeo ?? "",
@@ -601,6 +604,7 @@ export default function ProductTypesAdminPage() {
         name: productTypeForm.name,
         displayName: productTypeForm.displayName,
         slug: productTypeForm.slug,
+        hint: productTypeForm.hint || null,
         description: productTypeForm.description || null,
         titleSeo: productTypeForm.titleSeo || null,
         descriptionSeo: productTypeForm.descriptionSeo || null,
@@ -864,7 +868,7 @@ export default function ProductTypesAdminPage() {
       ) : null}
 
       {!isLoading && !error ? (
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.85fr)]">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.85fr)] xl:items-start">
           <div className="space-y-6">
             <Panel pretitle="Groupes" title="Groupes de modèles de produits">
               <form
@@ -1093,8 +1097,27 @@ export default function ProductTypesAdminPage() {
                   />
                 </PanelField>
                 <PanelField
+                  id="product-type-hint"
+                  label="Texte d'aide"
+                  hint="Utilisé sur les cartes de création pour indiquer quand choisir ce modèle."
+                  className="lg:col-span-2"
+                >
+                  <Textarea
+                    id="product-type-hint"
+                    value={productTypeForm.hint}
+                    onChange={(event) =>
+                      setProductTypeForm((current) => ({
+                        ...current,
+                        hint: event.target.value,
+                      }))
+                    }
+                    className="rounded-md border-slate-300 bg-white"
+                  />
+                </PanelField>
+                <PanelField
                   id="product-type-description"
-                  label="Description"
+                  label="Description publique"
+                  hint="Utilisée sur la vue publique du type de produit."
                   className="lg:col-span-2"
                 >
                   <Textarea
@@ -1361,6 +1384,7 @@ export default function ProductTypesAdminPage() {
           <Panel
             pretitle={selectedProductType?.displayName ?? "Attributs"}
             title="Attributs préconfigurés"
+            className="xl:sticky xl:top-6 xl:max-h-[calc(100svh-3rem)] xl:overflow-y-auto"
             allowOverflow
           >
             {selectedProductType ? (

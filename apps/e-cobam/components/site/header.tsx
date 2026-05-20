@@ -11,12 +11,12 @@ import { cn } from "@/lib/cn";
 function Logo() {
   return (
     <Link href="/" className="group flex items-center gap-3" aria-label="Accueil e-cobam">
-      <span className="bg-ec-ink group-hover:bg-ec-blue grid size-10 place-items-center rounded-full text-sm font-black text-white transition">
+      <span className="grid size-10 place-items-center rounded-full bg-ec-ink text-sm font-black text-white transition group-hover:bg-ec-blue">
         C
       </span>
       <span className="leading-none">
-        <span className="text-ec-ink block text-lg font-black tracking-[0.16em]">COBAM</span>
-        <span className="text-ec-blue block text-[11px] font-semibold tracking-[0.28em] uppercase">
+        <span className="block text-lg font-black tracking-[0.16em] text-ec-ink">COBAM</span>
+        <span className="block text-[11px] font-semibold uppercase tracking-[0.28em] text-ec-blue">
           e-commerce
         </span>
       </span>
@@ -29,16 +29,16 @@ function SearchForm({ compact = false }: { compact?: boolean }) {
     <form
       action="/catalogue"
       className={cn(
-        "group border-ec-line focus-within:border-ec-blue/50 flex items-center gap-2 rounded-full border bg-white px-4 transition focus-within:shadow-[0_0_0_4px_rgba(10,141,193,0.08)]",
-        compact ? "h-11" : "h-12 w-full",
+        "group flex items-center gap-2 rounded-full border border-ec-line bg-white px-4 transition focus-within:border-ec-blue/50 focus-within:shadow-[0_0_0_4px_rgba(10,141,193,0.08)]",
+        compact ? "h-11 w-full" : "h-12 w-full",
       )}
     >
-      <Search className="text-ec-muted size-4 shrink-0" />
+      <Search className="size-4 shrink-0 text-ec-muted" aria-hidden="true" />
       <input
         name="search"
         type="search"
         placeholder="Produit, marque, référence..."
-        className="text-ec-ink placeholder:text-ec-muted/70 min-w-0 flex-1 bg-transparent text-sm outline-none"
+        className="min-w-0 flex-1 bg-transparent text-sm text-ec-ink outline-none placeholder:text-ec-muted/70"
       />
     </form>
   );
@@ -49,20 +49,23 @@ export function SiteHeader({ categories }: { categories: LandingCategory[] }) {
   const navCategories = categories.filter((category) => category.subcategories.length > 0);
 
   return (
-    <header className="border-ec-line/80 sticky top-0 z-50 border-b bg-ec-paper/95 backdrop-blur-xl">
-      <div className="mx-auto flex h-20 max-w-[92rem] items-center gap-5 px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 border-b border-ec-line/80 bg-white/95 shadow-[0_10px_34px_rgba(20,32,46,0.055)] backdrop-blur-xl">
+      <div className="mx-auto flex h-[4.75rem] max-w-[92rem] items-center gap-5 px-4 sm:px-6 lg:px-8">
         <Logo />
 
-        <div className="ml-auto hidden min-w-0 flex-1 items-center justify-end gap-3 md:flex">
-          <div className="w-[min(44rem,52vw)]">
+        <div className="ml-auto hidden min-w-0 flex-1 items-center justify-end md:flex">
+          <div className="w-[min(42rem,48vw)]">
             <SearchForm />
           </div>
+        </div>
+
+        <div className="hidden items-center gap-2 lg:flex">
           <Link
-            href="/compte"
-            className="border-ec-line text-ec-ink hover:border-ec-blue/40 hover:text-ec-blue grid size-10 place-items-center rounded-full border bg-white transition"
-            aria-label="Compte client"
+            href="/connexion"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-ec-ink px-5 text-sm font-black text-white [color:#fff] shadow-[0_16px_34px_rgba(20,32,46,0.16)] transition hover:bg-ec-blue"
           >
-            <UserRound className="size-5" />
+            <UserRound className="size-4" aria-hidden="true" />
+            Se connecter
           </Link>
           <CustomerNotificationsMenu />
           <Link href="/panier" aria-label="Panier">
@@ -77,48 +80,48 @@ export function SiteHeader({ categories }: { categories: LandingCategory[] }) {
           </Link>
           <button
             type="button"
-            className="border-ec-line text-ec-ink grid size-10 place-items-center rounded-full border bg-white"
+            className="grid size-10 place-items-center rounded-full border border-ec-line bg-white text-ec-ink"
             aria-label="Ouvrir le menu"
             onClick={() => setMobileOpen(true)}
           >
-            <Menu className="size-5" />
+            <Menu className="size-5" aria-hidden="true" />
           </button>
         </div>
       </div>
 
-      <div className="border-ec-line/70 hidden border-t bg-white/72 lg:block">
+      <div className="hidden border-t border-ec-line/70 bg-white lg:block">
         <nav
-          className="mx-auto flex h-12 max-w-[92rem] items-center gap-2 px-4 sm:px-6 lg:px-8"
+          className="mx-auto flex min-h-14 max-w-[92rem] flex-wrap items-center gap-2 px-4 py-2 sm:px-6 lg:px-8"
           aria-label="Categories e-commerce"
         >
           <Link
             href="/catalogue"
-            className="bg-ec-ink hover:bg-ec-blue rounded-full px-4 py-2 text-sm font-black [color:#fff] text-white transition"
+            className="shrink-0 rounded-full bg-ec-ink px-4 py-2 text-sm font-black text-white [color:#fff] transition hover:bg-ec-blue"
           >
-            Catalogue
+            Tous les produits
           </Link>
           <Link
             href="/types-produits"
-            className="text-ec-ink hover:bg-ec-stone hover:text-ec-blue inline-flex h-10 items-center rounded-full px-4 text-sm font-semibold transition"
+            className="inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold text-ec-ink transition hover:bg-ec-stone hover:text-ec-blue"
           >
             Types de produits
           </Link>
 
           {navCategories.map((category) => (
-            <div key={category.slug} className="group relative">
+            <div key={category.slug} className="group relative shrink-0">
               <Link
                 href={category.href}
-                className="text-ec-ink hover:bg-ec-stone hover:text-ec-blue inline-flex h-10 max-w-[13rem] items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition"
+                className="inline-flex h-10 items-center gap-1.5 whitespace-nowrap rounded-full px-4 text-sm font-semibold text-ec-ink transition hover:bg-ec-stone hover:text-ec-blue"
                 aria-haspopup="true"
               >
-                <span className="truncate">{category.name}</span>
+                <span>{category.name}</span>
                 <ChevronDown className="size-4 shrink-0 transition group-hover:rotate-180" />
               </Link>
 
-              <div className="border-ec-line shadow-ec-ink/10 invisible absolute top-full left-0 z-50 w-80 translate-y-2 rounded-[1.25rem] border bg-white p-3 opacity-0 shadow-2xl transition duration-150 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+              <div className="invisible absolute left-0 top-full z-50 w-80 translate-y-2 rounded-2xl border border-ec-line bg-white p-3 opacity-0 shadow-2xl shadow-ec-ink/10 transition duration-150 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
                 <Link
                   href={category.href}
-                  className="bg-ec-paper text-ec-ink hover:bg-ec-stone block rounded-2xl px-4 py-3 text-sm font-black transition"
+                  className="block rounded-xl bg-ec-paper px-4 py-3 text-sm font-black text-ec-ink transition hover:bg-ec-stone"
                 >
                   Tous les produits
                 </Link>
@@ -127,10 +130,10 @@ export function SiteHeader({ categories }: { categories: LandingCategory[] }) {
                     <Link
                       key={subcategory.slug}
                       href={`/catalogue?categorie=${subcategory.slug}`}
-                      className="text-ec-muted hover:bg-ec-paper hover:text-ec-ink flex items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold transition"
+                      className="flex items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold text-ec-muted transition hover:bg-ec-paper hover:text-ec-ink"
                     >
                       <span>{subcategory.name}</span>
-                      <span className="text-ec-muted/70 text-xs">{subcategory.productCount}</span>
+                      <span className="text-xs text-ec-muted/70">{subcategory.productCount}</span>
                     </Link>
                   ))}
                 </div>
@@ -142,7 +145,7 @@ export function SiteHeader({ categories }: { categories: LandingCategory[] }) {
 
       {mobileOpen ? (
         <div
-          className="bg-ec-ink/30 fixed inset-0 z-50 lg:hidden"
+          className="fixed inset-0 z-50 bg-ec-ink/30 lg:hidden"
           onClick={() => setMobileOpen(false)}
         >
           <aside
@@ -153,11 +156,11 @@ export function SiteHeader({ categories }: { categories: LandingCategory[] }) {
               <Logo />
               <button
                 type="button"
-                className="border-ec-line grid size-10 place-items-center rounded-full border bg-white"
+                className="grid size-10 place-items-center rounded-full border border-ec-line bg-white"
                 aria-label="Fermer le menu"
                 onClick={() => setMobileOpen(false)}
               >
-                <X className="size-5" />
+                <X className="size-5" aria-hidden="true" />
               </button>
             </div>
 
@@ -165,32 +168,39 @@ export function SiteHeader({ categories }: { categories: LandingCategory[] }) {
               <SearchForm compact />
             </div>
 
-            <nav className="mt-8 flex flex-col gap-2">
+            <nav className="mt-8 flex flex-col gap-2 overflow-y-auto pb-8">
+              <Link
+                href="/connexion"
+                onClick={() => setMobileOpen(false)}
+                className="rounded-2xl bg-ec-ink px-4 py-4 text-base font-black text-white [color:#fff]"
+              >
+                Se connecter
+              </Link>
               <Link
                 href="/catalogue"
                 onClick={() => setMobileOpen(false)}
-                className="text-ec-ink rounded-2xl bg-white px-4 py-4 text-base font-semibold"
+                className="rounded-2xl bg-white px-4 py-4 text-base font-semibold text-ec-ink"
               >
                 Tous les produits
               </Link>
               <Link
                 href="/types-produits"
                 onClick={() => setMobileOpen(false)}
-                className="text-ec-ink rounded-2xl bg-white px-4 py-4 text-base font-semibold"
+                className="rounded-2xl bg-white px-4 py-4 text-base font-semibold text-ec-ink"
               >
                 Explorer par type
               </Link>
               {navCategories.map((category) => (
                 <details key={category.slug} className="rounded-2xl bg-white/60 px-4 py-2">
-                  <summary className="text-ec-ink flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-base font-semibold">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-base font-semibold text-ec-ink">
                     {category.name}
-                    <ChevronDown className="size-4" />
+                    <ChevronDown className="size-4" aria-hidden="true" />
                   </summary>
-                  <div className="border-ec-line/70 border-t py-2">
+                  <div className="border-t border-ec-line/70 py-2">
                     <Link
                       href={category.href}
                       onClick={() => setMobileOpen(false)}
-                      className="text-ec-blue block rounded-xl px-3 py-2 text-sm font-black"
+                      className="block rounded-xl px-3 py-2 text-sm font-black text-ec-blue"
                     >
                       Tous les produits
                     </Link>
@@ -199,7 +209,7 @@ export function SiteHeader({ categories }: { categories: LandingCategory[] }) {
                         key={subcategory.slug}
                         href={`/catalogue?categorie=${subcategory.slug}`}
                         onClick={() => setMobileOpen(false)}
-                        className="text-ec-muted flex items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold"
+                        className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold text-ec-muted"
                       >
                         <span>{subcategory.name}</span>
                         <span className="text-xs">{subcategory.productCount}</span>

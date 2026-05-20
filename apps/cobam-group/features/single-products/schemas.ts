@@ -133,6 +133,14 @@ function parseOptionalPositiveInteger(value: unknown, fieldName: string) {
   return parsed;
 }
 
+function parseRequiredPositiveInteger(value: unknown, fieldName: string) {
+  const parsed = parseOptionalPositiveInteger(value, fieldName);
+  if (parsed == null) {
+    throw new SingleProductsValidationError(`Champ requis: ${fieldName}.`);
+  }
+  return parsed;
+}
+
 function parseOptionalInteger(value: unknown, fieldName: string, fallback = 0) {
   if (value == null || value === "") {
     return fallback;
@@ -251,7 +259,7 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
   const defaultVisible = lifecycle !== "DRAFT";
 
   return {
-    productTypeId: parseOptionalPositiveInteger(record.productTypeId, "productTypeId"),
+    productTypeId: parseRequiredPositiveInteger(record.productTypeId, "productTypeId"),
     sku: parseRequiredString(record.sku, "sku"),
     slug: parseRequiredString(record.slug, "slug"),
     name,

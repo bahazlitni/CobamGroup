@@ -30,6 +30,13 @@ export class ProductServiceError extends Error {
   }
 }
 
+function requireProductTypeId(productTypeId: number | null | undefined) {
+  if (productTypeId == null) {
+    throw new ProductServiceError("Un modèle de produit est requis.");
+  }
+  return BigInt(productTypeId);
+}
+
 const STAFF_MEDIA_SELECT = {
   id: true,
   kind: true,
@@ -235,7 +242,7 @@ function mapVariant(
 
   return {
     id: Number(record.id),
-    productTypeId: record.productTypeId == null ? null : Number(record.productTypeId),
+    productTypeId: Number(record.productTypeId),
     sku: record.sku,
     slug: record.slug,
     name: record.name,
@@ -574,7 +581,7 @@ async function writeFamily(familyId: number | null, input: ProductFamilyUpsertIn
           sku: variant.sku,
           slug: variant.slug,
           kind: "VARIANT",
-          productTypeId: variant.productTypeId == null ? null : BigInt(variant.productTypeId),
+          productTypeId: requireProductTypeId(variant.productTypeId),
           name: variant.name,
           displayName: variant.displayName,
           richTextDescription: stringToRichTextDescription(variant.description),
@@ -694,6 +701,7 @@ export async function getProductFormOptionsService(
         name: true,
         displayName: true,
         slug: true,
+        hint: true,
         description: true,
         sortOrder: true,
         hasColor: true,
@@ -780,6 +788,7 @@ export async function getProductFormOptionsService(
       name: productType.name,
       displayName: productType.displayName,
       slug: productType.slug,
+      hint: productType.hint,
       description: productType.description,
       sortOrder: productType.sortOrder,
       hasColor: productType.hasColor,

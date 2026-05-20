@@ -6,26 +6,22 @@ import type { ProductLifecycle } from "@prisma/client";
 import { ExternalLink, Package } from "lucide-react";
 import { toast } from "sonner";
 import Loading from "@/components/staff/Loading";
+import ArticleRichTextEditor from "@/components/staff/articles/article-rich-text-editor";
 import ProductMediaGrid from "@/components/staff/products/ProductMediaGrid";
 import ProductSubcategoriesField from "@/components/staff/products/ProductSubcategoriesField";
 import Panel from "@/components/staff/ui/Panel";
+import PanelAttributesInput from "@/components/staff/ui/PanelAttributesInput";
 import PanelField from "@/components/staff/ui/PanelField";
 import PanelInput from "@/components/staff/ui/PanelInput";
 import {
-  AiPanelAttributesInput,
-  AiPanelRichText,
-  AiPanelTagsInput,
   DescriptionSEOTextArea,
   StaffPageHeader,
   StaffPdfImporter,
   StaffSelect,
   StaffStateCard,
+  StaffTagInput,
   UnsavedChangesGuard,
 } from "@/components/staff/ui";
-import {
-  AiSuggestionActionsRow,
-  AI_SUGGESTION_TOKEN_CLASS,
-} from "@/components/staff/ui/ai-suggestion";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
 import type { ProductAttributeInputDto, ProductTypeOptionDto } from "@/features/products/types";
@@ -43,30 +39,17 @@ import {
   getSingleProductClient,
   getSingleProductFormOptionsClient,
   SingleProductsClientError,
-  suggestSingleProductAiClient,
   updateSingleProductClient,
 } from "@/features/single-products/client";
 import type {
-  SingleProductAiSuggestionResponse,
   SingleProductDetailDto,
   SingleProductFormOptionsDto,
   SingleProductUpsertInput,
 } from "@/features/single-products/types";
 import { slugify } from "@/lib/slugify";
 import ProductEssentialEntries from "@/components/staff/products/ProductEssentialEntries";
-import { getArticlePlainText } from "@/features/articles/document";
-import { cn } from "@/lib/utils";
 import formatEnumLabel from "@/lib/formatEnumLabel";
 import { Checkbox } from "@/components/ui/checkbox";
-
-type SimpleProductAiSuggestions = {
-  descriptionPreview: string | null;
-  descriptionRichText: string | null;
-  descriptionSeo: string | null;
-  tags: string[] | null;
-  attributes: ProductAttributeInputDto[] | null;
-  subcategoryIds: number[] | null;
-};
 
 type LinkedProductFields = {
   displayName: boolean;
@@ -77,41 +60,6 @@ type LinkedProductFields = {
 
 const TITLE_SEO_MAX_LENGTH = 60;
 const TITLE_SEO_SUFFIX = " | COBAM GROUP";
-
-function emptyAiSuggestions(): SimpleProductAiSuggestions {
-  return {
-    descriptionPreview: null,
-    descriptionRichText: null,
-    descriptionSeo: null,
-    tags: null,
-    attributes: null,
-    subcategoryIds: null,
-  };
-}
-
-function hasActiveAiSuggestions(suggestions: SimpleProductAiSuggestions) {
-  return Boolean(
-    suggestions.descriptionRichText ||
-    suggestions.descriptionSeo ||
-    suggestions.tags?.length ||
-    suggestions.attributes?.length ||
-    suggestions.subcategoryIds?.length,
-  );
-}
-
-function mapAiResponseToSuggestions(
-  response: SingleProductAiSuggestionResponse,
-): SimpleProductAiSuggestions {
-  return {
-    descriptionPreview:
-      getArticlePlainText(response.descriptionRichText) || response.descriptionText || null,
-    descriptionRichText: response.descriptionRichText || null,
-    descriptionSeo: response.descriptionSeo || null,
-    tags: response.tags.length > 0 ? response.tags : null,
-    attributes: response.attributes.length > 0 ? response.attributes : null,
-    subcategoryIds: response.subcategoryIds.length > 0 ? response.subcategoryIds : null,
-  };
-}
 
 function buildLinkedTitleSeo(name: string) {
   const baseName = name.trim();
@@ -145,50 +93,8 @@ function getLinkedProductFields(form: SingleProductUpsertInput): LinkedProductFi
   };
 }
 
-function normalizeText(value: string | null | undefined) {
-  return (value ?? "").trim().toLocaleLowerCase("fr-FR");
-}
-
 function splitTags(value: string) {
   return value.split(" ").filter((tag) => tag.trim() !== "");
-}
-
-function mergeTags(currentTags: string[], suggestedTags: string[]) {
-  const seen = new Set<string>();
-
-  return [...currentTags, ...suggestedTags].filter((tag) => {
-    const key = normalizeText(tag);
-
-    if (!key || seen.has(key)) {
-      return false;
-    }
-
-    seen.add(key);
-    return true;
-  });
-}
-
-function areAttributesEqual(left: ProductAttributeInputDto[], right: ProductAttributeInputDto[]) {
-  if (left.length !== right.length) {
-    return false;
-  }
-
-  return left.every((attribute, index) => {
-    const other = right[index];
-
-    return (
-      normalizeText(attribute.kind) === normalizeText(other?.kind) &&
-      normalizeText(attribute.value) === normalizeText(other?.value)
-    );
-  });
-}
-
-function areNumberArraysEqual(left: number[], right: number[]) {
-  if (left.length !== right.length) {
-    return false;
-  }
-
-  return left.every((value, index) => value === right[index]);
 }
 
 function createEmptyFormState(): SingleProductUpsertInput {
@@ -374,10 +280,6 @@ function SingleProductEditPageContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [aiSuggestions, setAiSuggestions] =
-    useState<SimpleProductAiSuggestions>(emptyAiSuggestions);
-  const [isAiSuggesting, setIsAiSuggesting] = useState(false);
-  const [aiSuggestionError, setAiSuggestionError] = useState<string | null>(null);
 
   const onAttributesChange = (attributes: ProductAttributeInputDto[]) => {
     setForm((current) => ({ ...current, attributes }));
@@ -394,51 +296,6 @@ function SingleProductEditPageContent() {
     [form.productTypeId, options],
   );
   const lockAttributes = form.productTypeId != null;
-
-  const rejectAiSuggestion = (field: keyof SimpleProductAiSuggestions) => {
-    setAiSuggestions((current) => ({
-      ...current,
-      [field]: null,
-      ...(field === "descriptionPreview"
-        ? {
-            descriptionRichText: null,
-          }
-        : {}),
-      ...(field === "descriptionRichText"
-        ? {
-            descriptionPreview: null,
-          }
-        : {}),
-    }));
-  };
-
-  const rejectAllAiSuggestions = () => {
-    setAiSuggestions(emptyAiSuggestions());
-  };
-
-  const acceptAllAiSuggestions = () => {
-    setForm((current) => ({
-      ...(() => {
-        const nextForm = {
-          ...current,
-          description: aiSuggestions.descriptionRichText ?? current.description,
-          descriptionSeo: aiSuggestions.descriptionSeo ?? current.descriptionSeo,
-          tags: aiSuggestions.tags?.length
-            ? mergeTags(splitTags(current.tags), aiSuggestions.tags).join(" ")
-            : current.tags,
-          attributes:
-            !current.productTypeId && aiSuggestions.attributes?.length
-              ? aiSuggestions.attributes
-              : current.attributes,
-          subcategoryIds: aiSuggestions.subcategoryIds?.length
-            ? aiSuggestions.subcategoryIds
-            : current.subcategoryIds,
-        };
-        return nextForm;
-      })(),
-    }));
-    setAiSuggestions(emptyAiSuggestions());
-  };
 
   useEffect(() => {
     let cancelled = false;
@@ -497,106 +354,6 @@ function SingleProductEditPageContent() {
   }, [isEdit, productId, requestedProductTypeId, requestedProductTypeIsValid]);
 
   const isDirty = useMemo(() => JSON.stringify(form) !== initialSnapshot, [form, initialSnapshot]);
-
-  const handleGenerateAiSuggestions = async () => {
-    if (!canSave) {
-      toast.error("Acces refuse.");
-      return;
-    }
-
-    if (!form.name.trim()) {
-      toast.error("Le nom du produit est requis pour utiliser l'IA.");
-      return;
-    }
-
-    setIsAiSuggesting(true);
-    setAiSuggestionError(null);
-
-    try {
-      const response = await suggestSingleProductAiClient({
-        name: form.name,
-        description: getArticlePlainText(form.description),
-        descriptionSeo: form.descriptionSeo,
-        tags: splitTags(form.tags),
-        attributes: form.attributes,
-        datasheetUrl: form.datasheet?.url ?? null,
-        mediaUrls: form.media.map((media) => media.url),
-        brand: form.brand,
-        subcategoryOptions: options.productSubcategories,
-      });
-      const nextSuggestions = mapAiResponseToSuggestions(response);
-      const nextForm = { ...form };
-      const pendingSuggestions = emptyAiSuggestions();
-      const currentDescription = getArticlePlainText(form.description);
-      const currentTags = splitTags(form.tags);
-      const mergedTags = nextSuggestions.tags?.length
-        ? mergeTags(currentTags, nextSuggestions.tags)
-        : currentTags;
-      const allowedSubcategoryIds = new Set(
-        options.productSubcategories.map((option) => option.id),
-      );
-      const validSuggestedSubcategoryIds =
-        nextSuggestions.subcategoryIds?.filter((id) => allowedSubcategoryIds.has(id)) ?? [];
-
-      if (nextSuggestions.descriptionRichText) {
-        if (!currentDescription.trim()) {
-          nextForm.description = nextSuggestions.descriptionRichText;
-        } else if (form.description !== nextSuggestions.descriptionRichText) {
-          pendingSuggestions.descriptionPreview = nextSuggestions.descriptionPreview;
-          pendingSuggestions.descriptionRichText = nextSuggestions.descriptionRichText;
-        }
-      }
-
-      if (nextSuggestions.descriptionSeo) {
-        if (!normalizeText(form.descriptionSeo)) {
-          nextForm.descriptionSeo = nextSuggestions.descriptionSeo;
-        } else if (
-          normalizeText(form.descriptionSeo) !== normalizeText(nextSuggestions.descriptionSeo)
-        ) {
-          pendingSuggestions.descriptionSeo = nextSuggestions.descriptionSeo;
-        }
-      }
-
-      if (nextSuggestions.tags?.length) {
-        if (currentTags.length === 0) {
-          nextForm.tags = nextSuggestions.tags.join(" ");
-        } else if (
-          mergedTags.length !== currentTags.length ||
-          mergedTags.some((tag, index) => tag !== currentTags[index])
-        ) {
-          pendingSuggestions.tags = nextSuggestions.tags;
-        }
-      }
-
-      if (!form.productTypeId && nextSuggestions.attributes?.length) {
-        if (form.attributes.length === 0) {
-          nextForm.attributes = nextSuggestions.attributes;
-        } else if (!areAttributesEqual(form.attributes, nextSuggestions.attributes)) {
-          pendingSuggestions.attributes = nextSuggestions.attributes;
-        }
-      }
-
-      if (validSuggestedSubcategoryIds.length > 0) {
-        if (form.subcategoryIds.length === 0) {
-          nextForm.subcategoryIds = validSuggestedSubcategoryIds;
-        } else if (!areNumberArraysEqual(form.subcategoryIds, validSuggestedSubcategoryIds)) {
-          pendingSuggestions.subcategoryIds = validSuggestedSubcategoryIds;
-        }
-      }
-
-      setForm(nextForm);
-      setAiSuggestions(pendingSuggestions);
-      toast.success("L'IA a complete les champs vides et prepare les remplacements utiles.");
-    } catch (error: unknown) {
-      setAiSuggestions(emptyAiSuggestions());
-      const message =
-        error instanceof Error ? error.message : "Impossible de generer les suggestions IA.";
-      setAiSuggestionError(message);
-      toast.error(message);
-    } finally {
-      setIsAiSuggesting(false);
-    }
-  };
 
   const handleSave = async () => {
     if (!canSave) {
@@ -848,20 +605,11 @@ function SingleProductEditPageContent() {
                   descriptionSeo: value || null,
                 }))
               }
-              aiSuggestion={aiSuggestions.descriptionSeo}
-              onAcceptAiSuggestion={(value) => {
-                setForm((current) => ({
-                  ...current,
-                  descriptionSeo: value || null,
-                }));
-                rejectAiSuggestion("descriptionSeo");
-              }}
-              onRejectAiSuggestion={() => rejectAiSuggestion("descriptionSeo")}
             />
           </PanelField>
 
           <PanelField className="md:col-span-2 xl:col-span-3" id="product-tags" label="Tags">
-            <AiPanelTagsInput
+            <StaffTagInput
               id="product-tags"
               value={splitTags(form.tags)}
               onChange={(tags) =>
@@ -870,15 +618,6 @@ function SingleProductEditPageContent() {
                   tags: tags.join(" "),
                 }))
               }
-              aiSuggestion={aiSuggestions.tags}
-              onAcceptAiSuggestion={(tags) => {
-                setForm((current) => ({
-                  ...current,
-                  tags: tags.join(" "),
-                }));
-                rejectAiSuggestion("tags");
-              }}
-              onRejectAiSuggestion={() => rejectAiSuggestion("tags")}
             />
           </PanelField>
         </div>
@@ -894,41 +633,8 @@ function SingleProductEditPageContent() {
           }
         />
 
-        {aiSuggestions.subcategoryIds?.length ? (
-          <PanelField id="product-subcategories-ai" label="Suggestion IA de sous-catégories">
-            <div className="space-y-3">
-              <div className="flex flex-wrap gap-2">
-                {options.productSubcategories
-                  .filter((option) => aiSuggestions.subcategoryIds?.includes(option.id))
-                  .map((subcategory) => (
-                    <span
-                      key={subcategory.id}
-                      className={cn(
-                        "inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium",
-                        AI_SUGGESTION_TOKEN_CLASS,
-                      )}
-                    >
-                      {subcategory.categoryName} / {subcategory.name}
-                    </span>
-                  ))}
-              </div>
-              <AiSuggestionActionsRow
-                suggestion={aiSuggestions.subcategoryIds}
-                onAcceptSuggestion={(subcategoryIds) => {
-                  setForm((current) => ({
-                    ...current,
-                    subcategoryIds,
-                  }));
-                  rejectAiSuggestion("subcategoryIds");
-                }}
-                onRejectSuggestion={() => rejectAiSuggestion("subcategoryIds")}
-              />
-            </div>
-          </PanelField>
-        ) : null}
-
         <PanelField id="product-description" label="Description">
-          <AiPanelRichText
+          <ArticleRichTextEditor
             editorId="product-description"
             value={form.description ?? ""}
             onChange={(value) =>
@@ -941,27 +647,6 @@ function SingleProductEditPageContent() {
                     },
               )
             }
-            aiSuggestion={aiSuggestions.descriptionRichText}
-            aiSuggestionPreview={aiSuggestions.descriptionPreview}
-            onAcceptAiSuggestion={(value) => {
-              setForm((current) => {
-                if (current.description === value) {
-                  return current;
-                }
-
-                const nextForm = {
-                  ...current,
-                  description: value,
-                };
-                return nextForm;
-              });
-              setAiSuggestions((current) => ({
-                ...current,
-                descriptionPreview: null,
-                descriptionRichText: null,
-              }));
-            }}
-            onRejectAiSuggestion={() => rejectAiSuggestion("descriptionRichText")}
             placeholder="Description du produit..."
           />
         </PanelField>
@@ -1210,72 +895,14 @@ function SingleProductEditPageContent() {
         pretitle={selectedProductType ? selectedProductType.displayName : "Attributs"}
         title="Valeurs du produit"
       >
-        <AiPanelAttributesInput
+        <PanelAttributesInput
           attributes={form.attributes}
           onAttributesChange={onAttributesChange}
-          aiSuggestion={lockAttributes ? null : aiSuggestions.attributes}
-          onAcceptAiSuggestion={(attributes) => {
-            setForm((current) => ({
-              ...current,
-              attributes,
-            }));
-            rejectAiSuggestion("attributes");
-          }}
-          onRejectAiSuggestion={() => rejectAiSuggestion("attributes")}
           lockKinds={lockAttributes}
           canAddAttributes={!lockAttributes}
           canRemoveAttributes={!lockAttributes}
         />
       </Panel>
-
-      {form.name.trim() ||
-      isAiSuggesting ||
-      aiSuggestionError ||
-      hasActiveAiSuggestions(aiSuggestions) ? (
-        <div className="border-cobam-water-blue/15 bg-cobam-water-blue/5 text-cobam-dark-blue flex flex-wrap items-center gap-3 rounded-lg border px-4 py-3 text-sm">
-          <AnimatedUIButton
-            type="button"
-            variant="ghost"
-            color="secondary"
-            size="sm"
-            onClick={() => void handleGenerateAiSuggestions()}
-            disabled={!form.name.trim() || isAiSuggesting}
-            loading={isAiSuggesting}
-            loadingText="Generation..."
-          >
-            Continuer avec l&apos;IA
-          </AnimatedUIButton>
-          <span className="font-medium">
-            {isAiSuggesting
-              ? "L'IA prepare des suggestions..."
-              : aiSuggestionError
-                ? aiSuggestionError
-                : "Suggestions IA disponibles."}
-          </span>
-          {hasActiveAiSuggestions(aiSuggestions) ? (
-            <>
-              <AnimatedUIButton
-                type="button"
-                variant="ghost"
-                color="secondary"
-                size="sm"
-                onClick={acceptAllAiSuggestions}
-              >
-                Accepter tout
-              </AnimatedUIButton>
-              <AnimatedUIButton
-                type="button"
-                variant="ghost"
-                color="error"
-                size="sm"
-                onClick={rejectAllAiSuggestions}
-              >
-                Rejeter tout
-              </AnimatedUIButton>
-            </>
-          ) : null}
-        </div>
-      ) : null}
 
       <div className="flex flex-wrap gap-3">
         <AnimatedUIButton

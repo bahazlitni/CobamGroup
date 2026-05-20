@@ -38,6 +38,13 @@ export class SingleProductsServiceError extends Error {
   }
 }
 
+function requireProductTypeId(productTypeId: number | null | undefined) {
+  if (productTypeId == null) {
+    throw new SingleProductsServiceError("Un modèle de produit est requis.");
+  }
+  return BigInt(productTypeId);
+}
+
 const STAFF_MEDIA_SELECT = {
   id: true,
   kind: true,
@@ -161,7 +168,7 @@ function mapSingleProductDetail(record: SingleProductRecord): SingleProductDetai
 
   return {
     id: Number(record.id),
-    productTypeId: record.productTypeId == null ? null : Number(record.productTypeId),
+    productTypeId: Number(record.productTypeId),
     sku: record.sku,
     slug: record.slug,
     name: record.name,
@@ -330,7 +337,7 @@ async function writeSingleProduct(productId: number | null, input: SingleProduct
               sku: input.sku,
               slug: input.slug,
               kind: "STANDARD",
-              productTypeId: input.productTypeId == null ? null : BigInt(input.productTypeId),
+              productTypeId: requireProductTypeId(input.productTypeId),
               name: input.name,
               displayName: input.displayName,
               richTextDescription: stringToRichTextDescription(input.description),
@@ -364,7 +371,7 @@ async function writeSingleProduct(productId: number | null, input: SingleProduct
             data: {
               sku: input.sku,
               slug: input.slug,
-              productTypeId: input.productTypeId == null ? null : BigInt(input.productTypeId),
+              productTypeId: requireProductTypeId(input.productTypeId),
               name: input.name,
               displayName: input.displayName,
               richTextDescription: stringToRichTextDescription(input.description),

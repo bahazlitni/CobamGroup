@@ -131,6 +131,14 @@ function parseOptionalPositiveInteger(value: unknown, fieldName: string) {
   return parsed;
 }
 
+function parseRequiredPositiveInteger(value: unknown, fieldName: string) {
+  const parsed = parseOptionalPositiveInteger(value, fieldName);
+  if (parsed == null) {
+    throw new ProductValidationError(`Champ requis: ${fieldName}.`);
+  }
+  return parsed;
+}
+
 function parseOptionalInteger(value: unknown, fieldName: string, fallback = 0) {
   if (value == null || value === "") {
     return fallback;
@@ -255,7 +263,7 @@ function parseVariant(input: unknown): ProductVariantInputDto {
             }
             return parsed;
           })(),
-    productTypeId: parseOptionalPositiveInteger(record.productTypeId, "variant.productTypeId"),
+    productTypeId: parseRequiredPositiveInteger(record.productTypeId, "variant.productTypeId"),
     sku: parseRequiredString(record.sku, "variant.sku"),
     slug: parseRequiredString(record.slug, "variant.slug"),
     name,

@@ -371,6 +371,7 @@ export function parseProductTypeInput(value: unknown): ProductTaxonomyTypeInput 
     name: requiredString(record.name, "Le nom"),
     displayName: requiredLimitedString(record.displayName ?? record.name, "Le nom affiche", 255),
     slug: requiredString(record.slug, "Le slug"),
+    hint: optionalString(record.hint),
     description: optionalString(record.description),
     titleSeo: optionalLimitedString(record.titleSeo, "Le titre SEO", 60),
     descriptionSeo: optionalLimitedString(record.descriptionSeo, "La description SEO", 160),
@@ -551,6 +552,7 @@ function mapProductType(record: {
   name: string;
   displayName: string;
   slug: string;
+  hint: string | null;
   description: string | null;
   titleSeo: string | null;
   descriptionSeo: string | null;
@@ -575,6 +577,7 @@ function mapProductType(record: {
     name: record.name,
     displayName: record.displayName,
     slug: record.slug,
+    hint: record.hint,
     description: record.description,
     titleSeo: record.titleSeo,
     descriptionSeo: record.descriptionSeo,
@@ -820,6 +823,7 @@ function getProductTypeData(input: ProductTaxonomyTypeInput) {
     name: input.name,
     displayName: input.displayName,
     slug: input.slug,
+    hint: input.hint,
     description: input.description,
     titleSeo: input.titleSeo,
     descriptionSeo: input.descriptionSeo,

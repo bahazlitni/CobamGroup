@@ -3,16 +3,16 @@
 :root {
   --ec-primary: #14202e;
   --ec-secondary: #0a8dc1;
-  --ec-background: #eeeeee;
-  --ec-border: #d3d3d3;
+  --ec-background: #fafaf7;
+  --ec-border: #dbe2ea;
   --ec-paper: var(--ec-background);
   --ec-ink: #14202e;
   --ec-muted: #647184;
   --ec-line: var(--ec-border);
   --ec-blue: #0a8dc1;
   --ec-brass: #b08a5a;
-  --ec-stone: color-mix(in srgb, var(--ec-background) 86%, white);
-  --ec-stone-strong: color-mix(in srgb, var(--ec-background) 72%, var(--ec-primary));
+  --ec-stone: #f1eee8;
+  --ec-stone-strong: #e5ded2;
   --ec-white: #ffffff;
   --font-sans: "Sora", "Aptos", "Segoe UI", Arial, sans-serif;
   --font-serif: "Source Serif 4", Georgia, serif;
@@ -106,32 +106,123 @@
   }
 }
 
-@keyframes storefrontHeroSlide {
+@keyframes ecomHeroSlide {
   0% {
     opacity: 0;
-    transform: scale(1.02);
+    transform: scale(1.04) translate3d(0, 0, 0);
   }
 
   8%,
   31% {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1) translate3d(0, 0, 0);
   }
 
   39%,
   100% {
     opacity: 0;
-    transform: scale(1.03);
+    transform: scale(1.05) translate3d(-1.5%, 0, 0);
   }
 }
 
-.storefront-hero-slide {
-  opacity: 0;
-  animation: storefrontHeroSlide 13.5s ease-in-out infinite;
+.ecom-hero {
+  isolation: isolate;
 }
 
-.storefront-hero-slide:first-child {
+.ecom-hero-slide {
+  opacity: 0;
+  animation: ecomHeroSlide 14.4s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+.ecom-hero-slide:first-child {
   opacity: 1;
+}
+
+.ecom-technical-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    radial-gradient(circle at 18% 28%, rgba(10, 141, 193, 0.28), transparent 30rem),
+    radial-gradient(circle at 82% 18%, rgba(176, 138, 90, 0.18), transparent 28rem);
+  background-position:
+    center,
+    center,
+    center,
+    center;
+  background-size:
+    5.5rem 5.5rem,
+    5.5rem 5.5rem,
+    auto,
+    auto;
+  mask-image: linear-gradient(90deg, #000, rgba(0, 0, 0, 0.42) 68%, transparent);
+  pointer-events: none;
+}
+
+.ecom-noise {
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.12) 0 1px, transparent 1px),
+    radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px);
+  background-size: 3px 3px, 5px 5px;
+  mix-blend-mode: soft-light;
+  opacity: 0.24;
+  pointer-events: none;
+}
+
+.ecom-search-panel {
+  border-radius: 0.5rem;
+  backdrop-filter: blur(18px);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.66);
+}
+
+.ecom-hero-orbit {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 1.5rem;
+  transform: rotate(-5deg) scale(0.94);
+  transform-origin: 50% 50%;
+}
+
+.ecom-hero-orbit::before,
+.ecom-hero-orbit::after {
+  content: "";
+  position: absolute;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.ecom-hero-orbit::before {
+  inset: 10%;
+  border: 1px solid rgba(10, 141, 193, 0.22);
+}
+
+.ecom-hero-orbit::after {
+  inset: 22% -8% 12% 16%;
+  border: 1px solid rgba(176, 138, 90, 0.2);
+}
+
+.ecom-brand-marquee {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+
+.ecom-brand-marquee-track {
+  display: inline-flex;
+  width: max-content;
+  gap: 1rem;
+  padding-inline: 1rem;
+  animation: ecomBrandMarquee 36s linear infinite;
+}
+
+.ecom-brand-marquee:hover .ecom-brand-marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes ecomBrandMarquee {
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -139,12 +230,25 @@
     scroll-behavior: auto;
   }
 
-  .storefront-hero-slide {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .ecom-hero-slide {
     animation: none;
     opacity: 0;
   }
 
-  .storefront-hero-slide:first-child {
+  .ecom-hero-slide:first-child {
     opacity: 1;
+  }
+
+  .ecom-brand-marquee-track {
+    animation: none;
   }
 }

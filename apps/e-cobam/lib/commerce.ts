@@ -1146,17 +1146,12 @@ export async function listCommerceProductTypes(): Promise<CommerceProductTypeGro
     }),
     db.product.groupBy({
       by: ["productTypeId"],
-      where: {
-        ...productBaseWhere({}),
-        productTypeId: { not: null },
-      },
+      where: productBaseWhere({}),
       _count: { _all: true },
     }),
   ]);
   const counts = new Map(
-    countRows
-      .filter((row) => row.productTypeId != null)
-      .map((row) => [row.productTypeId!.toString(), row._count._all]),
+    countRows.map((row) => [row.productTypeId.toString(), row._count._all]),
   );
   const groups = new Map<string, CommerceProductTypeGroup>();
 

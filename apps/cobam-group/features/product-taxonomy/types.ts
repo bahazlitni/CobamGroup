@@ -58,6 +58,7 @@ export type ProductTaxonomyTypeDto = {
   name: string;
   displayName: string;
   slug: string;
+  hint: string | null;
   description: string | null;
   titleSeo: string | null;
   descriptionSeo: string | null;
@@ -93,6 +94,7 @@ export type ProductTaxonomyTypeInput = {
   name: string;
   displayName: string;
   slug: string;
+  hint: string | null;
   description: string | null;
   titleSeo: string | null;
   descriptionSeo: string | null;
