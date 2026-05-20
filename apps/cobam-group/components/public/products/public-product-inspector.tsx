@@ -605,12 +605,7 @@ export default function PublicProductInspectorView({
                 ))}
               </div>
 
-              <div className="mt-7 rounded-[1.35rem] border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm leading-7 text-slate-600">
-                  Notre equipe vous accompagne pour la disponibilité, les conseils techniques et
-                  le choix du produit adapte a votre projet.
-                </p>
-                <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div className="flex gap-3 flex-wrap items-center mt-7 rounded-[1.35rem] border border-slate-200 bg-slate-50 p-4">
                   <ProductDevisDialog
                     productName={selectedVariant.displayName}
                     sku={selectedVariant.sku}
@@ -622,13 +617,6 @@ export default function PublicProductInspectorView({
                   >
                     Contacter un conseiller
                   </Link>
-                  {selectedVariant.datasheet ? (
-                    <DatasheetLink
-                      url={selectedVariant.datasheet.url}
-                      label="Consulter la fiche technique"
-                    />
-                  ) : null}
-                </div>
               </div>
             </header>
 

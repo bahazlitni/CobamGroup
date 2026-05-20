@@ -37,6 +37,8 @@ function MediaPreview({
         fill
         priority={priority}
         sizes="(min-width: 1024px) 44vw, 100vw"
+        quality={100}
+        unoptimized
         className="object-contain p-5 sm:p-8"
       />
     );
@@ -175,6 +177,8 @@ export default function Carousel({ media, title, datasheetUrl }: CarouselProps) 
               alt={activeMedia.altText ?? activeMedia.title ?? title}
               fill
               sizes="92vw"
+              quality={100}
+              unoptimized
               className="object-contain p-6 sm:p-10"
             />
           </div>

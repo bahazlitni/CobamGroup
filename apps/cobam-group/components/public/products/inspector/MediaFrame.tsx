@@ -24,6 +24,7 @@ export default function MediaFrame({
                 sizes={isThumbnail ? "272px" : "100vw"}
                 className="object-cover"
                 quality={quality}
+                unoptimized={!isThumbnail}
                 draggable={false}
             />
             );
