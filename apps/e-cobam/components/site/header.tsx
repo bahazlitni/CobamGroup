@@ -14,7 +14,6 @@ const primaryLinks = [
   { href: "/catalogue?sélection=promotion", label: "Promotions" },
   { href: "/#best-sellers", label: "Meilleures ventes" },
   { href: "/#new-arrivals", label: "Nouveautés" },
-  { href: "/favoris", label: "Mes favoris" },
   { href: "/suivi-commande", label: "Suivi commande" },
 ];
 

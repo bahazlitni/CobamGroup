@@ -46,7 +46,7 @@ export function ProductCard({
     <article className="group border-ec-line hover:border-ec-blue/30 relative flex h-full flex-col overflow-hidden rounded-[1.15rem] border bg-white shadow-[0_10px_30px_rgba(16,32,47,0.045)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_46px_rgba(16,32,47,0.1)]">
       <Link
         href={product.href}
-        className="bg-ec-stone focus-visible:outline-ec-blue relative block aspect-[4/3.15] overflow-hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+        className="focus-visible:outline-ec-blue relative block aspect-square w-full overflow-hidden bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
       >
         {product.image?.thumbnailUrl || product.image?.url ? (
           <Image
@@ -85,7 +85,7 @@ export function ProductCard({
 export function ProductCardSkeleton() {
   return (
     <div className="border-ec-line h-full overflow-hidden rounded-[1.15rem] border bg-white">
-      <div className="bg-ec-stone aspect-[4/3.15] animate-pulse" />
+      <div className="aspect-square w-full animate-pulse bg-white" />
       <div className="space-y-3 p-3.5">
         <div className="bg-ec-stone h-5 w-4/5 rounded-lg" />
         <div className="flex items-center justify-between gap-3">

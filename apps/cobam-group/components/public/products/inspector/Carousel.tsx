@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 type CarouselProps = {
   media: PublicProductInspectorMedia[];
   title: string;
-  datasheetUrl?: string | null;
 };
 
 function MediaPreview({
@@ -24,7 +23,7 @@ function MediaPreview({
   if (!media) {
     return (
       <div className="grid h-full place-items-center px-8 text-center text-sm font-semibold text-slate-400">
-        Aucun media disponible.
+        Aucun média disponible.
       </div>
     );
   }
@@ -59,7 +58,7 @@ function MediaPreview({
   );
 }
 
-export default function Carousel({ media, title, datasheetUrl }: CarouselProps) {
+export default function Carousel({ media, title }: CarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const activeMedia = media[activeIndex] ?? media[0] ?? null;
@@ -69,41 +68,16 @@ export default function Carousel({ media, title, datasheetUrl }: CarouselProps) 
     <>
       <aside className="space-y-4 lg:sticky lg:top-28">
         <div className="overflow-hidden rounded-[2rem] border border-cobam-quill-grey/35 bg-white shadow-[0_28px_90px_rgba(20,32,46,0.08)]">
-          <div className="flex items-center justify-between gap-4 border-b border-slate-200/80 px-5 py-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-                Visuel produit
-              </p>
-              <p className="mt-1 text-sm font-semibold text-cobam-dark-blue">
-                Inspection catalogue
-              </p>
-            </div>
-            {datasheetUrl ? (
-              <a
-                href={datasheetUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-cobam-quill-grey/40 bg-white px-3 py-2 text-xs font-semibold text-cobam-dark-blue transition hover:border-cobam-water-blue hover:text-cobam-water-blue"
-              >
-                <FileText className="size-3.5" aria-hidden="true" />
-                Fiche
-              </a>
-            ) : null}
-          </div>
-
           <button
             type="button"
             onClick={() => canZoom && setIsLightboxOpen(true)}
             disabled={!canZoom}
             className={cn(
-              "group relative block aspect-[4/3] w-full overflow-hidden bg-[radial-gradient(circle_at_50%_18%,#ffffff_0%,#f8fafc_48%,#eef2f6_100%)] sm:aspect-square",
+              "group relative block aspect-square w-full overflow-hidden sm:aspect-square",
               canZoom && "cursor-zoom-in",
             )}
             aria-label={canZoom ? `Agrandir ${title}` : undefined}
           >
-            <div className="pointer-events-none absolute inset-7 rounded-[1.5rem] border border-white/80" />
-            <div className="pointer-events-none absolute inset-x-10 top-10 h-px bg-cobam-quill-grey/35" />
-            <div className="pointer-events-none absolute inset-y-10 left-10 w-px bg-cobam-quill-grey/35" />
             <MediaPreview media={activeMedia} title={title} priority />
             {canZoom ? (
               <span className="absolute right-5 top-5 inline-flex size-10 items-center justify-center rounded-full bg-white/85 text-cobam-dark-blue shadow-sm opacity-0 transition group-hover:opacity-100">

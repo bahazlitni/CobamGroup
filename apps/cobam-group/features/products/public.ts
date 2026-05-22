@@ -15,7 +15,7 @@ import {
   getProductAttributeUnit,
   normalizeProductAttributeKind,
 } from "@/features/products/attribute-definitions";
-import { rankPublicProductSearchRows } from "./search";
+import { rankPublicProductSearchRowsWithScores } from "./search";
 import { productBrandLabel, richTextDescriptionToString } from "./model-b-compat";
 import type {
   PublicProductColorReference,
@@ -328,9 +328,7 @@ function mapProductBrand(
   return name ? { name, description: brand?.description ?? null } : null;
 }
 
-function getProductDescription(record: {
-  richTextDescription: Prisma.JsonValue | null;
-}) {
+function getProductDescription(record: { richTextDescription: Prisma.JsonValue | null }) {
   return richTextDescriptionToString(record.richTextDescription);
 }
 
@@ -347,9 +345,7 @@ function serializeProductRichDescription(value: Prisma.JsonValue | null) {
   return typeof value === "string" ? value : JSON.stringify(value);
 }
 
-function getProductRichDescription(record: {
-  richTextDescription: Prisma.JsonValue | null;
-}) {
+function getProductRichDescription(record: { richTextDescription: Prisma.JsonValue | null }) {
   const serialized = serializeProductRichDescription(record.richTextDescription);
 
   return serialized
@@ -955,6 +951,7 @@ export async function listPublicProductsIndex(input: {
   pageSize?: number;
   q?: string | null;
   promoSlug?: string | null;
+  searchLimit?: number | null;
 }): Promise<PublicProductIndexResult> {
   const pageSize = input.pageSize ?? PUBLIC_PRODUCTS_INDEX_PAGE_SIZE;
   const offset = (input.page - 1) * pageSize;
@@ -1163,14 +1160,24 @@ export async function listPublicProductsIndex(input: {
   `;
 
   let rows: PublicIndexRow[];
+  let relevanceScoreByRowKey = new Map<string, number>();
   let total: number;
 
   if (normalSearchQuery) {
     const candidates = await prisma.$queryRaw<PublicIndexRow[]>(candidateEntriesQuery);
-    const rankedRows = rankPublicProductSearchRows(candidates, normalSearchQuery);
+    const rankedEntries = rankPublicProductSearchRowsWithScores(candidates, normalSearchQuery, {
+      limit: input.searchLimit ? Math.max(input.searchLimit, offset + pageSize) : null,
+    });
 
-    total = rankedRows.length;
-    rows = rankedRows.slice(offset, offset + pageSize);
+    total = rankedEntries.length;
+    const pageEntries = rankedEntries.slice(offset, offset + pageSize);
+    rows = pageEntries.map((entry) => entry.row);
+    relevanceScoreByRowKey = new Map(
+      pageEntries.map((entry) => [
+        `${entry.row.entity_type}:${entry.row.family_id ?? entry.row.product_id}:${entry.row.category_id}:${entry.row.subcategory_id}`,
+        entry.score,
+      ]),
+    );
   } else {
     rows = await prisma.$queryRaw<PublicIndexRow[]>(Prisma.sql`
       ${candidateEntriesQuery}
@@ -1242,8 +1249,8 @@ export async function listPublicProductsIndex(input: {
     );
   }
 
-  const indexItems: PublicProductIndexItem[] = rows
-    .map((row) => {
+  const indexItems = rows
+    .map((row): PublicProductIndexItem | null => {
       const category = mapIndexCategory({
         id: row.category_id,
         name: row.category_name,
@@ -1275,11 +1282,16 @@ export async function listPublicProductsIndex(input: {
         return null;
       }
 
+      const relevanceScore = relevanceScoreByRowKey.get(
+        `${row.entity_type}:${row.family_id ?? row.product_id}:${row.category_id}:${row.subcategory_id}`,
+      );
+
       return {
         product: summary,
         category,
         subcategory,
-      } satisfies PublicProductIndexItem;
+        ...(relevanceScore == null ? {} : { relevanceScore }),
+      };
     })
     .filter((item): item is PublicProductIndexItem => item != null);
 

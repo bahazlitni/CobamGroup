@@ -1,0 +1,131 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Accueil e-cobam" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e7]: ECOMMERCE
+      - link "Se connecter" [ref=e9] [cursor=pointer]:
+        - /url: /connexion
+        - img [ref=e10]
+    - generic [ref=e14]:
+      - button "Ouvrir les rayons" [ref=e16]:
+        - img [ref=e17]
+      - generic [ref=e19]:
+        - img [ref=e20]
+        - searchbox "Produit, marque, référence..." [ref=e23]
+        - button "Rechercher" [ref=e24]:
+          - img [ref=e25]
+          - generic [ref=e28]: Rechercher
+      - link "Mes favoris" [ref=e29] [cursor=pointer]:
+        - /url: /favoris
+        - img [ref=e31]
+      - link "Panier" [ref=e33] [cursor=pointer]:
+        - /url: /panier
+        - img [ref=e35]
+  - main [ref=e38]:
+    - generic [ref=e40]:
+      - generic [ref=e43]:
+        - paragraph [ref=e44]:
+          - img [ref=e45]
+          - text: Suivi de commande
+        - heading "Retrouvez l'état de votre commande." [level=1] [ref=e50]
+        - paragraph [ref=e51]: Saisissez votre numéro de commande et le contact utilisé au checkout pour consulter le statut, le paiement et les produits commandés.
+        - generic [ref=e52]:
+          - generic [ref=e53]:
+            - img [ref=e54]
+            - heading "Numéro de commande" [level=2] [ref=e57]
+            - paragraph [ref=e58]: Il se trouve sur la confirmation reçue après validation du checkout.
+          - generic [ref=e59]:
+            - img [ref=e60]
+            - heading "Accès sécurisé" [level=2] [ref=e63]
+            - paragraph [ref=e64]: Le suivi demande aussi l'email ou le téléphone utilisé à la commande.
+          - generic [ref=e65]:
+            - img [ref=e66]
+            - heading "Besoin d'aide ?" [level=2] [ref=e69]
+            - paragraph [ref=e70]: Connectez-vous ou contactez l'équipe si les informations ne correspondent pas.
+      - generic [ref=e71]:
+        - generic [ref=e72]:
+          - img [ref=e74]
+          - generic [ref=e77]:
+            - paragraph [ref=e78]: Recherche express
+            - paragraph [ref=e79]: Résultat immédiat
+        - generic [ref=e80]:
+          - generic [ref=e81]:
+            - text: Numéro de commande
+            - textbox "Numéro de commande" [ref=e82]:
+              - /placeholder: "Ex: ECO-2026-0001"
+          - generic [ref=e83]:
+            - text: Email ou téléphone
+            - textbox "Email ou téléphone" [ref=e84]:
+              - /placeholder: Email ou numéro utilisé
+        - button "Consulter le statut" [ref=e85]:
+          - text: Consulter le statut
+          - img [ref=e86]
+        - link "Suivre depuis mon compte" [ref=e88] [cursor=pointer]:
+          - /url: /connexion
+          - text: Suivre depuis mon compte
+          - img [ref=e89]
+  - contentinfo [ref=e91]:
+    - generic [ref=e92]:
+      - generic [ref=e93]:
+        - generic [ref=e94]:
+          - paragraph [ref=e95]: ECOMMERCE
+          - paragraph [ref=e96]: Produits, panier, commandes et suivi client.
+          - generic [ref=e97]:
+            - link "+216 75731731" [ref=e98] [cursor=pointer]:
+              - /url: tel:+21675731731
+              - img [ref=e99]
+              - text: +216 75731731
+            - link "contact@cobamgroup.com" [ref=e101] [cursor=pointer]:
+              - /url: mailto:contact@cobamgroup.com
+              - img [ref=e102]
+              - text: contact@cobamgroup.com
+            - paragraph [ref=e105]:
+              - img [ref=e106]
+              - text: Djerba, Tunisie
+        - generic [ref=e109]:
+          - heading "Service client" [level=2] [ref=e110]
+          - generic [ref=e111]:
+            - link "Suivre une commande" [ref=e112] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Panier" [ref=e113] [cursor=pointer]:
+              - /url: /panier
+            - link "Compte client" [ref=e114] [cursor=pointer]:
+              - /url: /compte
+            - link "Commander" [ref=e115] [cursor=pointer]:
+              - /url: /checkout
+        - generic [ref=e116]:
+          - heading "Aide" [level=2] [ref=e117]
+          - generic [ref=e118]:
+            - link "Livraison" [ref=e119] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Retours" [ref=e120] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Conditions" [ref=e121] [cursor=pointer]:
+              - /url: /conditions-generales
+            - link "Confidentialité" [ref=e122] [cursor=pointer]:
+              - /url: /politique-de-confidentialite
+        - generic [ref=e123]:
+          - heading "Catégories" [level=2] [ref=e124]
+          - generic [ref=e125]:
+            - link "Isolation et étanchéité" [ref=e126] [cursor=pointer]:
+              - /url: /catalogue?categorie=isolation-et-etancheite
+            - link "Salle de bain et cuisine" [ref=e127] [cursor=pointer]:
+              - /url: /catalogue?categorie=salle-de-bain-et-cuisine
+            - link "Peintures et décoration" [ref=e128] [cursor=pointer]:
+              - /url: /catalogue?categorie=peintures-et-decoration
+            - link "Piscine" [ref=e129] [cursor=pointer]:
+              - /url: /catalogue?categorie=piscine
+            - link "Portes et menuiserie" [ref=e130] [cursor=pointer]:
+              - /url: /catalogue?categorie=portes-et-menuiserie
+      - generic [ref=e131]:
+        - paragraph [ref=e132]: © 2026 COBAM GROUP. Tous droits réservés.
+        - generic [ref=e133]:
+          - link "Facebook" [ref=e134] [cursor=pointer]:
+            - /url: https://www.facebook.com/cobamgrp
+          - link "Instagram" [ref=e135] [cursor=pointer]:
+            - /url: https://www.instagram.com/cobamgroup/
+          - link "LinkedIn" [ref=e136] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/cobam-group/
+  - button "Open Next.js Dev Tools" [ref=e142] [cursor=pointer]:
+    - img [ref=e143]

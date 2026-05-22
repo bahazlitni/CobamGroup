@@ -463,7 +463,7 @@ export default async function ProductTypePage({ params, searchParams }: ProductT
                     size="sm"
                     icon={<X className="size-4" />}
                   >
-                    Reinitialiser
+                    Réinitialiser
                   </ButtonLink>
                 ) : null}
                 <form action={`/types-produits/${slug}`} className="flex items-center gap-2">
@@ -513,7 +513,7 @@ export default async function ProductTypePage({ params, searchParams }: ProductT
                   Retirez un filtre technique, une marque ou votre recherche pour elargir les resultats.
                 </p>
                 <ButtonLink href={`/types-produits/${slug}`} className="mt-6" variant="secondary">
-                  Reinitialiser les filtres
+                  Réinitialiser les filtres
                 </ButtonLink>
               </CardContent>
             </Card>

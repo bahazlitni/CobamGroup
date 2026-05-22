@@ -1,0 +1,106 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Accueil e-cobam" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e7]: ECOMMERCE
+      - navigation "Navigation principale" [ref=e8]:
+        - link "Tous les produits" [ref=e9] [cursor=pointer]:
+          - /url: /catalogue
+        - link "Promotions" [ref=e10] [cursor=pointer]:
+          - /url: /catalogue?sélection=promotion
+        - link "Meilleures ventes" [ref=e11] [cursor=pointer]:
+          - /url: /#best-sellers
+        - link "Nouveautés" [ref=e12] [cursor=pointer]:
+          - /url: /#new-arrivals
+        - link "Suivi commande" [ref=e13] [cursor=pointer]:
+          - /url: /suivi-commande
+      - link "Se connecter" [ref=e15] [cursor=pointer]:
+        - /url: /connexion
+        - img [ref=e16]
+        - generic [ref=e19]: Se connecter
+    - generic [ref=e21]:
+      - button "Ouvrir les rayons" [ref=e23]:
+        - img [ref=e24]
+        - generic [ref=e25]: Catégories
+        - img [ref=e26]
+      - generic [ref=e29]:
+        - img [ref=e30]
+        - searchbox "Produit, marque, référence..." [ref=e33]
+        - button "Rechercher" [ref=e34]:
+          - img [ref=e35]
+          - generic [ref=e38]: Rechercher
+      - generic [ref=e39]:
+        - link "Mes favoris" [ref=e40] [cursor=pointer]:
+          - /url: /favoris
+          - img [ref=e42]
+        - link "Panier" [ref=e44] [cursor=pointer]:
+          - /url: /panier
+          - img [ref=e46]
+  - main [ref=e49]
+  - contentinfo [ref=e108]:
+    - generic [ref=e109]:
+      - generic [ref=e110]:
+        - generic [ref=e111]:
+          - paragraph [ref=e112]: ECOMMERCE
+          - paragraph [ref=e113]: Produits, panier, commandes et suivi client.
+          - generic [ref=e114]:
+            - link "+216 75731731" [ref=e115] [cursor=pointer]:
+              - /url: tel:+21675731731
+              - img [ref=e116]
+              - text: +216 75731731
+            - link "contact@cobamgroup.com" [ref=e118] [cursor=pointer]:
+              - /url: mailto:contact@cobamgroup.com
+              - img [ref=e119]
+              - text: contact@cobamgroup.com
+            - paragraph [ref=e122]:
+              - img [ref=e123]
+              - text: Djerba, Tunisie
+        - generic [ref=e126]:
+          - heading "Service client" [level=2] [ref=e127]
+          - generic [ref=e128]:
+            - link "Suivre une commande" [ref=e129] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Panier" [ref=e130] [cursor=pointer]:
+              - /url: /panier
+            - link "Compte client" [ref=e131] [cursor=pointer]:
+              - /url: /compte
+            - link "Commander" [ref=e132] [cursor=pointer]:
+              - /url: /checkout
+        - generic [ref=e133]:
+          - heading "Aide" [level=2] [ref=e134]
+          - generic [ref=e135]:
+            - link "Livraison" [ref=e136] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Retours" [ref=e137] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Conditions" [ref=e138] [cursor=pointer]:
+              - /url: /conditions-generales
+            - link "Confidentialité" [ref=e139] [cursor=pointer]:
+              - /url: /politique-de-confidentialite
+        - generic [ref=e140]:
+          - heading "Catégories" [level=2] [ref=e141]
+          - generic [ref=e142]:
+            - link "Revêtements de sols et murs" [ref=e143] [cursor=pointer]:
+              - /url: /catalogue?search=carrelage
+            - link "Matériaux de construction" [ref=e144] [cursor=pointer]:
+              - /url: /catalogue?search=ciment
+            - link "Isolation et étanchéité" [ref=e145] [cursor=pointer]:
+              - /url: /catalogue?search=étanchéité
+            - link "Salle de bain et cuisine" [ref=e146] [cursor=pointer]:
+              - /url: /catalogue?search=mitigeur
+            - link "Peintures et décoration" [ref=e147] [cursor=pointer]:
+              - /url: /catalogue?search=peinture
+            - link "Piscine" [ref=e148] [cursor=pointer]:
+              - /url: /catalogue?search=piscine
+      - generic [ref=e149]:
+        - paragraph [ref=e150]: © 2026 COBAM GROUP. Tous droits réservés.
+        - generic [ref=e151]:
+          - link "Facebook" [ref=e152] [cursor=pointer]:
+            - /url: https://www.facebook.com/cobamgrp
+          - link "Instagram" [ref=e153] [cursor=pointer]:
+            - /url: https://www.instagram.com/cobamgroup/
+          - link "LinkedIn" [ref=e154] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/cobam-group/
+  - button "Open Next.js Dev Tools" [ref=e160] [cursor=pointer]:
+    - img [ref=e161]

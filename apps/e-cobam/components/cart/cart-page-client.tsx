@@ -269,7 +269,7 @@ export function CartPageClient() {
               key={line.id}
               className="border-ec-line grid gap-4 rounded-[1.5rem] border bg-white p-4 sm:grid-cols-[120px_1fr_auto]"
             >
-              <div className="bg-ec-stone relative aspect-square overflow-hidden rounded-[1.2rem]">
+              <div className="relative aspect-square overflow-hidden rounded-[1.2rem] bg-white">
                 {line.imageUrl ? (
                   <Image
                     src={line.imageUrl}

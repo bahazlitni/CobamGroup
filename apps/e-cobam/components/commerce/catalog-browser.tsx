@@ -127,9 +127,9 @@ function PriceFilter({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl bg-ec-stone px-4 py-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ec-muted">Plage</p>
-        <p className="mt-1 text-lg font-black text-ec-ink">
+      <div className="bg-ec-stone rounded-2xl px-4 py-3">
+        <p className="text-ec-muted text-xs font-semibold tracking-[0.18em] uppercase">Plage</p>
+        <p className="text-ec-ink mt-1 text-lg font-black">
           {hasRange
             ? `${formatPriceTnd(normalizedMin) ?? normalizedMin} - ${
                 formatPriceTnd(normalizedMax) ?? normalizedMax
@@ -150,7 +150,7 @@ function PriceFilter({
           aria-label="Filtrer par fourchette de prix"
           className="py-5"
         />
-        <div className="flex items-center justify-between text-xs font-semibold text-ec-muted">
+        <div className="text-ec-muted flex items-center justify-between text-xs font-semibold">
           <span>{formatPriceTnd(bounds.min) ?? bounds.min}</span>
           <span>{formatPriceTnd(bounds.max) ?? bounds.max}</span>
         </div>
@@ -160,7 +160,7 @@ function PriceFilter({
         <button
           type="button"
           onClick={onReset}
-          className="text-sm font-semibold text-ec-muted transition hover:text-ec-ink"
+          className="text-ec-muted hover:text-ec-ink text-sm font-semibold transition"
         >
           Effacer le prix
         </button>
@@ -183,12 +183,17 @@ function FilterCheckbox({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl px-2 py-2.5 transition hover:bg-ec-stone">
+    <div className="hover:bg-ec-stone flex items-center gap-3 rounded-2xl px-2 py-2.5 transition">
       <Checkbox id={id} checked={checked} onCheckedChange={(value) => onChange(value === true)} />
-      <label htmlFor={id} className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 text-sm font-semibold text-ec-ink">
+      <label
+        htmlFor={id}
+        className="text-ec-ink flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-3 text-sm font-semibold"
+      >
         <span className="min-w-0 truncate">{label}</span>
         {count != null ? (
-          <span className="shrink-0 text-xs font-bold text-ec-muted">{formatCompactNumber(count)}</span>
+          <span className="text-ec-muted shrink-0 text-xs font-bold">
+            {formatCompactNumber(count)}
+          </span>
         ) : null}
       </label>
     </div>
@@ -211,19 +216,33 @@ export function CatalogBrowser({ initialResult, initialFilters }: CatalogBrowser
   const priceRangeMax = result.priceRange.max;
   const selectedCategorySet = useMemo(() => new Set(filters.category), [filters.category]);
   const selectedBrandSet = useMemo(() => new Set(filters.brand), [filters.brand]);
-  const selectedAvailabilitySet = useMemo(() => new Set(filters.availability), [filters.availability]);
+  const selectedAvailabilitySet = useMemo(
+    () => new Set(filters.availability),
+    [filters.availability],
+  );
+  const sortOptions = useMemo(
+    () =>
+      filters.search
+        ? CATALOG_SORT_OPTIONS.map((option) =>
+            option.value === "latest" ? { ...option, label: "Pertinence" } : option,
+          )
+        : CATALOG_SORT_OPTIONS,
+    [filters.search],
+  );
   const categorySummary =
     filters.category.length === 0
       ? "Toutes les catégories"
       : filters.category.length === 1
-        ? result.activeCategory?.name ?? "1 catégorie"
+        ? (result.activeCategory?.name ?? "1 catégorie")
         : `${filters.category.length} catégories`;
   const availabilityLabels = filters.availability
     .map((value) => CATALOG_AVAILABILITY_OPTIONS.find((item) => item.value === value)?.label)
     .filter((label): label is string => Boolean(label));
   const activeFilterSummary = [
     filters.category.length > 0 ? categorySummary : null,
-    filters.brand.length > 0 ? `${filters.brand.length} marque${filters.brand.length > 1 ? "s" : ""}` : null,
+    filters.brand.length > 0
+      ? `${filters.brand.length} marque${filters.brand.length > 1 ? "s" : ""}`
+      : null,
     availabilityLabels.length > 0 ? availabilityLabels.join(", ") : null,
     filters.promotedOnly ? "Sélections COBAM" : null,
     filters.search ? `recherche "${filters.search}"` : null,
@@ -233,7 +252,7 @@ export function CatalogBrowser({ initialResult, initialFilters }: CatalogBrowser
     setFilters((current) => ({
       ...current,
       ...patch,
-      page: options.keepPage ? patch.page ?? current.page : patch.page ?? 1,
+      page: options.keepPage ? (patch.page ?? current.page) : (patch.page ?? 1),
     }));
   }
 
@@ -324,9 +343,9 @@ export function CatalogBrowser({ initialResult, initialFilters }: CatalogBrowser
   return (
     <section className="grid gap-8 lg:grid-cols-[330px_1fr]">
       <aside className="lg:sticky lg:top-[8.875rem] lg:self-start">
-        <div className="commerce-thin-scrollbar overflow-hidden rounded-[1.6rem] border border-ec-line bg-white shadow-sm lg:max-h-[calc(100svh-9.625rem)] lg:overflow-y-auto lg:overscroll-contain">
-          <section className="border-b border-ec-line p-4">
-            <div className="mb-3 flex items-center gap-2 px-2 text-sm font-semibold uppercase tracking-[0.18em] text-ec-muted">
+        <div className="commerce-thin-scrollbar border-ec-line overflow-hidden rounded-[1.6rem] border bg-white shadow-sm lg:max-h-[calc(100svh-9.625rem)] lg:overflow-y-auto lg:overscroll-contain">
+          <section className="border-ec-line border-b p-4">
+            <div className="text-ec-muted mb-3 flex items-center gap-2 px-2 text-sm font-semibold tracking-[0.18em] uppercase">
               <SlidersHorizontal className="size-4" />
               Prix
             </div>
@@ -340,8 +359,8 @@ export function CatalogBrowser({ initialResult, initialFilters }: CatalogBrowser
             />
           </section>
 
-          <section className="border-b border-ec-line p-4">
-            <div className="mb-3 flex items-center gap-2 px-2 text-sm font-semibold uppercase tracking-[0.18em] text-ec-muted">
+          <section className="border-ec-line border-b p-4">
+            <div className="text-ec-muted mb-3 flex items-center gap-2 px-2 text-sm font-semibold tracking-[0.18em] uppercase">
               <Filter className="size-4" />
               Catégories
             </div>
@@ -365,8 +384,8 @@ export function CatalogBrowser({ initialResult, initialFilters }: CatalogBrowser
             </div>
           </section>
 
-          <section className="border-b border-ec-line p-4">
-            <div className="mb-3 flex items-center gap-2 px-2 text-sm font-semibold uppercase tracking-[0.18em] text-ec-muted">
+          <section className="border-ec-line border-b p-4">
+            <div className="text-ec-muted mb-3 flex items-center gap-2 px-2 text-sm font-semibold tracking-[0.18em] uppercase">
               <SlidersHorizontal className="size-4" />
               Marques
             </div>
@@ -389,8 +408,8 @@ export function CatalogBrowser({ initialResult, initialFilters }: CatalogBrowser
             </div>
           </section>
 
-          <section className="border-b border-ec-line p-4">
-            <div className="mb-3 flex items-center gap-2 px-2 text-sm font-semibold uppercase tracking-[0.18em] text-ec-muted">
+          <section className="border-ec-line border-b p-4">
+            <div className="text-ec-muted mb-3 flex items-center gap-2 px-2 text-sm font-semibold tracking-[0.18em] uppercase">
               <SlidersHorizontal className="size-4" />
               Disponibilité
             </div>
@@ -406,7 +425,11 @@ export function CatalogBrowser({ initialResult, initialFilters }: CatalogBrowser
                     checked={selectedAvailabilitySet.has(item.value)}
                     onChange={(checked) =>
                       updateFilters({
-                        availability: toggleValue(filters.availability, item.value, checked) as CatalogFilters["availability"],
+                        availability: toggleValue(
+                          filters.availability,
+                          item.value,
+                          checked,
+                        ) as CatalogFilters["availability"],
                       })
                     }
                   />
@@ -415,7 +438,7 @@ export function CatalogBrowser({ initialResult, initialFilters }: CatalogBrowser
             </div>
           </section>
 
-          <section className="border-b border-ec-line p-4">
+          <section className="border-ec-line border-b p-4">
             <FilterCheckbox
               id="selection-promotion"
               label="Sélections COBAM"
@@ -427,26 +450,26 @@ export function CatalogBrowser({ initialResult, initialFilters }: CatalogBrowser
       </aside>
 
       <div ref={resultsRef}>
-        <div className="mb-5 grid gap-4 rounded-[1.5rem] border border-ec-line bg-white p-4 lg:grid-cols-[minmax(10rem,1fr)_minmax(18rem,28rem)_auto] lg:items-center">
+        <div className="border-ec-line mb-5 grid gap-4 rounded-[1.5rem] border bg-white p-4 lg:grid-cols-[minmax(10rem,1fr)_minmax(18rem,28rem)_auto] lg:items-center">
           <div>
-            <p className="text-sm font-semibold text-ec-ink">
+            <p className="text-ec-ink text-sm font-semibold">
               {formatCompactNumber(result.total)} résultat{result.total > 1 ? "s" : ""}
             </p>
-            <p className="mt-1 text-sm text-ec-muted">
+            <p className="text-ec-muted mt-1 text-sm">
               {categorySummary}
               {filters.search ? ` · recherche "${filters.search}"` : ""}
             </p>
           </div>
           {activeFilterSummary.length > 0 ? (
-            <p className="text-xs font-semibold text-ec-blue sm:text-right">
+            <p className="text-ec-blue text-xs font-semibold sm:text-right">
               {activeFilterSummary.join(" · ")}
             </p>
           ) : null}
           <form
             onSubmit={(event) => event.preventDefault()}
-            className="flex h-11 items-center gap-2 rounded-full border border-ec-line bg-ec-paper px-4 focus-within:border-ec-blue focus-within:ring-4 focus-within:ring-ec-blue/10"
+            className="border-ec-line bg-ec-paper focus-within:border-ec-blue focus-within:ring-ec-blue/10 flex h-11 items-center gap-2 rounded-full border px-4 focus-within:ring-4"
           >
-            <Search className="size-4 shrink-0 text-ec-muted" />
+            <Search className="text-ec-muted size-4 shrink-0" />
             <input
               value={searchDraft}
               onChange={(event) => {
@@ -455,23 +478,20 @@ export function CatalogBrowser({ initialResult, initialFilters }: CatalogBrowser
                 updateFilters({ search: value.trim() || null });
               }}
               placeholder="Rechercher dans les résultats..."
-              className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-ec-ink outline-none placeholder:text-ec-muted/70"
+              className="text-ec-ink placeholder:text-ec-muted/70 min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
             />
             <button className="sr-only">Rechercher</button>
           </form>
           <div className="flex items-center justify-end gap-2">
-            <label className="text-sm text-ec-muted" htmlFor="tri">
+            <label className="text-ec-muted text-sm" htmlFor="tri">
               Trier
             </label>
-            <Select
-              value={filters.sort}
-              onValueChange={(value) => updateFilters({ sort: value })}
-            >
+            <Select value={filters.sort} onValueChange={(value) => updateFilters({ sort: value })}>
               <SelectTrigger id="tri" className="h-11 min-w-44 rounded-full bg-white">
                 <SelectValue placeholder="Trier" />
               </SelectTrigger>
               <SelectContent align="end">
-                {CATALOG_SORT_OPTIONS.map((option) => (
+                {sortOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
@@ -483,8 +503,8 @@ export function CatalogBrowser({ initialResult, initialFilters }: CatalogBrowser
 
         <div className="relative min-h-80">
           {isLoading ? (
-            <div className="pointer-events-none absolute inset-0 z-10 rounded-[1.5rem] bg-ec-paper/55 backdrop-blur-[1px]">
-              <div className="sticky top-[9rem] mx-auto mt-20 w-fit rounded-full border border-ec-line bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-ec-blue shadow-sm">
+            <div className="bg-ec-paper/55 pointer-events-none absolute inset-0 z-10 rounded-[1.5rem] backdrop-blur-[1px]">
+              <div className="border-ec-line text-ec-blue sticky top-[9rem] mx-auto mt-20 w-fit rounded-full border bg-white px-4 py-2 text-xs font-black tracking-[0.18em] uppercase shadow-sm">
                 Actualisation
               </div>
             </div>
@@ -492,9 +512,11 @@ export function CatalogBrowser({ initialResult, initialFilters }: CatalogBrowser
 
           <div className={cn("transition-opacity duration-200", isLoading && "opacity-45")}>
             {error ? (
-              <div className="rounded-[2rem] border border-dashed border-ec-line bg-white p-10 text-center">
-                <h2 className="text-2xl font-black text-ec-ink">Le catalogue n&apos;a pas pu se charger.</h2>
-                <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-ec-muted">
+              <div className="border-ec-line rounded-[2rem] border border-dashed bg-white p-10 text-center">
+                <h2 className="text-ec-ink text-2xl font-black">
+                  Le catalogue n&apos;a pas pu se charger.
+                </h2>
+                <p className="text-ec-muted mx-auto mt-3 max-w-lg text-sm leading-7">
                   Réessayez dans un instant. Vos filtres restent en place.
                 </p>
                 <Button type="button" onClick={retry} className="mt-6" variant="secondary">
@@ -504,13 +526,17 @@ export function CatalogBrowser({ initialResult, initialFilters }: CatalogBrowser
             ) : result.items.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {result.items.map((product, index) => (
-                  <ProductCard key={`${product.entityType}-${product.id}`} product={product} priority={index < 4} />
+                  <ProductCard
+                    key={`${product.entityType}-${product.id}`}
+                    product={product}
+                    priority={index < 4}
+                  />
                 ))}
               </div>
             ) : (
-              <div className="rounded-[2rem] border border-dashed border-ec-line bg-white p-10 text-center">
-                <h2 className="text-2xl font-black text-ec-ink">Aucun produit trouvé</h2>
-                <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-ec-muted">
+              <div className="border-ec-line rounded-[2rem] border border-dashed bg-white p-10 text-center">
+                <h2 className="text-ec-ink text-2xl font-black">Aucun produit trouvé</h2>
+                <p className="text-ec-muted mx-auto mt-3 max-w-lg text-sm leading-7">
                   Essayez un terme plus court, retirez une marque ou revenez au catalogue complet.
                 </p>
                 <Button
@@ -550,7 +576,7 @@ export function CatalogBrowser({ initialResult, initialFilters }: CatalogBrowser
                 Page précédente
               </Button>
             ) : null}
-            <span className="text-sm font-semibold text-ec-muted">
+            <span className="text-ec-muted text-sm font-semibold">
               Page {filters.page} / {totalPages}
             </span>
             {filters.page < totalPages ? (

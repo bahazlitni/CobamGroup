@@ -55,7 +55,7 @@ export default function DatasheetLink({
       const response = await fetch(buildDownloadUrl(url));
 
       if (!response.ok) {
-        throw new Error("Impossible de telecharger la fiche technique.");
+        throw new Error("Impossible de télécharger la fiche technique.");
       }
 
       const blob = await response.blob();

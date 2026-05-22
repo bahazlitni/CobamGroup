@@ -1,0 +1,236 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Accueil e-cobam" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e7]: ECOMMERCE
+      - navigation "Navigation principale" [ref=e8]:
+        - link "Tous les produits" [ref=e9] [cursor=pointer]:
+          - /url: /catalogue
+        - link "Promotions" [ref=e10] [cursor=pointer]:
+          - /url: /catalogue?sélection=promotion
+        - link "Meilleures ventes" [ref=e11] [cursor=pointer]:
+          - /url: /#best-sellers
+        - link "Nouveautés" [ref=e12] [cursor=pointer]:
+          - /url: /#new-arrivals
+        - link "Suivi commande" [ref=e13] [cursor=pointer]:
+          - /url: /suivi-commande
+      - link "Se connecter" [ref=e15] [cursor=pointer]:
+        - /url: /connexion
+        - img [ref=e16]
+        - generic [ref=e19]: Se connecter
+    - generic [ref=e21]:
+      - button "Ouvrir les rayons" [ref=e23]:
+        - img [ref=e24]
+        - generic [ref=e25]: Catégories
+        - img [ref=e26]
+      - generic [ref=e29]:
+        - img [ref=e30]
+        - searchbox "Produit, marque, référence..." [ref=e33]
+        - button "Rechercher" [ref=e34]:
+          - img [ref=e35]
+          - generic [ref=e38]: Rechercher
+      - generic [ref=e39]:
+        - link "Mes favoris" [ref=e40] [cursor=pointer]:
+          - /url: /favoris
+          - img [ref=e42]
+        - link "Panier" [ref=e44] [cursor=pointer]:
+          - /url: /panier
+          - img [ref=e46]
+  - main [ref=e49]:
+    - generic [ref=e50]:
+      - generic [ref=e51]:
+        - img "Deutsch Color - Acrylex 20kg" [ref=e54]
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - link "Peintures et décoration" [ref=e57] [cursor=pointer]:
+              - /url: /catalogue?categorie=peintures-et-decoration
+            - link "Peintures d'extérieur" [ref=e58] [cursor=pointer]:
+              - /url: /catalogue?categorie=peintures-d-exterieur
+          - generic [ref=e59]:
+            - generic [ref=e60]:
+              - paragraph [ref=e61]: SKU 00233132
+              - paragraph [ref=e63]:
+                - generic [ref=e64]:
+                  - generic [ref=e65]: Deutsch Color
+                  - tooltip "Fabricant international spécialisé dans la production de peintures, mastics et matériaux de construction.": Fabricant international spécialisé dans la production de peintures, mastics et matériaux de construction.
+            - heading "Deutsch Color - Acrylex 20kg" [level=1] [ref=e66]
+          - generic [ref=e67]:
+            - generic [ref=e68]:
+              - generic [ref=e69]:
+                - paragraph [ref=e70]: Prix TTC
+                - paragraph [ref=e71]: 75 DT
+              - generic [ref=e72]:
+                - img [ref=e73]
+                - text: Rupture
+            - generic [ref=e78]:
+              - generic [ref=e79]:
+                - button "Diminuer la quantité" [ref=e80]:
+                  - img [ref=e81]
+                - generic [ref=e82]: "1"
+                - button "Augmenter la quantité" [ref=e83]:
+                  - img [ref=e84]
+              - button "Ajouter au panier" [ref=e86]:
+                - text: Ajouter au panier
+                - img [ref=e87]
+              - button "Ajouter aux favoris" [ref=e90]:
+                - img [ref=e91]
+            - generic [ref=e93]:
+              - link "Fiche technique" [ref=e94] [cursor=pointer]:
+                - /url: /api/media/815/file
+                - img [ref=e95]
+                - generic [ref=e98]: Fiche technique
+              - generic [ref=e99]:
+                - img [ref=e100]
+                - generic [ref=e105]: Certificat indisponible
+      - generic [ref=e106]:
+        - generic [ref=e107]:
+          - generic [ref=e108]:
+            - paragraph [ref=e109]: Options
+            - heading "Variantes disponibles" [level=2] [ref=e110]
+          - paragraph [ref=e111]: 2 références à comparer
+        - generic [ref=e114]:
+          - button "Deutsch Color - Acrylex 20kg 00233132 ACRYLEX 20KG DEUTSCH COLOR 75 DT Rupture" [pressed] [ref=e116]:
+            - img "Deutsch Color - Acrylex 20kg" [ref=e118]
+            - generic [ref=e120]:
+              - paragraph [ref=e121]: "00233132"
+              - heading "ACRYLEX 20KG DEUTSCH COLOR" [level=3] [ref=e122]
+              - generic [ref=e123]:
+                - paragraph [ref=e124]: 75 DT
+                - generic [ref=e125]:
+                  - img [ref=e126]
+                  - text: Rupture
+          - button "Deutsch Color - Acrylex 5kg 00219648 ACRYLEX 5KG DEUTSHCOLOR 27,269 DT En stock" [ref=e132]:
+            - img "Deutsch Color - Acrylex 5kg" [ref=e134]
+            - generic [ref=e136]:
+              - paragraph [ref=e137]: "00219648"
+              - heading "ACRYLEX 5KG DEUTSHCOLOR" [level=3] [ref=e138]
+              - generic [ref=e139]:
+                - paragraph [ref=e140]: 27,269 DT
+                - generic [ref=e141]:
+                  - img [ref=e142]
+                  - text: En stock
+      - generic [ref=e147]:
+        - generic [ref=e148]:
+          - heading "Détails produit" [level=2] [ref=e150]
+          - generic [ref=e152]:
+            - heading "Deutsch Color - Acrylex 20kg" [level=2] [ref=e153]
+            - paragraph [ref=e154]: Acrylex Deutsch Color est un primaire acrylique granule qui prepare le mur avant l'application d'un enduit griffe. Il aide le support a mieux accrocher et donne une base plus reguliere pour une finition propre.
+            - paragraph [ref=e155]: Il convient aux murs interieurs et exterieurs, en neuf comme en renovation, notamment avant les finitions decoratives sur systemes d'isolation thermique ou anciens murs peints.
+            - list [ref=e156]:
+              - listitem [ref=e157]:
+                - paragraph [ref=e158]: "Conditionnement : seau de 20 kg."
+              - listitem [ref=e159]:
+                - paragraph [ref=e160]: Application simple au pinceau ou au rouleau.
+              - listitem [ref=e161]:
+                - paragraph [ref=e162]: A diluer avec de l'eau avant application, selon le rendu et le support.
+              - listitem [ref=e163]:
+                - paragraph [ref=e164]: Nettoyage des outils a l'eau avant sechage.
+            - paragraph [ref=e165]: "Reference COBAM : 00233132."
+        - generic [ref=e166]:
+          - heading "Spécifications" [level=2] [ref=e168]
+          - generic [ref=e169]:
+            - generic [ref=e170]:
+              - heading "Filtres principaux" [level=3] [ref=e171]
+              - generic [ref=e172]:
+                - generic [ref=e173]:
+                  - term [ref=e174]: Type de produit
+                  - definition [ref=e175]: Primaire d'accrochage
+                - generic [ref=e176]:
+                  - term [ref=e177]: Conditionnement
+                  - definition [ref=e178]: 20 kg
+                - generic [ref=e179]:
+                  - term [ref=e180]: Pret a l'emploi
+                  - definition [ref=e181]: "false"
+                - generic [ref=e182]:
+                  - term [ref=e183]: Gamme
+                  - definition [ref=e184]: ACRYLEX
+            - generic [ref=e185]:
+              - heading "Caracteristiques techniques" [level=3] [ref=e186]
+              - generic [ref=e187]:
+                - generic [ref=e188]:
+                  - term [ref=e189]: Dilution
+                  - definition [ref=e190]: 20 a 40% d'eau
+                - generic [ref=e191]:
+                  - term [ref=e192]: Temps de sechage
+                  - definition [ref=e193]: 2 a 4 h avant revetement, 4 a 6 h entre couches
+                - generic [ref=e194]:
+                  - term [ref=e195]: Application
+                  - definition [ref=e196]: Pinceau ou rouleau
+                - generic [ref=e197]:
+                  - term [ref=e198]: Supports
+                  - definition [ref=e199]: Murs interieurs et exterieurs, supports neufs ou anciens, enduits et anciens murs peints
+                - generic [ref=e200]:
+                  - term [ref=e201]: Conservation
+                  - definition [ref=e202]: 36 mois
+                - generic [ref=e203]:
+                  - term [ref=e204]: Temperature de stockage
+                  - definition [ref=e205]: +5 C a +30 C, au sec et hors gel
+                - generic [ref=e206]:
+                  - term [ref=e207]: Aspect
+                  - definition [ref=e208]: Granule
+  - contentinfo [ref=e209]:
+    - generic [ref=e210]:
+      - generic [ref=e211]:
+        - generic [ref=e212]:
+          - paragraph [ref=e213]: ECOMMERCE
+          - paragraph [ref=e214]: Produits, panier, commandes et suivi client.
+          - generic [ref=e215]:
+            - link "+216 75731731" [ref=e216] [cursor=pointer]:
+              - /url: tel:+21675731731
+              - img [ref=e217]
+              - text: +216 75731731
+            - link "contact@cobamgroup.com" [ref=e219] [cursor=pointer]:
+              - /url: mailto:contact@cobamgroup.com
+              - img [ref=e220]
+              - text: contact@cobamgroup.com
+            - paragraph [ref=e223]:
+              - img [ref=e224]
+              - text: Djerba, Tunisie
+        - generic [ref=e227]:
+          - heading "Service client" [level=2] [ref=e228]
+          - generic [ref=e229]:
+            - link "Suivre une commande" [ref=e230] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Panier" [ref=e231] [cursor=pointer]:
+              - /url: /panier
+            - link "Compte client" [ref=e232] [cursor=pointer]:
+              - /url: /compte
+            - link "Commander" [ref=e233] [cursor=pointer]:
+              - /url: /checkout
+        - generic [ref=e234]:
+          - heading "Aide" [level=2] [ref=e235]
+          - generic [ref=e236]:
+            - link "Livraison" [ref=e237] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Retours" [ref=e238] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Conditions" [ref=e239] [cursor=pointer]:
+              - /url: /conditions-generales
+            - link "Confidentialité" [ref=e240] [cursor=pointer]:
+              - /url: /politique-de-confidentialite
+        - generic [ref=e241]:
+          - heading "Catégories" [level=2] [ref=e242]
+          - generic [ref=e243]:
+            - link "Isolation et étanchéité" [ref=e244] [cursor=pointer]:
+              - /url: /catalogue?categorie=isolation-et-etancheite
+            - link "Salle de bain et cuisine" [ref=e245] [cursor=pointer]:
+              - /url: /catalogue?categorie=salle-de-bain-et-cuisine
+            - link "Peintures et décoration" [ref=e246] [cursor=pointer]:
+              - /url: /catalogue?categorie=peintures-et-decoration
+            - link "Piscine" [ref=e247] [cursor=pointer]:
+              - /url: /catalogue?categorie=piscine
+            - link "Portes et menuiserie" [ref=e248] [cursor=pointer]:
+              - /url: /catalogue?categorie=portes-et-menuiserie
+      - generic [ref=e249]:
+        - paragraph [ref=e250]: © 2026 COBAM GROUP. Tous droits réservés.
+        - generic [ref=e251]:
+          - link "Facebook" [ref=e252] [cursor=pointer]:
+            - /url: https://www.facebook.com/cobamgrp
+          - link "Instagram" [ref=e253] [cursor=pointer]:
+            - /url: https://www.instagram.com/cobamgroup/
+          - link "LinkedIn" [ref=e254] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/cobam-group/
+  - button "Open Next.js Dev Tools" [ref=e260] [cursor=pointer]:
+    - img [ref=e261]
+  - alert [ref=e264]

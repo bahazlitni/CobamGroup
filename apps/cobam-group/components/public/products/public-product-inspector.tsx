@@ -551,7 +551,6 @@ export default function PublicProductInspectorView({
             key={`${selectedVariant.id}-${selectedMedia.map((media) => media.id).join("-")}`}
             media={selectedMedia}
             title={selectedVariant.displayName}
-            datasheetUrl={selectedVariant.datasheet?.url ?? null}
           />
 
           <div className="space-y-7">
@@ -716,7 +715,7 @@ export default function PublicProductInspectorView({
                   <div className="mt-4">
                     <DatasheetLink
                       url={selectedVariant.datasheet.url}
-                      label="Telecharger la fiche"
+                      label="Télécharger la fiche"
                     />
                   </div>
                 ) : null}

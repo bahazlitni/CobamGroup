@@ -222,6 +222,7 @@ export type PublicProductIndexItem = {
   product: PublicProductSummary;
   category: PublicProductIndexCategory;
   subcategory: PublicProductIndexSubcategory;
+  relevanceScore?: number;
 };
 
 export type PublicProductIndexResult = {

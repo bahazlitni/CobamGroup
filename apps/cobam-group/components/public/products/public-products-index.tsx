@@ -1,19 +1,18 @@
 "use client";
 
-import {
-  useCallback,
-  useDeferredValue,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, Search, Settings2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { normalizeThemeColor, withThemeAlpha } from "@/lib/theme-color";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { PublicProductIndexItem, PublicProductIndexResult } from "@/features/products/public";
 import PublicProductCard from "./public-product-card";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
@@ -48,7 +47,7 @@ function buildPublicProductHref(input: {
 
 function PublicProductCardSkeleton() {
   return (
-    <div className="flex flex-col h-full gap-5">
+    <div className="flex h-full flex-col gap-5">
       <div className="aspect-[4/5] w-full animate-pulse rounded-3xl bg-[#f0efed]" />
       <div className="space-y-4 px-1">
         <div className="h-3 w-1/4 rounded-full bg-[#f0efed]" />
@@ -138,25 +137,59 @@ function groupIndexItems(items: PublicProductIndexItem[]) {
     }));
 }
 
+function splitSearchResultsByRelevance(items: PublicProductIndexItem[]) {
+  const scoredItems = [...items].sort((left, right) => {
+    const scoreDiff = (right.relevanceScore ?? 0) - (left.relevanceScore ?? 0);
+    if (scoreDiff !== 0) {
+      return scoreDiff;
+    }
+    return left.product.slug.localeCompare(right.product.slug, "fr-FR");
+  });
+  const maxScore = scoredItems[0]?.relevanceScore ?? 0;
+  const threshold = Math.max(200, maxScore * 0.72);
+  const relevant = scoredItems.filter((item) => (item.relevanceScore ?? 0) >= threshold);
+
+  if (relevant.length === 0 && scoredItems.length > 0) {
+    return {
+      relevant: scoredItems.slice(0, 1),
+      other: scoredItems.slice(1),
+    };
+  }
+
+  return {
+    relevant,
+    other: scoredItems.slice(relevant.length),
+  };
+}
+
 function parseSearchQueryToAdvancedState(q: string) {
   const isAdvancedSearch = /^(?:brand|sku|name)(?::[123])?=/i.test(q);
   if (!isAdvancedSearch) return null;
 
   const result = {
-    brandValue: "", brandOp: "1",
-    nameValue: "", nameOp: "1",
-    skuValue: "", skuOp: "1",
+    brandValue: "",
+    brandOp: "1",
+    nameValue: "",
+    nameOp: "1",
+    skuValue: "",
+    skuOp: "1",
     bindBrandName: "&",
-    bindNameSku: "&"
+    bindNameSku: "&",
   };
 
   const tokens = [];
   let remainder = q;
   while (remainder.length > 0) {
-    if (remainder.startsWith('||')) { tokens.push('||'); remainder = remainder.slice(2); }
-    else if (remainder.startsWith('|')) { tokens.push('|'); remainder = remainder.slice(1); }
-    else if (remainder.startsWith('&')) { tokens.push('&'); remainder = remainder.slice(1); }
-    else {
+    if (remainder.startsWith("||")) {
+      tokens.push("||");
+      remainder = remainder.slice(2);
+    } else if (remainder.startsWith("|")) {
+      tokens.push("|");
+      remainder = remainder.slice(1);
+    } else if (remainder.startsWith("&")) {
+      tokens.push("&");
+      remainder = remainder.slice(1);
+    } else {
       const match = remainder.match(/^((?:brand|sku|name)(?::[123])?=[^&|]*)/i);
       if (match) {
         tokens.push(match[1]);
@@ -168,18 +201,30 @@ function parseSearchQueryToAdvancedState(q: string) {
   let lastKey: "brand" | "name" | "sku" | null = null;
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
-    if (token === '&' || token === '|' || token === '||') {
-      if (lastKey === 'brand') result.bindBrandName = token;
-      if (lastKey === 'name') result.bindNameSku = token;
+    if (token === "&" || token === "|" || token === "||") {
+      if (lastKey === "brand") result.bindBrandName = token;
+      if (lastKey === "name") result.bindNameSku = token;
     } else {
-      const [prefix, val] = token.split('=');
-      const prefixParts = prefix.split(':');
+      const [prefix, val] = token.split("=");
+      const prefixParts = prefix.split(":");
       const key = prefixParts[0];
-      const op = prefixParts[1] || '1';
+      const op = prefixParts[1] || "1";
       const k = key.toLowerCase();
-      if (k === 'brand') { result.brandValue = val; result.brandOp = op; lastKey = 'brand'; }
-      if (k === 'name') { result.nameValue = val; result.nameOp = op; lastKey = 'name'; }
-      if (k === 'sku') { result.skuValue = val; result.skuOp = op; lastKey = 'sku'; }
+      if (k === "brand") {
+        result.brandValue = val;
+        result.brandOp = op;
+        lastKey = "brand";
+      }
+      if (k === "name") {
+        result.nameValue = val;
+        result.nameOp = op;
+        lastKey = "name";
+      }
+      if (k === "sku") {
+        result.skuValue = val;
+        result.skuOp = op;
+        lastKey = "sku";
+      }
     }
   }
 
@@ -209,11 +254,16 @@ export default function PublicProductsIndex({
   const activeSearchQuery = normalizeSearchQuery(deferredSearchInput);
 
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
-  const parsedAdvancedState = useMemo(() => parseSearchQueryToAdvancedState(initialSearch ?? ""), [initialSearch]);
+  const parsedAdvancedState = useMemo(
+    () => parseSearchQueryToAdvancedState(initialSearch ?? ""),
+    [initialSearch],
+  );
 
   const [advBrandValue, setAdvBrandValue] = useState(parsedAdvancedState?.brandValue ?? "");
   const [advBrandOp, setAdvBrandOp] = useState(parsedAdvancedState?.brandOp ?? "1");
-  const [advBindBrandName, setAdvBindBrandName] = useState(parsedAdvancedState?.bindBrandName ?? "&");
+  const [advBindBrandName, setAdvBindBrandName] = useState(
+    parsedAdvancedState?.bindBrandName ?? "&",
+  );
   const [advNameValue, setAdvNameValue] = useState(parsedAdvancedState?.nameValue ?? "");
   const [advNameOp, setAdvNameOp] = useState(parsedAdvancedState?.nameOp ?? "1");
   const [advBindNameSku, setAdvBindNameSku] = useState(parsedAdvancedState?.bindNameSku ?? "&");
@@ -237,8 +287,17 @@ export default function PublicProductsIndex({
       if (parts.length > 0) parts.push(advBindNameSku);
       parts.push(`sku:${advSkuOp}=${advSkuValue.trim()}`);
     }
-    return parts.join('');
-  }, [advBrandValue, advBrandOp, advBindBrandName, advNameValue, advNameOp, advBindNameSku, advSkuValue, advSkuOp]);
+    return parts.join("");
+  }, [
+    advBrandValue,
+    advBrandOp,
+    advBindBrandName,
+    advNameValue,
+    advNameOp,
+    advBindNameSku,
+    advSkuValue,
+    advSkuOp,
+  ]);
 
   useEffect(() => {
     if (isAdvancedSearchOpen) {
@@ -250,6 +309,8 @@ export default function PublicProductsIndex({
   const hasMore = !isRefreshing && items.length < total;
 
   const groupedItems = useMemo(() => groupIndexItems(items), [items]);
+  const searchResultGroups = useMemo(() => splitSearchResultsByRelevance(items), [items]);
+  const isSearchResultsMode = Boolean(activeSearchQuery);
 
   const fetchProductsPage = useCallback(
     async (nextPage: number, query: string, signal?: AbortSignal) => {
@@ -354,9 +415,7 @@ export default function PublicProductsIndex({
           setPage(1);
           setTotal(0);
           setErrorMessage(
-            error instanceof Error
-              ? error.message
-              : "Impossible de charger les produits.",
+            error instanceof Error ? error.message : "Impossible de charger les produits.",
           );
         } finally {
           if (searchControllerRef.current === controller) {
@@ -374,12 +433,7 @@ export default function PublicProductsIndex({
       window.clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [
-    activeSearchQuery,
-    fetchProductsPage,
-    resetToInitialResult,
-    searchRefreshToken,
-  ]);
+  }, [activeSearchQuery, fetchProductsPage, resetToInitialResult, searchRefreshToken]);
 
   const loadMore = useCallback(async () => {
     if (!hasMore || requestInFlightRef.current || searchControllerRef.current != null) {
@@ -395,15 +449,10 @@ export default function PublicProductsIndex({
 
       setItems((currentItems) => {
         const seenKeys = new Set(
-          currentItems.map(
-            (item) => `${item.product.entityType}-${item.product.id}`,
-          ),
+          currentItems.map((item) => `${item.product.entityType}-${item.product.id}`),
         );
         const nextItems = payload.items.filter(
-          (item) =>
-            !seenKeys.has(
-              `${item.product.entityType}-${item.product.id}`,
-            ),
+          (item) => !seenKeys.has(`${item.product.entityType}-${item.product.id}`),
         );
         return [...currentItems, ...nextItems];
       });
@@ -411,9 +460,7 @@ export default function PublicProductsIndex({
       setTotal(payload.total);
     } catch (error: unknown) {
       setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "Impossible de charger plus de produits.",
+        error instanceof Error ? error.message : "Impossible de charger plus de produits.",
       );
     } finally {
       requestInFlightRef.current = false;
@@ -444,19 +491,19 @@ export default function PublicProductsIndex({
 
   const searchBar = (
     <div className="relative w-full md:max-w-md">
-      <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-cobam-carbon-grey/50" />
+      <Search className="text-cobam-carbon-grey/50 pointer-events-none absolute top-1/2 left-5 h-4 w-4 -translate-y-1/2" />
       <input
         type="search"
         value={searchInput}
         onChange={(event) => setSearchInput(event.target.value)}
         placeholder="Rechercher par nom, SKU, marque..."
-        className="h-12 w-full border-b border-cobam-quill-grey/40 bg-transparent pl-12 pr-12 text-sm text-[#14202e] outline-none transition-colors focus:border-cobam-water-blue placeholder:text-cobam-carbon-grey/40"
+        className="border-cobam-quill-grey/40 focus:border-cobam-water-blue placeholder:text-cobam-carbon-grey/40 h-12 w-full border-b bg-transparent pr-12 pl-12 text-sm text-[#14202e] transition-colors outline-none"
       />
       {searchInput && !isAdvancedSearchOpen ? (
         <button
           type="button"
           onClick={() => setSearchInput("")}
-          className="absolute right-3 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-cobam-carbon-grey/50 transition hover:bg-cobam-quill-grey/20 hover:text-cobam-dark-blue"
+          className="text-cobam-carbon-grey/50 hover:bg-cobam-quill-grey/20 hover:text-cobam-dark-blue absolute top-1/2 right-3 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full transition"
           aria-label="Effacer la recherche"
         >
           <X className="h-4 w-4" />
@@ -466,14 +513,22 @@ export default function PublicProductsIndex({
   );
 
   const advancedSearchForm = (
-    <div className={cn("transition-all duration-300", isAdvancedSearchOpen ? "mt-5 border-t border-cobam-quill-grey/20 pt-5 opacity-100" : "max-h-0 opacity-0")}>
-      <div className="flex flex-col lg:flex-row lg:flex-wrap items-center gap-3">
-
+    <div
+      className={cn(
+        "transition-all duration-300",
+        isAdvancedSearchOpen
+          ? "border-cobam-quill-grey/20 mt-5 border-t pt-5 opacity-100"
+          : "max-h-0 opacity-0",
+      )}
+    >
+      <div className="flex flex-col items-center gap-3 lg:flex-row lg:flex-wrap">
         {/* Brand */}
-        <div className="flex items-center bg-white p-1.5 rounded-lg border border-cobam-quill-grey/40 gap-2 shrink-0 focus-within:border-cobam-water-blue focus-within:ring-1 focus-within:ring-cobam-water-blue transition-all shadow-sm">
-          <span className="pl-3 text-[10px] font-bold uppercase tracking-[0.1em] text-cobam-water-blue">Marque</span>
+        <div className="border-cobam-quill-grey/40 focus-within:border-cobam-water-blue focus-within:ring-cobam-water-blue flex shrink-0 items-center gap-2 rounded-lg border bg-white p-1.5 shadow-sm transition-all focus-within:ring-1">
+          <span className="text-cobam-water-blue pl-3 text-[10px] font-bold tracking-[0.1em] uppercase">
+            Marque
+          </span>
           <Select value={advBrandOp} onValueChange={setAdvBrandOp}>
-            <SelectTrigger className="h-8 bg-transparent border-0 shadow-none text-xs text-cobam-carbon-grey focus:ring-0">
+            <SelectTrigger className="text-cobam-carbon-grey h-8 border-0 bg-transparent text-xs shadow-none focus:ring-0">
               <SelectValue placeholder="Opérateur" />
             </SelectTrigger>
             <SelectContent>
@@ -482,18 +537,18 @@ export default function PublicProductsIndex({
               <SelectItem value="3">Contient</SelectItem>
             </SelectContent>
           </Select>
-          <div className="w-px h-4 bg-cobam-quill-grey/30 mx-1" />
+          <div className="bg-cobam-quill-grey/30 mx-1 h-4 w-px" />
           <Input
             value={advBrandValue}
             onChange={(e) => setAdvBrandValue(e.target.value)}
             placeholder="Ex : Sika"
-            className="h-8 bg-transparent border-0 shadow-none focus-visible:ring-0 text-sm px-2 text-cobam-dark-blue placeholder:text-cobam-carbon-grey/40"
+            className="text-cobam-dark-blue placeholder:text-cobam-carbon-grey/40 h-8 border-0 bg-transparent px-2 text-sm shadow-none focus-visible:ring-0"
           />
         </div>
 
         {/* Bind 1 */}
         <Select value={advBindBrandName} onValueChange={setAdvBindBrandName}>
-          <SelectTrigger className="h-9 border-cobam-quill-grey/30 bg-[#f9fafb] font-bold text-[10px] uppercase shadow-none text-cobam-carbon-grey focus:ring-0 rounded-lg">
+          <SelectTrigger className="border-cobam-quill-grey/30 text-cobam-carbon-grey h-9 rounded-lg bg-[#f9fafb] text-[10px] font-bold uppercase shadow-none focus:ring-0">
             <SelectValue placeholder="Liaison" />
           </SelectTrigger>
           <SelectContent>
@@ -504,10 +559,12 @@ export default function PublicProductsIndex({
         </Select>
 
         {/* Name */}
-        <div className="flex items-center bg-white p-1.5 rounded-lg border border-cobam-quill-grey/40 gap-2 shrink-0 focus-within:border-cobam-water-blue focus-within:ring-1 focus-within:ring-cobam-water-blue transition-all shadow-sm">
-          <span className="pl-3 text-[10px] font-bold uppercase tracking-[0.1em] text-cobam-water-blue">Nom</span>
+        <div className="border-cobam-quill-grey/40 focus-within:border-cobam-water-blue focus-within:ring-cobam-water-blue flex shrink-0 items-center gap-2 rounded-lg border bg-white p-1.5 shadow-sm transition-all focus-within:ring-1">
+          <span className="text-cobam-water-blue pl-3 text-[10px] font-bold tracking-[0.1em] uppercase">
+            Nom
+          </span>
           <Select value={advNameOp} onValueChange={setAdvNameOp}>
-            <SelectTrigger className="h-8 bg-transparent border-0 shadow-none text-xs text-cobam-carbon-grey focus:ring-0">
+            <SelectTrigger className="text-cobam-carbon-grey h-8 border-0 bg-transparent text-xs shadow-none focus:ring-0">
               <SelectValue placeholder="Opérateur" />
             </SelectTrigger>
             <SelectContent>
@@ -516,18 +573,18 @@ export default function PublicProductsIndex({
               <SelectItem value="3">Contient</SelectItem>
             </SelectContent>
           </Select>
-          <div className="w-px h-4 bg-cobam-quill-grey/30 mx-1" />
+          <div className="bg-cobam-quill-grey/30 mx-1 h-4 w-px" />
           <Input
             value={advNameValue}
             onChange={(e) => setAdvNameValue(e.target.value)}
             placeholder="Ex : Ciment Colle"
-            className="h-8 bg-transparent border-0 shadow-none focus-visible:ring-0 text-sm px-2 text-cobam-dark-blue placeholder:text-cobam-carbon-grey/40"
+            className="text-cobam-dark-blue placeholder:text-cobam-carbon-grey/40 h-8 border-0 bg-transparent px-2 text-sm shadow-none focus-visible:ring-0"
           />
         </div>
 
         {/* Bind 2 */}
         <Select value={advBindNameSku} onValueChange={setAdvBindNameSku}>
-          <SelectTrigger className="h-9 border-cobam-quill-grey/30 bg-[#f9fafb] font-bold text-[10px] uppercase shadow-none text-cobam-carbon-grey focus:ring-0 rounded-lg">
+          <SelectTrigger className="border-cobam-quill-grey/30 text-cobam-carbon-grey h-9 rounded-lg bg-[#f9fafb] text-[10px] font-bold uppercase shadow-none focus:ring-0">
             <SelectValue placeholder="Liaison" />
           </SelectTrigger>
           <SelectContent>
@@ -538,10 +595,12 @@ export default function PublicProductsIndex({
         </Select>
 
         {/* SKU */}
-        <div className="flex items-center bg-white p-1.5 rounded-lg border border-cobam-quill-grey/40 gap-2 shrink-0 focus-within:border-cobam-water-blue focus-within:ring-1 focus-within:ring-cobam-water-blue transition-all shadow-sm">
-          <span className="pl-3 text-[10px] font-bold uppercase tracking-[0.1em] text-cobam-water-blue">SKU</span>
+        <div className="border-cobam-quill-grey/40 focus-within:border-cobam-water-blue focus-within:ring-cobam-water-blue flex shrink-0 items-center gap-2 rounded-lg border bg-white p-1.5 shadow-sm transition-all focus-within:ring-1">
+          <span className="text-cobam-water-blue pl-3 text-[10px] font-bold tracking-[0.1em] uppercase">
+            SKU
+          </span>
           <Select value={advSkuOp} onValueChange={setAdvSkuOp}>
-            <SelectTrigger className="h-8 bg-transparent border-0 shadow-none text-xs text-cobam-carbon-grey focus:ring-0">
+            <SelectTrigger className="text-cobam-carbon-grey h-8 border-0 bg-transparent text-xs shadow-none focus:ring-0">
               <SelectValue placeholder="Opérateur" />
             </SelectTrigger>
             <SelectContent>
@@ -550,40 +609,44 @@ export default function PublicProductsIndex({
               <SelectItem value="3">Contient</SelectItem>
             </SelectContent>
           </Select>
-          <div className="w-px h-4 bg-cobam-quill-grey/30 mx-1" />
+          <div className="bg-cobam-quill-grey/30 mx-1 h-4 w-px" />
           <Input
             value={advSkuValue}
             onChange={(e) => setAdvSkuValue(e.target.value)}
             placeholder="..."
-            className="w-[130px] h-8 bg-transparent border-0 shadow-none focus-visible:ring-0 text-sm px-2 text-cobam-dark-blue placeholder:text-cobam-carbon-grey/40"
+            className="text-cobam-dark-blue placeholder:text-cobam-carbon-grey/40 h-8 w-[130px] border-0 bg-transparent px-2 text-sm shadow-none focus-visible:ring-0"
           />
         </div>
 
-        <div className="flex-1 flex justify-end">
+        <div className="flex flex-1 justify-end">
           <Button
             type="button"
             variant="ghost"
             onClick={() => {
-              setAdvBrandValue(""); setAdvBrandOp("1"); setAdvBindBrandName("&");
-              setAdvNameValue(""); setAdvNameOp("1"); setAdvBindNameSku("&");
-              setAdvSkuValue(""); setAdvSkuOp("1");
+              setAdvBrandValue("");
+              setAdvBrandOp("1");
+              setAdvBindBrandName("&");
+              setAdvNameValue("");
+              setAdvNameOp("1");
+              setAdvBindNameSku("&");
+              setAdvSkuValue("");
+              setAdvSkuOp("1");
             }}
-            className="text-[10px] font-bold uppercase tracking-widest text-cobam-carbon-grey hover:text-rose-500 hover:bg-rose-50 transition-colors h-10 px-4"
+            className="text-cobam-carbon-grey h-10 px-4 text-[10px] font-bold tracking-widest uppercase transition-colors hover:bg-rose-50 hover:text-rose-500"
           >
             Réinitialiser
           </Button>
         </div>
-
       </div>
     </div>
   );
 
   return (
     <div className="space-y-12">
-      <div className="mx-6 bg-cobam-light-bg/90 px-6 py-5 backdrop-blur-md md:-mx-12 md:px-12">
+      <div className="bg-cobam-light-bg/90 mx-6 px-6 py-5 backdrop-blur-md md:-mx-12 md:px-12">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="space-y-1">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-cobam-carbon-grey">
+            <p className="text-cobam-carbon-grey text-[10px] font-semibold tracking-[0.3em] uppercase">
               {isRefreshing
                 ? "Recherche en cours..."
                 : activeSearchQuery
@@ -591,18 +654,23 @@ export default function PublicProductsIndex({
                   : `${total} produit${total > 1 ? "s" : ""}`}
             </p>
           </div>
-          <div className="w-fit flex items-center gap-3">
+          <div className="flex w-fit items-center gap-3">
             {searchBar}
             <AnimatedUIButton
               variant="secondary"
               icon={isAdvancedSearchOpen ? "chevron-up" : "chevron-down"}
-              className="px-6 hidden md:flex"
+              className="hidden px-6 md:flex"
               onClick={() => {
                 if (isAdvancedSearchOpen) {
                   setSearchInput("");
-                  setAdvBrandValue(""); setAdvBrandOp("1"); setAdvBindBrandName("&");
-                  setAdvNameValue(""); setAdvNameOp("1"); setAdvBindNameSku("&");
-                  setAdvSkuValue(""); setAdvSkuOp("1");
+                  setAdvBrandValue("");
+                  setAdvBrandOp("1");
+                  setAdvBindBrandName("&");
+                  setAdvNameValue("");
+                  setAdvNameOp("1");
+                  setAdvBindNameSku("&");
+                  setAdvSkuValue("");
+                  setAdvSkuOp("1");
                 }
                 setIsAdvancedSearchOpen((curr) => !curr);
               }}
@@ -617,15 +685,22 @@ export default function PublicProductsIndex({
               onClick={() => {
                 if (isAdvancedSearchOpen) {
                   setSearchInput("");
-                  setAdvBrandValue(""); setAdvBrandOp("1"); setAdvBindBrandName("&");
-                  setAdvNameValue(""); setAdvNameOp("1"); setAdvBindNameSku("&");
-                  setAdvSkuValue(""); setAdvSkuOp("1");
+                  setAdvBrandValue("");
+                  setAdvBrandOp("1");
+                  setAdvBindBrandName("&");
+                  setAdvNameValue("");
+                  setAdvNameOp("1");
+                  setAdvBindNameSku("&");
+                  setAdvSkuValue("");
+                  setAdvSkuOp("1");
                 }
                 setIsAdvancedSearchOpen((curr) => !curr);
               }}
               className={cn(
-                "h-12 w-12 shrink-0 border-cobam-quill-grey/40 md:hidden transition-colors",
-                isAdvancedSearchOpen ? "bg-cobam-water-blue text-white border-transparent" : "bg-transparent text-cobam-carbon-grey"
+                "border-cobam-quill-grey/40 h-12 w-12 shrink-0 transition-colors md:hidden",
+                isAdvancedSearchOpen
+                  ? "bg-cobam-water-blue border-transparent text-white"
+                  : "text-cobam-carbon-grey bg-transparent",
               )}
               aria-label="Recherche Avancée"
             >
@@ -657,8 +732,8 @@ export default function PublicProductsIndex({
         </div>
       ) : null}
 
-      {groupedItems.length === 0 && !isRefreshing && !errorMessage ? (
-        <div className="border border-dashed bg-white/80 px-6 py-14 text-center text-sm font-light text-cobam-carbon-grey">
+      {items.length === 0 && !isRefreshing && !errorMessage ? (
+        <div className="text-cobam-carbon-grey border border-dashed bg-white/80 px-6 py-14 text-center text-sm font-light">
           {activeSearchQuery
             ? "Aucun produit ne correspond a cette recherche."
             : "Aucun produit public n'est disponible pour le moment."}
@@ -666,80 +741,143 @@ export default function PublicProductsIndex({
       ) : null}
 
       <div className="space-y-14">
-        {groupedItems.map((category) => {
-          const themeColor = normalizeThemeColor(category.themeColor);
+        {isSearchResultsMode ? (
+          <>
+            {searchResultGroups.relevant.length > 0 ? (
+              <section className="space-y-6">
+                <div className="space-y-2">
+                  <p className="text-cobam-water-blue text-[10px] font-semibold tracking-[0.34em] uppercase">
+                    Recherche
+                  </p>
+                  <h2
+                    className="text-cobam-dark-blue text-3xl font-light sm:text-4xl"
+                    style={{ fontFamily: "var(--font-playfair), serif" }}
+                  >
+                    Les plus pertinents
+                  </h2>
+                  <div className="bg-cobam-water-blue h-px w-14" />
+                </div>
+                <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {searchResultGroups.relevant.map((item) => (
+                    <PublicProductCard
+                      key={`relevant-${item.product.entityType}-${item.product.id}-${item.subcategory.slug}`}
+                      product={item.product}
+                      themeColor={normalizeThemeColor(item.category.themeColor)}
+                      href={buildPublicProductHref({
+                        categorySlug: item.category.slug,
+                        subcategorySlug: item.subcategory.slug,
+                        product: item.product,
+                      })}
+                    />
+                  ))}
+                </div>
+              </section>
+            ) : null}
 
-          return (
-            <section key={category.slug} className="space-y-10">
-              <div className="space-y-3">
-                <p
-                  className="text-[10px] font-semibold uppercase tracking-[0.4em]"
-                  style={{ color: themeColor }}
-                >
-                  {category.subtitle ?? "Categorie"}
-                </p>
-                <h2
-                  className="flex flex-wrap items-center gap-3 text-3xl font-light text-cobam-dark-blue sm:text-4xl"
-                  style={{ fontFamily: "var(--font-playfair), serif" }}
-                >
-                  {category.name}
-                  {category.isPromoted ? (
-                    <span className="rounded-full border border-[#0a8dc1]/25 bg-[#0a8dc1]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#0a8dc1]">
-                      En promotion
-                    </span>
-                  ) : null}
-                </h2>
-                <div className="h-[1px] w-14" style={{ backgroundColor: themeColor }} />
-              </div>
+            {searchResultGroups.other.length > 0 ? (
+              <section className="space-y-6">
+                <div className="space-y-2">
+                  <h2
+                    className="text-cobam-dark-blue text-3xl font-light sm:text-4xl"
+                    style={{ fontFamily: "var(--font-playfair), serif" }}
+                  >
+                    Autres résultats
+                  </h2>
+                  <div className="bg-cobam-quill-grey/70 h-px w-14" />
+                </div>
+                <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {searchResultGroups.other.map((item) => (
+                    <PublicProductCard
+                      key={`other-${item.product.entityType}-${item.product.id}-${item.subcategory.slug}`}
+                      product={item.product}
+                      themeColor={normalizeThemeColor(item.category.themeColor)}
+                      href={buildPublicProductHref({
+                        categorySlug: item.category.slug,
+                        subcategorySlug: item.subcategory.slug,
+                        product: item.product,
+                      })}
+                    />
+                  ))}
+                </div>
+              </section>
+            ) : null}
+          </>
+        ) : (
+          groupedItems.map((category) => {
+            const themeColor = normalizeThemeColor(category.themeColor);
 
-              <div className="space-y-12">
-                {category.subcategories.map((subcategory) => (
-                  <div key={`${category.slug}-${subcategory.slug}`} className="space-y-6">
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <h3 className="text-xl font-semibold text-cobam-dark-blue">
-                          {subcategory.name}
-                        </h3>
-                        {subcategory.subtitle ? (
-                          <span className="text-sm text-cobam-carbon-grey">
-                            {subcategory.subtitle}
-                          </span>
-                        ) : null}
+            return (
+              <section key={category.slug} className="space-y-10">
+                <div className="space-y-3">
+                  <p
+                    className="text-[10px] font-semibold tracking-[0.4em] uppercase"
+                    style={{ color: themeColor }}
+                  >
+                    {category.subtitle ?? "Categorie"}
+                  </p>
+                  <h2
+                    className="text-cobam-dark-blue flex flex-wrap items-center gap-3 text-3xl font-light sm:text-4xl"
+                    style={{ fontFamily: "var(--font-playfair), serif" }}
+                  >
+                    {category.name}
+                    {category.isPromoted ? (
+                      <span className="rounded-full border border-[#0a8dc1]/25 bg-[#0a8dc1]/10 px-3 py-1 text-[10px] font-black tracking-[0.18em] text-[#0a8dc1] uppercase">
+                        En promotion
+                      </span>
+                    ) : null}
+                  </h2>
+                  <div className="h-[1px] w-14" style={{ backgroundColor: themeColor }} />
+                </div>
+
+                <div className="space-y-12">
+                  {category.subcategories.map((subcategory) => (
+                    <div key={`${category.slug}-${subcategory.slug}`} className="space-y-6">
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <h3 className="text-cobam-dark-blue text-xl font-semibold">
+                            {subcategory.name}
+                          </h3>
+                          {subcategory.subtitle ? (
+                            <span className="text-cobam-carbon-grey text-sm">
+                              {subcategory.subtitle}
+                            </span>
+                          ) : null}
+                        </div>
+                        <div className="bg-cobam-quill-grey/50 h-px w-10" />
                       </div>
-                      <div className="h-px w-10 bg-cobam-quill-grey/50" />
-                    </div>
 
-                    <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                      {subcategory.products.map((product) => (
-                        <PublicProductCard
-                          key={`${product.entityType}-${product.id}-${subcategory.slug}`}
-                          product={product}
-                          themeColor={themeColor}
-                          href={buildPublicProductHref({
-                            categorySlug: category.slug,
-                            subcategorySlug: subcategory.slug,
-                            product,
-                          })}
-                        />
-                      ))}
+                      <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                        {subcategory.products.map((product) => (
+                          <PublicProductCard
+                            key={`${product.entityType}-${product.id}-${subcategory.slug}`}
+                            product={product}
+                            themeColor={themeColor}
+                            href={buildPublicProductHref({
+                              categorySlug: category.slug,
+                              subcategorySlug: subcategory.slug,
+                              product,
+                            })}
+                          />
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          );
-        })}
+                  ))}
+                </div>
+              </section>
+            );
+          })
+        )}
 
         {isRefreshing
           ? Array.from({ length: 6 }).map((_, index) => (
-            <PublicProductCardSkeleton key={`refresh-skeleton-${index}`} />
-          ))
+              <PublicProductCardSkeleton key={`refresh-skeleton-${index}`} />
+            ))
           : null}
 
         {!isRefreshing && isLoadingMore
           ? Array.from({ length: 3 }).map((_, index) => (
-            <PublicProductCardSkeleton key={`append-skeleton-${index}`} />
-          ))
+              <PublicProductCardSkeleton key={`append-skeleton-${index}`} />
+            ))
           : null}
       </div>
 
@@ -759,7 +897,7 @@ export default function PublicProductsIndex({
         ) : hasMore ? (
           <div
             className={cn(
-              "inline-flex items-center gap-3 border-b px-2 py-2 text-[11px] font-medium uppercase tracking-[0.2em]",
+              "inline-flex items-center gap-3 border-b px-2 py-2 text-[11px] font-medium tracking-[0.2em] uppercase",
               isLoadingMore ? "text-cobam-dark-blue" : "text-cobam-carbon-grey",
             )}
             style={{

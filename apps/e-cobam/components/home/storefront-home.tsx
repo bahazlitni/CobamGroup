@@ -135,7 +135,7 @@ function ProductCard({ product }: { product: LandingProduct }) {
     <article className="group border-ec-line hover:border-ec-blue/35 relative flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_12px_34px_rgba(20,32,46,0.055)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_52px_rgba(20,32,46,0.1)]">
       <Link
         href={product.href}
-        className="focus-visible:outline-ec-blue relative block aspect-[4/3] overflow-hidden bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+        className="focus-visible:outline-ec-blue relative block aspect-square w-full overflow-hidden bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
       >
         {image ? (
           <SafeMediaImage
@@ -615,7 +615,6 @@ export function StorefrontHome({ data }: { data: LandingHomeData }) {
     <main>
       <Hero />
       <DiagnosticsNotice data={data} />
-      <CategoryShortcuts categories={data.categories} />
       <div id="best-sellers">
         <ProductShelf
           title="Les produits les plus demandés"
@@ -623,7 +622,6 @@ export function StorefrontHome({ data }: { data: LandingHomeData }) {
           actionHref="/catalogue?sélection=promotion"
         />
       </div>
-      <PromotionsSection />
       <div id="new-arrivals">
         <ProductShelf
           title="Nouveautés"
@@ -631,6 +629,8 @@ export function StorefrontHome({ data }: { data: LandingHomeData }) {
           actionHref="/catalogue?tri=latest"
         />
       </div>
+      <CategoryShortcuts categories={data.categories} />
+      <PromotionsSection />
       <ShopByNeed />
       <AccountSection />
       <WhySection />

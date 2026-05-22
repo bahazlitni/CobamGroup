@@ -13,8 +13,7 @@ interface NavbarSearchProps {
   onClose: () => void;
 }
 
-
-const POPULAR_SUGGESTIONS = ["Brique", "Ciment colle", "SikaCeram"]
+const POPULAR_SUGGESTIONS = ["Brique", "Ciment colle", "SikaCeram"];
 
 export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
   const router = useRouter();
@@ -86,15 +85,29 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
       if (parts.length > 0) parts.push(advBindNameSku);
       parts.push(`sku:${advSkuOp}=${advSkuValue.trim()}`);
     }
-    return parts.join('');
-  }, [advBrandValue, advBrandOp, advBindBrandName, advNameValue, advNameOp, advBindNameSku, advSkuValue, advSkuOp]);
+    return parts.join("");
+  }, [
+    advBrandValue,
+    advBrandOp,
+    advBindBrandName,
+    advNameValue,
+    advNameOp,
+    advBindNameSku,
+    advSkuValue,
+    advSkuOp,
+  ]);
 
   useEffect(() => {
     if (isOpen) {
       setIsAdvancedSearchOpen(false);
-      setAdvBrandValue(""); setAdvBrandOp("1"); setAdvBindBrandName("&");
-      setAdvNameValue(""); setAdvNameOp("1"); setAdvBindNameSku("&");
-      setAdvSkuValue(""); setAdvSkuOp("1");
+      setAdvBrandValue("");
+      setAdvBrandOp("1");
+      setAdvBindBrandName("&");
+      setAdvNameValue("");
+      setAdvNameOp("1");
+      setAdvBindNameSku("&");
+      setAdvSkuValue("");
+      setAdvSkuOp("1");
     }
   }, [isOpen]);
 
@@ -134,12 +147,12 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
           const params = new URLSearchParams({
             page: "1",
             pageSize: "6",
+            cap: "6",
             search: normalized,
           });
-          const response = await fetch(
-            `/api/public/all-products?${params.toString()}`,
-            { signal: controller.signal }
-          );
+          const response = await fetch(`/api/public/all-products?${params.toString()}`, {
+            signal: controller.signal,
+          });
           const payload = await response.json();
 
           if (!response.ok || !payload.ok) {
@@ -195,20 +208,20 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 1.02 }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed inset-0 z-[100] flex flex-col w-full h-full bg-white/95 backdrop-blur-2xl text-cobam-dark-blue overflow-hidden"
+          className="text-cobam-dark-blue fixed inset-0 z-[100] flex h-full w-full flex-col overflow-hidden bg-white/95 backdrop-blur-2xl"
         >
           {/* Header Area */}
-          <div className="flex items-center justify-between px-8 py-10 md:px-16 relative z-10">
-            <motion.div 
+          <div className="relative z-10 flex items-center justify-between px-8 py-10 md:px-16">
+            <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
               className="flex items-center gap-4"
             >
-              <div className="p-3 bg-cobam-water-blue/10 rounded-full border border-cobam-water-blue/20 backdrop-blur-md">
+              <div className="bg-cobam-water-blue/10 border-cobam-water-blue/20 rounded-full border p-3 backdrop-blur-md">
                 <Search size={22} className="text-cobam-water-blue" />
               </div>
-              <span className="text-xs font-bold uppercase tracking-[0.4em] text-cobam-carbon-grey/60">
+              <span className="text-cobam-carbon-grey/60 text-xs font-bold tracking-[0.4em] uppercase">
                 Commande Globale
               </span>
             </motion.div>
@@ -218,23 +231,25 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
               onClick={onClose}
-              className="group flex items-center gap-3 p-3 rounded-full hover:bg-black/5 transition-all outline-none"
+              className="group flex items-center gap-3 rounded-full p-3 transition-all outline-none hover:bg-black/5"
             >
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-cobam-carbon-grey/60 opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="text-cobam-carbon-grey/60 text-[10px] font-bold tracking-[0.2em] uppercase opacity-0 transition-opacity group-hover:opacity-100">
                 Fermer (Esc)
               </span>
-              <div className="bg-black/5 rounded-full p-2 group-hover:bg-cobam-water-blue group-hover:text-white transition-colors">
-                 <X size={20} className="text-cobam-carbon-grey group-hover:text-white transition-colors" />
+              <div className="group-hover:bg-cobam-water-blue rounded-full bg-black/5 p-2 transition-colors group-hover:text-white">
+                <X
+                  size={20}
+                  className="text-cobam-carbon-grey transition-colors group-hover:text-white"
+                />
               </div>
             </motion.button>
           </div>
 
           {/* Main Content Area */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col relative z-0">
-            <div className="max-w-6xl w-full mx-auto px-8 md:px-16 pt-[10vh] pb-24">
-              
+          <div className="custom-scrollbar relative z-0 flex flex-1 flex-col overflow-y-auto">
+            <div className="mx-auto w-full max-w-6xl px-8 pt-[10vh] pb-24 md:px-16">
               {/* Input Area */}
-              <div className="relative group">
+              <div className="group relative">
                 <input
                   ref={inputRef}
                   type="text"
@@ -250,21 +265,25 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
                       }
                     }
                     if (e.key === "ArrowDown") {
-                      setTargetIndex(prev => (prev === null ? 0 : Math.min(prev + 1, results.length - 1)));
+                      setTargetIndex((prev) =>
+                        prev === null ? 0 : Math.min(prev + 1, results.length - 1),
+                      );
                     }
                     if (e.key === "ArrowUp") {
-                      setTargetIndex(prev => (prev === null ? results.length - 1 : Math.max(prev - 1, 0)));
+                      setTargetIndex((prev) =>
+                        prev === null ? results.length - 1 : Math.max(prev - 1, 0),
+                      );
                     }
                   }}
                   placeholder="Que recherchez-vous ?"
-                  className="focus:outline-none w-full bg-transparent text-5xl md:text-7xl lg:text-[5rem] font-light text-cobam-dark-blue placeholder:text-cobam-carbon-grey/20 py-6 transition-all tracking-tight"
+                  className="text-cobam-dark-blue placeholder:text-cobam-carbon-grey/20 w-full bg-transparent py-6 text-5xl font-light tracking-tight transition-all focus:outline-none md:text-7xl lg:text-[5rem]"
                   style={{ fontFamily: "var(--font-playfair), serif" }}
                 />
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-6">
+                <div className="absolute top-1/2 right-0 flex -translate-y-1/2 items-center gap-6">
                   {/* Advanced search keeps the clean default state uncluttered. */}
                   {isSearching && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                       <Loader2 className="animate-spin text-cobam-water-blue h-10 w-10" />
+                      <Loader2 className="text-cobam-water-blue h-10 w-10 animate-spin" />
                     </motion.div>
                   )}
                 </div>
@@ -272,9 +291,9 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
                   initial={{ width: 0 }}
                   animate={{ width: "100%" }}
                   transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }}
-                  className="h-[2px] bg-gradient-to-r from-cobam-water-blue/80 via-cobam-water-blue/20 to-transparent origin-left relative"
+                  className="from-cobam-water-blue/80 via-cobam-water-blue/20 relative h-[2px] origin-left bg-gradient-to-r to-transparent"
                 >
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-32 h-32 bg-cobam-water-blue/10 blur-[50px] rounded-full pointer-events-none" />
+                  <div className="bg-cobam-water-blue/10 pointer-events-none absolute top-1/2 left-0 h-32 w-32 -translate-y-1/2 rounded-full blur-[50px]" />
                 </motion.div>
               </div>
 
@@ -289,8 +308,8 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
                       transition={{ delay: 0.4 }}
                       className="space-y-8"
                     >
-                      <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-cobam-carbon-grey/60 flex items-center gap-4">
-                        <span className="w-8 h-px bg-cobam-carbon-grey/20" />
+                      <p className="text-cobam-carbon-grey/60 flex items-center gap-4 text-[10px] font-bold tracking-[0.4em] uppercase">
+                        <span className="bg-cobam-carbon-grey/20 h-px w-8" />
                         Suggestions populaires
                       </p>
                       <div className="flex flex-wrap gap-4">
@@ -298,7 +317,7 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
                           <button
                             key={tag}
                             onClick={() => setSearchInput(tag)}
-                            className="px-6 py-3 rounded-full border border-cobam-quill-grey/40 bg-cobam-light-bg text-sm font-medium text-cobam-dark-blue hover:border-cobam-water-blue hover:text-cobam-water-blue hover:bg-cobam-water-blue/5 hover:shadow-[0_0_20px_rgba(0,174,239,0.05)] transition-all duration-300"
+                            className="border-cobam-quill-grey/40 bg-cobam-light-bg text-cobam-dark-blue hover:border-cobam-water-blue hover:text-cobam-water-blue hover:bg-cobam-water-blue/5 rounded-full border px-6 py-3 text-sm font-medium transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,174,239,0.05)]"
                           >
                             {tag}
                           </button>
@@ -310,7 +329,7 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
                       key="results"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                      className="grid grid-cols-1 gap-6 md:grid-cols-2"
                     >
                       {results.map((product, idx) => (
                         <motion.button
@@ -321,39 +340,55 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
                           onMouseEnter={() => setTargetIndex(idx)}
                           onClick={() => goToProduct(product)}
                           className={cn(
-                             "group flex items-center gap-6 p-5 rounded-lg border text-left transition-all duration-500 overflow-hidden relative",
-                             targetIndex === idx
-                               ? "bg-white border-cobam-water-blue -translate-y-1 shadow-[0_10px_40px_rgba(0,174,239,0.08)]"
-                               : "bg-transparent border-transparent hover:bg-white/60"
+                            "group relative flex items-center gap-6 overflow-hidden rounded-lg border p-5 text-left transition-all duration-500",
+                            targetIndex === idx
+                              ? "border-cobam-water-blue -translate-y-1 bg-white shadow-[0_10px_40px_rgba(0,174,239,0.08)]"
+                              : "border-transparent bg-transparent hover:bg-white/60",
                           )}
                         >
-                          <div className={cn("absolute inset-0 bg-gradient-to-tr from-cobam-water-blue/5 to-transparent opacity-0 transition-opacity duration-500", targetIndex === idx ? "opacity-100" : "")} />
-                          
-                          <div className="relative h-28 w-28 flex-shrink-0 overflow-hidden rounded-xl bg-white border border-cobam-quill-grey/20 shadow-sm z-10 flex items-center justify-center p-2">
+                          <div
+                            className={cn(
+                              "from-cobam-water-blue/5 absolute inset-0 bg-gradient-to-tr to-transparent opacity-0 transition-opacity duration-500",
+                              targetIndex === idx ? "opacity-100" : "",
+                            )}
+                          />
+
+                          <div className="border-cobam-quill-grey/20 relative z-10 flex h-28 w-28 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-white p-2 shadow-sm">
                             {product.product.imageThumbnailUrl ? (
                               <Image
                                 src={product.product.imageThumbnailUrl}
                                 alt={product.product.name}
                                 fill
-                                className="object-contain p-2 group-hover:scale-110 transition-transform duration-700"
+                                className="object-contain p-2 transition-transform duration-700 group-hover:scale-110"
                               />
                             ) : (
                               <Search className="text-cobam-carbon-grey/20" size={32} />
                             )}
                           </div>
 
-                          <div className="flex-1 min-w-0 z-10">
-                            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-cobam-water-blue mb-2 block">
-                              {product.product.entityType === "FAMILY" ? "Famille" : product.product.entityType === "VARIANT" ? "Variante" : "Produit"}
+                          <div className="z-10 min-w-0 flex-1">
+                            <span className="text-cobam-water-blue mb-2 block text-[10px] font-bold tracking-[0.3em] uppercase">
+                              {product.product.entityType === "FAMILY"
+                                ? "Famille"
+                                : product.product.entityType === "VARIANT"
+                                  ? "Variante"
+                                  : "Produit"}
                             </span>
-                            <h4 className="text-xl font-light text-cobam-dark-blue truncate leading-tight mb-2" style={{ fontFamily: "var(--font-playfair), serif" }}>
+                            <h4
+                              className="text-cobam-dark-blue mb-2 truncate text-xl leading-tight font-light"
+                              style={{ fontFamily: "var(--font-playfair), serif" }}
+                            >
                               {product.product.name}
                             </h4>
-                            <p className="text-sm font-medium text-cobam-carbon-grey truncate mb-4">
+                            <p className="text-cobam-carbon-grey mb-4 truncate text-sm font-medium">
                               {product.product.brandName || product.subcategory.name}
                             </p>
-                            <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-cobam-carbon-grey/60 group-hover:text-cobam-water-blue transition-colors">
-                              Voir Détails <ArrowRight size={14} className="group-hover:translate-x-2 transition-transform duration-500" />
+                            <div className="text-cobam-carbon-grey/60 group-hover:text-cobam-water-blue flex items-center gap-3 text-[10px] font-bold tracking-widest uppercase transition-colors">
+                              Voir Détails{" "}
+                              <ArrowRight
+                                size={14}
+                                className="transition-transform duration-500 group-hover:translate-x-2"
+                              />
                             </div>
                           </div>
                         </motion.button>
@@ -362,10 +397,15 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
                       {results.length >= 6 && (
                         <button
                           onClick={goToSearchPage}
-                          className="md:col-span-2 flex items-center justify-center gap-4 py-8 rounded-lg border border-dashed border-cobam-quill-grey/50 bg-white/40 text-cobam-carbon-grey hover:text-cobam-water-blue hover:border-cobam-water-blue hover:bg-cobam-water-blue/5 hover:shadow-[0_0_30px_rgba(0,174,239,0.05)] transition-all duration-300 group"
+                          className="border-cobam-quill-grey/50 text-cobam-carbon-grey hover:text-cobam-water-blue hover:border-cobam-water-blue hover:bg-cobam-water-blue/5 group flex items-center justify-center gap-4 rounded-lg border border-dashed bg-white/40 py-8 transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,174,239,0.05)] md:col-span-2"
                         >
-                          <span className="text-sm font-bold tracking-[0.2em] uppercase">Voir tous les résultats</span>
-                          <ArrowRight size={20} className="group-hover:translate-x-3 transition-transform duration-500 text-cobam-water-blue" />
+                          <span className="text-sm font-bold tracking-[0.2em] uppercase">
+                            Voir tous les résultats
+                          </span>
+                          <ArrowRight
+                            size={20}
+                            className="text-cobam-water-blue transition-transform duration-500 group-hover:translate-x-3"
+                          />
                         </button>
                       )}
                     </motion.div>
@@ -374,24 +414,26 @@ export default function NavbarSearch({ isOpen, onClose }: NavbarSearchProps) {
                       key="no-results"
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="py-24 text-center flex flex-col items-center"
+                      className="flex flex-col items-center py-24 text-center"
                     >
-                      <div className="w-20 h-20 bg-cobam-quill-grey/10 rounded-full flex items-center justify-center mb-6">
-                         <Search size={32} className="text-cobam-carbon-grey/30" />
+                      <div className="bg-cobam-quill-grey/10 mb-6 flex h-20 w-20 items-center justify-center rounded-full">
+                        <Search size={32} className="text-cobam-carbon-grey/30" />
                       </div>
                       <p className="text-cobam-carbon-grey text-xl font-light">
-                        Aucun résultat pour <span className="text-cobam-dark-blue font-medium italic">&quot;{searchInput}&quot;</span>
+                        Aucun résultat pour{" "}
+                        <span className="text-cobam-dark-blue font-medium italic">
+                          &quot;{searchInput}&quot;
+                        </span>
                       </p>
                     </motion.div>
                   ) : null}
                 </AnimatePresence>
               </div>
-
             </div>
           </div>
 
           {/* Footer Decor */}
-          <div className="absolute bottom-12 w-full text-center pointer-events-none opacity-20 hidden md:block">
+          <div className="pointer-events-none absolute bottom-12 hidden w-full text-center opacity-20 md:block">
             <Image
               src="/images/logos/cobam-group/logo-vector.svg"
               alt="Logo"

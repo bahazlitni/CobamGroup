@@ -4,6 +4,10 @@ import {
   type ProductTypeAttributeInputType,
   type StockUnit,
 } from "@prisma/client";
+import {
+  rankProductSearchRowsWithScores,
+  type ProductSearchCandidate,
+} from "@cobam/shared/search/product-search";
 
 export const CATALOG_PAGE_SIZE = 36;
 
@@ -63,6 +67,9 @@ const PRODUCT_CARD_SELECT = {
   name: true,
   displayName: true,
   richTextDescription: true,
+  titleSeo: true,
+  descriptionSeo: true,
+  tags: true,
   currentPriceTtcTnd: true,
   basePriceTtcTnd: true,
   priceVisibility: true,
@@ -91,6 +98,16 @@ const PRODUCT_CARD_SELECT = {
       media: { select: MEDIA_SELECT },
     },
   },
+  attributes: {
+    orderBy: [{ groupSortOrder: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
+    select: {
+      name: true,
+      label: true,
+      value: true,
+      unit: true,
+      groupName: true,
+    },
+  },
   subcategories: {
     where: VISIBLE_ECOMMERCE_SUBCATEGORY_LINK_WHERE,
     select: {
@@ -99,11 +116,17 @@ const PRODUCT_CARD_SELECT = {
           id: true,
           name: true,
           slug: true,
+          subtitle: true,
+          description: true,
+          descriptionSeo: true,
           category: {
             select: {
               id: true,
               name: true,
               slug: true,
+              subtitle: true,
+              description: true,
+              descriptionSeo: true,
             },
           },
         },
@@ -118,6 +141,7 @@ const PRODUCT_FAMILY_SELECT = {
   name: true,
   subtitle: true,
   description: true,
+  descriptionSeo: true,
   mainImageMediaId: true,
   mainImage: { select: MEDIA_SELECT },
   defaultProductId: true,
@@ -232,6 +256,19 @@ export type CommerceAttribute = {
   specialType: "COLOR" | "FINISH" | null;
 };
 
+export type CommerceColorReference = {
+  key: string;
+  label: string;
+  hexValue: string | null;
+};
+
+export type CommerceFinishReference = {
+  key: string;
+  label: string;
+  colorHex: string | null;
+  imageUrl: string | null;
+};
+
 export type CommerceVariant = {
   id: number;
   sku: string;
@@ -266,6 +303,8 @@ export type CommerceProductDetail = {
   brand: CommerceBrand | null;
   categoryTrail: Array<{ name: string; slug: string }>;
   coverImage: CommerceMedia | null;
+  colorReferences: CommerceColorReference[];
+  finishReferences: CommerceFinishReference[];
   variants: CommerceVariant[];
   relatedProducts: CommerceProductCard[];
 };
@@ -332,6 +371,15 @@ function mediaUrl(id: bigint | number, variant: "original" | "thumbnail" = "orig
   return `/api/media/${id.toString()}/file${query}`;
 }
 
+function normalizeComparableValue(value: string | null | undefined) {
+  return (value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
 function isRenderableMedia(media: {
   id: bigint;
   kind: "IMAGE" | "VIDEO" | "DOCUMENT";
@@ -375,7 +423,10 @@ function firstImage(product: Pick<ProductCardRecord, "media">) {
   return null;
 }
 
-function technicalMedia(product: Pick<ProductDetailRecord, "media">, role: "TECHNICAL" | "CERTIFICATE") {
+function technicalMedia(
+  product: Pick<ProductDetailRecord, "media">,
+  role: "TECHNICAL" | "CERTIFICATE",
+) {
   const link = product.media.find((entry) => entry.role === role);
   return link ? mapMedia(link.media, link) : null;
 }
@@ -391,7 +442,9 @@ function decimalToString(value: Prisma.Decimal | null | undefined) {
   return value == null ? null : value.toString();
 }
 
-function productPrice(record: Pick<ProductCardRecord, "currentPriceTtcTnd" | "basePriceTtcTnd" | "priceVisibility">) {
+function productPrice(
+  record: Pick<ProductCardRecord, "currentPriceTtcTnd" | "basePriceTtcTnd" | "priceVisibility">,
+) {
   if (record.priceVisibility === "NEVER") {
     return null;
   }
@@ -484,7 +537,9 @@ function firstSubcategory(record: Pick<ProductCardRecord, "subcategories">) {
   };
 }
 
-function mapStock(record: Pick<ProductCardRecord, "stockAvailable" | "stockAvailability" | "stockUnit">) {
+function mapStock(
+  record: Pick<ProductCardRecord, "stockAvailable" | "stockAvailability" | "stockUnit">,
+) {
   const label = stockLabel(record.stockAvailability, record.stockAvailable);
 
   return {
@@ -497,10 +552,9 @@ function mapStock(record: Pick<ProductCardRecord, "stockAvailable" | "stockAvail
 }
 
 function productBadges(record: Pick<ProductCardRecord, "isNew" | "isFeatured">) {
-  return [
-    record.isNew ? "Nouveau" : null,
-    record.isFeatured ? "Premium" : null,
-  ].filter((badge): badge is string => badge != null);
+  return [record.isNew ? "Nouveau" : null, record.isFeatured ? "Premium" : null].filter(
+    (badge): badge is string => badge != null,
+  );
 }
 
 function mapProductCard(record: ProductCardRecord): CommerceProductCard {
@@ -536,11 +590,7 @@ function defaultFamilyProduct(record: ProductFamilyRecord | ProductFamilyDetailR
   const products = visibleFamilyProducts(record);
   const defaultProductId = record.defaultProductId == null ? null : Number(record.defaultProductId);
 
-  return (
-    products.find((product) => Number(product.id) === defaultProductId) ??
-    products[0] ??
-    null
-  );
+  return products.find((product) => Number(product.id) === defaultProductId) ?? products[0] ?? null;
 }
 
 function mapFamilyCard(record: ProductFamilyRecord): CommerceProductCard | null {
@@ -571,6 +621,166 @@ function mapFamilyCard(record: ProductFamilyRecord): CommerceProductCard | null 
     badges: Array.from(new Set(["Gamme", ...productBadges(defaultProduct)])),
     updatedAt: record.updatedAt.toISOString(),
   };
+}
+
+type CommerceSearchCandidate = ProductSearchCandidate & {
+  commerceKey: string;
+};
+
+function productAttributesText(record: Pick<ProductCardRecord, "attributes">) {
+  return record.attributes
+    .map((attribute) =>
+      [attribute.groupName, attribute.label || attribute.name, attribute.value, attribute.unit]
+        .filter(Boolean)
+        .join(" "),
+    )
+    .filter(Boolean)
+    .join(" ");
+}
+
+function productSearchText(record: ProductCardRecord) {
+  return [
+    record.sku,
+    record.displayName,
+    record.name,
+    record.brand?.name,
+    record.tags,
+    richTextPlainText(record.richTextDescription),
+    record.descriptionSeo,
+    productAttributesText(record),
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function firstSearchSubcategory(record: ProductCardRecord) {
+  const first = record.subcategories[0]?.subcategory;
+
+  return {
+    category: first?.category ?? null,
+    subcategory: first ?? null,
+  };
+}
+
+function mapProductSearchCandidate(
+  record: ProductCardRecord,
+  commerceKey: string,
+): CommerceSearchCandidate {
+  const trail = firstSearchSubcategory(record);
+
+  return {
+    commerceKey,
+    entity_type: "PRODUCT",
+    product_slug: record.slug,
+    product_sku: record.sku,
+    product_name: record.displayName || record.name,
+    product_brand: record.brand?.name ?? null,
+    product_tags: record.tags,
+    product_description: richTextJson(record.richTextDescription),
+    product_description_seo: record.descriptionSeo,
+    attributes_text: productAttributesText(record),
+    family_name: null,
+    family_slug: null,
+    family_subtitle: null,
+    family_description: null,
+    family_description_seo: null,
+    family_members_text: null,
+    category_name: trail.category?.name ?? "",
+    category_slug: trail.category?.slug ?? "",
+    category_subtitle: trail.category?.subtitle ?? null,
+    category_description: trail.category?.description ?? null,
+    category_description_seo: trail.category?.descriptionSeo ?? null,
+    subcategory_name: trail.subcategory?.name ?? "",
+    subcategory_slug: trail.subcategory?.slug ?? "",
+    subcategory_subtitle: trail.subcategory?.subtitle ?? null,
+    subcategory_description: trail.subcategory?.description ?? null,
+    subcategory_description_seo: trail.subcategory?.descriptionSeo ?? null,
+  };
+}
+
+function mapFamilySearchCandidate(
+  record: ProductFamilyRecord,
+  commerceKey: string,
+): CommerceSearchCandidate | null {
+  const defaultProduct = defaultFamilyProduct(record);
+  if (!defaultProduct) {
+    return null;
+  }
+
+  const products = visibleFamilyProducts(record);
+  const trail = firstSearchSubcategory(defaultProduct);
+
+  return {
+    commerceKey,
+    entity_type: "FAMILY",
+    product_slug: record.slug,
+    product_sku: defaultProduct.sku,
+    product_name: defaultProduct.displayName || defaultProduct.name,
+    product_brand: defaultProduct.brand?.name ?? null,
+    product_tags: products
+      .map((product) => product.tags)
+      .filter(Boolean)
+      .join(" "),
+    product_description: richTextJson(defaultProduct.richTextDescription),
+    product_description_seo: defaultProduct.descriptionSeo,
+    attributes_text: products.map(productAttributesText).filter(Boolean).join(" "),
+    family_name: record.name,
+    family_slug: record.slug,
+    family_subtitle: record.subtitle,
+    family_description: record.description,
+    family_description_seo: record.descriptionSeo,
+    family_members_text: products.map(productSearchText).filter(Boolean).join(" "),
+    category_name: trail.category?.name ?? "",
+    category_slug: trail.category?.slug ?? "",
+    category_subtitle: trail.category?.subtitle ?? null,
+    category_description: trail.category?.description ?? null,
+    category_description_seo: trail.category?.descriptionSeo ?? null,
+    subcategory_name: trail.subcategory?.name ?? "",
+    subcategory_slug: trail.subcategory?.slug ?? "",
+    subcategory_subtitle: trail.subcategory?.subtitle ?? null,
+    subcategory_description: trail.subcategory?.description ?? null,
+    subcategory_description_seo: trail.subcategory?.descriptionSeo ?? null,
+  };
+}
+
+function rankCommerceCardsBySearch(input: {
+  families: ProductFamilyRecord[];
+  products: ProductCardRecord[];
+  query: string;
+  limit?: number | null;
+}) {
+  const familiesByKey = new Map<string, ProductFamilyRecord>();
+  const productsByKey = new Map<string, ProductCardRecord>();
+  const candidates: CommerceSearchCandidate[] = [];
+
+  for (const family of input.families) {
+    const key = `FAMILY:${Number(family.id)}`;
+    const candidate = mapFamilySearchCandidate(family, key);
+    if (!candidate) {
+      continue;
+    }
+
+    familiesByKey.set(key, family);
+    candidates.push(candidate);
+  }
+
+  for (const product of input.products) {
+    const key = `PRODUCT:${Number(product.id)}`;
+    productsByKey.set(key, product);
+    candidates.push(mapProductSearchCandidate(product, key));
+  }
+
+  return rankProductSearchRowsWithScores(candidates, input.query, { limit: input.limit })
+    .map((entry) => {
+      const family = familiesByKey.get(entry.row.commerceKey);
+      if (family) {
+        return mapFamilyCard(family);
+      }
+
+      const product = productsByKey.get(entry.row.commerceKey);
+      return product ? mapProductCard(product) : null;
+    })
+    .filter((card): card is CommerceProductCard => card != null);
 }
 
 function filterValues<T extends string>(value: FilterValue<T>) {
@@ -616,23 +826,6 @@ function categoryWhere(categorySlug?: FilterValue<string>) {
   } satisfies Prisma.ProductWhereInput;
 }
 
-function productSearchWhere(search?: string | null) {
-  if (!search) {
-    return undefined;
-  }
-
-  return {
-    OR: [
-      { sku: { contains: search, mode: "insensitive" } },
-      { name: { contains: search, mode: "insensitive" } },
-      { displayName: { contains: search, mode: "insensitive" } },
-      { tags: { contains: search, mode: "insensitive" } },
-      { brand: { is: { name: { contains: search, mode: "insensitive" } } } },
-      { attributes: { some: { value: { contains: search, mode: "insensitive" } } } },
-    ],
-  } satisfies Prisma.ProductWhereInput;
-}
-
 function productAvailabilityWhere(availability?: FilterValue<ProductAvailability>) {
   const values = filterValues(availability);
 
@@ -654,7 +847,10 @@ function productAvailabilityWhere(availability?: FilterValue<ProductAvailability
   } satisfies Prisma.ProductWhereInput;
 }
 
-function productAttributeFilterWhere(key: string, values: string[]): Prisma.ProductWhereInput | null {
+function productAttributeFilterWhere(
+  key: string,
+  values: string[],
+): Prisma.ProductWhereInput | null {
   const cleanedValues = Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)));
 
   if (cleanedValues.length === 0) {
@@ -669,10 +865,7 @@ function productAttributeFilterWhere(key: string, values: string[]): Prisma.Prod
         })),
         AND: [
           {
-            OR: [
-              { name: { equals: key, mode: "insensitive" } },
-              { attributeDef: { is: { key } } },
-            ],
+            OR: [{ name: { equals: key, mode: "insensitive" } }, { attributeDef: { is: { key } } }],
           },
         ],
       },
@@ -741,7 +934,6 @@ function productBaseWhere(input: {
   brandSlug?: FilterValue<string>;
   productTypeSlug?: string | null;
   attributeFilters?: Record<string, string[]>;
-  search?: string | null;
   standaloneOnly?: boolean;
   availability?: FilterValue<ProductAvailability>;
   promotedOnly?: boolean;
@@ -774,7 +966,6 @@ function productBaseWhere(input: {
     ...(brandSlugs.length > 0 ? { brand: { is: { slug: { in: brandSlugs } } } } : {}),
     ...(andFilters.length > 0 ? { AND: andFilters } : {}),
     ...categoryWhere(input.categorySlug),
-    ...productSearchWhere(input.search),
   } satisfies Prisma.ProductWhereInput;
 }
 
@@ -783,7 +974,6 @@ function familyWhere(input: {
   brandSlug?: FilterValue<string>;
   productTypeSlug?: string | null;
   attributeFilters?: Record<string, string[]>;
-  search?: string | null;
   availability?: FilterValue<ProductAvailability>;
   promotedOnly?: boolean;
 }) {
@@ -792,7 +982,6 @@ function familyWhere(input: {
     brandSlug: input.brandSlug,
     productTypeSlug: input.productTypeSlug,
     attributeFilters: input.attributeFilters,
-    search: input.search,
     availability: input.availability,
     promotedOnly: input.promotedOnly,
   });
@@ -805,15 +994,6 @@ function familyWhere(input: {
         },
       },
     },
-    ...(input.search
-      ? {
-          OR: [
-            { name: { contains: input.search, mode: "insensitive" as const } },
-            { subtitle: { contains: input.search, mode: "insensitive" as const } },
-            { members: { some: { product: { is: productSearchWhere(input.search) } } } },
-          ],
-        }
-      : {}),
   } satisfies Prisma.ProductFamilyWhereInput;
 }
 
@@ -969,7 +1149,9 @@ export async function getCommerceCategories(): Promise<CommerceCategory[]> {
   });
 }
 
-export async function getCommerceBrands(input: { productType?: string | null } = {}): Promise<CommerceBrand[]> {
+export async function getCommerceBrands(
+  input: { productType?: string | null } = {},
+): Promise<CommerceBrand[]> {
   const db = await getPrisma();
   const brands = await db.organization.findMany({
     where: {
@@ -1009,9 +1191,12 @@ export async function listCommerceProducts(input: {
   maxPrice?: number | null;
   page?: number;
   pageSize?: number;
+  searchLimit?: number | null;
 }): Promise<CommerceCatalogResult> {
   const page = input.page ?? 1;
   const pageSize = input.pageSize ?? CATALOG_PAGE_SIZE;
+  const offset = (page - 1) * pageSize;
+  const searchQuery = input.search?.trim() || null;
   const db = await getPrisma();
   const [families, products, categories, brands] = await Promise.all([
     db.productFamily.findMany({
@@ -1020,11 +1205,10 @@ export async function listCommerceProducts(input: {
         brandSlug: input.brand,
         productTypeSlug: input.productType,
         attributeFilters: input.attributeFilters,
-        search: input.search,
         availability: input.availability,
         promotedOnly: input.promotedOnly,
       }),
-      take: 120,
+      take: searchQuery ? undefined : 120,
       select: PRODUCT_FAMILY_SELECT,
       orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
     }),
@@ -1034,12 +1218,11 @@ export async function listCommerceProducts(input: {
         brandSlug: input.brand,
         productTypeSlug: input.productType,
         attributeFilters: input.attributeFilters,
-        search: input.search,
         availability: input.availability,
         promotedOnly: input.promotedOnly,
         standaloneOnly: true,
       }),
-      take: 160,
+      take: searchQuery ? undefined : 160,
       select: PRODUCT_CARD_SELECT,
       orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
     }),
@@ -1047,18 +1230,27 @@ export async function listCommerceProducts(input: {
     getCommerceBrands({ productType: input.productType }),
   ]);
 
-  const cards = [
-    ...families.map(mapFamilyCard).filter((card): card is CommerceProductCard => card != null),
-    ...products.map(mapProductCard),
-  ];
+  const cards = searchQuery
+    ? rankCommerceCardsBySearch({
+        families,
+        products,
+        query: searchQuery,
+        limit: input.searchLimit ? Math.max(input.searchLimit, offset + pageSize) : null,
+      })
+    : [
+        ...families.map(mapFamilyCard).filter((card): card is CommerceProductCard => card != null),
+        ...products.map(mapProductCard),
+      ];
   const priceRange = cardPriceRange(cards);
   const filtered = filterCardsByPrice(
     cards,
     normalizePriceFilterForRange(input.minPrice, priceRange),
     normalizePriceFilterForRange(input.maxPrice, priceRange),
   );
-  const sorted = sortCards(filtered, input.sort);
-  const offset = (page - 1) * pageSize;
+  const sorted =
+    searchQuery && (!input.sort || input.sort === "latest")
+      ? filtered
+      : sortCards(filtered, input.sort);
   const items = sorted.slice(offset, offset + pageSize);
   const selectedCategories = filterValues(input.category);
   const activeCategory =
@@ -1150,9 +1342,7 @@ export async function listCommerceProductTypes(): Promise<CommerceProductTypeGro
       _count: { _all: true },
     }),
   ]);
-  const counts = new Map(
-    countRows.map((row) => [row.productTypeId.toString(), row._count._all]),
-  );
+  const counts = new Map(countRows.map((row) => [row.productTypeId.toString(), row._count._all]));
   const groups = new Map<string, CommerceProductTypeGroup>();
 
   for (const productType of productTypes) {
@@ -1161,14 +1351,12 @@ export async function listCommerceProductTypes(): Promise<CommerceProductTypeGro
     if (productCount <= 0) continue;
 
     const groupKey = productType.group?.slug ?? "autres";
-    const group =
-      groups.get(groupKey) ??
-      {
-        id: productType.group ? Number(productType.group.id) : null,
-        name: productType.group?.name ?? "Autres types",
-        slug: groupKey,
-        productTypes: [],
-      };
+    const group = groups.get(groupKey) ?? {
+      id: productType.group ? Number(productType.group.id) : null,
+      name: productType.group?.name ?? "Autres types",
+      slug: groupKey,
+      productTypes: [],
+    };
 
     group.productTypes.push(mapProductTypeSummary(productType, productCount));
     groups.set(groupKey, group);
@@ -1235,7 +1423,9 @@ async function buildProductTypeFilters(
       const counts = new Map(rows.map((row) => [row.value, row._count._all]));
       const values = [
         ...definition.selectOptions.filter((value) => counts.has(value)),
-        ...rows.map((row) => row.value).filter((value) => !definition.selectOptions.includes(value)),
+        ...rows
+          .map((row) => row.value)
+          .filter((value) => !definition.selectOptions.includes(value)),
       ];
       const selected = selectedFilterValues(selectedFilters, definition.key);
 
@@ -1349,7 +1539,9 @@ export async function getHomeData(): Promise<CommerceHomeData> {
     listCommerceProducts({ pageSize: 8 }),
   ]);
 
-  const promoted = featured.items.find((product) => product.image) ?? latest.items.find((product) => product.image);
+  const promoted =
+    featured.items.find((product) => product.image) ??
+    latest.items.find((product) => product.image);
 
   return {
     categories: categories.filter((category) => category.productCount > 0).slice(0, 8),
@@ -1424,6 +1616,8 @@ function mapProductDetail(record: ProductDetailRecord): CommerceProductDetail {
       (entry): entry is { name: string; slug: string } => entry != null,
     ),
     coverImage: variant.images[0] ?? null,
+    colorReferences: [],
+    finishReferences: [],
     variants: [variant],
     relatedProducts: [],
   };
@@ -1455,12 +1649,89 @@ function mapFamilyDetail(record: ProductFamilyDetailRecord): CommerceProductDeta
       (entry): entry is { name: string; slug: string } => entry != null,
     ),
     coverImage: familyImage ?? variants[0]?.images[0] ?? null,
+    colorReferences: [],
+    finishReferences: [],
     variants,
     relatedProducts: [],
   };
 }
 
-export async function findCommerceProductBySlug(slug: string): Promise<CommerceProductDetail | null> {
+async function buildSpecialAttributeReferences(variants: CommerceVariant[]) {
+  const colorKeys = new Set<string>();
+  const finishKeys = new Set<string>();
+
+  for (const variant of variants) {
+    for (const attribute of variant.attributes) {
+      const key = normalizeComparableValue(attribute.value);
+      if (!key) {
+        continue;
+      }
+      if (attribute.specialType === "COLOR") {
+        colorKeys.add(key);
+      }
+      if (attribute.specialType === "FINISH") {
+        finishKeys.add(key);
+      }
+    }
+  }
+
+  if (colorKeys.size === 0 && finishKeys.size === 0) {
+    return { colorReferences: [], finishReferences: [] };
+  }
+
+  const db = await getPrisma();
+  const [colors, finishes] = await Promise.all([
+    colorKeys.size > 0
+      ? db.productColor.findMany({
+          select: { key: true, label: true, value: true },
+          orderBy: [{ label: "asc" }],
+        })
+      : Promise.resolve([]),
+    finishKeys.size > 0
+      ? db.productFinish.findMany({
+          select: { key: true, label: true, color: true, imageMediaId: true },
+          orderBy: [{ label: "asc" }],
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const colorLookup = new Map<string, (typeof colors)[number]>();
+  for (const color of colors) {
+    colorLookup.set(normalizeComparableValue(color.key), color);
+    colorLookup.set(normalizeComparableValue(color.label), color);
+  }
+
+  const finishLookup = new Map<string, (typeof finishes)[number]>();
+  for (const finish of finishes) {
+    finishLookup.set(normalizeComparableValue(finish.key), finish);
+    finishLookup.set(normalizeComparableValue(finish.label), finish);
+  }
+
+  const colorReferences = [...colorKeys].map((key) => {
+    const color = colorLookup.get(key);
+    return {
+      key: color?.key ?? key,
+      label: color?.label ?? key,
+      hexValue: color?.value ?? (/^#[0-9a-f]{3,8}$/i.test(key) ? key : null),
+    } satisfies CommerceColorReference;
+  });
+
+  const finishReferences = [...finishKeys].map((key) => {
+    const finish = finishLookup.get(key);
+    return {
+      key: finish?.key ?? key,
+      label: finish?.label ?? key,
+      colorHex: finish?.color ?? null,
+      imageUrl: finish?.imageMediaId ? mediaUrl(finish.imageMediaId, "thumbnail") : null,
+    } satisfies CommerceFinishReference;
+  });
+
+  return { colorReferences, finishReferences };
+}
+
+export async function findCommerceProductBySlug(
+  slug: string,
+): Promise<CommerceProductDetail | null> {
   const db = await getPrisma();
   const [family, product] = await Promise.all([
     db.productFamily.findFirst({
@@ -1491,9 +1762,11 @@ export async function findCommerceProductBySlug(slug: string): Promise<CommerceP
     brand: detail.brand?.slug,
     pageSize: 5,
   });
+  const specialReferences = await buildSpecialAttributeReferences(detail.variants);
 
   return {
     ...detail,
+    ...specialReferences,
     relatedProducts: related.items.filter((item) => item.slug !== detail.slug).slice(0, 4),
   };
 }

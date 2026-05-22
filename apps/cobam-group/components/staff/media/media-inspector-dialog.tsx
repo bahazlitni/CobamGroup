@@ -315,7 +315,7 @@ export default function MediaInspectorDialog({
       anchor.remove();
       URL.revokeObjectURL(objectUrl);
     } catch {
-      toast.error("Impossible de telecharger le media.");
+      toast.error("Impossible de télécharger le media.");
     }
   };
 
@@ -530,7 +530,7 @@ export default function MediaInspectorDialog({
                         iconPosition="right"
                         onClick={() => void handleDownload()}
                       >
-                        Telecharger le fichier
+                        Télécharger le fichier
                       </AnimatedUIButton>
                       
                       <div className="grid grid-cols-2 gap-2">

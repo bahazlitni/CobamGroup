@@ -20,7 +20,10 @@ function FavoriteCard({ item }: { item: FavoriteItemSnapshot }) {
 
   return (
     <article className="border-ec-line flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_12px_34px_rgba(20,32,46,0.055)]">
-      <Link href={item.href} className="bg-ec-stone relative block aspect-[4/3] overflow-hidden">
+      <Link
+        href={item.href}
+        className="relative block aspect-square w-full overflow-hidden bg-white"
+      >
         {item.imageUrl ? (
           <Image
             src={item.imageUrl}
@@ -108,9 +111,6 @@ export function FavoritesPageClient() {
             <h1 className="text-ec-ink mt-3 text-4xl font-black tracking-tight sm:text-5xl">
               Vos produits mis de côté.
             </h1>
-            <p className="text-ec-muted mt-3 max-w-2xl text-sm leading-6 font-semibold">
-              Retrouvez vos références préférées, ouvrez leurs fiches ou ajoutez-les au panier.
-            </p>
           </div>
           {items.length > 0 ? (
             <button
@@ -158,9 +158,6 @@ export function FavoritesPageClient() {
           <div className="border-ec-line mt-10 rounded-3xl border bg-white px-6 py-14 text-center shadow-sm">
             <Heart className="text-ec-blue mx-auto size-10" />
             <h2 className="text-ec-ink mt-5 text-2xl font-black">Aucun favori pour le moment.</h2>
-            <p className="text-ec-muted mx-auto mt-3 max-w-xl text-sm leading-6 font-semibold">
-              Touchez le cœur sur une fiche produit pour la retrouver ici plus tard.
-            </p>
             <Link
               href="/catalogue"
               className="bg-ec-ink hover:bg-ec-blue mt-7 inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-black text-white transition"

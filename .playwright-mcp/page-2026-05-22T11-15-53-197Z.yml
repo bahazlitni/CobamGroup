@@ -1,0 +1,240 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Accueil e-cobam" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e7]: ECOMMERCE
+      - navigation "Navigation principale" [ref=e8]:
+        - link "Tous les produits" [ref=e9] [cursor=pointer]:
+          - /url: /catalogue
+        - link "Promotions" [ref=e10] [cursor=pointer]:
+          - /url: /catalogue?sélection=promotion
+        - link "Meilleures ventes" [ref=e11] [cursor=pointer]:
+          - /url: /#best-sellers
+        - link "Nouveautés" [ref=e12] [cursor=pointer]:
+          - /url: /#new-arrivals
+        - link "Suivi commande" [ref=e13] [cursor=pointer]:
+          - /url: /suivi-commande
+      - link "Se connecter" [ref=e15] [cursor=pointer]:
+        - /url: /connexion
+        - img [ref=e16]
+        - generic [ref=e19]: Se connecter
+    - generic [ref=e21]:
+      - button "Ouvrir les rayons" [ref=e23]:
+        - img [ref=e24]
+        - generic [ref=e25]: Catégories
+        - img [ref=e26]
+      - generic [ref=e29]:
+        - img [ref=e30]
+        - searchbox "Produit, marque, référence..." [ref=e33]
+        - button "Rechercher" [ref=e34]:
+          - img [ref=e35]
+          - generic [ref=e38]: Rechercher
+      - generic [ref=e39]:
+        - link "Mes favoris" [ref=e40] [cursor=pointer]:
+          - /url: /favoris
+          - img [ref=e42]
+        - link "Panier" [ref=e44] [cursor=pointer]:
+          - /url: /panier
+          - img [ref=e46]
+  - main [ref=e49]:
+    - generic [ref=e50]:
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - generic [ref=e53]:
+            - paragraph [ref=e54]: Galerie produit
+            - paragraph [ref=e55]: 1 visuel
+          - img "AATIK Blanc - enduit monocouche" [ref=e57]
+        - generic [ref=e58]:
+          - generic [ref=e59]:
+            - link "Isolation et étanchéité" [ref=e60] [cursor=pointer]:
+              - /url: /catalogue?categorie=isolation-et-etancheite
+            - link "Étanchéité" [ref=e61] [cursor=pointer]:
+              - /url: /catalogue?categorie=etancheite
+          - generic [ref=e62]:
+            - generic [ref=e63]:
+              - paragraph [ref=e64]: SKU 00244312
+              - paragraph [ref=e66]:
+                - generic [ref=e67]:
+                  - generic [ref=e68]: Derbigum
+                  - tooltip "Marque de produits techniques pour pose, etancheite et finitions.": Marque de produits techniques pour pose, etancheite et finitions.
+            - heading "AATIK Blanc 25kg" [level=1] [ref=e69]
+          - complementary [ref=e70]:
+            - generic [ref=e71]:
+              - generic [ref=e72]:
+                - paragraph [ref=e73]: Prix TTC
+                - paragraph [ref=e74]: 19 DT
+              - generic [ref=e75]:
+                - img [ref=e76]
+                - text: Rupture
+            - generic [ref=e81]:
+              - generic [ref=e82]:
+                - button "Diminuer la quantité" [ref=e83]:
+                  - img [ref=e84]
+                - generic [ref=e85]: "1"
+                - button "Augmenter la quantité" [ref=e86]:
+                  - img [ref=e87]
+              - button "Ajouter au panier" [ref=e89]:
+                - text: Ajouter au panier
+                - img [ref=e90]
+            - button "Ajouter aux favoris" [ref=e93]:
+              - img [ref=e94]
+              - generic [ref=e96]: Ajouter aux favoris
+            - generic [ref=e97]:
+              - link "Fiche technique" [ref=e98] [cursor=pointer]:
+                - /url: /api/media/811/file
+                - img [ref=e99]
+                - generic [ref=e102]: Fiche technique
+              - generic [ref=e103]:
+                - img [ref=e104]
+                - generic [ref=e109]: Certificat indisponible
+          - generic [ref=e110]:
+            - generic [ref=e112]:
+              - img [ref=e114]
+              - generic [ref=e119]:
+                - paragraph [ref=e120]: Retrait ou livraison
+                - paragraph [ref=e121]: Choisissez le mode adapté à votre chantier.
+            - generic [ref=e123]:
+              - img [ref=e125]
+              - generic [ref=e128]:
+                - paragraph [ref=e129]: Réachat simple
+                - paragraph [ref=e130]: Retrouvez ce produit depuis votre compte.
+            - generic [ref=e132]:
+              - img [ref=e134]
+              - generic [ref=e136]:
+                - paragraph [ref=e137]: Favoris
+                - paragraph [ref=e138]: Gardez vos références importantes sous la main.
+      - generic [ref=e139]:
+        - generic [ref=e140]:
+          - heading "Détails produit" [level=2] [ref=e142]
+          - generic [ref=e144]:
+            - heading "AATIK Blanc" [level=2] [ref=e145]
+            - paragraph [ref=e146]: AATIK Blanc est un enduit monocouche teinte dans la masse, concu pour l'impermeabilisation et la decoration des facades, murs et supports interieurs ou exterieurs.
+            - paragraph [ref=e147]: Il s'applique en neuf sur maconneries non enduites ou beton, et en renovation sur anciens supports non enduits ou revetus d'un mortier hydraulique sain. La finition peut etre lissee, rugueuse, brute de projection, ecrasee ou grattee selon le rendu recherche.
+            - list [ref=e148]:
+              - listitem [ref=e149]:
+                - paragraph [ref=e150]: "Conditionnement : sac kraft de 25 kg."
+              - listitem [ref=e151]:
+                - paragraph [ref=e152]: "Preparation : 6 a 7 litres d'eau par sac de 25 kg pour une application lissee a la taloche."
+              - listitem [ref=e153]:
+                - paragraph [ref=e154]: "Application : deux passes, dont une premiere couche d'environ 8 mm, sur support propre, stable et prealablement humidifie."
+              - listitem [ref=e155]:
+                - paragraph [ref=e156]: "Consommation moyenne : 8 a 10 kg/m2 par couche de 8 mm."
+              - listitem [ref=e157]:
+                - paragraph [ref=e158]: "Temperature de projection recommandee : +5 C a +35 C."
+              - listitem [ref=e159]:
+                - paragraph [ref=e160]: "Conservation : 12 mois dans l'emballage d'origine, a l'abri de l'humidite."
+            - paragraph [ref=e161]: "Reference COBAM : 00244312."
+        - generic [ref=e162]:
+          - heading "Spécifications" [level=2] [ref=e164]
+          - generic [ref=e165]:
+            - generic [ref=e166]:
+              - heading "Filtres principaux" [level=3] [ref=e167]
+              - generic [ref=e168]:
+                - generic [ref=e169]:
+                  - term [ref=e170]: Type de produit
+                  - definition [ref=e171]: Enduit monocouche
+                - generic [ref=e172]:
+                  - term [ref=e173]: Couleur
+                  - definition [ref=e174]: Blanc
+                - generic [ref=e175]:
+                  - term [ref=e176]: Conditionnement
+                  - definition [ref=e177]: 25 kg
+                - generic [ref=e178]:
+                  - term [ref=e179]: Pret a l'emploi
+                  - definition [ref=e180]: "false"
+            - generic [ref=e181]:
+              - heading "Caractéristiques techniques" [level=3] [ref=e182]
+              - generic [ref=e183]:
+                - generic [ref=e184]:
+                  - term [ref=e185]: Gamme
+                  - definition [ref=e186]: AATIK
+                - generic [ref=e187]:
+                  - term [ref=e188]: Étanche
+                  - definition [ref=e189]: "true"
+                - generic [ref=e190]:
+                  - term [ref=e191]: Eau de gachage
+                  - definition [ref=e192]: 6 a 7 L / sac de 25 kg
+                - generic [ref=e193]:
+                  - term [ref=e194]: Epaisseur par passe
+                  - definition [ref=e195]: 8 mm
+                - generic [ref=e196]:
+                  - term [ref=e197]: Consommation
+                  - definition [ref=e198]: 8 a 10 kg/m2 par couche de 8 mm
+                - generic [ref=e199]:
+                  - term [ref=e200]: Temperature d'application
+                  - definition [ref=e201]: +5 C a +35 C
+                - generic [ref=e202]:
+                  - term [ref=e203]: Conservation
+                  - definition [ref=e204]: 12 mois
+                - generic [ref=e205]:
+                  - term [ref=e206]: Aspect
+                  - definition [ref=e207]: Lisse ou rugueux
+                - generic [ref=e208]:
+                  - term [ref=e209]: Supports
+                  - definition [ref=e210]: Maconneries non enduites, beton, anciens supports au mortier hydraulique sain
+  - contentinfo [ref=e211]:
+    - generic [ref=e212]:
+      - generic [ref=e213]:
+        - generic [ref=e214]:
+          - paragraph [ref=e215]: ECOMMERCE
+          - paragraph [ref=e216]: Produits, panier, commandes et suivi client.
+          - generic [ref=e217]:
+            - link "+216 75731731" [ref=e218] [cursor=pointer]:
+              - /url: tel:+21675731731
+              - img [ref=e219]
+              - text: +216 75731731
+            - link "contact@cobamgroup.com" [ref=e221] [cursor=pointer]:
+              - /url: mailto:contact@cobamgroup.com
+              - img [ref=e222]
+              - text: contact@cobamgroup.com
+            - paragraph [ref=e225]:
+              - img [ref=e226]
+              - text: Djerba, Tunisie
+        - generic [ref=e229]:
+          - heading "Service client" [level=2] [ref=e230]
+          - generic [ref=e231]:
+            - link "Suivre une commande" [ref=e232] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Panier" [ref=e233] [cursor=pointer]:
+              - /url: /panier
+            - link "Compte client" [ref=e234] [cursor=pointer]:
+              - /url: /compte
+            - link "Commander" [ref=e235] [cursor=pointer]:
+              - /url: /checkout
+        - generic [ref=e236]:
+          - heading "Aide" [level=2] [ref=e237]
+          - generic [ref=e238]:
+            - link "Livraison" [ref=e239] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Retours" [ref=e240] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Conditions" [ref=e241] [cursor=pointer]:
+              - /url: /conditions-generales
+            - link "Confidentialité" [ref=e242] [cursor=pointer]:
+              - /url: /politique-de-confidentialite
+        - generic [ref=e243]:
+          - heading "Catégories" [level=2] [ref=e244]
+          - generic [ref=e245]:
+            - link "Isolation et étanchéité" [ref=e246] [cursor=pointer]:
+              - /url: /catalogue?categorie=isolation-et-etancheite
+            - link "Salle de bain et cuisine" [ref=e247] [cursor=pointer]:
+              - /url: /catalogue?categorie=salle-de-bain-et-cuisine
+            - link "Peintures et décoration" [ref=e248] [cursor=pointer]:
+              - /url: /catalogue?categorie=peintures-et-decoration
+            - link "Piscine" [ref=e249] [cursor=pointer]:
+              - /url: /catalogue?categorie=piscine
+            - link "Portes et menuiserie" [ref=e250] [cursor=pointer]:
+              - /url: /catalogue?categorie=portes-et-menuiserie
+      - generic [ref=e251]:
+        - paragraph [ref=e252]: © 2026 COBAM GROUP. Tous droits réservés.
+        - generic [ref=e253]:
+          - link "Facebook" [ref=e254] [cursor=pointer]:
+            - /url: https://www.facebook.com/cobamgrp
+          - link "Instagram" [ref=e255] [cursor=pointer]:
+            - /url: https://www.instagram.com/cobamgroup/
+          - link "LinkedIn" [ref=e256] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/cobam-group/
+  - button "Open Next.js Dev Tools" [ref=e262] [cursor=pointer]:
+    - img [ref=e263]
+  - alert [ref=e266]

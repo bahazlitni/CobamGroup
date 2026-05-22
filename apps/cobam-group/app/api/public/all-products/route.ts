@@ -18,6 +18,15 @@ function parsePositiveInteger(value: string | null, fallback: number) {
   return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : fallback;
 }
 
+function parseOptionalPositiveInteger(value: string | null) {
+  if (value == null) {
+    return null;
+  }
+
+  const parsedValue = Number(value);
+  return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : null;
+}
+
 function parseOptionalSlug(value: string | null) {
   const normalizedValue = value?.trim();
   return normalizedValue ? normalizedValue : null;
@@ -42,6 +51,9 @@ export async function GET(req: Request) {
     const q =
       parseOptionalSearchQuery(searchParams.get("search")) ??
       parseOptionalSearchQuery(searchParams.get("q"));
+    const searchLimit = parseOptionalPositiveInteger(
+      searchParams.get("cap") ?? searchParams.get("limit"),
+    );
 
     const result = await listPublicProductsIndex({
       categorySlug,
@@ -50,6 +62,7 @@ export async function GET(req: Request) {
       pageSize,
       q,
       promoSlug,
+      searchLimit,
     });
 
     return NextResponse.json(
@@ -64,16 +77,10 @@ export async function GET(req: Request) {
     );
   } catch (error: unknown) {
     if (error instanceof PublicAllProductsValidationError) {
-      return NextResponse.json(
-        { ok: false, message: error.message },
-        { status: error.status },
-      );
+      return NextResponse.json({ ok: false, message: error.message }, { status: error.status });
     }
 
     console.error("PUBLIC_ALL_PRODUCTS_LIST_ERROR:", error);
-    return NextResponse.json(
-      { ok: false, message: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ ok: false, message: "Internal server error" }, { status: 500 });
   }
 }

@@ -171,7 +171,7 @@ export default function VariantRail({
             Variantes disponibles
           </p>
           <h2 className="mt-1 text-2xl font-semibold tracking-[-0.03em] text-cobam-dark-blue">
-            Meme gamme
+            Même gamme
           </h2>
         </div>
       </div>
@@ -186,8 +186,8 @@ export default function VariantRail({
         className="-mx-2 px-2"
         viewportClassName="p-2 pb-4 pr-1"
         trackClassName="gap-4"
-        previousButtonLabel="Produits de la meme gamme precedents"
-        nextButtonLabel="Produits de la meme gamme suivants"
+        previousButtonLabel="Produits de la même gamme precedents"
+        nextButtonLabel="Produits de la même gamme suivants"
       >
         {variants.map((variant) => (
           <VariantRailCard
