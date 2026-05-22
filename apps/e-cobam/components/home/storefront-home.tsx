@@ -1,22 +1,21 @@
-import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { COBAM_SOCIAL_LINKS } from "@cobam/shared";
 import {
   ArrowRight,
-  Boxes,
   CheckCircle2,
-  ClipboardList,
-  CreditCard,
-  Headphones,
-  Layers3,
+  ChevronRight,
+  Clock3,
   PackageCheck,
+  RotateCcw,
   Search,
-  ShieldCheck,
   ShoppingBag,
+  Sparkles,
   Truck,
-  UserRound,
 } from "lucide-react";
 
+import { AddToCartButton } from "@/components/cart/add-to-cart-button";
+import { FavoriteToggleButton } from "@/components/favorites/favorite-toggle-button";
+import { SafeMediaImage } from "@/components/home/safe-media-image";
 import { ButtonLink } from "@/components/ui/button";
 import { formatCompactNumber, formatPriceTnd } from "@/lib/format";
 import type {
@@ -36,30 +35,70 @@ function firstReadyItems(primary: LandingProductsState, fallback: LandingProduct
 }
 
 function productCountLabel(value: number | null) {
-  if (value == null) {
-    return "Catalogue";
-  }
-
-  if (value === 0) {
-    return "Catégorie";
-  }
-
+  if (value == null) return "Catalogue";
+  if (value <= 0) return "Voir le rayon";
   return `${formatCompactNumber(value)} produits`;
 }
 
-function findCategory(categories: LandingCategory[], patterns: string[]) {
+function SectionHeader({
+  eyebrow,
+  title,
+  action,
+}: {
+  eyebrow?: string;
+  title: string;
+  action?: { href: string; label: string };
+}) {
   return (
-    categories.find((category) =>
-      patterns.some((pattern) =>
-        `${category.name} ${category.subtitle ?? ""} ${category.description ?? ""}`
-          .toLocaleLowerCase("fr")
-          .includes(pattern),
-      ),
-    ) ?? categories[0]
+    <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        {eyebrow ? (
+          <p className="text-ec-blue text-xs font-black tracking-[0.2em] uppercase">{eyebrow}</p>
+        ) : null}
+        <h2 className="text-ec-ink mt-2 text-2xl font-black tracking-tight sm:text-3xl">{title}</h2>
+      </div>
+      {action ? (
+        <Link
+          href={action.href}
+          className="text-ec-ink hover:text-ec-blue inline-flex items-center gap-2 text-sm font-black transition"
+        >
+          {action.label}
+          <ArrowRight className="size-4" aria-hidden="true" />
+        </Link>
+      ) : null}
+    </div>
   );
 }
 
-function StockPill({ stock }: { stock: LandingProduct["stock"] }) {
+function SearchBar({ large = false }: { large?: boolean }) {
+  return (
+    <form
+      action="/catalogue"
+      className="border-ec-line focus-within:border-ec-blue/45 mx-auto flex w-full max-w-3xl items-center gap-2 rounded-2xl border bg-white p-2 shadow-[0_18px_55px_rgba(20,32,46,0.08)] transition focus-within:shadow-[0_0_0_4px_rgba(10,141,193,0.08)]"
+    >
+      <Search className="text-ec-blue ml-2 size-5 shrink-0" aria-hidden="true" />
+      <label className="sr-only" htmlFor={large ? "home-search" : "section-search"}>
+        Rechercher un produit
+      </label>
+      <input
+        id={large ? "home-search" : "section-search"}
+        name="search"
+        type="search"
+        placeholder="Rechercher un produit, une marque, une référence..."
+        className="text-ec-ink placeholder:text-ec-muted/70 min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none sm:text-base"
+      />
+      <button
+        type="submit"
+        className="bg-ec-ink hover:bg-ec-blue inline-flex h-11 shrink-0 items-center justify-center rounded-xl px-4 text-sm font-black [color:#fff] text-white transition sm:px-5"
+      >
+        <span className="hidden sm:inline">Rechercher</span>
+        <Search className="size-4 sm:hidden" aria-hidden="true" />
+      </button>
+    </form>
+  );
+}
+
+function StockBadge({ stock }: { stock: LandingProduct["stock"] }) {
   const tone =
     stock.tone === "available"
       ? "bg-emerald-50 text-emerald-700"
@@ -68,407 +107,182 @@ function StockPill({ stock }: { stock: LandingProduct["stock"] }) {
         : "bg-rose-50 text-rose-700";
 
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-black ${tone}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-black ${tone}`}
+    >
       <PackageCheck className="size-3" aria-hidden="true" />
       {stock.label}
     </span>
   );
 }
 
-function SearchPanel({ compact = false }: { compact?: boolean }) {
-  return (
-    <form
-      action="/catalogue"
-      className={`ecom-search-panel grid gap-2 border border-ec-line bg-white p-2 sm:grid-cols-[1fr_auto] ${
-        compact ? "" : "mt-6"
-      }`}
-    >
-      <label className="flex h-12 items-center gap-3 px-3">
-        <Search className="size-5 shrink-0 text-ec-blue" aria-hidden="true" />
-        <span className="sr-only">Rechercher dans le catalogue</span>
-        <input
-          name="search"
-          type="search"
-          placeholder="Produit, marque, SKU, matière..."
-          className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-ec-ink outline-none placeholder:text-ec-muted/68"
-        />
-      </label>
-      <button className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-ec-blue px-5 text-sm font-black text-white transition hover:bg-ec-ink">
-        Rechercher
-        <ArrowRight className="size-4" aria-hidden="true" />
-      </button>
-    </form>
-  );
-}
-
-function CommerceProductCard({
-  product,
-  priority = false,
-  compact = false,
-}: {
-  product: LandingProduct;
-  priority?: boolean;
-  compact?: boolean;
-}) {
-  const price = formatPriceTnd(product.price);
+function ProductCard({ product }: { product: LandingProduct }) {
   const image = product.image?.thumbnailUrl ?? product.image?.url ?? null;
+  const price = formatPriceTnd(product.price) ?? "Prix sur demande";
+  const favoriteItem = {
+    id: product.id,
+    entityType: "PRODUCT",
+    sku: product.sku,
+    name: product.name,
+    href: product.href,
+    price: product.price,
+    imageUrl: image,
+    brandName: product.brandName,
+    categoryName: product.categoryName ?? product.subcategoryName,
+  } as const;
 
   return (
-    <Link
-      href={product.href}
-      className="group flex h-full min-w-[14rem] flex-col overflow-hidden rounded-lg border border-ec-line bg-white shadow-[0_14px_40px_rgba(20,32,46,0.055)] transition duration-300 hover:-translate-y-1 hover:border-ec-blue/40 hover:shadow-[0_28px_70px_rgba(20,32,46,0.13)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ec-blue sm:min-w-0"
-    >
-      <span className={`relative block overflow-hidden bg-ec-stone ${compact ? "aspect-[4/3]" : "aspect-[4/3.15]"}`}>
+    <article className="group border-ec-line hover:border-ec-blue/35 relative flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_12px_34px_rgba(20,32,46,0.055)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_52px_rgba(20,32,46,0.1)]">
+      <Link
+        href={product.href}
+        className="focus-visible:outline-ec-blue relative block aspect-[4/3] overflow-hidden bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+      >
         {image ? (
-          <Image
+          <SafeMediaImage
             src={image}
             alt={product.image?.altText ?? product.name}
-            fill
-            sizes="(min-width: 1280px) 18vw, (min-width: 768px) 30vw, 72vw"
-            priority={priority}
-            className="object-contain p-4 transition duration-500 group-hover:scale-[1.04]"
+            className="object-contain p-6 transition duration-300 group-hover:scale-[1.025]"
+            fallback="COBAM"
           />
         ) : (
-          <span className="grid h-full place-items-center text-xs font-black uppercase tracking-[0.22em] text-ec-muted/45">
+          <span className="text-ec-muted/45 grid h-full place-items-center text-xs font-black tracking-[0.2em] uppercase">
             COBAM
           </span>
         )}
-        {product.badges.length > 0 ? (
-          <span className="absolute left-3 top-3 rounded-md bg-white/92 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-ec-blue shadow-sm">
+        {product.badges[0] ? (
+          <span className="text-ec-blue absolute top-3 left-3 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-black tracking-[0.12em] uppercase shadow-sm">
             {product.badges[0]}
           </span>
         ) : null}
-      </span>
+      </Link>
+      <FavoriteToggleButton item={favoriteItem} className="absolute top-3 right-3 z-10" />
 
-      <span className="flex flex-1 flex-col p-4">
-        {product.brandName ? (
-          <span className="mb-2 line-clamp-1 text-[11px] font-black uppercase tracking-[0.14em] text-ec-blue">
-            {product.brandName}
-          </span>
-        ) : null}
-        <span className="line-clamp-2 min-h-11 text-sm font-black leading-snug text-ec-ink">
-          {product.name}
-        </span>
-        <span className="mt-2 line-clamp-1 text-xs font-semibold text-ec-muted">
-          {product.categoryName ?? product.sku}
-        </span>
-
-        <span className="mt-auto flex items-end justify-between gap-3 pt-4">
-          <span className="text-base font-black text-ec-ink">{price ?? "Sur devis"}</span>
-          <StockPill stock={product.stock} />
-        </span>
-      </span>
-    </Link>
-  );
-}
-
-function HeroShopPanel({ categories }: { categories: LandingCategory[] }) {
-  const visibleCategories = categories.slice(0, 5);
-
-  if (visibleCategories.length === 0) {
-    return null;
-  }
-
-  return (
-    <aside className="rounded-lg border border-ec-line bg-white p-4 shadow-[0_22px_64px_rgba(20,32,46,0.1)]">
-      <div className="flex items-center justify-between gap-3 border-b border-ec-line pb-4">
-        <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-ec-blue">
-            Entrée boutique
+      <div className="flex flex-1 flex-col p-5">
+        <div className="min-h-[5.5rem]">
+          <p className="text-ec-blue line-clamp-1 text-[11px] font-black tracking-[0.18em] uppercase">
+            {product.brandName ?? product.categoryName ?? "COBAM"}
           </p>
-          <p className="mt-1 text-lg font-black text-ec-ink">Rayons populaires</p>
-        </div>
-        <Link
-          href="/panier"
-          className="inline-flex size-10 items-center justify-center rounded-md bg-ec-ink text-white transition hover:bg-ec-blue"
-          aria-label="Ouvrir le panier"
-        >
-          <ShoppingBag className="size-4" aria-hidden="true" />
-        </Link>
-      </div>
-
-      <div className="mt-4 divide-y divide-ec-line">
-        {visibleCategories.map((category) => (
           <Link
-            key={category.slug}
-            href={category.href}
-            className="group flex items-center justify-between gap-4 py-3 transition hover:text-ec-blue"
+            href={product.href}
+            className="text-ec-ink hover:text-ec-blue mt-2 line-clamp-2 text-sm leading-5 font-black transition"
           >
-            <span className="min-w-0">
-              <span className="block truncate text-base font-black text-ec-ink group-hover:text-ec-blue">
-                {category.name}
-              </span>
-              <span className="mt-1 block text-xs font-bold text-ec-muted">
-                {productCountLabel(category.productCount)}
-              </span>
-            </span>
-            <ArrowRight
-              className="size-4 shrink-0 text-ec-muted transition group-hover:translate-x-1 group-hover:text-ec-blue"
-              aria-hidden="true"
-            />
+            {product.name}
           </Link>
-        ))}
-      </div>
-    </aside>
-  );
-}
-
-function StorefrontHero({ data }: { data: LandingHomeData }) {
-  return (
-    <section className="ecom-hero relative isolate overflow-hidden border-b border-ec-line bg-ec-paper text-ec-ink">
-      <div className="absolute inset-0 bg-[linear-gradient(120deg,#fafaf7_0%,#fafaf7_58%,rgba(10,141,193,0.07)_58.1%,rgba(10,141,193,0.07)_100%)]" />
-
-      <div className="commerce-container relative z-10 grid gap-8 py-8 sm:py-10 md:grid-cols-[0.86fr_1.14fr] md:items-center lg:grid-cols-[0.82fr_1.18fr] lg:py-12">
-        <div className="max-w-3xl">
-
-          <h1 className="mt-4 max-w-2xl text-[clamp(2.35rem,4vw,4.4rem)] font-black leading-[0.96] tracking-tight text-ec-ink">
-            Achetez COBAM en ligne.
-          </h1>
-
-          <SearchPanel />
-
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <ButtonLink href="/catalogue" size="lg" icon={<ShoppingBag className="size-5" />}>
-              Tous les produits
-            </ButtonLink>
-            <ButtonLink
-              href="/suivi-commande"
-              variant="secondary"
-              size="lg"
-              className="border-ec-line bg-white text-ec-ink [color:#14202e] hover:border-ec-blue hover:bg-ec-blue hover:text-white hover:[color:#fff]"
-              icon={<Truck className="size-5" />}
-            >
-              Suivre une commande
-            </ButtonLink>
-          </div>
         </div>
 
-        <HeroShopPanel categories={data.categories} />
+        <div className="mt-5 flex items-center justify-between gap-4">
+          <p className="text-ec-ink text-lg font-black">{price}</p>
+          <StockBadge stock={product.stock} />
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
+          <AddToCartButton
+            item={{
+              id: product.id,
+              sku: product.sku,
+              name: product.name,
+              price: product.price,
+              imageUrl: image,
+            }}
+            quantity={1}
+            size="sm"
+            className="sm:w-full"
+          />
+          <Link
+            href={product.href}
+            className="border-ec-line text-ec-ink hover:border-ec-blue/40 hover:text-ec-blue inline-flex h-10 items-center justify-center rounded-full border px-4 text-sm font-black transition"
+          >
+            Détails
+          </Link>
+        </div>
       </div>
-    </section>
+    </article>
   );
 }
 
-function QuickAction({
-  href,
-  icon,
-  title,
-  text,
-  action,
-}: {
-  href: string;
-  icon: ReactNode;
-  title: string;
-  text: string;
-  action: string;
-}) {
+function CategoryCard({ category }: { category: LandingCategory }) {
   return (
     <Link
-      href={href}
-      className="group rounded-lg border border-ec-line bg-white p-5 shadow-[0_14px_38px_rgba(20,32,46,0.05)] transition hover:-translate-y-1 hover:border-ec-blue/40 hover:shadow-[0_22px_60px_rgba(20,32,46,0.1)]"
+      href={category.href}
+      className="group border-ec-line hover:border-ec-blue/35 overflow-hidden rounded-2xl border bg-white shadow-[0_12px_34px_rgba(20,32,46,0.045)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_50px_rgba(20,32,46,0.09)]"
     >
-      <span className="flex items-start justify-between gap-4">
-        <span className="grid size-12 place-items-center rounded-md bg-ec-blue/10 text-ec-blue">
-          {icon}
-        </span>
-        <ArrowRight className="size-4 text-ec-muted transition group-hover:translate-x-1 group-hover:text-ec-blue" />
+      <span className="bg-ec-stone relative block aspect-[4/2.45] overflow-hidden">
+        {category.imageUrl ? (
+          <SafeMediaImage
+            src={category.imageUrl}
+            alt=""
+            className="object-cover transition duration-300 group-hover:scale-[1.035]"
+            fallback={category.name}
+          />
+        ) : (
+          <span className="absolute inset-0 bg-[linear-gradient(135deg,rgba(10,141,193,0.10),rgba(176,138,90,0.12))]" />
+        )}
       </span>
-      <span className="mt-5 block text-lg font-black text-ec-ink">{title}</span>
-      <span className="mt-2 block text-sm leading-6 text-ec-muted">{text}</span>
-      <span className="mt-4 block text-sm font-black text-ec-blue">{action}</span>
+      <span className="flex items-center justify-between gap-4 p-5">
+        <span>
+          <span className="text-ec-ink block text-base font-black">{category.name}</span>
+          <span className="text-ec-muted mt-1 block text-xs font-semibold">
+            {productCountLabel(category.productCount)}
+          </span>
+        </span>
+        <ChevronRight className="text-ec-muted group-hover:text-ec-blue size-5 transition group-hover:translate-x-0.5" />
+      </span>
     </Link>
   );
 }
 
-function CommerceCommandBar() {
+function Hero() {
   return (
-    <section className="border-b border-ec-line bg-white">
-      <div className="commerce-container grid gap-4 py-5 sm:grid-cols-2 lg:grid-cols-4">
-        <QuickAction
-          href="/catalogue"
-          icon={<Boxes className="size-5" aria-hidden="true" />}
-          title="Catalogue complet"
-          text="Tous les produits e-commerce avec filtres, prix, stock et marques."
-          action="Ouvrir le catalogue"
-        />
-        <QuickAction
-          href="/types-produits"
-          icon={<Layers3 className="size-5" aria-hidden="true" />}
-          title="Types de produits"
-          text="Commencez par usage: salle de bain, revêtements, chantier, piscine."
-          action="Explorer par type"
-        />
-        <QuickAction
-          href="/compte"
-          icon={<UserRound className="size-5" aria-hidden="true" />}
-          title="Espace client"
-          text="Retrouvez profils, adresses, commandes et notifications."
-          action="Se connecter"
-        />
-        <QuickAction
-          href="mailto:contact@cobamgroup.com?subject=Demande%20de%20devis%20e-cobam"
-          icon={<ClipboardList className="size-5" aria-hidden="true" />}
-          title="Devis accompagné"
-          text="Préparez le panier et confirmez les quantités avec COBAM."
-          action="Demander un devis"
-        />
-      </div>
-    </section>
-  );
-}
-
-function CategoryNavigator({ categories }: { categories: LandingCategory[] }) {
-  return (
-    <section className="bg-ec-paper py-14 sm:py-18" aria-labelledby="category-navigator-title">
-      <div className="commerce-container grid gap-8 lg:grid-cols-[0.64fr_1.36fr] lg:items-start">
-        <div className="lg:sticky lg:top-36">
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-ec-blue">
-            Acheter par univers
-          </p>
-          <h2 id="category-navigator-title" className="mt-4 max-w-xl text-4xl font-black leading-none tracking-tight text-ec-ink sm:text-6xl">
-            Un catalogue dense, lisible par projet.
-          </h2>
-          <p className="mt-5 max-w-lg text-base leading-7 text-ec-muted">
-            Les rayons ne sont pas de simples blocs: ils orientent vers les sous-familles,
-            les produits disponibles et les références à comparer.
-          </p>
-          <Link
-            href="/catalogue"
-            className="mt-7 inline-flex h-12 items-center justify-center gap-2 rounded-md bg-ec-ink px-5 text-sm font-black text-white transition hover:bg-ec-blue"
+    <section className="border-ec-line bg-ec-paper border-b">
+      <div className="commerce-container py-18 text-center sm:py-24">
+        <Link
+          href="/catalogue?sélection=promotion"
+          className="border-ec-line text-ec-blue hover:border-ec-blue/35 inline-flex items-center gap-2 rounded-full border bg-white px-4 py-2 text-xs font-black tracking-[0.16em] uppercase shadow-sm transition"
+        >
+          <Sparkles className="size-4" aria-hidden="true" />
+          Offres du moment
+        </Link>
+        <h1 className="text-ec-ink mx-auto mt-6 max-w-4xl text-4xl leading-tight font-black tracking-tight sm:text-6xl">
+          Tous vos matériaux, prêts à commander.
+        </h1>
+        <p className="text-ec-muted mx-auto mt-4 max-w-2xl text-base leading-7 font-semibold">
+          Recherchez, ajoutez au panier et suivez vos commandes en quelques clics.
+        </p>
+        <div className="mt-8">
+          <SearchBar large />
+        </div>
+        <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
+          <ButtonLink href="/catalogue" size="lg" icon={<ShoppingBag className="size-5" />}>
+            Voir tous les produits
+          </ButtonLink>
+          <ButtonLink
+            href="/suivi-commande"
+            variant="ghost"
+            size="lg"
+            className="border-ec-line border bg-white"
+            icon={<Truck className="size-5" />}
           >
-            Tous les produits
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
-        </div>
-
-        <div className="grid gap-4">
-          {categories.slice(0, 8).map((category, index) => (
-            <Link
-              key={category.slug}
-              href={category.href}
-              className="group grid overflow-hidden rounded-lg border border-ec-line bg-white shadow-[0_18px_52px_rgba(20,32,46,0.055)] transition hover:-translate-y-1 hover:border-ec-blue/38 hover:shadow-[0_28px_70px_rgba(20,32,46,0.12)] md:grid-cols-[0.72fr_1.28fr]"
-            >
-              <span className={index % 2 === 1 ? "relative min-h-64 bg-ec-stone md:order-2" : "relative min-h-64 bg-ec-stone"}>
-                {category.imageUrl ? (
-                  <Image
-                    src={category.imageUrl}
-                    alt={category.name}
-                    fill
-                    sizes="(min-width: 1024px) 34vw, 92vw"
-                    priority={index < 2}
-                    className="object-cover transition duration-500 group-hover:scale-[1.04]"
-                  />
-                ) : (
-                  <span className="grid h-full place-items-center bg-[linear-gradient(135deg,var(--ec-stone),#fff)] text-xs font-black uppercase tracking-[0.22em] text-ec-muted/45">
-                    COBAM
-                  </span>
-                )}
-                <span className="absolute bottom-4 left-4 rounded-md bg-ec-ink px-3 py-2 text-sm font-black text-white">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-              </span>
-              <span className="flex min-h-64 flex-col justify-center p-5 sm:p-7">
-                <span className="text-xs font-black uppercase tracking-[0.18em] text-ec-blue">
-                  {productCountLabel(category.productCount)}
-                </span>
-                <span className="mt-3 block text-3xl font-black leading-tight text-ec-ink">
-                  {category.name}
-                </span>
-                <span className="mt-4 block max-w-xl text-sm leading-6 text-ec-muted">
-                  {category.subtitle ?? category.description ?? "Produits COBAM GROUP disponibles au catalogue."}
-                </span>
-                <span className="mt-5 flex flex-wrap gap-2">
-                  {category.subcategories.slice(0, 5).map((subcategory) => (
-                    <span key={subcategory.slug} className="rounded-md bg-ec-stone px-3 py-2 text-xs font-bold text-ec-muted">
-                      {subcategory.name}
-                    </span>
-                  ))}
-                </span>
-                <span className="mt-6 inline-flex items-center gap-2 text-sm font-black text-ec-blue">
-                  Voir les produits
-                  <ArrowRight className="size-4 transition group-hover:translate-x-1" aria-hidden="true" />
-                </span>
-              </span>
-            </Link>
-          ))}
+            Suivre une commande
+          </ButtonLink>
         </div>
       </div>
     </section>
   );
 }
 
-function ProjectShortcuts({ categories }: { categories: LandingCategory[] }) {
-  const bathroom = findCategory(categories, ["bain", "cuisine", "robinet"]);
-  const surface = findCategory(categories, ["revêtement", "revetement", "carrelage", "surface"]);
-  const chantier = findCategory(categories, ["construction", "ciment", "matériaux", "materiaux"]);
-  const shortcuts = [
-    {
-      eyebrow: "Salle de bain",
-      title: "Vasques, robinetterie, douche et accessoires.",
-      category: bathroom,
-    },
-    {
-      eyebrow: "Surfaces",
-      title: "Carrelage, faïence, mosaïque et grands formats.",
-      category: surface,
-    },
-    {
-      eyebrow: "Chantier",
-      title: "Ciments, briques, sables, graviers et armatures.",
-      category: chantier,
-    },
-  ];
+function CategoryShortcuts({ categories }: { categories: LandingCategory[] }) {
+  if (categories.length === 0) return null;
 
   return (
-    <section className="bg-white py-14" aria-labelledby="project-shortcuts-title">
+    <section className="bg-white py-18 sm:py-24">
       <div className="commerce-container">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-ec-blue">
-              Parcours rapides
-            </p>
-            <h2 id="project-shortcuts-title" className="mt-3 text-4xl font-black leading-tight tracking-tight text-ec-ink sm:text-5xl">
-              Commencer par le besoin réel.
-            </h2>
-          </div>
-          <p className="max-w-xl text-sm leading-6 text-ec-muted">
-            Une entrée plus concrète pour les clients qui ne connaissent pas encore le nom exact de
-            la référence.
-          </p>
-        </div>
-
-        <div className="mt-7 grid gap-4 lg:grid-cols-3">
-          {shortcuts.map((item) => (
-            <Link
-              key={item.eyebrow}
-              href={item.category?.href ?? "/catalogue"}
-              className="group relative min-h-80 overflow-hidden rounded-lg bg-ec-ink p-6 text-white shadow-[0_24px_70px_rgba(20,32,46,0.16)]"
-            >
-              {item.category?.imageUrl ? (
-                <Image
-                  src={item.category.imageUrl}
-                  alt={item.category.name}
-                  fill
-                  sizes="(min-width: 1024px) 31vw, 92vw"
-                  className="object-cover opacity-45 transition duration-500 group-hover:scale-[1.04] group-hover:opacity-58"
-                />
-              ) : null}
-              <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,32,46,0.18),rgba(20,32,46,0.92))]" />
-              <span className="relative z-10 flex min-h-68 flex-col justify-between">
-                <span>
-                  <span className="text-xs font-black uppercase tracking-[0.18em] text-ec-blue">
-                    {item.eyebrow}
-                  </span>
-                  <span className="mt-4 block max-w-sm text-3xl font-black leading-tight">
-                    {item.title}
-                  </span>
-                </span>
-                <span className="inline-flex items-center gap-2 text-sm font-black">
-                  Voir la catégorie
-                  <ArrowRight className="size-4 transition group-hover:translate-x-1" aria-hidden="true" />
-                </span>
-              </span>
-            </Link>
+        <SectionHeader
+          title="Acheter par catégorie"
+          action={{ href: "/catalogue", label: "Tout voir" }}
+        />
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {categories.map((category) => (
+            <CategoryCard key={category.slug} category={category} />
           ))}
         </div>
       </div>
@@ -477,116 +291,246 @@ function ProjectShortcuts({ categories }: { categories: LandingCategory[] }) {
 }
 
 function ProductShelf({
-  eyebrow,
   title,
-  description,
   products,
-  emptyText,
-  tone = "light",
+  actionHref = "/catalogue",
 }: {
-  eyebrow: string;
   title: string;
-  description: string;
   products: LandingProduct[];
-  emptyText: string;
-  tone?: "light" | "paper" | "dark";
+  actionHref?: string;
 }) {
-  const isDark = tone === "dark";
-
   return (
-    <section className={`${isDark ? "bg-ec-ink text-white" : tone === "paper" ? "bg-ec-paper text-ec-ink" : "bg-white text-ec-ink"} py-14 sm:py-18`}>
+    <section className="bg-white py-18 sm:py-24">
       <div className="commerce-container">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-ec-blue">{eyebrow}</p>
-            <h2 className="mt-3 max-w-3xl text-4xl font-black leading-tight tracking-tight sm:text-5xl">
-              {title}
-            </h2>
-            <p className={`mt-3 max-w-2xl text-sm leading-6 ${isDark ? "text-white/64" : "text-ec-muted"}`}>
-              {description}
-            </p>
-          </div>
-          <Link
-            href="/catalogue"
-            className={`inline-flex h-12 items-center justify-center gap-2 rounded-md px-5 text-sm font-black transition ${
-              isDark
-                ? "border border-white/18 bg-white/10 text-white hover:bg-white/18"
-                : "border border-ec-line bg-white text-ec-ink hover:border-ec-blue/35 hover:bg-ec-blue/5"
-            }`}
-          >
-            Voir tout
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
-        </div>
-
+        <SectionHeader title={title} action={{ href: actionHref, label: "Voir tout" }} />
         {products.length > 0 ? (
-          <div className="commerce-thin-scrollbar mt-7 grid auto-cols-[14rem] grid-flow-col gap-4 overflow-x-auto pb-3 sm:grid-flow-row sm:grid-cols-2 sm:overflow-visible sm:pb-0 lg:grid-cols-4">
-            {products.slice(0, 8).map((product, index) => (
-              <CommerceProductCard key={product.id} product={product} priority={index < 4} compact />
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {products.slice(0, 8).map((product) => (
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         ) : (
-          <div className={`mt-7 rounded-lg border border-dashed p-8 text-center ${isDark ? "border-white/18 bg-white/8" : "border-ec-line bg-white"}`}>
-            <Search className="mx-auto size-9 text-ec-blue" aria-hidden="true" />
-            <h3 className="mt-4 text-lg font-black">{emptyText}</h3>
-            <p className={`mx-auto mt-2 max-w-xl text-sm leading-6 ${isDark ? "text-white/62" : "text-ec-muted"}`}>
-              Le catalogue reste disponible. Vous pouvez rechercher une référence ou contacter
-              l&apos;équipe COBAM.
-            </p>
-          </div>
+          <EmptyProducts />
         )}
       </div>
     </section>
   );
 }
 
-function BrandRunway({ brands }: { brands: LandingBrand[] }) {
-  if (brands.length === 0) {
-    return null;
-  }
+function EmptyProducts() {
+  return (
+    <div className="border-ec-line bg-ec-paper rounded-2xl border border-dashed p-8 text-center">
+      <Search className="text-ec-blue mx-auto size-8" aria-hidden="true" />
+      <p className="text-ec-ink mt-3 font-black">Produits indisponibles pour le moment.</p>
+      <Link href="/catalogue" className="text-ec-blue mt-2 inline-flex text-sm font-black">
+        Ouvrir le catalogue
+      </Link>
+    </div>
+  );
+}
 
-  const runwayBrands = brands.slice(0, 14);
+const promos = [
+  {
+    title: "Sélection carrelage",
+    text: "Formats, décors et finitions à commander.",
+    href: "/catalogue?search=carrelage",
+  },
+  {
+    title: "Packs salle de bain",
+    text: "Sanitaires, robinetterie et accessoires.",
+    href: "/catalogue?search=salle%20de%20bain",
+  },
+  {
+    title: "Nouveaux arrivages piscine",
+    text: "Mosaïques et finitions extérieures.",
+    href: "/catalogue?search=piscine",
+  },
+];
+
+function PromotionsSection() {
+  return (
+    <section id="promotions" className="bg-ec-paper py-18 sm:py-24">
+      <div className="commerce-container">
+        <SectionHeader
+          title="Offres du moment"
+          action={{ href: "/catalogue?sélection=promotion", label: "Voir les offres" }}
+        />
+        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <Link
+            href="/catalogue?sélection=promotion"
+            className="bg-ec-ink group relative overflow-hidden rounded-3xl p-7 text-white shadow-[0_24px_70px_rgba(20,32,46,0.16)] sm:p-9"
+          >
+            <span className="absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_70%_20%,rgba(10,141,193,0.45),transparent_45%),radial-gradient(circle_at_40%_80%,rgba(176,138,90,0.25),transparent_42%)]" />
+            <span className="text-ec-blue relative block text-xs font-black tracking-[0.2em] uppercase">
+              Offre boutique
+            </span>
+            <span className="relative mt-4 block max-w-xl text-3xl leading-tight font-black sm:text-4xl">
+              Livraison offerte dès X TND
+            </span>
+            <span className="relative mt-4 block max-w-lg text-sm leading-6 text-white/70">
+              Préparez votre panier et validez les modalités avec l’équipe commerciale.
+            </span>
+            <span className="text-ec-ink group-hover:bg-ec-blue relative mt-8 inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-black transition group-hover:text-white">
+              En profiter
+              <ArrowRight className="size-4" />
+            </span>
+          </Link>
+          <div className="grid gap-5">
+            {promos.map((promo) => (
+              <PromoCard key={promo.title} {...promo} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PromoCard({ title, text, href }: { title: string; text: string; href: string }) {
+  return (
+    <Link
+      href={href}
+      className="border-ec-line hover:border-ec-blue/35 group rounded-2xl border bg-white p-6 shadow-sm transition hover:shadow-[0_18px_42px_rgba(20,32,46,0.08)]"
+    >
+      <span className="text-ec-ink block text-lg font-black">{title}</span>
+      <span className="text-ec-muted mt-2 block text-sm font-semibold">{text}</span>
+      <span className="text-ec-blue mt-4 inline-flex items-center gap-2 text-sm font-black">
+        Voir la sélection
+        <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
+      </span>
+    </Link>
+  );
+}
+
+const needCards = [
+  ["Je rénove ma salle de bain", "/catalogue?search=salle%20de%20bain"],
+  ["Je cherche du carrelage extérieur", "/catalogue?search=carrelage%20extérieur"],
+  ["Je prépare une piscine", "/catalogue?search=piscine"],
+  ["Je peins une maison", "/catalogue?search=peinture"],
+  ["Je construis un mur", "/catalogue?search=brique"],
+  ["Je cherche des produits d’étanchéité", "/catalogue?search=étanchéité"],
+] as const;
+
+function ShopByNeed() {
+  return (
+    <section className="bg-ec-paper py-18 sm:py-24">
+      <div className="commerce-container">
+        <SectionHeader title="Acheter selon votre besoin" />
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {needCards.map(([title, href]) => (
+            <Link
+              key={title}
+              href={href}
+              className="border-ec-line text-ec-ink hover:border-ec-blue/35 hover:text-ec-blue flex items-center justify-between rounded-2xl border bg-white p-5 text-sm font-black transition"
+            >
+              {title}
+              <ChevronRight className="size-5 shrink-0" />
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const accountCards = [
+  {
+    icon: ShoppingBag,
+    title: "Panier rapide",
+    text: "Ajoutez vos produits, ajustez les quantités et commandez plus vite.",
+  },
+  {
+    icon: Clock3,
+    title: "Suivi de commande",
+    text: "Consultez l’état de vos commandes à tout moment.",
+  },
+  {
+    icon: RotateCcw,
+    title: "Réachat facile",
+    text: "Retrouvez vos anciens achats et recommandez en quelques clics.",
+  },
+];
+
+function AccountSection() {
+  return (
+    <section className="bg-white py-18 sm:py-24">
+      <div className="commerce-container">
+        <SectionHeader title="Votre espace d’achat simplifié" />
+        <div className="grid gap-6 md:grid-cols-3">
+          {accountCards.map((card) => (
+            <article
+              key={card.title}
+              className="border-ec-line rounded-2xl border bg-white p-6 shadow-sm"
+            >
+              <span className="bg-ec-blue/10 text-ec-blue grid size-11 place-items-center rounded-xl">
+                <card.icon className="size-5" />
+              </span>
+              <h3 className="text-ec-ink mt-5 text-lg font-black">{card.title}</h3>
+              <p className="text-ec-muted mt-2 text-sm leading-6 font-semibold">{card.text}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const reasons = [
+  ["Large choix", "Des références pour chaque projet."],
+  ["Commande rapide", "Panier simple et clair."],
+  ["Suivi clair", "Vos commandes restent visibles."],
+  ["Support disponible", "Une équipe peut vous aider."],
+] as const;
+
+function WhySection() {
+  return (
+    <section className="border-ec-line border-y bg-white py-16">
+      <div className="commerce-container">
+        <SectionHeader title="Pourquoi acheter ici ?" />
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {reasons.map(([title, text]) => (
+            <article key={title} className="bg-ec-paper rounded-2xl p-6">
+              <CheckCircle2 className="text-ec-blue size-5" />
+              <h3 className="text-ec-ink mt-3 font-black">{title}</h3>
+              <p className="text-ec-muted mt-1 text-sm font-semibold">{text}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BrandGrid({ brands }: { brands: LandingBrand[] }) {
+  if (brands.length === 0) return null;
 
   return (
-    <section className="overflow-hidden border-y border-ec-line bg-white py-14 text-ec-ink sm:py-18" aria-labelledby="brands-title">
-      <div className="commerce-container flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-ec-blue">Marques</p>
-          <h2 id="brands-title" className="mt-3 max-w-3xl text-4xl font-black leading-tight tracking-tight sm:text-5xl">
-            Des marques reconnues, prêtes à commander.
-          </h2>
-        </div>
-        <Link
-          href="/catalogue"
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-ec-ink px-5 text-sm font-black text-white transition hover:bg-ec-blue"
-        >
-          Explorer par marque
-          <ArrowRight className="size-4" aria-hidden="true" />
-        </Link>
-      </div>
-
-      <div className="ecom-brand-marquee mt-9">
-        <div className="ecom-brand-marquee-track">
-          {[...runwayBrands, ...runwayBrands].map((brand, index) => (
+    <section className="bg-white py-18 sm:py-24">
+      <div className="commerce-container">
+        <SectionHeader
+          title="Marques disponibles"
+          action={{ href: "/catalogue", label: "Voir toutes les marques" }}
+        />
+        <div className="grid gap-5 sm:grid-cols-3 lg:grid-cols-6">
+          {brands.slice(0, 12).map((brand) => (
             <Link
-              key={`${brand.slug}-${index}`}
+              key={brand.slug}
               href={brand.href}
-              className="group flex h-28 min-w-64 flex-col justify-between rounded-lg border border-ec-line bg-white p-5 shadow-sm transition hover:border-ec-blue/40 hover:shadow-[0_16px_45px_rgba(20,32,46,0.09)]"
+              className="border-ec-line hover:border-ec-blue/35 flex min-h-28 flex-col justify-between rounded-2xl border bg-white p-5 shadow-sm transition hover:shadow-[0_16px_38px_rgba(20,32,46,0.08)]"
             >
-              <span className="relative block h-11">
-                {brand.logoUrl ? (
-                  <Image
+              {brand.logoUrl ? (
+                <span className="relative block h-10">
+                  <SafeMediaImage
                     src={brand.logoUrl}
                     alt={brand.name}
-                    fill
-                    sizes="14rem"
-                    className="object-contain object-left grayscale transition duration-300 group-hover:grayscale-0"
+                    className="object-contain object-left grayscale transition hover:grayscale-0"
+                    fallback={brand.name}
                   />
-                ) : (
-                  <span className="line-clamp-1 text-lg font-black text-ec-ink">{brand.name}</span>
-                )}
-              </span>
-              <span className="text-xs font-bold text-ec-muted">
+                </span>
+              ) : (
+                <span className="text-ec-ink line-clamp-1 text-sm font-black">{brand.name}</span>
+              )}
+              <span className="text-ec-muted mt-4 text-xs font-bold">
                 {formatCompactNumber(brand.productCount)} produits
               </span>
             </Link>
@@ -597,55 +541,26 @@ function BrandRunway({ brands }: { brands: LandingBrand[] }) {
   );
 }
 
-const serviceItems = [
-  {
-    icon: Truck,
-    title: "Retrait & livraison",
-    text: "Préparez le panier, COBAM confirme les modalités adaptées au chantier.",
-  },
-  {
-    icon: CreditCard,
-    title: "Paiement maîtrisé",
-    text: "Prix visibles quand ils existent, devis clair lorsque le projet demande validation.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Catalogue fiable",
-    text: "Les produits visibles respectent les règles e-commerce et les stocks déclarés.",
-  },
-  {
-    icon: Headphones,
-    title: "Conseil projet",
-    text: "Une équipe peut accompagner les quantités, usages, délais et alternatives.",
-  },
-];
+function SocialMiniSection() {
+  const socialLinks = COBAM_SOCIAL_LINKS.filter((social) =>
+    ["Facebook", "Instagram", "LinkedIn"].includes(social.label),
+  );
 
-function TrustSection() {
   return (
-    <section className="bg-ec-paper py-14 sm:py-18" aria-labelledby="trust-title">
-      <div className="commerce-container grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-ec-blue">
-            Service commerce
-          </p>
-          <h2 id="trust-title" className="mt-3 max-w-2xl text-4xl font-black leading-tight tracking-tight text-ec-ink sm:text-5xl">
-            Une boutique pensée pour les vrais achats de construction.
-          </h2>
-          <p className="mt-4 max-w-xl text-sm leading-7 text-ec-muted">
-            e-cobam n&apos;est pas une vitrine décorative: c&apos;est une interface pour trouver, comparer,
-            préparer, commander et suivre les produits COBAM.
-          </p>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          {serviceItems.map((item) => (
-            <article key={item.title} className="rounded-lg border border-ec-line bg-white p-5 shadow-sm">
-              <span className="grid size-12 place-items-center rounded-md bg-ec-blue/10 text-ec-blue">
-                <item.icon className="size-5" aria-hidden="true" />
-              </span>
-              <h3 className="mt-5 text-lg font-black text-ec-ink">{item.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-ec-muted">{item.text}</p>
-            </article>
+    <section className="bg-ec-paper py-16">
+      <div className="commerce-container flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-ec-ink text-xl font-black">Suivez nos nouveautés</h2>
+        <div className="flex flex-wrap gap-2">
+          {socialLinks.map((social) => (
+            <a
+              key={social.label}
+              href={social.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="border-ec-line text-ec-ink hover:border-ec-blue/35 hover:text-ec-blue rounded-full border bg-white px-4 py-2 text-sm font-black transition"
+            >
+              {social.label}
+            </a>
           ))}
         </div>
       </div>
@@ -653,33 +568,23 @@ function TrustSection() {
   );
 }
 
-function FinalHelpSection() {
+function FinalCta() {
   return (
-    <section className="relative overflow-hidden bg-ec-ink py-16 text-white sm:py-20">
-      <div className="ecom-technical-grid absolute inset-0 opacity-55" aria-hidden="true" />
-      <div className="commerce-container relative z-10 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+    <section className="bg-ec-ink py-18 text-white sm:py-24">
+      <div className="commerce-container flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-ec-blue">
-            Achat accompagné
-          </p>
-          <h2 className="mt-3 max-w-4xl text-5xl font-black leading-none tracking-tight sm:text-6xl">
-            Construisez votre panier, COBAM confirme le projet.
-          </h2>
-          <p className="mt-5 max-w-2xl text-sm leading-7 text-white/68">
-            Ajoutez vos références, comparez les disponibilités, puis validez les quantités et
-            modalités avec l&apos;équipe commerciale.
-          </p>
+          <p className="text-ec-blue text-xs font-black tracking-[0.2em] uppercase">Commande</p>
+          <h2 className="mt-2 text-3xl font-black tracking-tight">Prêt à commander ?</h2>
         </div>
-
-        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-          <ButtonLink href="/catalogue" size="lg" className="bg-white text-ec-ink [color:#14202e] hover:bg-ec-blue hover:text-white hover:[color:#fff]" icon={<ShoppingBag className="size-5" />}>
-            Explorer le catalogue
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <ButtonLink
+            href="/catalogue"
+            className="text-ec-ink hover:bg-ec-blue bg-white [color:#14202e] hover:[color:#fff] hover:text-white"
+          >
+            Voir tous les produits
           </ButtonLink>
-          <ButtonLink href="/suivi-commande" variant="secondary" size="lg" className="border-white/20 bg-white/10 text-white [color:#fff] hover:bg-white/20" icon={<Truck className="size-5" />}>
-            Suivre une commande
-          </ButtonLink>
-          <ButtonLink href="mailto:contact@cobamgroup.com?subject=Demande%20de%20devis%20e-cobam" variant="secondary" size="lg" className="border-white/20 bg-white/10 text-white [color:#fff] hover:bg-white/20" icon={<ClipboardList className="size-5" />}>
-            Demander un devis
+          <ButtonLink href="/panier" variant="secondary">
+            Voir mon panier
           </ButtonLink>
         </div>
       </div>
@@ -688,9 +593,7 @@ function FinalHelpSection() {
 }
 
 function DiagnosticsNotice({ data }: { data: LandingHomeData }) {
-  if (data.products.status !== "error") {
-    return null;
-  }
+  if (data.products.status !== "error") return null;
 
   return (
     <section className="bg-amber-50 py-4 text-amber-900">
@@ -703,34 +606,38 @@ function DiagnosticsNotice({ data }: { data: LandingHomeData }) {
 }
 
 export function StorefrontHome({ data }: { data: LandingHomeData }) {
-  const promotedProducts = firstReadyItems(data.promotedProducts, data.products);
+  const bestSellers = firstReadyItems(data.promotedProducts, data.products);
   const latestProducts = firstReadyItems(data.latestProducts, data.products);
+  const recommendedProducts =
+    data.products.status === "ready" ? data.products.items : latestProducts;
 
   return (
     <main>
-      <StorefrontHero data={data} />
+      <Hero />
       <DiagnosticsNotice data={data} />
-      <CommerceCommandBar />
-      <CategoryNavigator categories={data.categories} />
-      <ProductShelf
-        eyebrow="Sélections"
-        title="Les références à vérifier en premier."
-        description="Une vitrine courte avec prix, stock, marque et accès direct aux fiches produits."
-        products={promotedProducts}
-        emptyText="Aucune sélection n'est publiée pour le moment."
-      />
-      <ProjectShortcuts categories={data.categories} />
-      <ProductShelf
-        eyebrow="Nouveautés"
-        title="Les dernières références ajoutées au catalogue."
-        description="Gardez les arrivages et mises à jour à portée de main pour préparer vos demandes."
-        products={latestProducts}
-        emptyText="Aucune nouveauté n'est publiée pour le moment."
-        tone="paper"
-      />
-      <BrandRunway brands={data.brands} />
-      <TrustSection />
-      <FinalHelpSection />
+      <CategoryShortcuts categories={data.categories} />
+      <div id="best-sellers">
+        <ProductShelf
+          title="Les produits les plus demandés"
+          products={bestSellers}
+          actionHref="/catalogue?sélection=promotion"
+        />
+      </div>
+      <PromotionsSection />
+      <div id="new-arrivals">
+        <ProductShelf
+          title="Nouveautés"
+          products={latestProducts}
+          actionHref="/catalogue?tri=latest"
+        />
+      </div>
+      <ShopByNeed />
+      <AccountSection />
+      <WhySection />
+      <BrandGrid brands={data.brands} />
+      <ProductShelf title="Recommandé pour vous" products={recommendedProducts} />
+      <SocialMiniSection />
+      <FinalCta />
     </main>
   );
 }

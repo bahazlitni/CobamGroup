@@ -123,10 +123,8 @@ export default async function CustomerPaymentsPage() {
           <form action={addCustomerPaymentMethodAction}>
             <Card>
               <CardHeader>
-                <CardTitle>Ajouter une preference</CardTitle>
-                <CardDescription>
-                  e-cobam enregistre uniquement des preferences de paiement manuel.
-                </CardDescription>
+                <CardTitle>Ajouter une préférence</CardTitle>
+
               </CardHeader>
               <Separator />
               <CardContent className="grid gap-4 pt-5 sm:grid-cols-2 sm:pt-6">

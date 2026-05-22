@@ -8,7 +8,7 @@ function getMediaUploadBodyLimit() {
 }
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@cobam/db", "@cobam/media-storage"],
+  transpilePackages: ["@cobam/db", "@cobam/media-storage", "@cobam/shared"],
   htmlLimitedBots: /.*/,
   experimental: {
     proxyClientMaxBodySize: getMediaUploadBodyLimit(),
@@ -167,7 +167,6 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
 
-
       {
         source: "/services/:slash?",
         destination: "/",
@@ -225,10 +224,11 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/product/colonne-de-douche-avec-inverseur-zarzis/:slash?",
-        destination: "/produits/salle-de-bain-et-cuisine/espace-douche/sopal-colonne-de-douche-carre-avec-inverseur-zarzis",
+        destination:
+          "/produits/salle-de-bain-et-cuisine/espace-douche/sopal-colonne-de-douche-carre-avec-inverseur-zarzis",
         permanent: true,
       },
-     {
+      {
         source: "/product/ciment-colle/:slash?",
         destination: "/produits?search=ciment%20colle",
         permanent: true,
@@ -248,18 +248,20 @@ const nextConfig: NextConfig = {
         destination: "/produits",
         permanent: true,
       },
-     {
+      {
         source: "/product-category/produit-de-finition/robinetterie/sopal/:slash?",
         destination: "/produits?search=brand%3A2%3DSopal",
         permanent: true,
       },
       {
-        source: "/product-category/produit-de-finition/robinetterie/jaquar/sanitaire-jaquar/jdr/:slash?",
+        source:
+          "/product-category/produit-de-finition/robinetterie/jaquar/sanitaire-jaquar/jdr/:slash?",
         destination: "/produits?search=brand%3A2%3DJaquar",
         permanent: true,
       },
       {
-        source: "/product-category/produit-de-finition/robinetterie/jaquar/sanitaire-jaquar/:slash?",
+        source:
+          "/product-category/produit-de-finition/robinetterie/jaquar/sanitaire-jaquar/:slash?",
         destination: "/produits?search=brand%3A2%3DJaquar",
         permanent: true,
       },
@@ -298,7 +300,6 @@ const nextConfig: NextConfig = {
         destination: "/a-propos",
         permanent: true,
       },
-
     ];
   },
 };

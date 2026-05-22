@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -23,18 +19,12 @@
       }
     ],
     "paths": {
-      "@cobam/db": [
-        "../../packages/db/src"
-      ],
-      "@cobam/media-storage": [
-        "../../packages/media-storage/src"
-      ],
-      "@cobam/media-storage/*": [
-        "../../packages/media-storage/src/*"
-      ],
-      "@/*": [
-        "./*"
-      ]
+      "@cobam/db": ["../../packages/db/src"],
+      "@cobam/media-storage": ["../../packages/media-storage/src"],
+      "@cobam/media-storage/*": ["../../packages/media-storage/src/*"],
+      "@cobam/shared": ["../../packages/shared/src"],
+      "@cobam/shared/*": ["../../packages/shared/src/*"],
+      "@/*": ["./*"]
     }
   },
   "include": [
@@ -45,7 +35,5 @@
     ".next/dev/types/**/*.ts",
     ".next/dev/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

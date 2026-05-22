@@ -1,81 +1,128 @@
 import Link from "next/link";
-import { Mail, MapPin } from "lucide-react";
+import {
+  COBAM_BRAND,
+  COBAM_CONTACT_DETAILS,
+  COBAM_SOCIAL_LINKS,
+  getPhoneHref,
+} from "@cobam/shared";
+import { Mail, MapPin, Phone } from "lucide-react";
 import type { LandingCategory } from "@/lib/home-data";
+
+const serviceLinks = [
+  { href: "/suivi-commande", label: "Suivre une commande" },
+  { href: "/panier", label: "Panier" },
+  { href: "/compte", label: "Compte client" },
+  { href: "/checkout", label: "Commander" },
+];
+
+const helpLinks = [
+  { href: "/suivi-commande", label: "Livraison" },
+  { href: "/suivi-commande", label: "Retours" },
+  { href: "/conditions-generales", label: "Conditions" },
+  { href: "/politique-de-confidentialite", label: "Confidentialité" },
+];
+
+const footerSocialLinks = COBAM_SOCIAL_LINKS.filter((social) =>
+  ["Facebook", "Instagram", "LinkedIn"].includes(social.label),
+);
 
 export function SiteFooter({ categories }: { categories: LandingCategory[] }) {
   return (
-    <footer className="border-t border-ec-line bg-white text-ec-ink">
-      <div className="mx-auto max-w-[92rem] px-4 py-14 sm:px-6 lg:px-8 lg:py-18">
-        <div className="grid gap-10 lg:grid-cols-[1.35fr_1fr_1fr_1fr]">
+    <footer className="border-ec-line text-ec-ink border-t bg-white">
+      <div className="mx-auto max-w-[92rem] px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.2fr_0.9fr_0.9fr_0.9fr]">
           <div>
-            <p className="text-2xl font-black tracking-[0.18em]">COBAM</p>
-            <p className="mt-3 text-sm font-semibold uppercase tracking-[0.26em] text-ec-blue">
-              e-commerce
+            <p className="text-xl font-black tracking-[0.18em]">ECOMMERCE</p>
+            <p className="text-ec-muted mt-4 max-w-sm text-sm leading-6 font-semibold">
+              Produits, panier, commandes et suivi client.
             </p>
-            <p className="mt-5 max-w-sm text-sm leading-7 text-ec-muted">
-              Une boutique reliée au catalogue COBAM GROUP pour sélectionner matériaux,
-              sanitaires, revêtements, peintures, finitions et produits techniques.
-            </p>
+            <div className="text-ec-muted mt-5 space-y-3 text-sm font-semibold">
+              <a
+                href={getPhoneHref(COBAM_CONTACT_DETAILS.phoneFixed)}
+                className="hover:text-ec-ink flex gap-3 transition"
+              >
+                <Phone className="text-ec-blue mt-0.5 size-4 shrink-0" />
+                {COBAM_CONTACT_DETAILS.phoneFixed}
+              </a>
+              <a
+                href={`mailto:${COBAM_CONTACT_DETAILS.email}`}
+                className="hover:text-ec-ink flex gap-3 transition"
+              >
+                <Mail className="text-ec-blue mt-0.5 size-4 shrink-0" />
+                {COBAM_CONTACT_DETAILS.email}
+              </a>
+              <p className="flex gap-3">
+                <MapPin className="text-ec-blue mt-0.5 size-4 shrink-0" />
+                {COBAM_BRAND.baseLocation}
+              </p>
+            </div>
           </div>
 
+          <FooterColumn title="Service client" links={serviceLinks} />
+          <FooterColumn title="Aide" links={helpLinks} />
+
           <div>
-            <h2 className="text-sm font-semibold uppercase tracking-[0.22em] text-ec-ink">
-              Catalogue
+            <h2 className="text-ec-ink text-sm font-black tracking-[0.18em] uppercase">
+              Catégories
             </h2>
             <div className="mt-5 flex flex-col gap-3">
-              {categories.slice(0, 7).map((category) => (
+              {categories.slice(0, 6).map((category) => (
                 <Link
                   key={category.slug}
                   href={category.href}
-                  className="text-sm text-ec-muted transition hover:text-ec-ink"
+                  className="text-ec-muted hover:text-ec-ink text-sm font-semibold transition"
                 >
                   {category.name}
                 </Link>
               ))}
             </div>
           </div>
-
-          <div>
-            <h2 className="text-sm font-semibold uppercase tracking-[0.22em] text-ec-ink">
-              Service
-            </h2>
-            <div className="mt-5 flex flex-col gap-3">
-              <Link href="/panier" className="text-sm text-ec-muted transition hover:text-ec-ink">
-                Panier
-              </Link>
-              <Link href="/catalogue" className="text-sm text-ec-muted transition hover:text-ec-ink">
-                Tous les produits
-              </Link>
-              <Link href="/compte" className="text-sm text-ec-muted transition hover:text-ec-ink">
-                Compte client
-              </Link>
-              <a href="mailto:contact@cobamgroup.com" className="text-sm text-ec-muted transition hover:text-ec-ink">
-                Demander un devis
-              </a>
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-sm font-semibold uppercase tracking-[0.22em] text-ec-ink">
-              Contact
-            </h2>
-            <div className="mt-5 space-y-4 text-sm text-ec-muted">
-              <p className="flex gap-3">
-                <MapPin className="mt-0.5 size-4 shrink-0 text-ec-blue" />
-                Djerba, Tunisie
-              </p>
-              <a href="mailto:contact@cobamgroup.com" className="flex gap-3 transition hover:text-ec-ink">
-                <Mail className="mt-0.5 size-4 shrink-0 text-ec-blue" />
-                contact@cobamgroup.com
-              </a>
-            </div>
-          </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-3 border-t border-ec-line pt-6 text-xs text-ec-muted sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} COBAM GROUP. Tous droits réservés.</p>
+        <div className="border-ec-line text-ec-muted mt-10 flex flex-col gap-4 border-t pt-6 text-xs font-semibold sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            © {new Date().getFullYear()} {COBAM_BRAND.legalName}. Tous droits réservés.
+          </p>
+          <div className="flex gap-4">
+            {footerSocialLinks.map((social) => (
+              <a
+                key={social.label}
+                href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-ec-ink transition"
+              >
+                {social.label}
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </footer>
+  );
+}
+
+function FooterColumn({
+  title,
+  links,
+}: {
+  title: string;
+  links: { href: string; label: string }[];
+}) {
+  return (
+    <div>
+      <h2 className="text-ec-ink text-sm font-black tracking-[0.18em] uppercase">{title}</h2>
+      <div className="mt-5 flex flex-col gap-3">
+        {links.map((link) => (
+          <Link
+            key={`${link.href}-${link.label}`}
+            href={link.href}
+            className="text-ec-muted hover:text-ec-ink text-sm font-semibold transition"
+          >
+            {link.label}
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }

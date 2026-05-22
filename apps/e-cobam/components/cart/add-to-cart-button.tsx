@@ -4,13 +4,18 @@ import { useState } from "react";
 import { Check, ShoppingBag } from "lucide-react";
 import { addCartItem, type CartItemSnapshot } from "@/lib/cart-store";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
 
 export function AddToCartButton({
   item,
   quantity,
+  size = "lg",
+  className,
 }: {
   item: CartItemSnapshot;
   quantity: number;
+  size?: "sm" | "md" | "lg";
+  className?: string;
 }) {
   const [added, setAdded] = useState(false);
   const [pending, setPending] = useState(false);
@@ -32,10 +37,10 @@ export function AddToCartButton({
   }
 
   return (
-    <div className="w-full space-y-2 sm:w-auto">
+    <div className={cn("w-full space-y-2 sm:w-auto", className)}>
       <Button
         type="button"
-        size="lg"
+        size={size}
         className="w-full sm:w-auto"
         icon={added ? <Check className="size-5" /> : <ShoppingBag className="size-5" />}
         disabled={pending}

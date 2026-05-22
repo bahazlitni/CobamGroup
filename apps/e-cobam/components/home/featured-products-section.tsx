@@ -1,23 +1,18 @@
 import Link from "next/link";
+import { getMailtoHref } from "@cobam/shared";
 import { ArrowRight, PackageOpen } from "lucide-react";
 import type { LandingProductsState } from "@/lib/home-data";
 import { LandingProductCard } from "@/components/home/landing-product-card";
 
-function ProductSectionFallback({
-  title,
-  text,
-}: {
-  title: string;
-  text: string;
-}) {
+function ProductSectionFallback({ title, text }: { title: string; text: string }) {
   return (
-    <div className="mt-8 rounded-[1.5rem] border border-dashed border-ec-line bg-white p-8 text-center">
-      <PackageOpen className="mx-auto size-10 text-ec-blue" />
-      <h3 className="mt-4 text-xl font-semibold text-ec-ink">{title}</h3>
-      <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-ec-muted">{text}</p>
+    <div className="border-ec-line mt-8 rounded-[1.5rem] border border-dashed bg-white p-8 text-center">
+      <PackageOpen className="text-ec-blue mx-auto size-10" />
+      <h3 className="text-ec-ink mt-4 text-xl font-semibold">{title}</h3>
+      <p className="text-ec-muted mx-auto mt-2 max-w-xl text-sm leading-6">{text}</p>
       <Link
-        href="mailto:contact@cobamgroup.com?subject=Demande%20catalogue%20e-cobam"
-        className="mt-5 inline-flex h-11 items-center justify-center rounded-full bg-ec-ink px-5 text-sm font-semibold text-white transition hover:bg-ec-blue"
+        href={getMailtoHref({ subject: "Demande catalogue e-cobam" })}
+        className="bg-ec-ink hover:bg-ec-blue mt-5 inline-flex h-11 items-center justify-center rounded-full px-5 text-sm font-semibold text-white transition"
       >
         Demander une référence
       </Link>
@@ -27,20 +22,20 @@ function ProductSectionFallback({
 
 export function FeaturedProductsSection({ products }: { products: LandingProductsState }) {
   return (
-    <section className="border-y border-ec-line bg-ec-paper py-14 sm:py-18 lg:py-24">
+    <section className="border-ec-line bg-ec-paper border-y py-14 sm:py-18 lg:py-24">
       <div className="commerce-container">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-ec-blue">
+            <p className="text-ec-blue text-sm font-semibold tracking-[0.24em] uppercase">
               Produits
             </p>
-            <h2 className="mt-3 max-w-3xl text-3xl font-black tracking-tight text-ec-ink sm:text-5xl">
+            <h2 className="text-ec-ink mt-3 max-w-3xl text-3xl font-black tracking-tight sm:text-5xl">
               Des références réelles, prêtes à comparer.
             </h2>
           </div>
           <Link
             href="/catalogue"
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-ec-line bg-white px-5 text-sm font-semibold text-ec-ink transition hover:border-ec-blue/40 hover:bg-ec-blue/5"
+            className="border-ec-line text-ec-ink hover:border-ec-blue/40 hover:bg-ec-blue/5 inline-flex h-12 items-center justify-center gap-2 rounded-full border bg-white px-5 text-sm font-semibold transition"
           >
             Ouvrir le catalogue
             <ArrowRight className="size-4" />

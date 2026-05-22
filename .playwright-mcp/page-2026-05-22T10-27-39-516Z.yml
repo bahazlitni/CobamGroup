@@ -1,0 +1,136 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Accueil e-cobam" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e7]: ECOMMERCE
+      - link "Se connecter" [ref=e9] [cursor=pointer]:
+        - /url: /connexion
+        - img [ref=e10]
+    - generic [ref=e14]:
+      - button "Ouvrir les rayons" [ref=e16]:
+        - img [ref=e17]
+      - generic [ref=e19]:
+        - img [ref=e20]
+        - searchbox "Produit, marque, référence..." [ref=e23]
+        - button "Rechercher" [ref=e24]:
+          - img [ref=e25]
+          - generic [ref=e28]: Rechercher
+      - link "Mes favoris" [active] [ref=e29] [cursor=pointer]:
+        - /url: /favoris
+        - generic [ref=e30]:
+          - img [ref=e31]
+          - generic [ref=e1053]: "1"
+      - link "Panier" [ref=e33] [cursor=pointer]:
+        - /url: /panier
+        - img [ref=e35]
+  - main [ref=e1062]:
+    - generic [ref=e1063]:
+      - generic [ref=e1064]:
+        - generic [ref=e1065]:
+          - paragraph [ref=e1066]: Mes favoris
+          - heading "Vos produits mis de côté." [level=1] [ref=e1067]
+          - paragraph [ref=e1068]: Retrouvez vos références préférées, ouvrez leurs fiches ou ajoutez-les au panier.
+        - button "Vider la liste" [ref=e1069]:
+          - img [ref=e1070]
+          - text: Vider la liste
+      - generic [ref=e1073]:
+        - generic [ref=e1074]:
+          - paragraph [ref=e1075]: Total
+          - paragraph [ref=e1076]: "1"
+        - generic [ref=e1077]:
+          - paragraph [ref=e1078]: Produits
+          - paragraph [ref=e1079]: "1"
+        - generic [ref=e1080]:
+          - paragraph [ref=e1081]: Gammes
+          - paragraph [ref=e1082]: "0"
+      - article [ref=e1084]:
+        - link "Pamesa Ceramica - Mosaique 30 Mat Rusty Metal Silver Pamesa" [ref=e1085] [cursor=pointer]:
+          - /url: /produits/pamesa-ceramica-mosaique-30-mat-rusty-metal-silver-pamesa
+          - img "Pamesa Ceramica - Mosaique 30 Mat Rusty Metal Silver Pamesa" [ref=e1086]
+        - generic [ref=e1087]:
+          - paragraph [ref=e1088]: Pamesa Ceramica
+          - link "Pamesa Ceramica - Mosaique 30 Mat Rusty Metal Silver Pamesa" [ref=e1089] [cursor=pointer]:
+            - /url: /produits/pamesa-ceramica-mosaique-30-mat-rusty-metal-silver-pamesa
+          - paragraph [ref=e1090]: 27,778 DT
+          - generic [ref=e1091]:
+            - button "Ajouter au panier" [ref=e1093]:
+              - text: Ajouter au panier
+              - img [ref=e1094]
+            - button "Retirer" [ref=e1097]:
+              - img [ref=e1098]
+              - text: Retirer
+  - contentinfo [ref=e97]:
+    - generic [ref=e98]:
+      - generic [ref=e99]:
+        - generic [ref=e100]:
+          - paragraph [ref=e101]: ECOMMERCE
+          - paragraph [ref=e102]: Produits, panier, commandes et suivi client.
+          - generic [ref=e103]:
+            - link "+216 75731731" [ref=e104] [cursor=pointer]:
+              - /url: tel:+21675731731
+              - img [ref=e105]
+              - text: +216 75731731
+            - link "contact@cobamgroup.com" [ref=e107] [cursor=pointer]:
+              - /url: mailto:contact@cobamgroup.com
+              - img [ref=e108]
+              - text: contact@cobamgroup.com
+            - paragraph [ref=e111]:
+              - img [ref=e112]
+              - text: Djerba, Tunisie
+        - generic [ref=e115]:
+          - heading "Service client" [level=2] [ref=e116]
+          - generic [ref=e117]:
+            - link "Suivre une commande" [ref=e118] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Panier" [ref=e119] [cursor=pointer]:
+              - /url: /panier
+            - link "Compte client" [ref=e120] [cursor=pointer]:
+              - /url: /compte
+            - link "Commander" [ref=e121] [cursor=pointer]:
+              - /url: /checkout
+        - generic [ref=e122]:
+          - heading "Aide" [level=2] [ref=e123]
+          - generic [ref=e124]:
+            - link "Livraison" [ref=e125] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Retours" [ref=e126] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Conditions" [ref=e127] [cursor=pointer]:
+              - /url: /conditions-generales
+            - link "Confidentialité" [ref=e128] [cursor=pointer]:
+              - /url: /politique-de-confidentialite
+        - generic [ref=e129]:
+          - heading "Catégories" [level=2] [ref=e130]
+          - generic [ref=e131]:
+            - link "Isolation et étanchéité" [ref=e132] [cursor=pointer]:
+              - /url: /catalogue?categorie=isolation-et-etancheite
+            - link "Salle de bain et cuisine" [ref=e133] [cursor=pointer]:
+              - /url: /catalogue?categorie=salle-de-bain-et-cuisine
+            - link "Peintures et décoration" [ref=e134] [cursor=pointer]:
+              - /url: /catalogue?categorie=peintures-et-decoration
+            - link "Piscine" [ref=e135] [cursor=pointer]:
+              - /url: /catalogue?categorie=piscine
+            - link "Portes et menuiserie" [ref=e136] [cursor=pointer]:
+              - /url: /catalogue?categorie=portes-et-menuiserie
+      - generic [ref=e137]:
+        - paragraph [ref=e138]: © 2026 COBAM GROUP. Tous droits réservés.
+        - generic [ref=e139]:
+          - link "Facebook" [ref=e140] [cursor=pointer]:
+            - /url: https://www.facebook.com/cobamgrp
+          - link "Instagram" [ref=e141] [cursor=pointer]:
+            - /url: https://www.instagram.com/cobamgroup/
+          - link "LinkedIn" [ref=e142] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/cobam-group/
+  - generic [ref=e147] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e148]:
+      - img [ref=e149]
+    - generic [ref=e1044]:
+      - button "Open issues overlay" [ref=e1045]:
+        - generic [ref=e1046]:
+          - generic [ref=e1047]: "0"
+          - generic [ref=e1048]: "1"
+        - generic [ref=e1049]: Issue
+      - button "Collapse issues badge" [ref=e1050]:
+        - img [ref=e1051]
+  - alert [ref=e152]: Mes favoris | e-cobam

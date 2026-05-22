@@ -22,6 +22,8 @@
   },
   "dependencies": {
     "@cobam/db": "*",
-    "@cobam/media-storage": "*"
+    "@cobam/media-storage": "*",
+    "@cobam/shared": "*",
+    "framer-motion": "^12.40.0"
   }
 }

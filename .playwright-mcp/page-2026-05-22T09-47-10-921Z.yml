@@ -1,0 +1,87 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Accueil e-cobam" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e7]: ECOMMERCE
+      - link "Se connecter" [ref=e9] [cursor=pointer]:
+        - /url: /connexion
+        - img [ref=e10]
+    - generic [ref=e14]:
+      - button "Ouvrir les rayons" [ref=e16]:
+        - img [ref=e17]
+      - generic [ref=e19]:
+        - img [ref=e20]
+        - searchbox "Produit, marque, référence..." [ref=e23]
+        - button "Rechercher" [ref=e24]:
+          - img [ref=e25]
+          - generic [ref=e28]: Rechercher
+      - link "Panier" [ref=e29] [cursor=pointer]:
+        - /url: /panier
+        - img [ref=e31]
+  - main [ref=e34]
+  - contentinfo [ref=e93]:
+    - generic [ref=e94]:
+      - generic [ref=e95]:
+        - generic [ref=e96]:
+          - paragraph [ref=e97]: ECOMMERCE
+          - paragraph [ref=e98]: Produits, panier, commandes et suivi client.
+          - generic [ref=e99]:
+            - link "+216 75 731 731" [ref=e100] [cursor=pointer]:
+              - /url: tel:+21675731731
+              - img [ref=e101]
+              - text: +216 75 731 731
+            - link "contact@cobamgroup.com" [ref=e103] [cursor=pointer]:
+              - /url: mailto:contact@cobamgroup.com
+              - img [ref=e104]
+              - text: contact@cobamgroup.com
+            - paragraph [ref=e107]:
+              - img [ref=e108]
+              - text: Djerba, Tunisie
+        - generic [ref=e111]:
+          - heading "Service client" [level=2] [ref=e112]
+          - generic [ref=e113]:
+            - link "Suivre une commande" [ref=e114] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Panier" [ref=e115] [cursor=pointer]:
+              - /url: /panier
+            - link "Compte client" [ref=e116] [cursor=pointer]:
+              - /url: /compte
+            - link "Commander" [ref=e117] [cursor=pointer]:
+              - /url: /checkout
+        - generic [ref=e118]:
+          - heading "Aide" [level=2] [ref=e119]
+          - generic [ref=e120]:
+            - link "Livraison" [ref=e121] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Retours" [ref=e122] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Conditions" [ref=e123] [cursor=pointer]:
+              - /url: /conditions-generales
+            - link "Confidentialité" [ref=e124] [cursor=pointer]:
+              - /url: /politique-de-confidentialite
+        - generic [ref=e125]:
+          - heading "Catégories" [level=2] [ref=e126]
+          - generic [ref=e127]:
+            - link "Isolation et étanchéité" [ref=e128] [cursor=pointer]:
+              - /url: /catalogue?categorie=isolation-et-etancheite
+            - link "Salle de bain et cuisine" [ref=e129] [cursor=pointer]:
+              - /url: /catalogue?categorie=salle-de-bain-et-cuisine
+            - link "Peintures et décoration" [ref=e130] [cursor=pointer]:
+              - /url: /catalogue?categorie=peintures-et-decoration
+            - link "Piscine" [ref=e131] [cursor=pointer]:
+              - /url: /catalogue?categorie=piscine
+            - link "Portes et menuiserie" [ref=e132] [cursor=pointer]:
+              - /url: /catalogue?categorie=portes-et-menuiserie
+      - generic [ref=e133]:
+        - paragraph [ref=e134]: © 2026 COBAM GROUP. Tous droits réservés.
+        - generic [ref=e135]:
+          - link "Facebook" [ref=e136] [cursor=pointer]:
+            - /url: "#"
+          - link "Instagram" [ref=e137] [cursor=pointer]:
+            - /url: "#"
+          - link "LinkedIn" [ref=e138] [cursor=pointer]:
+            - /url: "#"
+  - button "Open Next.js Dev Tools" [ref=e144] [cursor=pointer]:
+    - img [ref=e145]
+  - alert [ref=e148]

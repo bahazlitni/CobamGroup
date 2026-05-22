@@ -1,0 +1,755 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Accueil e-cobam" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e6]: C
+        - generic [ref=e7]:
+          - generic [ref=e8]: COBAM
+          - generic [ref=e9]: e-commerce
+      - navigation "Navigation principale" [ref=e10]:
+        - link "Accueil" [ref=e11] [cursor=pointer]:
+          - /url: /
+        - link "Tous les produits" [ref=e12] [cursor=pointer]:
+          - /url: /catalogue
+        - link "Types de produits" [ref=e13] [cursor=pointer]:
+          - /url: /types-produits
+        - link "Suivi commande" [ref=e14] [cursor=pointer]:
+          - /url: /suivi-commande
+      - link "Se connecter" [ref=e16] [cursor=pointer]:
+        - /url: /connexion
+        - img [ref=e17]
+        - generic [ref=e20]: Se connecter
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - button "Ouvrir les rayons" [expanded] [active] [ref=e24]:
+          - img [ref=e25]
+          - generic [ref=e26]: Rayons
+          - img [ref=e27]
+        - button "Fermer les rayons" [ref=e780]
+        - generic [ref=e781]:
+          - generic [ref=e783]:
+            - generic [ref=e784]:
+              - paragraph [ref=e785]: Rayons COBAM
+              - paragraph [ref=e786]: 414 références à explorer
+            - link "Tous les produits" [ref=e787] [cursor=pointer]:
+              - /url: /catalogue
+          - generic [ref=e789]:
+            - generic [ref=e790]:
+              - link "Isolation et étanchéité Protection thermique et étanche 8" [ref=e791] [cursor=pointer]:
+                - /url: /catalogue?categorie=isolation-et-etancheite
+                - generic [ref=e792]:
+                  - generic [ref=e793]: Isolation et étanchéité
+                  - generic [ref=e794]: Protection thermique et étanche
+                - generic [ref=e795]: "8"
+              - generic [ref=e796]:
+                - link "Étanchéité 4" [ref=e797] [cursor=pointer]:
+                  - /url: /catalogue?categorie=etancheite
+                  - generic [ref=e798]: Étanchéité
+                  - generic [ref=e799]: "4"
+                - link "Isolation thermique 4" [ref=e800] [cursor=pointer]:
+                  - /url: /catalogue?categorie=isolation-thermique
+                  - generic [ref=e801]: Isolation thermique
+                  - generic [ref=e802]: "4"
+            - generic [ref=e803]:
+              - link "Salle de bain et cuisine Équipements et robinetterie 187" [ref=e804] [cursor=pointer]:
+                - /url: /catalogue?categorie=salle-de-bain-et-cuisine
+                - generic [ref=e805]:
+                  - generic [ref=e806]: Salle de bain et cuisine
+                  - generic [ref=e807]: Équipements et robinetterie
+                - generic [ref=e808]: "187"
+              - generic [ref=e809]:
+                - link "Éviers de cuisine 23" [ref=e810] [cursor=pointer]:
+                  - /url: /catalogue?categorie=eviers-de-cuisine
+                  - generic [ref=e811]: Éviers de cuisine
+                  - generic [ref=e812]: "23"
+                - link "Robinetterie 46" [ref=e813] [cursor=pointer]:
+                  - /url: /catalogue?categorie=robinetterie
+                  - generic [ref=e814]: Robinetterie
+                  - generic [ref=e815]: "46"
+                - link "Baignoires 1" [ref=e816] [cursor=pointer]:
+                  - /url: /catalogue?categorie=baignoires
+                  - generic [ref=e817]: Baignoires
+                  - generic [ref=e818]: "1"
+                - link "Jacuzzis 0" [ref=e819] [cursor=pointer]:
+                  - /url: /catalogue?categorie=jacuzzis
+                  - generic [ref=e820]: Jacuzzis
+                  - generic [ref=e821]: "0"
+                - link "Lavabos et vasques 55" [ref=e822] [cursor=pointer]:
+                  - /url: /catalogue?categorie=lavabos-et-vasques
+                  - generic [ref=e823]: Lavabos et vasques
+                  - generic [ref=e824]: "55"
+                - link "Espace douche 43" [ref=e825] [cursor=pointer]:
+                  - /url: /catalogue?categorie=espace-douche
+                  - generic [ref=e826]: Espace douche
+                  - generic [ref=e827]: "43"
+                - link "Voir tout le rayon" [ref=e828] [cursor=pointer]:
+                  - /url: /catalogue?categorie=salle-de-bain-et-cuisine
+            - generic [ref=e829]:
+              - link "Peintures et décoration Couleurs et finitions 2" [ref=e830] [cursor=pointer]:
+                - /url: /catalogue?categorie=peintures-et-decoration
+                - generic [ref=e831]:
+                  - generic [ref=e832]: Peintures et décoration
+                  - generic [ref=e833]: Couleurs et finitions
+                - generic [ref=e834]: "2"
+              - generic [ref=e835]:
+                - link "Béton ciré 0" [ref=e836] [cursor=pointer]:
+                  - /url: /catalogue?categorie=beton-cire
+                  - generic [ref=e837]: Béton ciré
+                  - generic [ref=e838]: "0"
+                - link "Peintures d'intérieur 2" [ref=e839] [cursor=pointer]:
+                  - /url: /catalogue?categorie=peintures-d-interieur
+                  - generic [ref=e840]: Peintures d'intérieur
+                  - generic [ref=e841]: "2"
+                - link "Peintures d'extérieur 2" [ref=e842] [cursor=pointer]:
+                  - /url: /catalogue?categorie=peintures-d-exterieur
+                  - generic [ref=e843]: Peintures d'extérieur
+                  - generic [ref=e844]: "2"
+            - generic [ref=e845]:
+              - link "Piscine Aménagements extérieurs premium 217" [ref=e846] [cursor=pointer]:
+                - /url: /catalogue?categorie=piscine
+                - generic [ref=e847]:
+                  - generic [ref=e848]: Piscine
+                  - generic [ref=e849]: Aménagements extérieurs premium
+                - generic [ref=e850]: "217"
+              - generic [ref=e851]:
+                - link "Pierres de Bali 3" [ref=e852] [cursor=pointer]:
+                  - /url: /catalogue?categorie=pierres-de-bali
+                  - generic [ref=e853]: Pierres de Bali
+                  - generic [ref=e854]: "3"
+                - link "Margelles et finitions 0" [ref=e855] [cursor=pointer]:
+                  - /url: /catalogue?categorie=margelles-et-finitions
+                  - generic [ref=e856]: Margelles et finitions
+                  - generic [ref=e857]: "0"
+                - link "Mosaïques 214" [ref=e858] [cursor=pointer]:
+                  - /url: /catalogue?categorie=mosaiques
+                  - generic [ref=e859]: Mosaïques
+                  - generic [ref=e860]: "214"
+            - generic [ref=e861]:
+              - link "Portes et menuiserie Portes et finitions bois 0" [ref=e862] [cursor=pointer]:
+                - /url: /catalogue?categorie=portes-et-menuiserie
+                - generic [ref=e863]:
+                  - generic [ref=e864]: Portes et menuiserie
+                  - generic [ref=e865]: Portes et finitions bois
+                - generic [ref=e866]: "0"
+              - generic [ref=e867]:
+                - link "Portes coulissantes 0" [ref=e868] [cursor=pointer]:
+                  - /url: /catalogue?categorie=portes-coulissantes
+                  - generic [ref=e869]: Portes coulissantes
+                  - generic [ref=e870]: "0"
+                - link "Portes en bois 0" [ref=e871] [cursor=pointer]:
+                  - /url: /catalogue?categorie=portes-en-bois
+                  - generic [ref=e872]: Portes en bois
+                  - generic [ref=e873]: "0"
+      - generic [ref=e30]:
+        - img [ref=e31]
+        - searchbox "Produit, marque, référence..." [ref=e34]
+        - button "Rechercher" [ref=e35]:
+          - img [ref=e36]
+          - generic [ref=e39]: Rechercher
+      - link "Panier" [ref=e41] [cursor=pointer]:
+        - /url: /panier
+        - img [ref=e43]
+  - main [ref=e46]:
+    - generic [ref=e50]:
+      - heading "Achetez en ligne." [level=1] [ref=e779]
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - img [ref=e54]
+          - generic [ref=e57]: Rechercher dans le catalogue
+          - searchbox "Rechercher dans le catalogue" [ref=e58]
+        - button "Rechercher" [ref=e59]:
+          - text: Rechercher
+          - img [ref=e60]
+      - generic [ref=e62]:
+        - link "Tous les produits" [ref=e63] [cursor=pointer]:
+          - /url: /catalogue
+          - text: Tous les produits
+          - img [ref=e64]
+        - link "Suivre une commande" [ref=e67] [cursor=pointer]:
+          - /url: /suivi-commande
+          - text: Suivre une commande
+          - img [ref=e68]
+    - generic [ref=e114]:
+      - link "Catalogue complet Tous les produits e-commerce avec filtres, prix, stock et marques. Ouvrir le catalogue" [ref=e115] [cursor=pointer]:
+        - /url: /catalogue
+        - generic [ref=e116]:
+          - img [ref=e118]
+          - img [ref=e128]
+        - generic [ref=e130]: Catalogue complet
+        - generic [ref=e131]: Tous les produits e-commerce avec filtres, prix, stock et marques.
+        - generic [ref=e132]: Ouvrir le catalogue
+      - 'link "Types de produits Commencez par usage: salle de bain, revêtements, chantier, piscine. Explorer par type" [ref=e133] [cursor=pointer]':
+        - /url: /types-produits
+        - generic [ref=e134]:
+          - img [ref=e136]
+          - img [ref=e140]
+        - generic [ref=e142]: Types de produits
+        - generic [ref=e143]: "Commencez par usage: salle de bain, revêtements, chantier, piscine."
+        - generic [ref=e144]: Explorer par type
+      - link "Espace client Retrouvez profils, adresses, commandes et notifications. Se connecter" [ref=e145] [cursor=pointer]:
+        - /url: /compte
+        - generic [ref=e146]:
+          - img [ref=e148]
+          - img [ref=e151]
+        - generic [ref=e153]: Espace client
+        - generic [ref=e154]: Retrouvez profils, adresses, commandes et notifications.
+        - generic [ref=e155]: Se connecter
+      - link "Devis accompagné Préparez le panier et confirmez les quantités avec COBAM. Demander un devis" [ref=e156] [cursor=pointer]:
+        - /url: mailto:contact@cobamgroup.com?subject=Demande%20de%20devis%20e-cobam
+        - generic [ref=e157]:
+          - img [ref=e159]
+          - img [ref=e162]
+        - generic [ref=e164]: Devis accompagné
+        - generic [ref=e165]: Préparez le panier et confirmez les quantités avec COBAM.
+        - generic [ref=e166]: Demander un devis
+    - region "Un catalogue dense, lisible par projet." [ref=e167]:
+      - generic [ref=e168]:
+        - generic [ref=e169]:
+          - paragraph [ref=e170]: Acheter par univers
+          - heading "Un catalogue dense, lisible par projet." [level=2] [ref=e171]
+          - paragraph [ref=e172]: "Les rayons ne sont pas de simples blocs: ils orientent vers les sous-familles, les produits disponibles et les références à comparer."
+          - link "Tous les produits" [ref=e173] [cursor=pointer]:
+            - /url: /catalogue
+            - text: Tous les produits
+            - img [ref=e174]
+        - generic [ref=e176]:
+          - link "Isolation et étanchéité 01 8 produits Isolation et étanchéité Protection thermique et étanche Étanchéité Isolation thermique Voir les produits" [ref=e177] [cursor=pointer]:
+            - /url: /catalogue?categorie=isolation-et-etancheite
+            - generic [ref=e178]:
+              - img "Isolation et étanchéité" [ref=e179]
+              - generic [ref=e180]: "01"
+            - generic [ref=e181]:
+              - generic [ref=e182]: 8 produits
+              - generic [ref=e183]: Isolation et étanchéité
+              - generic [ref=e184]: Protection thermique et étanche
+              - generic [ref=e185]:
+                - generic [ref=e186]: Étanchéité
+                - generic [ref=e187]: Isolation thermique
+              - generic [ref=e188]:
+                - text: Voir les produits
+                - img [ref=e189]
+          - link "Salle de bain et cuisine 02 187 produits Salle de bain et cuisine Équipements et robinetterie Éviers de cuisine Robinetterie Baignoires Jacuzzis Lavabos et vasques Voir les produits" [ref=e191] [cursor=pointer]:
+            - /url: /catalogue?categorie=salle-de-bain-et-cuisine
+            - generic [ref=e192]:
+              - img "Salle de bain et cuisine" [ref=e193]
+              - generic [ref=e194]: "02"
+            - generic [ref=e195]:
+              - generic [ref=e196]: 187 produits
+              - generic [ref=e197]: Salle de bain et cuisine
+              - generic [ref=e198]: Équipements et robinetterie
+              - generic [ref=e199]:
+                - generic [ref=e200]: Éviers de cuisine
+                - generic [ref=e201]: Robinetterie
+                - generic [ref=e202]: Baignoires
+                - generic [ref=e203]: Jacuzzis
+                - generic [ref=e204]: Lavabos et vasques
+              - generic [ref=e205]:
+                - text: Voir les produits
+                - img [ref=e206]
+          - link "Peintures et décoration 03 2 produits Peintures et décoration Couleurs et finitions Béton ciré Peintures d'intérieur Peintures d'extérieur Voir les produits" [ref=e208] [cursor=pointer]:
+            - /url: /catalogue?categorie=peintures-et-decoration
+            - generic [ref=e209]:
+              - img "Peintures et décoration" [ref=e210]
+              - generic [ref=e211]: "03"
+            - generic [ref=e212]:
+              - generic [ref=e213]: 2 produits
+              - generic [ref=e214]: Peintures et décoration
+              - generic [ref=e215]: Couleurs et finitions
+              - generic [ref=e216]:
+                - generic [ref=e217]: Béton ciré
+                - generic [ref=e218]: Peintures d'intérieur
+                - generic [ref=e219]: Peintures d'extérieur
+              - generic [ref=e220]:
+                - text: Voir les produits
+                - img [ref=e221]
+          - link "Piscine 04 217 produits Piscine Aménagements extérieurs premium Pierres de Bali Margelles et finitions Mosaïques Voir les produits" [ref=e223] [cursor=pointer]:
+            - /url: /catalogue?categorie=piscine
+            - generic [ref=e224]:
+              - img "Piscine" [ref=e225]
+              - generic [ref=e226]: "04"
+            - generic [ref=e227]:
+              - generic [ref=e228]: 217 produits
+              - generic [ref=e229]: Piscine
+              - generic [ref=e230]: Aménagements extérieurs premium
+              - generic [ref=e231]:
+                - generic [ref=e232]: Pierres de Bali
+                - generic [ref=e233]: Margelles et finitions
+                - generic [ref=e234]: Mosaïques
+              - generic [ref=e235]:
+                - text: Voir les produits
+                - img [ref=e236]
+          - link "Portes et menuiserie 05 Catégorie Portes et menuiserie Portes et finitions bois Portes coulissantes Portes en bois Voir les produits" [ref=e238] [cursor=pointer]:
+            - /url: /catalogue?categorie=portes-et-menuiserie
+            - generic [ref=e239]:
+              - img "Portes et menuiserie" [ref=e240]
+              - generic [ref=e241]: "05"
+            - generic [ref=e242]:
+              - generic [ref=e243]: Catégorie
+              - generic [ref=e244]: Portes et menuiserie
+              - generic [ref=e245]: Portes et finitions bois
+              - generic [ref=e246]:
+                - generic [ref=e247]: Portes coulissantes
+                - generic [ref=e248]: Portes en bois
+              - generic [ref=e249]:
+                - text: Voir les produits
+                - img [ref=e250]
+    - generic [ref=e253]:
+      - generic [ref=e254]:
+        - generic [ref=e255]:
+          - paragraph [ref=e256]: Sélections
+          - heading "Les références à vérifier en premier." [level=2] [ref=e257]
+          - paragraph [ref=e258]: Une vitrine courte avec prix, stock, marque et accès direct aux fiches produits.
+        - link "Voir tout" [ref=e259] [cursor=pointer]:
+          - /url: /catalogue
+          - text: Voir tout
+          - img [ref=e260]
+      - generic [ref=e262]:
+        - link "rusty.webp Pamesa Ceramica Pamesa Ceramica - Mosaique 30 Mat Rusty Metal Silver Pamesa Piscine 27,778 DT En stock" [ref=e263] [cursor=pointer]:
+          - /url: /produits/pamesa-ceramica-mosaique-30-mat-rusty-metal-silver-pamesa
+          - img "rusty.webp" [ref=e265]
+          - generic [ref=e266]:
+            - generic [ref=e267]: Pamesa Ceramica
+            - generic [ref=e268]: Pamesa Ceramica - Mosaique 30 Mat Rusty Metal Silver Pamesa
+            - generic [ref=e269]: Piscine
+            - generic [ref=e270]:
+              - generic [ref=e271]: 27,778 DT
+              - generic [ref=e272]:
+                - img [ref=e273]
+                - text: En stock
+        - link "CAS1GALXBPHA.webp KTL Ceramica KTL Ceramica - Mosaique 30 Galaxy Beige Ktl Piscine 22,223 DT En stock" [ref=e278] [cursor=pointer]:
+          - /url: /produits/ktl-ceramica-mosaique-30-galaxy-beige-ktl
+          - img "CAS1GALXBPHA.webp" [ref=e280]
+          - generic [ref=e281]:
+            - generic [ref=e282]: KTL Ceramica
+            - generic [ref=e283]: KTL Ceramica - Mosaique 30 Galaxy Beige Ktl
+            - generic [ref=e284]: Piscine
+            - generic [ref=e285]:
+              - generic [ref=e286]: 22,223 DT
+              - generic [ref=e287]:
+                - img [ref=e288]
+                - text: En stock
+        - link "Athlone-Beige-Pulido120x120-Rectificado.webp Alaplana Ceramica Alaplana Ceramica - Mosaique 30 Athlone Beige Alaplana Piscine 22,222 DT En stock" [ref=e293] [cursor=pointer]:
+          - /url: /produits/alaplana-ceramica-mosaique-30-athlone-beige-alaplana
+          - img "Athlone-Beige-Pulido120x120-Rectificado.webp" [ref=e295]
+          - generic [ref=e296]:
+            - generic [ref=e297]: Alaplana Ceramica
+            - generic [ref=e298]: Alaplana Ceramica - Mosaique 30 Athlone Beige Alaplana
+            - generic [ref=e299]: Piscine
+            - generic [ref=e300]:
+              - generic [ref=e301]: 22,222 DT
+              - generic [ref=e302]:
+                - img [ref=e303]
+                - text: En stock
+        - link "CAS1GALXEPHAbrown.webp KTL Ceramica KTL Ceramica - Mosaique 30 Galaxy Brown Ktl Piscine 24,445 DT En stock" [ref=e308] [cursor=pointer]:
+          - /url: /produits/ktl-ceramica-mosaique-30-galaxy-brown-ktl
+          - img "CAS1GALXEPHAbrown.webp" [ref=e310]
+          - generic [ref=e311]:
+            - generic [ref=e312]: KTL Ceramica
+            - generic [ref=e313]: KTL Ceramica - Mosaique 30 Galaxy Brown Ktl
+            - generic [ref=e314]: Piscine
+            - generic [ref=e315]:
+              - generic [ref=e316]: 24,445 DT
+              - generic [ref=e317]:
+                - img [ref=e318]
+                - text: En stock
+        - link "Mosaique 34 FBZJ001 (Carré) Mosaique 34 FBZJ001 (Carré) Piscine 17,800 DT En stock" [ref=e323] [cursor=pointer]:
+          - /url: /produits/mosaique-34-fbzj001-carre
+          - img "Mosaique 34 FBZJ001 (Carré)" [ref=e325]
+          - generic [ref=e326]:
+            - generic [ref=e327]: Mosaique 34 FBZJ001 (Carré)
+            - generic [ref=e328]: Piscine
+            - generic [ref=e329]:
+              - generic [ref=e330]: 17,800 DT
+              - generic [ref=e331]:
+                - img [ref=e332]
+                - text: En stock
+        - link "1_result.webp Alaplana Ceramica Alaplana Ceramica - Mosaique 30 Mat Brera Oxyd Alaplana Piscine 27,778 DT En stock" [ref=e337] [cursor=pointer]:
+          - /url: /produits/alaplana-ceramica-mosaique-30-mat-brera-oxyd-alaplana
+          - img "1_result.webp" [ref=e339]
+          - generic [ref=e340]:
+            - generic [ref=e341]: Alaplana Ceramica
+            - generic [ref=e342]: Alaplana Ceramica - Mosaique 30 Mat Brera Oxyd Alaplana
+            - generic [ref=e343]: Piscine
+            - generic [ref=e344]:
+              - generic [ref=e345]: 27,778 DT
+              - generic [ref=e346]:
+                - img [ref=e347]
+                - text: En stock
+        - link "0172500011123.webp Pamesa Ceramica Pamesa Ceramica - MOSAIQUE.30 Alpha Beat Grey Pamesa Piscine 24,450 DT En stock" [ref=e352] [cursor=pointer]:
+          - /url: /produits/pamesa-ceramica-mosaique-30-alpha-beat-grey-pamesa
+          - img "0172500011123.webp" [ref=e354]
+          - generic [ref=e355]:
+            - generic [ref=e356]: Pamesa Ceramica
+            - generic [ref=e357]: Pamesa Ceramica - MOSAIQUE.30 Alpha Beat Grey Pamesa
+            - generic [ref=e358]: Piscine
+            - generic [ref=e359]:
+              - generic [ref=e360]: 24,450 DT
+              - generic [ref=e361]:
+                - img [ref=e362]
+                - text: En stock
+        - link "image_2d31bb2 (1).webp Marazzi Marazzi - Mosaique 30 Progress Antracit Piscine 24,450 DT En stock" [ref=e367] [cursor=pointer]:
+          - /url: /produits/marazzi-mosaique-30-progress-antracit
+          - img "image_2d31bb2 (1).webp" [ref=e369]
+          - generic [ref=e370]:
+            - generic [ref=e371]: Marazzi
+            - generic [ref=e372]: Marazzi - Mosaique 30 Progress Antracit
+            - generic [ref=e373]: Piscine
+            - generic [ref=e374]:
+              - generic [ref=e375]: 24,450 DT
+              - generic [ref=e376]:
+                - img [ref=e377]
+                - text: En stock
+    - region "Commencer par le besoin réel." [ref=e382]:
+      - generic [ref=e383]:
+        - generic [ref=e384]:
+          - generic [ref=e385]:
+            - paragraph [ref=e386]: Parcours rapides
+            - heading "Commencer par le besoin réel." [level=2] [ref=e387]
+          - paragraph [ref=e388]: Une entrée plus concrète pour les clients qui ne connaissent pas encore le nom exact de la référence.
+        - generic [ref=e389]:
+          - link "Salle de bain et cuisine Salle de bain Vasques, robinetterie, douche et accessoires. Voir la catégorie" [ref=e390] [cursor=pointer]:
+            - /url: /catalogue?categorie=salle-de-bain-et-cuisine
+            - img "Salle de bain et cuisine" [ref=e391]
+            - generic [ref=e393]:
+              - generic [ref=e394]:
+                - text: Salle de bain
+                - generic [ref=e395]: Vasques, robinetterie, douche et accessoires.
+              - generic [ref=e396]:
+                - text: Voir la catégorie
+                - img [ref=e397]
+          - link "Piscine Surfaces Carrelage, faïence, mosaïque et grands formats. Voir la catégorie" [ref=e399] [cursor=pointer]:
+            - /url: /catalogue?categorie=piscine
+            - img "Piscine" [ref=e400]
+            - generic [ref=e402]:
+              - generic [ref=e403]:
+                - text: Surfaces
+                - generic [ref=e404]: Carrelage, faïence, mosaïque et grands formats.
+              - generic [ref=e405]:
+                - text: Voir la catégorie
+                - img [ref=e406]
+          - link "Isolation et étanchéité Chantier Ciments, briques, sables, graviers et armatures. Voir la catégorie" [ref=e408] [cursor=pointer]:
+            - /url: /catalogue?categorie=isolation-et-etancheite
+            - img "Isolation et étanchéité" [ref=e409]
+            - generic [ref=e411]:
+              - generic [ref=e412]:
+                - text: Chantier
+                - generic [ref=e413]: Ciments, briques, sables, graviers et armatures.
+              - generic [ref=e414]:
+                - text: Voir la catégorie
+                - img [ref=e415]
+    - generic [ref=e418]:
+      - generic [ref=e419]:
+        - generic [ref=e420]:
+          - paragraph [ref=e421]: Nouveautés
+          - heading "Les dernières références ajoutées au catalogue." [level=2] [ref=e422]
+          - paragraph [ref=e423]: Gardez les arrivages et mises à jour à portée de main pour préparer vos demandes.
+        - link "Voir tout" [ref=e424] [cursor=pointer]:
+          - /url: /catalogue
+          - text: Voir tout
+          - img [ref=e425]
+      - generic [ref=e427]:
+        - link "Deutsch Color - Acrylex 5kg Deutsch Color Deutsch Color - Acrylex 5kg Peintures et décoration 27,269 DT En stock" [ref=e428] [cursor=pointer]:
+          - /url: /produits/deutsch-color-acrylex-5kg-00219648
+          - img "Deutsch Color - Acrylex 5kg" [ref=e430]
+          - generic [ref=e431]:
+            - generic [ref=e432]: Deutsch Color
+            - generic [ref=e433]: Deutsch Color - Acrylex 5kg
+            - generic [ref=e434]: Peintures et décoration
+            - generic [ref=e435]:
+              - generic [ref=e436]: 27,269 DT
+              - generic [ref=e437]:
+                - img [ref=e438]
+                - text: En stock
+        - link "Deutsch Color - Acrylex 20kg Deutsch Color Deutsch Color - Acrylex 20kg Peintures et décoration 75 DT Rupture" [ref=e443] [cursor=pointer]:
+          - /url: /produits/deutsch-color-acrylex-20kg-00233132
+          - img "Deutsch Color - Acrylex 20kg" [ref=e445]
+          - generic [ref=e446]:
+            - generic [ref=e447]: Deutsch Color
+            - generic [ref=e448]: Deutsch Color - Acrylex 20kg
+            - generic [ref=e449]: Peintures et décoration
+            - generic [ref=e450]:
+              - generic [ref=e451]: 75 DT
+              - generic [ref=e452]:
+                - img [ref=e453]
+                - text: Rupture
+        - link "AATIK Blanc - enduit monocouche Derbigum Etancheite Tunisienne - AATIK Blanc 25kg Isolation et étanchéité 19 DT Rupture" [ref=e458] [cursor=pointer]:
+          - /url: /produits/etancheite-tunisienne-aatik-blanc-00244312
+          - img "AATIK Blanc - enduit monocouche" [ref=e460]
+          - generic [ref=e461]:
+            - generic [ref=e462]: Derbigum
+            - generic [ref=e463]: Etancheite Tunisienne - AATIK Blanc 25kg
+            - generic [ref=e464]: Isolation et étanchéité
+            - generic [ref=e465]:
+              - generic [ref=e466]: 19 DT
+              - generic [ref=e467]:
+                - img [ref=e468]
+                - text: Rupture
+        - link "ABAT GALA BIDET ELIA BLC [1].webp Gala Gala - Abattant bidet Elia blanc Salle de bain et cuisine 64,300 DT Rupture" [ref=e473] [cursor=pointer]:
+          - /url: /produits/abattant-wc-gala-abattant-bidet-elia-blanc-00184533
+          - img "ABAT GALA BIDET ELIA BLC [1].webp" [ref=e475]
+          - generic [ref=e476]:
+            - generic [ref=e477]: Gala
+            - generic [ref=e478]: Gala - Abattant bidet Elia blanc
+            - generic [ref=e479]: Salle de bain et cuisine
+            - generic [ref=e480]:
+              - generic [ref=e481]: 64,300 DT
+              - generic [ref=e482]:
+                - img [ref=e483]
+                - text: Rupture
+        - link "ABAT GALA METROPOL BLC [1].webp Gala Gala - Abattant Metropol blanc Salle de bain et cuisine 70,400 DT Rupture" [ref=e488] [cursor=pointer]:
+          - /url: /produits/abattant-wc-gala-abattant-metropol-blanc-00184519
+          - img "ABAT GALA METROPOL BLC [1].webp" [ref=e490]
+          - generic [ref=e491]:
+            - generic [ref=e492]: Gala
+            - generic [ref=e493]: Gala - Abattant Metropol blanc
+            - generic [ref=e494]: Salle de bain et cuisine
+            - generic [ref=e495]:
+              - generic [ref=e496]: 70,400 DT
+              - generic [ref=e497]:
+                - img [ref=e498]
+                - text: Rupture
+        - link "ABAT GALA BIDET MARINA BLC [1].webp Gala Gala - Abattant bidet Marina blanc Salle de bain et cuisine 65 DT Rupture" [ref=e503] [cursor=pointer]:
+          - /url: /produits/abattant-wc-gala-abattant-bidet-marina-blanc-00184526
+          - img "ABAT GALA BIDET MARINA BLC [1].webp" [ref=e505]
+          - generic [ref=e506]:
+            - generic [ref=e507]: Gala
+            - generic [ref=e508]: Gala - Abattant bidet Marina blanc
+            - generic [ref=e509]: Salle de bain et cuisine
+            - generic [ref=e510]:
+              - generic [ref=e511]: 65 DT
+              - generic [ref=e512]:
+                - img [ref=e513]
+                - text: Rupture
+        - link "ABAT DURAVIT DELLARCO DURAVIT [1].webp Duravit Abattant Dellarco Duravit Salle de bain et cuisine 191,910 DT Rupture" [ref=e518] [cursor=pointer]:
+          - /url: /produits/abattant-wc-duravit-abattant-dellarco-00002938
+          - img "ABAT DURAVIT DELLARCO DURAVIT [1].webp" [ref=e520]
+          - generic [ref=e521]:
+            - generic [ref=e522]: Duravit
+            - generic [ref=e523]: Abattant Dellarco Duravit
+            - generic [ref=e524]: Salle de bain et cuisine
+            - generic [ref=e525]:
+              - generic [ref=e526]: 191,910 DT
+              - generic [ref=e527]:
+                - img [ref=e528]
+                - text: Rupture
+        - link "ABAT DURAVIT D-CODE SANS AMORTIS(6731) [1].webp Duravit Duravit - Abattant D-Code sans amortis (6731) Salle de bain et cuisine 117,850 DT En stock" [ref=e533] [cursor=pointer]:
+          - /url: /produits/abattant-wc-duravit-abattant-d-code-sans-amortis-6731-00000053
+          - img "ABAT DURAVIT D-CODE SANS AMORTIS(6731) [1].webp" [ref=e535]
+          - generic [ref=e536]:
+            - generic [ref=e537]: Duravit
+            - generic [ref=e538]: Duravit - Abattant D-Code sans amortis (6731)
+            - generic [ref=e539]: Salle de bain et cuisine
+            - generic [ref=e540]:
+              - generic [ref=e541]: 117,850 DT
+              - generic [ref=e542]:
+                - img [ref=e543]
+                - text: En stock
+    - region "Des marques reconnues, prêtes à commander." [ref=e548]:
+      - generic [ref=e549]:
+        - generic [ref=e550]:
+          - paragraph [ref=e551]: Marques
+          - heading "Des marques reconnues, prêtes à commander." [level=2] [ref=e552]
+        - link "Explorer par marque" [ref=e553] [cursor=pointer]:
+          - /url: /catalogue
+          - text: Explorer par marque
+          - img [ref=e554]
+      - generic [ref=e557]:
+        - link "Lilot 24 produits" [ref=e558] [cursor=pointer]:
+          - /url: /catalogue?marque=lilot
+          - generic [ref=e560]: Lilot
+          - generic [ref=e561]: 24 produits
+        - link "Sopal 24 produits" [ref=e562] [cursor=pointer]:
+          - /url: /catalogue?marque=sopal
+          - img "Sopal" [ref=e564]
+          - generic [ref=e565]: 24 produits
+        - link "Ibero 19 produits" [ref=e566] [cursor=pointer]:
+          - /url: /catalogue?marque=ibero
+          - generic [ref=e568]: Ibero
+          - generic [ref=e569]: 19 produits
+        - link "Jaquar 19 produits" [ref=e570] [cursor=pointer]:
+          - /url: /catalogue?marque=jaquar
+          - img "Jaquar" [ref=e572]
+          - generic [ref=e573]: 19 produits
+        - link "Carthago Ceramic 18 produits" [ref=e574] [cursor=pointer]:
+          - /url: /catalogue?marque=carthago-ceramic
+          - img "Carthago Ceramic" [ref=e576]
+          - generic [ref=e577]: 18 produits
+        - link "Duravit 16 produits" [ref=e578] [cursor=pointer]:
+          - /url: /catalogue?marque=duravit
+          - generic [ref=e580]: Duravit
+          - generic [ref=e581]: 16 produits
+        - link "Sanimed 11 produits" [ref=e582] [cursor=pointer]:
+          - /url: /catalogue?marque=sanimed
+          - generic [ref=e584]: Sanimed
+          - generic [ref=e585]: 11 produits
+        - link "Marazzi 10 produits" [ref=e586] [cursor=pointer]:
+          - /url: /catalogue?marque=marazzi
+          - img "Marazzi" [ref=e588]
+          - generic [ref=e589]: 10 produits
+        - link "GSI 8 produits" [ref=e590] [cursor=pointer]:
+          - /url: /catalogue?marque=gsi
+          - generic [ref=e592]: GSI
+          - generic [ref=e593]: 8 produits
+        - link "Pamesa Ceramica 6 produits" [ref=e594] [cursor=pointer]:
+          - /url: /catalogue?marque=pamesa-ceramica
+          - img "Pamesa Ceramica" [ref=e596]
+          - generic [ref=e597]: 6 produits
+        - link "Sotemail 6 produits" [ref=e598] [cursor=pointer]:
+          - /url: /catalogue?marque=sotemail
+          - generic [ref=e600]: Sotemail
+          - generic [ref=e601]: 6 produits
+        - link "Cinca 5 produits" [ref=e602] [cursor=pointer]:
+          - /url: /catalogue?marque=cinca
+          - generic [ref=e604]: Cinca
+          - generic [ref=e605]: 5 produits
+        - link "Ideal San 5 produits" [ref=e606] [cursor=pointer]:
+          - /url: /catalogue?marque=ideal-san
+          - generic [ref=e608]: Ideal San
+          - generic [ref=e609]: 5 produits
+        - link "Gala 3 produits" [ref=e610] [cursor=pointer]:
+          - /url: /catalogue?marque=gala
+          - generic [ref=e612]: Gala
+          - generic [ref=e613]: 3 produits
+        - link "Lilot 24 produits" [ref=e614] [cursor=pointer]:
+          - /url: /catalogue?marque=lilot
+          - generic [ref=e616]: Lilot
+          - generic [ref=e617]: 24 produits
+        - link "Sopal 24 produits" [ref=e618] [cursor=pointer]:
+          - /url: /catalogue?marque=sopal
+          - img "Sopal" [ref=e620]
+          - generic [ref=e621]: 24 produits
+        - link "Ibero 19 produits" [ref=e622] [cursor=pointer]:
+          - /url: /catalogue?marque=ibero
+          - generic [ref=e624]: Ibero
+          - generic [ref=e625]: 19 produits
+        - link "Jaquar 19 produits" [ref=e626] [cursor=pointer]:
+          - /url: /catalogue?marque=jaquar
+          - img "Jaquar" [ref=e628]
+          - generic [ref=e629]: 19 produits
+        - link "Carthago Ceramic 18 produits" [ref=e630] [cursor=pointer]:
+          - /url: /catalogue?marque=carthago-ceramic
+          - img "Carthago Ceramic" [ref=e632]
+          - generic [ref=e633]: 18 produits
+        - link "Duravit 16 produits" [ref=e634] [cursor=pointer]:
+          - /url: /catalogue?marque=duravit
+          - generic [ref=e636]: Duravit
+          - generic [ref=e637]: 16 produits
+        - link "Sanimed 11 produits" [ref=e638] [cursor=pointer]:
+          - /url: /catalogue?marque=sanimed
+          - generic [ref=e640]: Sanimed
+          - generic [ref=e641]: 11 produits
+        - link "Marazzi 10 produits" [ref=e642] [cursor=pointer]:
+          - /url: /catalogue?marque=marazzi
+          - img "Marazzi" [ref=e644]
+          - generic [ref=e645]: 10 produits
+        - link "GSI 8 produits" [ref=e646] [cursor=pointer]:
+          - /url: /catalogue?marque=gsi
+          - generic [ref=e648]: GSI
+          - generic [ref=e649]: 8 produits
+        - link "Pamesa Ceramica 6 produits" [ref=e650] [cursor=pointer]:
+          - /url: /catalogue?marque=pamesa-ceramica
+          - img "Pamesa Ceramica" [ref=e652]
+          - generic [ref=e653]: 6 produits
+        - link "Sotemail 6 produits" [ref=e654] [cursor=pointer]:
+          - /url: /catalogue?marque=sotemail
+          - generic [ref=e656]: Sotemail
+          - generic [ref=e657]: 6 produits
+        - link "Cinca 5 produits" [ref=e658] [cursor=pointer]:
+          - /url: /catalogue?marque=cinca
+          - generic [ref=e660]: Cinca
+          - generic [ref=e661]: 5 produits
+        - link "Ideal San 5 produits" [ref=e662] [cursor=pointer]:
+          - /url: /catalogue?marque=ideal-san
+          - generic [ref=e664]: Ideal San
+          - generic [ref=e665]: 5 produits
+        - link "Gala 3 produits" [ref=e666] [cursor=pointer]:
+          - /url: /catalogue?marque=gala
+          - generic [ref=e668]: Gala
+          - generic [ref=e669]: 3 produits
+    - region "Une boutique pensée pour les vrais achats de construction." [ref=e670]:
+      - generic [ref=e671]:
+        - generic [ref=e672]:
+          - paragraph [ref=e673]: Service commerce
+          - heading "Une boutique pensée pour les vrais achats de construction." [level=2] [ref=e674]
+          - paragraph [ref=e675]: "e-cobam n'est pas une vitrine décorative: c'est une interface pour trouver, comparer, préparer, commander et suivre les produits COBAM."
+        - generic [ref=e676]:
+          - article [ref=e677]:
+            - img [ref=e679]
+            - heading "Retrait & livraison" [level=3] [ref=e684]
+            - paragraph [ref=e685]: Préparez le panier, COBAM confirme les modalités adaptées au chantier.
+          - article [ref=e686]:
+            - img [ref=e688]
+            - heading "Paiement maîtrisé" [level=3] [ref=e690]
+            - paragraph [ref=e691]: Prix visibles quand ils existent, devis clair lorsque le projet demande validation.
+          - article [ref=e692]:
+            - img [ref=e694]
+            - heading "Catalogue fiable" [level=3] [ref=e697]
+            - paragraph [ref=e698]: Les produits visibles respectent les règles e-commerce et les stocks déclarés.
+          - article [ref=e699]:
+            - img [ref=e701]
+            - heading "Conseil projet" [level=3] [ref=e703]
+            - paragraph [ref=e704]: Une équipe peut accompagner les quantités, usages, délais et alternatives.
+    - generic [ref=e706]:
+      - generic [ref=e707]:
+        - paragraph [ref=e708]: Achat accompagné
+        - heading "Construisez votre panier, COBAM confirme le projet." [level=2] [ref=e709]
+        - paragraph [ref=e710]: Ajoutez vos références, comparez les disponibilités, puis validez les quantités et modalités avec l'équipe commerciale.
+      - generic [ref=e711]:
+        - link "Explorer le catalogue" [ref=e712] [cursor=pointer]:
+          - /url: /catalogue
+          - text: Explorer le catalogue
+          - img [ref=e713]
+        - link "Suivre une commande" [ref=e716] [cursor=pointer]:
+          - /url: /suivi-commande
+          - text: Suivre une commande
+          - img [ref=e717]
+        - link "Demander un devis" [ref=e722] [cursor=pointer]:
+          - /url: mailto:contact@cobamgroup.com?subject=Demande%20de%20devis%20e-cobam
+          - text: Demander un devis
+          - img [ref=e723]
+  - contentinfo [ref=e726]:
+    - generic [ref=e727]:
+      - generic [ref=e728]:
+        - generic [ref=e729]:
+          - paragraph [ref=e730]: COBAM
+          - paragraph [ref=e731]: e-commerce
+          - paragraph [ref=e732]: Une boutique reliée au catalogue COBAM GROUP pour sélectionner matériaux, sanitaires, revêtements, peintures, finitions et produits techniques.
+        - generic [ref=e733]:
+          - heading "Catalogue" [level=2] [ref=e734]
+          - generic [ref=e735]:
+            - link "Isolation et étanchéité" [ref=e736] [cursor=pointer]:
+              - /url: /catalogue?categorie=isolation-et-etancheite
+            - link "Salle de bain et cuisine" [ref=e737] [cursor=pointer]:
+              - /url: /catalogue?categorie=salle-de-bain-et-cuisine
+            - link "Peintures et décoration" [ref=e738] [cursor=pointer]:
+              - /url: /catalogue?categorie=peintures-et-decoration
+            - link "Piscine" [ref=e739] [cursor=pointer]:
+              - /url: /catalogue?categorie=piscine
+            - link "Portes et menuiserie" [ref=e740] [cursor=pointer]:
+              - /url: /catalogue?categorie=portes-et-menuiserie
+        - generic [ref=e741]:
+          - heading "Service" [level=2] [ref=e742]
+          - generic [ref=e743]:
+            - link "Panier" [ref=e744] [cursor=pointer]:
+              - /url: /panier
+            - link "Tous les produits" [ref=e745] [cursor=pointer]:
+              - /url: /catalogue
+            - link "Compte client" [ref=e746] [cursor=pointer]:
+              - /url: /compte
+            - link "Demander un devis" [ref=e747] [cursor=pointer]:
+              - /url: mailto:contact@cobamgroup.com
+        - generic [ref=e748]:
+          - heading "Contact" [level=2] [ref=e749]
+          - generic [ref=e750]:
+            - paragraph [ref=e751]:
+              - img [ref=e752]
+              - text: Djerba, Tunisie
+            - link "contact@cobamgroup.com" [ref=e755] [cursor=pointer]:
+              - /url: mailto:contact@cobamgroup.com
+              - img [ref=e756]
+              - text: contact@cobamgroup.com
+      - paragraph [ref=e760]: © 2026 COBAM GROUP. Tous droits réservés.
+  - button "Open Next.js Dev Tools" [ref=e766] [cursor=pointer]:
+    - img [ref=e767]
+  - alert [ref=e770]

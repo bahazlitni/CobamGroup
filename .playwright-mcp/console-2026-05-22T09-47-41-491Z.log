@@ -1,0 +1,2907 @@
+[     276ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     289ms] [LOG] [HMR] connected @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     293ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT "column_name"
+    FROM "information_schema"."columns"
+    WHERE "table_schema" = 'public'
+      AND "table_name" = 'product_subcategories'
+      AND "column_name" IN ('visible_ecommerce', 'visible_vitrine')
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     293ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT "column_name"
+    FROM "information_schema"."columns"
+    WHERE "table_schema" = 'public'
+      AND "table_name" = 'product_subcategories'
+      AND "column_name" IN ('visible_ecommerce', 'visible_vitrine')
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     293ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_types" "c"
+    JOIN "product_subcategories" "s"
+      ON "s"."category_id" = "c"."id"
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "c"."is_active" = true
+    GROUP BY
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      "c"."sort_order"
+    ORDER BY "c"."sort_order" ASC, "c"."name" ASC
+    LIMIT 8
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     293ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_types" "c"
+    JOIN "product_subcategories" "s"
+      ON "s"."category_id" = "c"."id"
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "c"."is_active" = true
+    GROUP BY
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      "c"."sort_order"
+    ORDER BY "c"."sort_order" ASC, "c"."name" ASC
+    LIMIT 8
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     294ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_featured" DESC,
+      "p"."is_new" DESC,
+      "p"."stock_available" DESC,
+      "p"."updated_at" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     294ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      AND 
+    EXISTS (
+      SELECT 1
+      FROM "commerce_promotions" "promotion"
+      WHERE "promotion"."status" = 'ACTIVE'
+        AND ("promotion"."starts_at" IS NULL OR "promotion"."starts_at" <= NOW())
+        AND ("promotion"."ends_at" IS NULL OR "promotion"."ends_at" >= NOW())
+        AND (
+          EXISTS (
+            SELECT 1
+            FROM "commerce_promotion_products" "promotion_product"
+            WHERE "promotion_product"."promotion_id" = "promotion"."id"
+              AND "promotion_product"."product_id" = "p"."id"
+          )
+          OR (
+            "p"."brand_id" IS NOT NULL
+            AND EXISTS (
+              SELECT 1
+              FROM "commerce_promotion_brands" "promotion_brand"
+              WHERE "promotion_brand"."promotion_id" = "promotion"."id"
+                AND "promotion_brand"."brand_id" = "p"."brand_id"
+            )
+          )
+          OR EXISTS (
+            SELECT 1
+            FROM "commerce_promotion_categories" "promotion_category"
+            JOIN "product_subcategory_links" "promotion_link"
+              ON "promotion_link"."product_id" = "p"."id"
+            JOIN "product_subcategories" "promotion_subcategory"
+              ON "promotion_subcategory"."id" = "promotion_link"."subcategory_id"
+            WHERE "promotion_category"."promotion_id" = "promotion"."id"
+              AND "promotion_category"."category_id" = "promotion_subcategory"."category_id"
+          )
+        )
+    )
+  
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_featured" DESC,
+      "p"."is_new" DESC,
+      "p"."stock_available" DESC,
+      "p"."updated_at" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     294ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "s"."category_id",
+      "s"."id",
+      "s"."name",
+      "s"."slug",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_subcategories" "s"
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "s"."category_id" IN ($1,$2,$3,$4,$5)
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    GROUP BY "s"."category_id", "s"."id", "s"."name", "s"."slug", "s"."sort_order"
+    ORDER BY "s"."sort_order" ASC, "s"."name" ASC
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     294ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "s"."category_id",
+      "s"."id",
+      "s"."name",
+      "s"."slug",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_subcategories" "s"
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "s"."category_id" IN ($1,$2,$3,$4,$5)
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    GROUP BY "s"."category_id", "s"."id", "s"."name", "s"."slug", "s"."sort_order"
+    ORDER BY "s"."sort_order" ASC, "s"."name" ASC
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     327ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/notifications:0
+[     613ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_new" DESC,
+      "p"."updated_at" DESC,
+      "p"."stock_available" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     613ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."products"."id" FROM "public"."products" WHERE ("public"."products"."visible_ecommerce" = $1 AND "public"."products"."kind" IN (CAST($2::text AS "public"."ProductKind"),CAST($3::text AS "public"."ProductKind"),CAST($4::text AS "public"."ProductKind")) AND EXISTS(SELECT "t0"."product_id" FROM "public"."product_subcategory_links" AS "t0" LEFT JOIN "public"."product_subcategories" AS "j1" ON ("j1"."id") = ("t0"."subcategory_id") LEFT JOIN "public"."product_types" AS "j2" ON ("j2"."id") = ("j1"."category_id") WHERE ("j1"."is_active" = $5 AND "j1"."visible_ecommerce" = $6 AND ("j2"."is_active" = $7 AND ("j2"."id" IS NOT NULL)) AND ("j1"."id" IS NOT NULL) AND ("public"."products"."id") = ("t0"."product_id") AND "t0"."product_id" IS NOT NULL))) OFFSET $8) AS "sub" @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     613ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "brand"."name",
+      "brand"."slug",
+      "brand"."description",
+      "brand"."logo_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "organizations" "brand"
+    JOIN "products" "p"
+      ON "p"."brand_id" = "brand"."id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "brand"."is_product_brand" = true
+      AND EXISTS (
+        SELECT 1
+        FROM "product_subcategory_links" "l"
+        JOIN "product_subcategories" "s"
+          ON "s"."id" = "l"."subcategory_id"
+          AND "s"."is_active" = true
+          AND "s"."visible_ecommerce" = true
+        JOIN "product_types" "c"
+          ON "c"."id" = "s"."category_id"
+          AND "c"."is_active" = true
+        WHERE "l"."product_id" = "p"."id"
+      )
+    GROUP BY
+      "brand"."id",
+      "brand"."name",
+      "brand"."slug",
+      "brand"."description",
+      "brand"."logo_media_id"
+    ORDER BY COUNT(DISTINCT "p"."id") DESC, "brand"."name" ASC
+    LIMIT 16
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[     788ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3001/_next/image?url=%2Fapi%2Fmedia%2F581%2Ffile%3Fvariant%3Dthumbnail&w=384&q=75:0
+[     801ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3001/_next/image?url=%2Fapi%2Fmedia%2F574%2Ffile%3Fvariant%3Dthumbnail&w=384&q=75:0
+[     802ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3001/_next/image?url=%2Fapi%2Fmedia%2F592%2Ffile%3Fvariant%3Dthumbnail&w=384&q=75:0
+[     805ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3001/_next/image?url=%2Fapi%2Fmedia%2F575%2Ffile%3Fvariant%3Dthumbnail&w=384&q=75:0
+[     819ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3001/_next/image?url=%2Fapi%2Fmedia%2F814%2Ffile%3Fvariant%3Dthumbnail&w=384&q=75:0
+[     846ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3001/_next/image?url=%2Fapi%2Fmedia%2F813%2Ffile%3Fvariant%3Dthumbnail&w=384&q=75:0
+[     864ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3001/_next/image?url=%2Fapi%2Fmedia%2F708%2Ffile%3Fvariant%3Dthumbnail&w=384&q=75:0
+[    1314ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3001/_next/image?url=%2Fapi%2Fmedia%2F593%2Ffile%3Fvariant%3Dthumbnail&w=384&q=75:0
+[    1329ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3001/_next/image?url=%2Fapi%2Fmedia%2F583%2Ffile%3Fvariant%3Dthumbnail&w=384&q=75:0
+[    1329ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3001/_next/image?url=%2Fapi%2Fmedia%2F579%2Ffile%3Fvariant%3Dthumbnail&w=384&q=75:0
+[   60338ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/notifications:0
+[   72770ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   72810ms] [LOG] [Fast Refresh] done in 72ms @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73633ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT "column_name"
+    FROM "information_schema"."columns"
+    WHERE "table_schema" = 'public'
+      AND "table_name" = 'product_subcategories'
+      AND "column_name" IN ('visible_ecommerce', 'visible_vitrine')
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73634ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT "column_name"
+    FROM "information_schema"."columns"
+    WHERE "table_schema" = 'public'
+      AND "table_name" = 'product_subcategories'
+      AND "column_name" IN ('visible_ecommerce', 'visible_vitrine')
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73634ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_types" "c"
+    JOIN "product_subcategories" "s"
+      ON "s"."category_id" = "c"."id"
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "c"."is_active" = true
+    GROUP BY
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      "c"."sort_order"
+    ORDER BY "c"."sort_order" ASC, "c"."name" ASC
+    LIMIT 8
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73634ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_featured" DESC,
+      "p"."is_new" DESC,
+      "p"."stock_available" DESC,
+      "p"."updated_at" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73634ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      AND 
+    EXISTS (
+      SELECT 1
+      FROM "commerce_promotions" "promotion"
+      WHERE "promotion"."status" = 'ACTIVE'
+        AND ("promotion"."starts_at" IS NULL OR "promotion"."starts_at" <= NOW())
+        AND ("promotion"."ends_at" IS NULL OR "promotion"."ends_at" >= NOW())
+        AND (
+          EXISTS (
+            SELECT 1
+            FROM "commerce_promotion_products" "promotion_product"
+            WHERE "promotion_product"."promotion_id" = "promotion"."id"
+              AND "promotion_product"."product_id" = "p"."id"
+          )
+          OR (
+            "p"."brand_id" IS NOT NULL
+            AND EXISTS (
+              SELECT 1
+              FROM "commerce_promotion_brands" "promotion_brand"
+              WHERE "promotion_brand"."promotion_id" = "promotion"."id"
+                AND "promotion_brand"."brand_id" = "p"."brand_id"
+            )
+          )
+          OR EXISTS (
+            SELECT 1
+            FROM "commerce_promotion_categories" "promotion_category"
+            JOIN "product_subcategory_links" "promotion_link"
+              ON "promotion_link"."product_id" = "p"."id"
+            JOIN "product_subcategories" "promotion_subcategory"
+              ON "promotion_subcategory"."id" = "promotion_link"."subcategory_id"
+            WHERE "promotion_category"."promotion_id" = "promotion"."id"
+              AND "promotion_category"."category_id" = "promotion_subcategory"."category_id"
+          )
+        )
+    )
+  
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_featured" DESC,
+      "p"."is_new" DESC,
+      "p"."stock_available" DESC,
+      "p"."updated_at" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73634ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_new" DESC,
+      "p"."updated_at" DESC,
+      "p"."stock_available" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73634ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "brand"."name",
+      "brand"."slug",
+      "brand"."description",
+      "brand"."logo_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "organizations" "brand"
+    JOIN "products" "p"
+      ON "p"."brand_id" = "brand"."id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "brand"."is_product_brand" = true
+      AND EXISTS (
+        SELECT 1
+        FROM "product_subcategory_links" "l"
+        JOIN "product_subcategories" "s"
+          ON "s"."id" = "l"."subcategory_id"
+          AND "s"."is_active" = true
+          AND "s"."visible_ecommerce" = true
+        JOIN "product_types" "c"
+          ON "c"."id" = "s"."category_id"
+          AND "c"."is_active" = true
+        WHERE "l"."product_id" = "p"."id"
+      )
+    GROUP BY
+      "brand"."id",
+      "brand"."name",
+      "brand"."slug",
+      "brand"."description",
+      "brand"."logo_media_id"
+    ORDER BY COUNT(DISTINCT "p"."id") DESC, "brand"."name" ASC
+    LIMIT 16
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73634ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."products"."id" FROM "public"."products" WHERE ("public"."products"."visible_ecommerce" = $1 AND "public"."products"."kind" IN (CAST($2::text AS "public"."ProductKind"),CAST($3::text AS "public"."ProductKind"),CAST($4::text AS "public"."ProductKind")) AND EXISTS(SELECT "t0"."product_id" FROM "public"."product_subcategory_links" AS "t0" LEFT JOIN "public"."product_subcategories" AS "j1" ON ("j1"."id") = ("t0"."subcategory_id") LEFT JOIN "public"."product_types" AS "j2" ON ("j2"."id") = ("j1"."category_id") WHERE ("j1"."is_active" = $5 AND "j1"."visible_ecommerce" = $6 AND ("j2"."is_active" = $7 AND ("j2"."id" IS NOT NULL)) AND ("j1"."id" IS NOT NULL) AND ("public"."products"."id") = ("t0"."product_id") AND "t0"."product_id" IS NOT NULL))) OFFSET $8) AS "sub" @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73635ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_types" "c"
+    JOIN "product_subcategories" "s"
+      ON "s"."category_id" = "c"."id"
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "c"."is_active" = true
+    GROUP BY
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      "c"."sort_order"
+    ORDER BY "c"."sort_order" ASC, "c"."name" ASC
+    LIMIT 8
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73635ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "s"."category_id",
+      "s"."id",
+      "s"."name",
+      "s"."slug",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_subcategories" "s"
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "s"."category_id" IN ($1,$2,$3,$4,$5)
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    GROUP BY "s"."category_id", "s"."id", "s"."name", "s"."slug", "s"."sort_order"
+    ORDER BY "s"."sort_order" ASC, "s"."name" ASC
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73823ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "s"."category_id",
+      "s"."id",
+      "s"."name",
+      "s"."slug",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_subcategories" "s"
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "s"."category_id" IN ($1,$2,$3,$4,$5)
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    GROUP BY "s"."category_id", "s"."id", "s"."name", "s"."slug", "s"."sort_order"
+    ORDER BY "s"."sort_order" ASC, "s"."name" ASC
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73828ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT "column_name"
+    FROM "information_schema"."columns"
+    WHERE "table_schema" = 'public'
+      AND "table_name" = 'product_subcategories'
+      AND "column_name" IN ('visible_ecommerce', 'visible_vitrine')
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73828ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT "column_name"
+    FROM "information_schema"."columns"
+    WHERE "table_schema" = 'public'
+      AND "table_name" = 'product_subcategories'
+      AND "column_name" IN ('visible_ecommerce', 'visible_vitrine')
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73828ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_types" "c"
+    JOIN "product_subcategories" "s"
+      ON "s"."category_id" = "c"."id"
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "c"."is_active" = true
+    GROUP BY
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      "c"."sort_order"
+    ORDER BY "c"."sort_order" ASC, "c"."name" ASC
+    LIMIT 8
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73828ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_new" DESC,
+      "p"."updated_at" DESC,
+      "p"."stock_available" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73828ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."products"."id" FROM "public"."products" WHERE ("public"."products"."visible_ecommerce" = $1 AND "public"."products"."kind" IN (CAST($2::text AS "public"."ProductKind"),CAST($3::text AS "public"."ProductKind"),CAST($4::text AS "public"."ProductKind")) AND EXISTS(SELECT "t0"."product_id" FROM "public"."product_subcategory_links" AS "t0" LEFT JOIN "public"."product_subcategories" AS "j1" ON ("j1"."id") = ("t0"."subcategory_id") LEFT JOIN "public"."product_types" AS "j2" ON ("j2"."id") = ("j1"."category_id") WHERE ("j1"."is_active" = $5 AND "j1"."visible_ecommerce" = $6 AND ("j2"."is_active" = $7 AND ("j2"."id" IS NOT NULL)) AND ("j1"."id" IS NOT NULL) AND ("public"."products"."id") = ("t0"."product_id") AND "t0"."product_id" IS NOT NULL))) OFFSET $8) AS "sub" @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73828ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "brand"."name",
+      "brand"."slug",
+      "brand"."description",
+      "brand"."logo_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "organizations" "brand"
+    JOIN "products" "p"
+      ON "p"."brand_id" = "brand"."id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "brand"."is_product_brand" = true
+      AND EXISTS (
+        SELECT 1
+        FROM "product_subcategory_links" "l"
+        JOIN "product_subcategories" "s"
+          ON "s"."id" = "l"."subcategory_id"
+          AND "s"."is_active" = true
+          AND "s"."visible_ecommerce" = true
+        JOIN "product_types" "c"
+          ON "c"."id" = "s"."category_id"
+          AND "c"."is_active" = true
+        WHERE "l"."product_id" = "p"."id"
+      )
+    GROUP BY
+      "brand"."id",
+      "brand"."name",
+      "brand"."slug",
+      "brand"."description",
+      "brand"."logo_media_id"
+    ORDER BY COUNT(DISTINCT "p"."id") DESC, "brand"."name" ASC
+    LIMIT 16
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73828ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_types" "c"
+    JOIN "product_subcategories" "s"
+      ON "s"."category_id" = "c"."id"
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "c"."is_active" = true
+    GROUP BY
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      "c"."sort_order"
+    ORDER BY "c"."sort_order" ASC, "c"."name" ASC
+    LIMIT 8
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73829ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "s"."category_id",
+      "s"."id",
+      "s"."name",
+      "s"."slug",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_subcategories" "s"
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "s"."category_id" IN ($1,$2,$3,$4,$5)
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    GROUP BY "s"."category_id", "s"."id", "s"."name", "s"."slug", "s"."sort_order"
+    ORDER BY "s"."sort_order" ASC, "s"."name" ASC
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73829ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "s"."category_id",
+      "s"."id",
+      "s"."name",
+      "s"."slug",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_subcategories" "s"
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "s"."category_id" IN ($1,$2,$3,$4,$5)
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    GROUP BY "s"."category_id", "s"."id", "s"."name", "s"."slug", "s"."sort_order"
+    ORDER BY "s"."sort_order" ASC, "s"."name" ASC
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   73894ms] [ERROR] %o
+
+%s Error: Failed prop type: The prop `href` expects a `string` or `object` in `<Link>`, but got `undefined` instead.
+Open your browser's console to view the Component stack trace.
+    at createPropError (http://localhost:3001/_next/static/chunks/node_modules_0ok.8d5._.js:644:42)
+    at http://localhost:3001/_next/static/chunks/node_modules_0ok.8d5._.js:658:27
+    at Array.forEach (<anonymous>)
+    at LinkComponent (http://localhost:3001/_next/static/chunks/node_modules_0ok.8d5._.js:655:23)
+    at Object.react_stack_bottom_frame (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15037:24)
+    at renderWithHooks (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4620:24)
+    at updateFunctionComponent (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6081:21)
+    at beginWork (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6691:24)
+    at runWithFiberInDEV (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopSync (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3001/_next/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64) The above error occurred in the <LinkComponent> component. It was handled by the <ErrorBoundaryHandler> error boundary. @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_client_0fhqo1d._.js:1998
+[   74024ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   74049ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      AND 
+    EXISTS (
+      SELECT 1
+      FROM "commerce_promotions" "promotion"
+      WHERE "promotion"."status" = 'ACTIVE'
+        AND ("promotion"."starts_at" IS NULL OR "promotion"."starts_at" <= NOW())
+        AND ("promotion"."ends_at" IS NULL OR "promotion"."ends_at" >= NOW())
+        AND (
+          EXISTS (
+            SELECT 1
+            FROM "commerce_promotion_products" "promotion_product"
+            WHERE "promotion_product"."promotion_id" = "promotion"."id"
+              AND "promotion_product"."product_id" = "p"."id"
+          )
+          OR (
+            "p"."brand_id" IS NOT NULL
+            AND EXISTS (
+              SELECT 1
+              FROM "commerce_promotion_brands" "promotion_brand"
+              WHERE "promotion_brand"."promotion_id" = "promotion"."id"
+                AND "promotion_brand"."brand_id" = "p"."brand_id"
+            )
+          )
+          OR EXISTS (
+            SELECT 1
+            FROM "commerce_promotion_categories" "promotion_category"
+            JOIN "product_subcategory_links" "promotion_link"
+              ON "promotion_link"."product_id" = "p"."id"
+            JOIN "product_subcategories" "promotion_subcategory"
+              ON "promotion_subcategory"."id" = "promotion_link"."subcategory_id"
+            WHERE "promotion_category"."promotion_id" = "promotion"."id"
+              AND "promotion_category"."category_id" = "promotion_subcategory"."category_id"
+          )
+        )
+    )
+  
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_featured" DESC,
+      "p"."is_new" DESC,
+      "p"."stock_available" DESC,
+      "p"."updated_at" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   74050ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_featured" DESC,
+      "p"."is_new" DESC,
+      "p"."stock_available" DESC,
+      "p"."updated_at" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[   74052ms] [LOG] [Fast Refresh] done in 143ms @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  102752ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  102830ms] [LOG] [Fast Refresh] done in 183ms @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111316ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111323ms] [LOG] [Fast Refresh] done in 76ms @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111795ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT "column_name"
+    FROM "information_schema"."columns"
+    WHERE "table_schema" = 'public'
+      AND "table_name" = 'product_subcategories'
+      AND "column_name" IN ('visible_ecommerce', 'visible_vitrine')
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111795ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT "column_name"
+    FROM "information_schema"."columns"
+    WHERE "table_schema" = 'public'
+      AND "table_name" = 'product_subcategories'
+      AND "column_name" IN ('visible_ecommerce', 'visible_vitrine')
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111796ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_types" "c"
+    JOIN "product_subcategories" "s"
+      ON "s"."category_id" = "c"."id"
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "c"."is_active" = true
+    GROUP BY
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      "c"."sort_order"
+    ORDER BY "c"."sort_order" ASC, "c"."name" ASC
+    LIMIT 8
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111796ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      AND 
+    EXISTS (
+      SELECT 1
+      FROM "commerce_promotions" "promotion"
+      WHERE "promotion"."status" = 'ACTIVE'
+        AND ("promotion"."starts_at" IS NULL OR "promotion"."starts_at" <= NOW())
+        AND ("promotion"."ends_at" IS NULL OR "promotion"."ends_at" >= NOW())
+        AND (
+          EXISTS (
+            SELECT 1
+            FROM "commerce_promotion_products" "promotion_product"
+            WHERE "promotion_product"."promotion_id" = "promotion"."id"
+              AND "promotion_product"."product_id" = "p"."id"
+          )
+          OR (
+            "p"."brand_id" IS NOT NULL
+            AND EXISTS (
+              SELECT 1
+              FROM "commerce_promotion_brands" "promotion_brand"
+              WHERE "promotion_brand"."promotion_id" = "promotion"."id"
+                AND "promotion_brand"."brand_id" = "p"."brand_id"
+            )
+          )
+          OR EXISTS (
+            SELECT 1
+            FROM "commerce_promotion_categories" "promotion_category"
+            JOIN "product_subcategory_links" "promotion_link"
+              ON "promotion_link"."product_id" = "p"."id"
+            JOIN "product_subcategories" "promotion_subcategory"
+              ON "promotion_subcategory"."id" = "promotion_link"."subcategory_id"
+            WHERE "promotion_category"."promotion_id" = "promotion"."id"
+              AND "promotion_category"."category_id" = "promotion_subcategory"."category_id"
+          )
+        )
+    )
+  
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_featured" DESC,
+      "p"."is_new" DESC,
+      "p"."stock_available" DESC,
+      "p"."updated_at" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111796ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_featured" DESC,
+      "p"."is_new" DESC,
+      "p"."stock_available" DESC,
+      "p"."updated_at" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111796ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_new" DESC,
+      "p"."updated_at" DESC,
+      "p"."stock_available" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111796ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "brand"."name",
+      "brand"."slug",
+      "brand"."description",
+      "brand"."logo_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "organizations" "brand"
+    JOIN "products" "p"
+      ON "p"."brand_id" = "brand"."id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "brand"."is_product_brand" = true
+      AND EXISTS (
+        SELECT 1
+        FROM "product_subcategory_links" "l"
+        JOIN "product_subcategories" "s"
+          ON "s"."id" = "l"."subcategory_id"
+          AND "s"."is_active" = true
+          AND "s"."visible_ecommerce" = true
+        JOIN "product_types" "c"
+          ON "c"."id" = "s"."category_id"
+          AND "c"."is_active" = true
+        WHERE "l"."product_id" = "p"."id"
+      )
+    GROUP BY
+      "brand"."id",
+      "brand"."name",
+      "brand"."slug",
+      "brand"."description",
+      "brand"."logo_media_id"
+    ORDER BY COUNT(DISTINCT "p"."id") DESC, "brand"."name" ASC
+    LIMIT 16
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111796ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."products"."id" FROM "public"."products" WHERE ("public"."products"."visible_ecommerce" = $1 AND "public"."products"."kind" IN (CAST($2::text AS "public"."ProductKind"),CAST($3::text AS "public"."ProductKind"),CAST($4::text AS "public"."ProductKind")) AND EXISTS(SELECT "t0"."product_id" FROM "public"."product_subcategory_links" AS "t0" LEFT JOIN "public"."product_subcategories" AS "j1" ON ("j1"."id") = ("t0"."subcategory_id") LEFT JOIN "public"."product_types" AS "j2" ON ("j2"."id") = ("j1"."category_id") WHERE ("j1"."is_active" = $5 AND "j1"."visible_ecommerce" = $6 AND ("j2"."is_active" = $7 AND ("j2"."id" IS NOT NULL)) AND ("j1"."id" IS NOT NULL) AND ("public"."products"."id") = ("t0"."product_id") AND "t0"."product_id" IS NOT NULL))) OFFSET $8) AS "sub" @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111796ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_types" "c"
+    JOIN "product_subcategories" "s"
+      ON "s"."category_id" = "c"."id"
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "c"."is_active" = true
+    GROUP BY
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      "c"."sort_order"
+    ORDER BY "c"."sort_order" ASC, "c"."name" ASC
+    LIMIT 8
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111796ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "s"."category_id",
+      "s"."id",
+      "s"."name",
+      "s"."slug",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_subcategories" "s"
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "s"."category_id" IN ($1,$2,$3,$4,$5)
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    GROUP BY "s"."category_id", "s"."id", "s"."name", "s"."slug", "s"."sort_order"
+    ORDER BY "s"."sort_order" ASC, "s"."name" ASC
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111973ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT "column_name"
+    FROM "information_schema"."columns"
+    WHERE "table_schema" = 'public'
+      AND "table_name" = 'product_subcategories'
+      AND "column_name" IN ('visible_ecommerce', 'visible_vitrine')
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111974ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT "column_name"
+    FROM "information_schema"."columns"
+    WHERE "table_schema" = 'public'
+      AND "table_name" = 'product_subcategories'
+      AND "column_name" IN ('visible_ecommerce', 'visible_vitrine')
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111974ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_types" "c"
+    JOIN "product_subcategories" "s"
+      ON "s"."category_id" = "c"."id"
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "c"."is_active" = true
+    GROUP BY
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      "c"."sort_order"
+    ORDER BY "c"."sort_order" ASC, "c"."name" ASC
+    LIMIT 8
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111974ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_types" "c"
+    JOIN "product_subcategories" "s"
+      ON "s"."category_id" = "c"."id"
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "c"."is_active" = true
+    GROUP BY
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      "c"."sort_order"
+    ORDER BY "c"."sort_order" ASC, "c"."name" ASC
+    LIMIT 8
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111974ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_featured" DESC,
+      "p"."is_new" DESC,
+      "p"."stock_available" DESC,
+      "p"."updated_at" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111974ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      AND 
+    EXISTS (
+      SELECT 1
+      FROM "commerce_promotions" "promotion"
+      WHERE "promotion"."status" = 'ACTIVE'
+        AND ("promotion"."starts_at" IS NULL OR "promotion"."starts_at" <= NOW())
+        AND ("promotion"."ends_at" IS NULL OR "promotion"."ends_at" >= NOW())
+        AND (
+          EXISTS (
+            SELECT 1
+            FROM "commerce_promotion_products" "promotion_product"
+            WHERE "promotion_product"."promotion_id" = "promotion"."id"
+              AND "promotion_product"."product_id" = "p"."id"
+          )
+          OR (
+            "p"."brand_id" IS NOT NULL
+            AND EXISTS (
+              SELECT 1
+              FROM "commerce_promotion_brands" "promotion_brand"
+              WHERE "promotion_brand"."promotion_id" = "promotion"."id"
+                AND "promotion_brand"."brand_id" = "p"."brand_id"
+            )
+          )
+          OR EXISTS (
+            SELECT 1
+            FROM "commerce_promotion_categories" "promotion_category"
+            JOIN "product_subcategory_links" "promotion_link"
+              ON "promotion_link"."product_id" = "p"."id"
+            JOIN "product_subcategories" "promotion_subcategory"
+              ON "promotion_subcategory"."id" = "promotion_link"."subcategory_id"
+            WHERE "promotion_category"."promotion_id" = "promotion"."id"
+              AND "promotion_category"."category_id" = "promotion_subcategory"."category_id"
+          )
+        )
+    )
+  
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_featured" DESC,
+      "p"."is_new" DESC,
+      "p"."stock_available" DESC,
+      "p"."updated_at" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111974ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "brand"."name",
+      "brand"."slug",
+      "brand"."description",
+      "brand"."logo_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "organizations" "brand"
+    JOIN "products" "p"
+      ON "p"."brand_id" = "brand"."id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "brand"."is_product_brand" = true
+      AND EXISTS (
+        SELECT 1
+        FROM "product_subcategory_links" "l"
+        JOIN "product_subcategories" "s"
+          ON "s"."id" = "l"."subcategory_id"
+          AND "s"."is_active" = true
+          AND "s"."visible_ecommerce" = true
+        JOIN "product_types" "c"
+          ON "c"."id" = "s"."category_id"
+          AND "c"."is_active" = true
+        WHERE "l"."product_id" = "p"."id"
+      )
+    GROUP BY
+      "brand"."id",
+      "brand"."name",
+      "brand"."slug",
+      "brand"."description",
+      "brand"."logo_media_id"
+    ORDER BY COUNT(DISTINCT "p"."id") DESC, "brand"."name" ASC
+    LIMIT 16
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111974ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."products"."id" FROM "public"."products" WHERE ("public"."products"."visible_ecommerce" = $1 AND "public"."products"."kind" IN (CAST($2::text AS "public"."ProductKind"),CAST($3::text AS "public"."ProductKind"),CAST($4::text AS "public"."ProductKind")) AND EXISTS(SELECT "t0"."product_id" FROM "public"."product_subcategory_links" AS "t0" LEFT JOIN "public"."product_subcategories" AS "j1" ON ("j1"."id") = ("t0"."subcategory_id") LEFT JOIN "public"."product_types" AS "j2" ON ("j2"."id") = ("j1"."category_id") WHERE ("j1"."is_active" = $5 AND "j1"."visible_ecommerce" = $6 AND ("j2"."is_active" = $7 AND ("j2"."id" IS NOT NULL)) AND ("j1"."id" IS NOT NULL) AND ("public"."products"."id") = ("t0"."product_id") AND "t0"."product_id" IS NOT NULL))) OFFSET $8) AS "sub" @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111974ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_new" DESC,
+      "p"."updated_at" DESC,
+      "p"."stock_available" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111974ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "s"."category_id",
+      "s"."id",
+      "s"."name",
+      "s"."slug",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_subcategories" "s"
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "s"."category_id" IN ($1,$2,$3,$4,$5)
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    GROUP BY "s"."category_id", "s"."id", "s"."name", "s"."slug", "s"."sort_order"
+    ORDER BY "s"."sort_order" ASC, "s"."name" ASC
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111974ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "s"."category_id",
+      "s"."id",
+      "s"."name",
+      "s"."slug",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_subcategories" "s"
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "s"."category_id" IN ($1,$2,$3,$4,$5)
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    GROUP BY "s"."category_id", "s"."id", "s"."name", "s"."slug", "s"."sort_order"
+    ORDER BY "s"."sort_order" ASC, "s"."name" ASC
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  111988ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "s"."category_id",
+      "s"."id",
+      "s"."name",
+      "s"."slug",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_subcategories" "s"
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "s"."category_id" IN ($1,$2,$3,$4,$5)
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    GROUP BY "s"."category_id", "s"."id", "s"."name", "s"."slug", "s"."sort_order"
+    ORDER BY "s"."sort_order" ASC, "s"."name" ASC
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  118529ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  118671ms] [LOG] [Fast Refresh] done in 68ms @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119163ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT "column_name"
+    FROM "information_schema"."columns"
+    WHERE "table_schema" = 'public'
+      AND "table_name" = 'product_subcategories'
+      AND "column_name" IN ('visible_ecommerce', 'visible_vitrine')
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119164ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT "column_name"
+    FROM "information_schema"."columns"
+    WHERE "table_schema" = 'public'
+      AND "table_name" = 'product_subcategories'
+      AND "column_name" IN ('visible_ecommerce', 'visible_vitrine')
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119164ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_types" "c"
+    JOIN "product_subcategories" "s"
+      ON "s"."category_id" = "c"."id"
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "c"."is_active" = true
+    GROUP BY
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      "c"."sort_order"
+    ORDER BY "c"."sort_order" ASC, "c"."name" ASC
+    LIMIT 8
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119164ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_types" "c"
+    JOIN "product_subcategories" "s"
+      ON "s"."category_id" = "c"."id"
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "c"."is_active" = true
+    GROUP BY
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      "c"."sort_order"
+    ORDER BY "c"."sort_order" ASC, "c"."name" ASC
+    LIMIT 8
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119164ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_featured" DESC,
+      "p"."is_new" DESC,
+      "p"."stock_available" DESC,
+      "p"."updated_at" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119164ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      AND 
+    EXISTS (
+      SELECT 1
+      FROM "commerce_promotions" "promotion"
+      WHERE "promotion"."status" = 'ACTIVE'
+        AND ("promotion"."starts_at" IS NULL OR "promotion"."starts_at" <= NOW())
+        AND ("promotion"."ends_at" IS NULL OR "promotion"."ends_at" >= NOW())
+        AND (
+          EXISTS (
+            SELECT 1
+            FROM "commerce_promotion_products" "promotion_product"
+            WHERE "promotion_product"."promotion_id" = "promotion"."id"
+              AND "promotion_product"."product_id" = "p"."id"
+          )
+          OR (
+            "p"."brand_id" IS NOT NULL
+            AND EXISTS (
+              SELECT 1
+              FROM "commerce_promotion_brands" "promotion_brand"
+              WHERE "promotion_brand"."promotion_id" = "promotion"."id"
+                AND "promotion_brand"."brand_id" = "p"."brand_id"
+            )
+          )
+          OR EXISTS (
+            SELECT 1
+            FROM "commerce_promotion_categories" "promotion_category"
+            JOIN "product_subcategory_links" "promotion_link"
+              ON "promotion_link"."product_id" = "p"."id"
+            JOIN "product_subcategories" "promotion_subcategory"
+              ON "promotion_subcategory"."id" = "promotion_link"."subcategory_id"
+            WHERE "promotion_category"."promotion_id" = "promotion"."id"
+              AND "promotion_category"."category_id" = "promotion_subcategory"."category_id"
+          )
+        )
+    )
+  
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_featured" DESC,
+      "p"."is_new" DESC,
+      "p"."stock_available" DESC,
+      "p"."updated_at" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119165ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "brand"."name",
+      "brand"."slug",
+      "brand"."description",
+      "brand"."logo_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "organizations" "brand"
+    JOIN "products" "p"
+      ON "p"."brand_id" = "brand"."id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "brand"."is_product_brand" = true
+      AND EXISTS (
+        SELECT 1
+        FROM "product_subcategory_links" "l"
+        JOIN "product_subcategories" "s"
+          ON "s"."id" = "l"."subcategory_id"
+          AND "s"."is_active" = true
+          AND "s"."visible_ecommerce" = true
+        JOIN "product_types" "c"
+          ON "c"."id" = "s"."category_id"
+          AND "c"."is_active" = true
+        WHERE "l"."product_id" = "p"."id"
+      )
+    GROUP BY
+      "brand"."id",
+      "brand"."name",
+      "brand"."slug",
+      "brand"."description",
+      "brand"."logo_media_id"
+    ORDER BY COUNT(DISTINCT "p"."id") DESC, "brand"."name" ASC
+    LIMIT 16
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119165ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."products"."id" FROM "public"."products" WHERE ("public"."products"."visible_ecommerce" = $1 AND "public"."products"."kind" IN (CAST($2::text AS "public"."ProductKind"),CAST($3::text AS "public"."ProductKind"),CAST($4::text AS "public"."ProductKind")) AND EXISTS(SELECT "t0"."product_id" FROM "public"."product_subcategory_links" AS "t0" LEFT JOIN "public"."product_subcategories" AS "j1" ON ("j1"."id") = ("t0"."subcategory_id") LEFT JOIN "public"."product_types" AS "j2" ON ("j2"."id") = ("j1"."category_id") WHERE ("j1"."is_active" = $5 AND "j1"."visible_ecommerce" = $6 AND ("j2"."is_active" = $7 AND ("j2"."id" IS NOT NULL)) AND ("j1"."id" IS NOT NULL) AND ("public"."products"."id") = ("t0"."product_id") AND "t0"."product_id" IS NOT NULL))) OFFSET $8) AS "sub" @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119165ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_new" DESC,
+      "p"."updated_at" DESC,
+      "p"."stock_available" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119165ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "s"."category_id",
+      "s"."id",
+      "s"."name",
+      "s"."slug",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_subcategories" "s"
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "s"."category_id" IN ($1,$2,$3,$4,$5)
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    GROUP BY "s"."category_id", "s"."id", "s"."name", "s"."slug", "s"."sort_order"
+    ORDER BY "s"."sort_order" ASC, "s"."name" ASC
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119165ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "s"."category_id",
+      "s"."id",
+      "s"."name",
+      "s"."slug",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_subcategories" "s"
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "s"."category_id" IN ($1,$2,$3,$4,$5)
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    GROUP BY "s"."category_id", "s"."id", "s"."name", "s"."slug", "s"."sort_order"
+    ORDER BY "s"."sort_order" ASC, "s"."name" ASC
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119328ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT "column_name"
+    FROM "information_schema"."columns"
+    WHERE "table_schema" = 'public'
+      AND "table_name" = 'product_subcategories'
+      AND "column_name" IN ('visible_ecommerce', 'visible_vitrine')
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119329ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT "column_name"
+    FROM "information_schema"."columns"
+    WHERE "table_schema" = 'public'
+      AND "table_name" = 'product_subcategories'
+      AND "column_name" IN ('visible_ecommerce', 'visible_vitrine')
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119329ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_types" "c"
+    JOIN "product_subcategories" "s"
+      ON "s"."category_id" = "c"."id"
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "c"."is_active" = true
+    GROUP BY
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      "c"."sort_order"
+    ORDER BY "c"."sort_order" ASC, "c"."name" ASC
+    LIMIT 8
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119329ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_types" "c"
+    JOIN "product_subcategories" "s"
+      ON "s"."category_id" = "c"."id"
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "c"."is_active" = true
+    GROUP BY
+      "c"."id",
+      "c"."name",
+      "c"."slug",
+      "c"."subtitle",
+      "c"."description",
+      "c"."image_media_id",
+      "c"."sort_order"
+    ORDER BY "c"."sort_order" ASC, "c"."name" ASC
+    LIMIT 8
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119329ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."products"."id" FROM "public"."products" WHERE ("public"."products"."visible_ecommerce" = $1 AND "public"."products"."kind" IN (CAST($2::text AS "public"."ProductKind"),CAST($3::text AS "public"."ProductKind"),CAST($4::text AS "public"."ProductKind")) AND EXISTS(SELECT "t0"."product_id" FROM "public"."product_subcategory_links" AS "t0" LEFT JOIN "public"."product_subcategories" AS "j1" ON ("j1"."id") = ("t0"."subcategory_id") LEFT JOIN "public"."product_types" AS "j2" ON ("j2"."id") = ("j1"."category_id") WHERE ("j1"."is_active" = $5 AND "j1"."visible_ecommerce" = $6 AND ("j2"."is_active" = $7 AND ("j2"."id" IS NOT NULL)) AND ("j1"."id" IS NOT NULL) AND ("public"."products"."id") = ("t0"."product_id") AND "t0"."product_id" IS NOT NULL))) OFFSET $8) AS "sub" @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119329ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      AND 
+    EXISTS (
+      SELECT 1
+      FROM "commerce_promotions" "promotion"
+      WHERE "promotion"."status" = 'ACTIVE'
+        AND ("promotion"."starts_at" IS NULL OR "promotion"."starts_at" <= NOW())
+        AND ("promotion"."ends_at" IS NULL OR "promotion"."ends_at" >= NOW())
+        AND (
+          EXISTS (
+            SELECT 1
+            FROM "commerce_promotion_products" "promotion_product"
+            WHERE "promotion_product"."promotion_id" = "promotion"."id"
+              AND "promotion_product"."product_id" = "p"."id"
+          )
+          OR (
+            "p"."brand_id" IS NOT NULL
+            AND EXISTS (
+              SELECT 1
+              FROM "commerce_promotion_brands" "promotion_brand"
+              WHERE "promotion_brand"."promotion_id" = "promotion"."id"
+                AND "promotion_brand"."brand_id" = "p"."brand_id"
+            )
+          )
+          OR EXISTS (
+            SELECT 1
+            FROM "commerce_promotion_categories" "promotion_category"
+            JOIN "product_subcategory_links" "promotion_link"
+              ON "promotion_link"."product_id" = "p"."id"
+            JOIN "product_subcategories" "promotion_subcategory"
+              ON "promotion_subcategory"."id" = "promotion_link"."subcategory_id"
+            WHERE "promotion_category"."promotion_id" = "promotion"."id"
+              AND "promotion_category"."category_id" = "promotion_subcategory"."category_id"
+          )
+        )
+    )
+  
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_featured" DESC,
+      "p"."is_new" DESC,
+      "p"."stock_available" DESC,
+      "p"."updated_at" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119329ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "brand"."name",
+      "brand"."slug",
+      "brand"."description",
+      "brand"."logo_media_id",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "organizations" "brand"
+    JOIN "products" "p"
+      ON "p"."brand_id" = "brand"."id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "brand"."is_product_brand" = true
+      AND EXISTS (
+        SELECT 1
+        FROM "product_subcategory_links" "l"
+        JOIN "product_subcategories" "s"
+          ON "s"."id" = "l"."subcategory_id"
+          AND "s"."is_active" = true
+          AND "s"."visible_ecommerce" = true
+        JOIN "product_types" "c"
+          ON "c"."id" = "s"."category_id"
+          AND "c"."is_active" = true
+        WHERE "l"."product_id" = "p"."id"
+      )
+    GROUP BY
+      "brand"."id",
+      "brand"."name",
+      "brand"."slug",
+      "brand"."description",
+      "brand"."logo_media_id"
+    ORDER BY COUNT(DISTINCT "p"."id") DESC, "brand"."name" ASC
+    LIMIT 16
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119329ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_featured" DESC,
+      "p"."is_new" DESC,
+      "p"."stock_available" DESC,
+      "p"."updated_at" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119329ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "p"."id",
+      "p"."sku",
+      "p"."slug",
+      "p"."name",
+      "p"."display_name",
+      "p"."current_price_ttc_tnd",
+      "p"."base_price_ttc_tnd",
+      "p"."price_visibility"::text,
+      "p"."stock_available",
+      "p"."stock_availability"::text,
+      "p"."stock_unit"::text,
+      "p"."is_featured",
+      "p"."is_new",
+      "p"."updated_at",
+      "brand"."name" AS "brand_name",
+      "brand"."slug" AS "brand_slug",
+      "trail"."category_name",
+      "trail"."category_slug",
+      "trail"."subcategory_name",
+      "trail"."subcategory_slug",
+      "image"."media_id",
+      "image"."media_title",
+      "image"."media_alt_text"
+    FROM "products" "p"
+    LEFT JOIN "organizations" "brand"
+      ON "brand"."id" = "p"."brand_id"
+    JOIN LATERAL (
+      SELECT
+        "c"."name" AS "category_name",
+        "c"."slug" AS "category_slug",
+        "s"."name" AS "subcategory_name",
+        "s"."slug" AS "subcategory_slug"
+      FROM "product_subcategory_links" "l"
+      JOIN "product_subcategories" "s"
+        ON "s"."id" = "l"."subcategory_id"
+        AND "s"."is_active" = true
+        AND "s"."visible_ecommerce" = true
+      JOIN "product_types" "c"
+        ON "c"."id" = "s"."category_id"
+        AND "c"."is_active" = true
+      WHERE "l"."product_id" = "p"."id"
+      ORDER BY "c"."sort_order" ASC, "s"."sort_order" ASC, "s"."name" ASC
+      LIMIT 1
+    ) "trail" ON true
+    LEFT JOIN LATERAL (
+      SELECT
+        "m"."id" AS "media_id",
+        COALESCE("pm"."name", "m"."title", "m"."original_filename") AS "media_title",
+        COALESCE("pm"."alt_text", "m"."alt_text") AS "media_alt_text"
+      FROM "product_media" "pm"
+      JOIN "media" "m"
+        ON "m"."id" = "pm"."media_id"
+        AND "m"."kind" = 'IMAGE'
+        AND "m"."is_active" = true
+        AND "m"."deleted_at" IS NULL
+      WHERE "pm"."product_id" = "p"."id"
+        AND "pm"."role" = 'GALLERY'
+      ORDER BY "pm"."sort_order" ASC, "pm"."media_id" ASC
+      LIMIT 1
+    ) "image" ON true
+    WHERE "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+      
+    ORDER BY 
+      ("image"."media_id" IS NOT NULL) DESC,
+      "p"."is_new" DESC,
+      "p"."updated_at" DESC,
+      "p"."stock_available" DESC
+    
+    LIMIT $1
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119329ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "s"."category_id",
+      "s"."id",
+      "s"."name",
+      "s"."slug",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_subcategories" "s"
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "s"."category_id" IN ($1,$2,$3,$4,$5)
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    GROUP BY "s"."category_id", "s"."id", "s"."name", "s"."slug", "s"."sort_order"
+    ORDER BY "s"."sort_order" ASC, "s"."name" ASC
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  119330ms] [LOG] %c%s%c [34mprisma:query[39m background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   
+    SELECT
+      "s"."category_id",
+      "s"."id",
+      "s"."name",
+      "s"."slug",
+      COUNT(DISTINCT "p"."id")::bigint AS "product_count"
+    FROM "product_subcategories" "s"
+    LEFT JOIN "product_subcategory_links" "l"
+      ON "l"."subcategory_id" = "s"."id"
+    LEFT JOIN "products" "p"
+      ON "p"."id" = "l"."product_id"
+      AND "p"."visible_ecommerce" = true
+      AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
+    WHERE "s"."category_id" IN ($1,$2,$3,$4,$5)
+      AND "s"."is_active" = true
+      AND "s"."visible_ecommerce" = true
+    GROUP BY "s"."category_id", "s"."id", "s"."name", "s"."slug", "s"."sort_order"
+    ORDER BY "s"."sort_order" ASC, "s"."name" ASC
+   @ http://localhost:3001/_next/static/chunks/node_modules_next_dist_115brz8._.js:2431
+[  120347ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/notifications:0

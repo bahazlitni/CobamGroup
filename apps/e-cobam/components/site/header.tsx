@@ -2,23 +2,27 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, Menu, Search, UserRound, X } from "lucide-react";
+import { ChevronDown, Menu, Search, UserRound } from "lucide-react";
 import { CartBadge } from "@/components/cart/cart-badge";
+import { FavoritesBadge } from "@/components/favorites/favorites-badge";
 import { CustomerNotificationsMenu } from "@/components/site/customer-notifications-menu";
 import type { LandingCategory } from "@/lib/home-data";
 import { cn } from "@/lib/cn";
 
+const primaryLinks = [
+  { href: "/catalogue", label: "Tous les produits" },
+  { href: "/catalogue?sélection=promotion", label: "Promotions" },
+  { href: "/#best-sellers", label: "Meilleures ventes" },
+  { href: "/#new-arrivals", label: "Nouveautés" },
+  { href: "/favoris", label: "Mes favoris" },
+  { href: "/suivi-commande", label: "Suivi commande" },
+];
+
 function Logo() {
   return (
     <Link href="/" className="group flex items-center gap-3" aria-label="Accueil e-cobam">
-      <span className="grid size-10 place-items-center rounded-full bg-ec-ink text-sm font-black text-white transition group-hover:bg-ec-blue">
-        C
-      </span>
       <span className="leading-none">
-        <span className="block text-lg font-black tracking-[0.16em] text-ec-ink">COBAM</span>
-        <span className="block text-[11px] font-semibold uppercase tracking-[0.28em] text-ec-blue">
-          e-commerce
-        </span>
+        <span className="text-ec-ink block text-lg font-black tracking-[0.16em]">ECOMMERCE</span>
       </span>
     </Link>
   );
@@ -29,199 +33,188 @@ function SearchForm({ compact = false }: { compact?: boolean }) {
     <form
       action="/catalogue"
       className={cn(
-        "group flex items-center gap-2 rounded-full border border-ec-line bg-white px-4 transition focus-within:border-ec-blue/50 focus-within:shadow-[0_0_0_4px_rgba(10,141,193,0.08)]",
+        "group border-ec-line focus-within:border-ec-blue/50 flex items-center gap-2 rounded-2xl border bg-white p-1.5 shadow-[0_10px_28px_rgba(20,32,46,0.06)] transition focus-within:shadow-[0_0_0_4px_rgba(10,141,193,0.08)]",
         compact ? "h-11 w-full" : "h-12 w-full",
       )}
     >
-      <Search className="size-4 shrink-0 text-ec-muted" aria-hidden="true" />
+      <Search className="text-ec-muted ml-2 size-4 shrink-0" aria-hidden="true" />
       <input
         name="search"
         type="search"
         placeholder="Produit, marque, référence..."
-        className="min-w-0 flex-1 bg-transparent text-sm text-ec-ink outline-none placeholder:text-ec-muted/70"
+        className="text-ec-ink placeholder:text-ec-muted/70 min-w-0 flex-1 bg-transparent text-sm outline-none"
       />
+      <button
+        type="submit"
+        className={cn(
+          "bg-ec-ink hover:bg-ec-blue focus-visible:outline-ec-blue inline-flex shrink-0 items-center justify-center rounded-xl text-sm font-black [color:#fff] text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
+          compact ? "size-8" : "h-9 px-4",
+        )}
+      >
+        <Search className={cn("size-4", compact ? "" : "sm:hidden")} aria-hidden="true" />
+        <span className={compact ? "sr-only" : "hidden sm:inline"}>Rechercher</span>
+      </button>
     </form>
   );
 }
 
-export function SiteHeader({ categories }: { categories: LandingCategory[] }) {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const navCategories = categories.filter((category) => category.subcategories.length > 0);
+function CategoryDropdown({
+  categories,
+  isOpen,
+  onClose,
+}: {
+  categories: LandingCategory[];
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  if (!isOpen) {
+    return null;
+  }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-ec-line/80 bg-white/95 shadow-[0_10px_34px_rgba(20,32,46,0.055)] backdrop-blur-xl">
-      <div className="mx-auto flex h-[4.75rem] max-w-[92rem] items-center gap-5 px-4 sm:px-6 lg:px-8">
-        <Logo />
-
-        <div className="ml-auto hidden min-w-0 flex-1 items-center justify-end md:flex">
-          <div className="w-[min(42rem,48vw)]">
-            <SearchForm />
-          </div>
-        </div>
-
-        <div className="hidden items-center gap-2 lg:flex">
-          <Link
-            href="/connexion"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-ec-ink px-5 text-sm font-black text-white [color:#fff] shadow-[0_16px_34px_rgba(20,32,46,0.16)] transition hover:bg-ec-blue"
-          >
-            <UserRound className="size-4" aria-hidden="true" />
-            Se connecter
-          </Link>
-          <CustomerNotificationsMenu />
-          <Link href="/panier" aria-label="Panier">
-            <CartBadge />
-          </Link>
-        </div>
-
-        <div className="ml-auto flex items-center gap-2 lg:hidden">
-          <CustomerNotificationsMenu compact />
-          <Link href="/panier" aria-label="Panier">
-            <CartBadge />
-          </Link>
-          <button
-            type="button"
-            className="grid size-10 place-items-center rounded-full border border-ec-line bg-white text-ec-ink"
-            aria-label="Ouvrir le menu"
-            onClick={() => setMobileOpen(true)}
-          >
-            <Menu className="size-5" aria-hidden="true" />
-          </button>
-        </div>
-      </div>
-
-      <div className="hidden border-t border-ec-line/70 bg-white lg:block">
-        <nav
-          className="mx-auto flex min-h-14 max-w-[92rem] flex-wrap items-center gap-2 px-4 py-2 sm:px-6 lg:px-8"
-          aria-label="Categories e-commerce"
-        >
+    <>
+      <button
+        type="button"
+        className="fixed inset-0 z-40 cursor-default bg-transparent"
+        aria-label="Fermer les rayons"
+        onClick={onClose}
+      />
+      <div className="border-ec-line absolute top-[calc(100%+0.65rem)] left-0 z-50 w-[min(23rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border bg-white shadow-[0_22px_60px_rgba(20,32,46,0.16)]">
+        <div className="border-ec-line border-b p-2">
           <Link
             href="/catalogue"
-            className="shrink-0 rounded-full bg-ec-ink px-4 py-2 text-sm font-black text-white [color:#fff] transition hover:bg-ec-blue"
+            className="bg-ec-ink hover:bg-ec-blue flex items-center justify-between rounded-xl px-4 py-3 text-sm font-black [color:#fff] text-white transition"
+            onClick={onClose}
           >
-            Tous les produits
+            <span>Tous les produits</span>
+            <span aria-hidden="true">→</span>
           </Link>
           <Link
             href="/types-produits"
-            className="inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm font-semibold text-ec-ink transition hover:bg-ec-stone hover:text-ec-blue"
+            className="text-ec-ink hover:bg-ec-paper mt-1 flex items-center justify-between rounded-xl px-4 py-3 text-sm font-bold transition"
+            onClick={onClose}
           >
-            Types de produits
+            <span>Types de produits</span>
+            <span aria-hidden="true">→</span>
           </Link>
+        </div>
 
-          {navCategories.map((category) => (
-            <div key={category.slug} className="group relative shrink-0">
+        <div className="commerce-thin-scrollbar max-h-[min(26rem,66vh)] overflow-y-auto p-2">
+          <p className="text-ec-muted px-3 py-2 text-[11px] font-black tracking-[0.18em] uppercase">
+            Catégories
+          </p>
+          <div className="grid gap-1">
+            {categories.map((category) => (
               <Link
+                key={category.slug}
                 href={category.href}
-                className="inline-flex h-10 items-center gap-1.5 whitespace-nowrap rounded-full px-4 text-sm font-semibold text-ec-ink transition hover:bg-ec-stone hover:text-ec-blue"
-                aria-haspopup="true"
+                className="text-ec-ink hover:bg-ec-paper hover:text-ec-blue flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition"
+                onClick={onClose}
               >
-                <span>{category.name}</span>
-                <ChevronDown className="size-4 shrink-0 transition group-hover:rotate-180" />
+                <span className="min-w-0 truncate">{category.name}</span>
+                {category.productCount ? (
+                  <span className="text-ec-muted shrink-0 text-xs font-bold">
+                    {category.productCount}
+                  </span>
+                ) : null}
               </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
 
-              <div className="invisible absolute left-0 top-full z-50 w-80 translate-y-2 rounded-2xl border border-ec-line bg-white p-3 opacity-0 shadow-2xl shadow-ec-ink/10 transition duration-150 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
-                <Link
-                  href={category.href}
-                  className="block rounded-xl bg-ec-paper px-4 py-3 text-sm font-black text-ec-ink transition hover:bg-ec-stone"
-                >
-                  Tous les produits
-                </Link>
-                <div className="mt-2 grid gap-1">
-                  {category.subcategories.map((subcategory) => (
-                    <Link
-                      key={subcategory.slug}
-                      href={`/catalogue?categorie=${subcategory.slug}`}
-                      className="flex items-center justify-between gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold text-ec-muted transition hover:bg-ec-paper hover:text-ec-ink"
-                    >
-                      <span>{subcategory.name}</span>
-                      <span className="text-xs text-ec-muted/70">{subcategory.productCount}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </nav>
+export function SiteHeader({ categories }: { categories: LandingCategory[] }) {
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const navCategories = categories.filter((category) => category.subcategories.length > 0);
+
+  return (
+    <header className="border-ec-line/80 sticky top-0 z-50 border-b bg-white/95 shadow-[0_10px_34px_rgba(20,32,46,0.055)] backdrop-blur-xl">
+      <div className="border-ec-line/70 border-b bg-white">
+        <div className="mx-auto flex h-16 max-w-[92rem] items-center gap-5 px-4 sm:px-6 lg:px-8">
+          <Logo />
+
+          <nav
+            className="hidden flex-1 items-center justify-center gap-1 lg:flex"
+            aria-label="Navigation principale"
+          >
+            {primaryLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-ec-ink hover:bg-ec-paper hover:text-ec-blue inline-flex h-10 items-center rounded-full px-4 text-sm font-bold transition"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="ml-auto flex items-center gap-2">
+            <Link
+              href="/connexion"
+              aria-label="Se connecter"
+              className="bg-ec-ink hover:bg-ec-blue inline-flex h-10 items-center justify-center gap-2 rounded-full px-3 text-sm font-black [color:#fff] text-white shadow-[0_14px_30px_rgba(20,32,46,0.16)] transition sm:px-5"
+            >
+              <UserRound className="size-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Se connecter</span>
+            </Link>
+          </div>
+        </div>
       </div>
 
-      {mobileOpen ? (
-        <div
-          className="fixed inset-0 z-50 bg-ec-ink/30 lg:hidden"
-          onClick={() => setMobileOpen(false)}
-        >
-          <aside
-            className="ml-auto flex h-full w-[min(420px,88vw)] flex-col bg-ec-paper p-5 shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-center justify-between">
-              <Logo />
-              <button
-                type="button"
-                className="grid size-10 place-items-center rounded-full border border-ec-line bg-white"
-                aria-label="Fermer le menu"
-                onClick={() => setMobileOpen(false)}
-              >
-                <X className="size-5" aria-hidden="true" />
-              </button>
-            </div>
+      <div className="bg-ec-paper/95">
+        <div className="mx-auto flex h-[4.25rem] max-w-[92rem] items-center gap-3 px-4 sm:px-6 lg:px-8">
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              className="border-ec-line text-ec-ink hover:border-ec-blue/40 hover:text-ec-blue relative z-50 inline-flex h-11 items-center justify-center gap-2 rounded-2xl border bg-white px-3 text-sm font-black shadow-[0_10px_28px_rgba(20,32,46,0.06)] transition sm:px-4"
+              aria-label="Ouvrir les rayons"
+              aria-expanded={categoriesOpen}
+              aria-haspopup="menu"
+              onClick={() => setCategoriesOpen((current) => !current)}
+            >
+              <Menu className="size-5" aria-hidden="true" />
+              <span className="hidden sm:inline">Catégories</span>
+              <ChevronDown
+                className={cn(
+                  "hidden size-4 transition sm:block",
+                  categoriesOpen ? "rotate-180" : "",
+                )}
+                aria-hidden="true"
+              />
+            </button>
 
-            <div className="mt-7">
-              <SearchForm compact />
-            </div>
+            <CategoryDropdown
+              categories={navCategories}
+              isOpen={categoriesOpen}
+              onClose={() => setCategoriesOpen(false)}
+            />
+          </div>
 
-            <nav className="mt-8 flex flex-col gap-2 overflow-y-auto pb-8">
-              <Link
-                href="/connexion"
-                onClick={() => setMobileOpen(false)}
-                className="rounded-2xl bg-ec-ink px-4 py-4 text-base font-black text-white [color:#fff]"
-              >
-                Se connecter
-              </Link>
-              <Link
-                href="/catalogue"
-                onClick={() => setMobileOpen(false)}
-                className="rounded-2xl bg-white px-4 py-4 text-base font-semibold text-ec-ink"
-              >
-                Tous les produits
-              </Link>
-              <Link
-                href="/types-produits"
-                onClick={() => setMobileOpen(false)}
-                className="rounded-2xl bg-white px-4 py-4 text-base font-semibold text-ec-ink"
-              >
-                Explorer par type
-              </Link>
-              {navCategories.map((category) => (
-                <details key={category.slug} className="rounded-2xl bg-white/60 px-4 py-2">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-base font-semibold text-ec-ink">
-                    {category.name}
-                    <ChevronDown className="size-4" aria-hidden="true" />
-                  </summary>
-                  <div className="border-t border-ec-line/70 py-2">
-                    <Link
-                      href={category.href}
-                      onClick={() => setMobileOpen(false)}
-                      className="block rounded-xl px-3 py-2 text-sm font-black text-ec-blue"
-                    >
-                      Tous les produits
-                    </Link>
-                    {category.subcategories.map((subcategory) => (
-                      <Link
-                        key={subcategory.slug}
-                        href={`/catalogue?categorie=${subcategory.slug}`}
-                        onClick={() => setMobileOpen(false)}
-                        className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold text-ec-muted"
-                      >
-                        <span>{subcategory.name}</span>
-                        <span className="text-xs">{subcategory.productCount}</span>
-                      </Link>
-                    ))}
-                  </div>
-                </details>
-              ))}
-            </nav>
-          </aside>
+          <div className="min-w-0 flex-1">
+            <SearchForm compact />
+          </div>
+
+          <div className="hidden items-center gap-2 sm:flex">
+            <Link href="/favoris" aria-label="Mes favoris">
+              <FavoritesBadge />
+            </Link>
+            <CustomerNotificationsMenu compact />
+            <Link href="/panier" aria-label="Panier">
+              <CartBadge />
+            </Link>
+          </div>
+
+          <Link href="/favoris" className="sm:hidden" aria-label="Mes favoris">
+            <FavoritesBadge />
+          </Link>
+          <Link href="/panier" className="sm:hidden" aria-label="Panier">
+            <CartBadge />
+          </Link>
         </div>
-      ) : null}
+      </div>
     </header>
   );
 }

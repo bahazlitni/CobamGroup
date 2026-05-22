@@ -7,6 +7,7 @@ import { listLatestPublicArticles } from "@/features/articles/public";
 import { listPublicProductBrandOrganizations } from "@/features/organizations/public";
 import { listPublicMegaMenuProductCategories } from "@/features/product-categories/public";
 import type { PublicMegaMenuProductCategory } from "@/features/product-categories/public-types";
+import { ParticleTextEffect } from "@/components/ui/particle-text-effect";
 
 export const metadata: Metadata = {
   title: "COBAM Group | L'architecture des matières",

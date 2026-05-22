@@ -1,0 +1,67 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Accueil e-cobam" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e7]: ECOMMERCE
+      - link "Se connecter" [ref=e9] [cursor=pointer]:
+        - /url: /connexion
+        - img [ref=e10]
+    - generic [ref=e14]:
+      - button "Ouvrir les rayons" [ref=e16]:
+        - img [ref=e17]
+      - generic [ref=e19]:
+        - img [ref=e20]
+        - searchbox "Produit, marque, référence..." [ref=e23]
+        - button "Rechercher" [ref=e24]:
+          - img [ref=e25]
+          - generic [ref=e28]: Rechercher
+      - link "Panier" [ref=e29] [cursor=pointer]:
+        - /url: /panier
+        - img [ref=e31]
+  - main [ref=e34]
+  - contentinfo [ref=e93]:
+    - generic [ref=e94]:
+      - generic [ref=e95]:
+        - generic [ref=e96]:
+          - paragraph [ref=e97]: COBAM
+          - paragraph [ref=e98]: e-commerce
+          - paragraph [ref=e99]: Une boutique reliée au catalogue COBAM GROUP pour sélectionner matériaux, sanitaires, revêtements, peintures, finitions et produits techniques.
+        - generic [ref=e100]:
+          - heading "Catalogue" [level=2] [ref=e101]
+          - generic [ref=e102]:
+            - link "Isolation et étanchéité" [ref=e103] [cursor=pointer]:
+              - /url: /catalogue?categorie=isolation-et-etancheite
+            - link "Salle de bain et cuisine" [ref=e104] [cursor=pointer]:
+              - /url: /catalogue?categorie=salle-de-bain-et-cuisine
+            - link "Peintures et décoration" [ref=e105] [cursor=pointer]:
+              - /url: /catalogue?categorie=peintures-et-decoration
+            - link "Piscine" [ref=e106] [cursor=pointer]:
+              - /url: /catalogue?categorie=piscine
+            - link "Portes et menuiserie" [ref=e107] [cursor=pointer]:
+              - /url: /catalogue?categorie=portes-et-menuiserie
+        - generic [ref=e108]:
+          - heading "Service" [level=2] [ref=e109]
+          - generic [ref=e110]:
+            - link "Panier" [ref=e111] [cursor=pointer]:
+              - /url: /panier
+            - link "Tous les produits" [ref=e112] [cursor=pointer]:
+              - /url: /catalogue
+            - link "Compte client" [ref=e113] [cursor=pointer]:
+              - /url: /compte
+            - link "Demander un devis" [ref=e114] [cursor=pointer]:
+              - /url: mailto:contact@cobamgroup.com
+        - generic [ref=e115]:
+          - heading "Contact" [level=2] [ref=e116]
+          - generic [ref=e117]:
+            - paragraph [ref=e118]:
+              - img [ref=e119]
+              - text: Djerba, Tunisie
+            - link "contact@cobamgroup.com" [ref=e122] [cursor=pointer]:
+              - /url: mailto:contact@cobamgroup.com
+              - img [ref=e123]
+              - text: contact@cobamgroup.com
+      - paragraph [ref=e127]: © 2026 COBAM GROUP. Tous droits réservés.
+  - button "Open Next.js Dev Tools" [ref=e133] [cursor=pointer]:
+    - img [ref=e134]
+  - alert [ref=e137]
