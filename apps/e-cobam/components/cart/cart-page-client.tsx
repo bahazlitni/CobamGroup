@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getMailtoHref } from "@cobam/shared";
-import { ArrowRight, CreditCard, Loader2, Trash2 } from "lucide-react";
+import { ArrowRight, CreditCard, Loader2, Trash2, X } from "lucide-react";
 import {
   CART_UPDATED_EVENT,
   EMPTY_CART,
@@ -12,6 +12,7 @@ import {
   clearStoredCouponCode,
   readCart,
   readStoredCouponCode,
+  restoreCartState,
   storeCouponCode,
   updateCartLine,
   validatePromotionCode,
@@ -20,7 +21,9 @@ import {
 } from "@/lib/cart-store";
 import { formatPriceTnd } from "@/lib/format";
 import type { PromotionQuote } from "@/lib/promotion-types";
+import { QuantityStepper } from "@/components/commerce/quantity-stepper";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { pushUndoToast } from "@/lib/undo-actions";
 
 function cartTotalLabel(value: string, fallback = "Sur devis") {
   const amount = Number(value);
@@ -37,6 +40,30 @@ function stockToneClass(tone: CartLine["stock"]["tone"]) {
   }
 
   return "bg-rose-50 text-rose-700";
+}
+
+function CartLineQuantity({
+  line,
+  disabled,
+  onChange,
+}: {
+  line: CartLine;
+  disabled: boolean;
+  onChange: (productId: number, quantity: number) => void;
+}) {
+  function handleChange(nextValue: number) {
+    onChange(line.id, nextValue);
+  }
+
+  return (
+    <QuantityStepper
+      value={line.quantity}
+      onChange={handleChange}
+      min={0}
+      disabled={disabled}
+      className="h-12 w-36 shadow-none [&_button]:size-12"
+    />
+  );
 }
 
 export function CartPageClient() {
@@ -145,9 +172,21 @@ export function CartPageClient() {
   async function handleQuantity(productId: number, quantity: number) {
     setPendingProductId(productId);
     setError(null);
+    const previousLine = cart.lines.find((line) => line.id === productId) ?? null;
 
     try {
-      setCart(await updateCartLine(productId, quantity));
+      const nextCart = await updateCartLine(productId, quantity);
+      setCart(nextCart);
+
+      if (quantity <= 0 && previousLine) {
+        pushUndoToast({
+          title: "Produit retire du panier",
+          description: previousLine.name,
+          onUndo: async () => {
+            setCart(await updateCartLine(previousLine.id, previousLine.quantity));
+          },
+        });
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Impossible de modifier la quantite.");
     } finally {
@@ -158,9 +197,19 @@ export function CartPageClient() {
   async function handleClearCart() {
     setClearing(true);
     setError(null);
+    const previousCart = cart;
 
     try {
-      setCart(await clearCart());
+      const nextCart = await clearCart();
+      setCart(nextCart);
+
+      pushUndoToast({
+        title: "Panier vide",
+        description: `${previousCart.summary.itemCount} article(s) retires`,
+        onUndo: async () => {
+          setCart(await restoreCartState(previousCart));
+        },
+      });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Impossible de vider le panier.");
     } finally {
@@ -267,8 +316,18 @@ export function CartPageClient() {
           {cart.lines.map((line) => (
             <article
               key={line.id}
-              className="border-ec-line grid gap-4 rounded-[1.5rem] border bg-white p-4 sm:grid-cols-[120px_1fr_auto]"
+              className="border-ec-line relative grid gap-4 rounded-[1.5rem] border bg-white p-4 pr-14 sm:grid-cols-[120px_1fr_auto]"
             >
+              <button
+                type="button"
+                aria-label="Retirer du panier"
+                title="Retirer du panier"
+                className="absolute right-4 top-4 grid size-8 place-items-center rounded-full border border-ec-line bg-white text-ec-muted transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:pointer-events-none disabled:opacity-50"
+                disabled={pendingProductId === line.id}
+                onClick={() => void handleQuantity(line.id, 0)}
+              >
+                <X className="size-4" aria-hidden="true" />
+              </button>
               <div className="relative aspect-square overflow-hidden rounded-[1.2rem] bg-white">
                 {line.imageUrl ? (
                   <Image
@@ -300,33 +359,15 @@ export function CartPageClient() {
                 ) : null}
               </div>
               <div className="flex items-center gap-3 sm:flex-col sm:items-end sm:justify-between">
-                <input
-                  type="number"
-                  min={1}
-                  value={line.quantity}
-                  aria-label={`Quantite ${line.name}`}
+                <CartLineQuantity
+                  line={line}
                   disabled={pendingProductId === line.id}
-                  onChange={(event) => {
-                    if (event.target.value === "") {
-                      return;
-                    }
-
-                    void handleQuantity(line.id, Number(event.target.value));
-                  }}
-                  className="border-ec-line focus:border-ec-blue h-11 w-24 rounded-full border px-4 text-center font-semibold outline-none disabled:opacity-60"
+                  onChange={(productId, nextQuantity) => void handleQuantity(productId, nextQuantity)}
                 />
                 <div className="text-right">
                   <p className="text-ec-ink text-sm font-black">
                     {formatPriceTnd(line.lineTotalTtc) ?? "Sur devis"}
                   </p>
-                  <button
-                    type="button"
-                    className="mt-2 rounded-full px-3 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 disabled:opacity-60"
-                    disabled={pendingProductId === line.id}
-                    onClick={() => void handleQuantity(line.id, 0)}
-                  >
-                    Retirer
-                  </button>
                 </div>
               </div>
             </article>

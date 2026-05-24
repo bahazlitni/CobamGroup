@@ -1,27 +1,44 @@
 "use client";
 
 import { useMemo, useSyncExternalStore } from "react";
-import { Heart } from "lucide-react";
 import {
+  AddToFavoritesButton,
+  emitFavoritesActionAnimation,
+  type ProductActionSize,
+} from "@/components/commerce/product-action-buttons";
+import {
+  addFavorite,
   favoriteKey,
   EMPTY_FAVORITE_ITEMS,
   getFavoritesSnapshot,
+  removeFavorite,
   subscribeFavorites,
-  toggleFavorite,
   type FavoriteItemSnapshot,
 } from "@/lib/favorites-store";
 import { cn } from "@/lib/cn";
+import { pushUndoToast } from "@/lib/undo-actions";
 
 export function FavoriteToggleButton({
   item,
-  label = "Favori",
   showLabel = false,
+  size = "md",
+  iconOnly,
+  disabled = false,
   className,
+  buttonClassName,
+  onAddedToFavoritesAnimation,
+  onRemovedFromFavoritesAnimation,
 }: {
   item: FavoriteItemSnapshot;
   label?: string;
   showLabel?: boolean;
+  size?: ProductActionSize;
+  iconOnly?: boolean;
+  disabled?: boolean;
   className?: string;
+  buttonClassName?: string;
+  onAddedToFavoritesAnimation?: () => void;
+  onRemovedFromFavoritesAnimation?: () => void;
 }) {
   const favorites = useSyncExternalStore(
     subscribeFavorites,
@@ -34,24 +51,44 @@ export function FavoriteToggleButton({
   }, [favorites, item]);
 
   function handleToggle() {
-    toggleFavorite(item);
+    if (active) {
+      removeFavorite(item);
+      pushUndoToast({
+        title: "Retiré des favoris",
+        description: item.name,
+        onUndo: () => {
+          addFavorite(item);
+        },
+      });
+      return;
+    }
+
+    addFavorite(item);
+    pushUndoToast({
+      title: "Ajouté aux favoris",
+      description: item.name,
+      onUndo: () => {
+        removeFavorite(item);
+      },
+    });
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleToggle}
-      aria-pressed={active}
-      aria-label={active ? "Retirer des favoris" : "Ajouter aux favoris"}
-      className={cn(
-        "border-ec-line text-ec-muted hover:border-ec-blue/40 hover:text-ec-blue focus-visible:outline-ec-blue inline-flex h-10 items-center justify-center gap-2 rounded-full border bg-white px-3 text-sm font-black shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
-        active && "border-ec-blue/45 bg-ec-blue/10 text-ec-blue",
-        !showLabel && "w-10 px-0",
-        className,
-      )}
-    >
-      <Heart className={cn("size-4", active && "fill-current")} aria-hidden="true" />
-      {showLabel ? <span>{active ? "Dans mes favoris" : label}</span> : null}
-    </button>
+    <AddToFavoritesButton
+      isFavorite={active}
+      onToggle={handleToggle}
+      size={size}
+      iconOnly={iconOnly ?? !showLabel}
+      disabled={disabled}
+      className={cn(!showLabel && "shadow-sm", buttonClassName, className)}
+      onAddedToFavoritesAnimation={() => {
+        emitFavoritesActionAnimation("added");
+        onAddedToFavoritesAnimation?.();
+      }}
+      onRemovedFromFavoritesAnimation={() => {
+        emitFavoritesActionAnimation("removed");
+        onRemovedFromFavoritesAnimation?.();
+      }}
+    />
   );
 }

@@ -19,6 +19,9 @@
     "./search/product-search": "./src/search/product-search.ts",
     "./ui/AnimatedUIButton": "./src/ui/AnimatedUIButton.tsx",
     "./ui/AnimatedIcon": "./src/ui/AnimatedIcon.tsx",
+    "./ui/CopyButton": "./src/ui/CopyButton.tsx",
+    "./ui/ImagePreviewCarousel": "./src/ui/ImagePreviewCarousel.tsx",
+    "./ui/PublicRichText": "./src/ui/PublicRichText.tsx",
     "./ui/RailCarousel": "./src/ui/RailCarousel.tsx",
     "./ui/animated-ui": "./src/ui/animated-ui.ts"
   }

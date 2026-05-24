@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getMailtoHref } from "@cobam/shared";
 import { ArrowRight, PackageOpen } from "lucide-react";
 import type { LandingProductsState } from "@/lib/home-data";
-import { LandingProductCard } from "@/components/home/landing-product-card";
+import { ProductCard } from "@/components/commerce/product-card";
 
 function ProductSectionFallback({ title, text }: { title: string; text: string }) {
   return (
@@ -45,7 +45,7 @@ export function FeaturedProductsSection({ products }: { products: LandingProduct
         {products.status === "ready" ? (
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {products.items.map((product, index) => (
-              <LandingProductCard key={product.id} product={product} priority={index < 4} />
+              <ProductCard key={product.id} product={product} priority={index < 4} />
             ))}
           </div>
         ) : products.status === "empty" ? (

@@ -10,6 +10,7 @@ export type FavoriteItemSnapshot = {
   imageUrl: string | null;
   brandName: string | null;
   categoryName: string | null;
+  addedAt?: string | null;
 };
 
 export type FavoritesState = {
@@ -116,7 +117,7 @@ export function addFavorite(item: FavoriteItemSnapshot) {
     return { items: current };
   }
 
-  return writeFavorites([item, ...current]);
+  return writeFavorites([{ ...item, addedAt: item.addedAt ?? new Date().toISOString() }, ...current]);
 }
 
 export function removeFavorite(item: Pick<FavoriteItemSnapshot, "entityType" | "id">) {
@@ -130,4 +131,8 @@ export function toggleFavorite(item: FavoriteItemSnapshot) {
 
 export function clearFavorites() {
   return writeFavorites([]);
+}
+
+export function restoreFavorites(items: FavoriteItemSnapshot[]) {
+  return writeFavorites(items);
 }

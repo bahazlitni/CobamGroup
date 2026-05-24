@@ -1,12 +1,17 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Bell, CheckCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+  emitNotificationsUpdated,
+  NOTIFICATIONS_UPDATED_EVENT,
+} from "@/lib/notifications-events";
+import { pushUndoToast } from "@/lib/undo-actions";
 
 type NotificationItem = {
   id: string;
@@ -20,6 +25,11 @@ type NotificationItem = {
 type NotificationsData = {
   unreadCount: number;
   items: NotificationItem[];
+};
+
+type NotificationsMutationResponse = {
+  ok: boolean;
+  changedIds?: string[];
 };
 
 function formatDate(value: string) {
@@ -50,19 +60,48 @@ export function NotificationsPanel({ initialData }: { initialData: Notifications
       setIsLoading(true);
 
       try {
-        await fetch("/api/notifications", {
+        const response = await fetch("/api/notifications", {
           method: "PATCH",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(all ? { all: true } : { ids }),
         });
+        const mutation = response.ok
+          ? ((await response.json().catch(() => null)) as NotificationsMutationResponse | null)
+          : null;
+
         await reload();
+        emitNotificationsUpdated();
+
+        if (all && mutation?.changedIds?.length) {
+          const changedIds = mutation.changedIds;
+          pushUndoToast({
+            title: "Notifications marquees comme lues",
+            description: `${changedIds.length} notification(s)`,
+            onUndo: async () => {
+              await fetch("/api/notifications", {
+                method: "PATCH",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ unreadIds: changedIds }),
+              });
+              await reload();
+              emitNotificationsUpdated();
+            },
+          });
+        }
       } finally {
         setIsLoading(false);
       }
     },
     [reload],
   );
+
+  useEffect(() => {
+    window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, reload);
+
+    return () => window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, reload);
+  }, [reload]);
 
   return (
     <Card>

@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ChevronDown, Menu, Search, UserRound } from "lucide-react";
-import { CartBadge } from "@/components/cart/cart-badge";
-import { FavoritesBadge } from "@/components/favorites/favorites-badge";
+import { CartDrawer } from "@/components/cart/cart-drawer";
+import { FavoritesMenu } from "@/components/favorites/favorites-menu";
 import { CustomerNotificationsMenu } from "@/components/site/customer-notifications-menu";
 import type { LandingCategory } from "@/lib/home-data";
 import { cn } from "@/lib/cn";
@@ -16,6 +17,8 @@ const primaryLinks = [
   { href: "/#new-arrivals", label: "Nouveautés" },
   { href: "/suivi-commande", label: "Suivi commande" },
 ];
+
+type HeaderPanel = "favorites" | "notifications" | "cart" | null;
 
 function Logo() {
   return (
@@ -125,9 +128,40 @@ function CategoryDropdown({
   );
 }
 
-export function SiteHeader({ categories }: { categories: LandingCategory[] }) {
+export function SiteHeader({
+  categories,
+  isSignedIn = false,
+}: {
+  categories: LandingCategory[];
+  isSignedIn?: boolean;
+}) {
   const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [openPanel, setOpenPanel] = useState<HeaderPanel>(null);
+  const pathname = usePathname();
   const navCategories = categories.filter((category) => category.subcategories.length > 0);
+  const favoritesActive = pathname?.startsWith("/favoris") ?? false;
+  const cartActive = pathname?.startsWith("/panier") ?? false;
+  const notificationsActive = pathname?.startsWith("/compte/notifications") ?? false;
+
+  function handlePanelChange(panel: Exclude<HeaderPanel, null>, nextOpen: boolean) {
+    setOpenPanel(nextOpen ? panel : null);
+
+    if (nextOpen) {
+      setCategoriesOpen(false);
+    }
+  }
+
+  function toggleCategories() {
+    setCategoriesOpen((current) => {
+      const nextOpen = !current;
+
+      if (nextOpen) {
+        setOpenPanel(null);
+      }
+
+      return nextOpen;
+    });
+  }
 
   return (
     <header className="border-ec-line/80 sticky top-0 z-50 border-b bg-white/95 shadow-[0_10px_34px_rgba(20,32,46,0.055)] backdrop-blur-xl">
@@ -152,12 +186,12 @@ export function SiteHeader({ categories }: { categories: LandingCategory[] }) {
 
           <div className="ml-auto flex items-center gap-2">
             <Link
-              href="/connexion"
-              aria-label="Se connecter"
+              href={isSignedIn ? "/compte" : "/connexion"}
+              aria-label={isSignedIn ? "Mon compte" : "Se connecter"}
               className="bg-ec-ink hover:bg-ec-blue inline-flex h-10 items-center justify-center gap-2 rounded-full px-3 text-sm font-black [color:#fff] text-white shadow-[0_14px_30px_rgba(20,32,46,0.16)] transition sm:px-5"
             >
               <UserRound className="size-4" aria-hidden="true" />
-              <span className="hidden sm:inline">Se connecter</span>
+              <span className="hidden sm:inline">{isSignedIn ? "Mon compte" : "Se connecter"}</span>
             </Link>
           </div>
         </div>
@@ -172,7 +206,7 @@ export function SiteHeader({ categories }: { categories: LandingCategory[] }) {
               aria-label="Ouvrir les rayons"
               aria-expanded={categoriesOpen}
               aria-haspopup="menu"
-              onClick={() => setCategoriesOpen((current) => !current)}
+              onClick={toggleCategories}
             >
               <Menu className="size-5" aria-hidden="true" />
               <span className="hidden sm:inline">Catégories</span>
@@ -192,26 +226,28 @@ export function SiteHeader({ categories }: { categories: LandingCategory[] }) {
             />
           </div>
 
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 lg:max-w-[42rem] xl:max-w-[48rem]">
             <SearchForm compact />
           </div>
 
-          <div className="hidden items-center gap-2 sm:flex">
-            <Link href="/favoris" aria-label="Mes favoris">
-              <FavoritesBadge />
-            </Link>
-            <CustomerNotificationsMenu compact />
-            <Link href="/panier" aria-label="Panier">
-              <CartBadge />
-            </Link>
+          <div className="ml-auto flex items-center gap-2">
+            <FavoritesMenu
+              active={favoritesActive}
+              open={openPanel === "favorites"}
+              onOpenChange={(nextOpen) => handlePanelChange("favorites", nextOpen)}
+            />
+            <CustomerNotificationsMenu
+              compact
+              active={notificationsActive}
+              open={openPanel === "notifications"}
+              onOpenChange={(nextOpen) => handlePanelChange("notifications", nextOpen)}
+            />
+            <CartDrawer
+              active={cartActive}
+              open={openPanel === "cart"}
+              onOpenChange={(nextOpen) => handlePanelChange("cart", nextOpen)}
+            />
           </div>
-
-          <Link href="/favoris" className="sm:hidden" aria-label="Mes favoris">
-            <FavoritesBadge />
-          </Link>
-          <Link href="/panier" className="sm:hidden" aria-label="Panier">
-            <CartBadge />
-          </Link>
         </div>
       </div>
     </header>

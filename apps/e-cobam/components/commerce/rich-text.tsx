@@ -1,175 +1,42 @@
-import type { ReactNode } from "react";
+import {
+  PublicRichText,
+  getPublicRichTextPlainText,
+  type PublicRichTextTheme,
+} from "@cobam/shared/ui/PublicRichText";
 
-type RichTextMark = {
-  type: string;
-  attrs?: Record<string, unknown>;
-};
-
-type RichTextNode = {
-  type?: string;
-  text?: string;
-  attrs?: Record<string, unknown>;
-  marks?: RichTextMark[];
-  content?: RichTextNode[];
-};
-
-function isRichTextNode(value: unknown): value is RichTextNode {
-  return Boolean(value && typeof value === "object" && !Array.isArray(value));
-}
-
-function renderMarks(node: RichTextNode, children: ReactNode, key: string) {
-  return (node.marks ?? []).reduce<ReactNode>((content, mark, markIndex) => {
-    const markKey = `${key}-mark-${markIndex}`;
-
-    if (mark.type === "bold") {
-      return (
-        <strong key={markKey} className="font-semibold text-ec-ink">
-          {content}
-        </strong>
-      );
-    }
-
-    if (mark.type === "italic") {
-      return <em key={markKey}>{content}</em>;
-    }
-
-    if (mark.type === "underline") {
-      return (
-        <span key={markKey} className="underline decoration-ec-blue/40 underline-offset-4">
-          {content}
-        </span>
-      );
-    }
-
-    if (mark.type === "link") {
-      const href = typeof mark.attrs?.href === "string" ? mark.attrs.href : "#";
-      return (
-        <a
-          key={markKey}
-          href={href}
-          className="font-medium text-ec-blue underline-offset-4 hover:underline"
-          target={href.startsWith("http") ? "_blank" : undefined}
-          rel={href.startsWith("http") ? "noreferrer" : undefined}
-        >
-          {content}
-        </a>
-      );
-    }
-
-    return content;
-  }, children);
-}
-
-function renderChildren(nodes: RichTextNode[] | undefined, prefix: string) {
-  return (nodes ?? []).map((node, index) => renderNode(node, `${prefix}-${index}`));
-}
-
-function renderNode(node: RichTextNode, key: string): ReactNode {
-  if (node.type === "text") {
-    return renderMarks(node, node.text ?? "", key);
-  }
-
-  if (node.type === "paragraph") {
-    return (
-      <p key={key} className="leading-8 text-ec-muted">
-        {renderChildren(node.content, key)}
-      </p>
-    );
-  }
-
-  if (node.type === "heading") {
-    const level = Number(node.attrs?.level ?? 2);
-    const className = "font-semibold tracking-tight text-ec-ink";
-    const children = renderChildren(node.content, key);
-
-    if (level <= 2) {
-      return (
-        <h2 key={key} className={`${className} mt-8 text-2xl`}>
-          {children}
-        </h2>
-      );
-    }
-
-    return (
-      <h3 key={key} className={`${className} mt-7 text-xl`}>
-        {children}
-      </h3>
-    );
-  }
-
-  if (node.type === "bulletList") {
-    return (
-      <ul key={key} className="ml-5 list-disc space-y-2 text-ec-muted">
-        {renderChildren(node.content, key)}
-      </ul>
-    );
-  }
-
-  if (node.type === "orderedList") {
-    return (
-      <ol key={key} className="ml-5 list-decimal space-y-2 text-ec-muted">
-        {renderChildren(node.content, key)}
-      </ol>
-    );
-  }
-
-  if (node.type === "listItem") {
-    return (
-      <li key={key} className="pl-1 leading-8">
-        {renderChildren(node.content, key)}
-      </li>
-    );
-  }
-
-  if (node.type === "hardBreak") {
-    return <br key={key} />;
-  }
-
-  return <span key={key}>{renderChildren(node.content, key)}</span>;
-}
+export const commerceRichTextTheme = {
+  content: "space-y-5",
+  empty: "text-ec-muted",
+  paragraph: "leading-8 text-ec-muted",
+  h1: "mt-8 text-3xl font-black tracking-tight text-ec-ink",
+  h2: "mt-8 text-2xl font-black tracking-tight text-ec-ink",
+  h3: "mt-7 text-xl font-black tracking-tight text-ec-ink",
+  h4: "mt-7 text-lg font-black tracking-tight text-ec-ink",
+  bulletList: "ml-5 list-disc space-y-2 text-ec-muted marker:text-ec-blue",
+  orderedList: "ml-5 list-decimal space-y-2 text-ec-muted marker:text-ec-blue",
+  listItem: "pl-1 leading-8",
+  blockquote: "border-l-4 border-ec-blue/30 pl-5 text-[1.02rem] italic leading-8 text-ec-muted",
+  horizontalRule: "border-ec-line",
+  figure: "overflow-hidden rounded-[1.35rem] border border-ec-line bg-white",
+  image: "h-auto w-full object-cover",
+  figcaption: "border-t border-ec-line px-4 py-3 text-sm text-ec-muted",
+  tableWrapper: "overflow-x-auto rounded-[1.35rem] border border-ec-line bg-white",
+  table: "min-w-full border-collapse text-left text-sm text-ec-muted",
+  tableRow: "border-b border-ec-line last:border-b-0",
+  tableHeader: "bg-slate-50 px-4 py-3 font-black text-ec-ink",
+  tableCell: "px-4 py-3",
+  codeBlock: "overflow-x-auto rounded-[1.1rem] bg-ec-ink px-5 py-4 text-sm leading-7 text-white",
+  inlineCode: "rounded-md bg-slate-100 px-1.5 py-0.5 text-[0.92em] text-ec-ink",
+  link: "font-medium text-ec-blue underline-offset-4 hover:underline",
+  strong: "font-semibold text-ec-ink",
+  underline: "decoration-ec-blue/40 underline-offset-4",
+} satisfies Partial<PublicRichTextTheme>;
 
 export function getRichTextPlainText(value: unknown): string | null {
-  if (typeof value === "string") {
-    try {
-      return getRichTextPlainText(JSON.parse(value));
-    } catch {
-      return value.trim() || null;
-    }
-  }
-
-  if (!isRichTextNode(value)) {
-    return null;
-  }
-
-  const text = [
-    value.text,
-    ...(value.content ?? []).map((node) => getRichTextPlainText(node)),
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .replace(/\s+/g, " ")
-    .trim();
-
+  const text = getPublicRichTextPlainText(value);
   return text || null;
 }
 
 export function RichText({ value }: { value: unknown }) {
-  const document = typeof value === "string" ? safelyParseRichText(value) : value;
-
-  if (!isRichTextNode(document)) {
-    return null;
-  }
-
-  return <div className="space-y-5">{renderChildren(document.content, "rich")}</div>;
-}
-
-function safelyParseRichText(value: string) {
-  try {
-    return JSON.parse(value) as unknown;
-  } catch {
-    return {
-      type: "doc",
-      content: [{ type: "paragraph", content: [{ type: "text", text: value }] }],
-    };
-  }
+  return <PublicRichText content={value} theme={commerceRichTextTheme} />;
 }

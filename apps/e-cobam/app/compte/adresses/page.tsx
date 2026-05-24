@@ -47,7 +47,7 @@ export default async function CustomerAddressesPage() {
       <AccountPageHeader
         eyebrow="Adresses"
         title="Chantiers, livraison, facturation."
-        description="Enregistrez vos adresses utiles et choisissez les destinations par defaut pour vos commandes."
+        description="Enregistrez vos adresses utiles et choisissez les destinations par défaut pour vos commandes."
       />
 
       <AccountPageShell active="/compte/adresses">

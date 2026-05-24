@@ -46,7 +46,7 @@ export default async function CustomerOrdersPage() {
       <AccountPageHeader
         eyebrow="Commandes"
         title="Historique et statuts."
-        description="Consultez les commandes rattachees a votre compte et suivez leur avancement."
+        description="Consultez vos commandes et suivez leur avancement."
       />
 
       <AccountPageShell active="/compte/commandes">
@@ -59,7 +59,8 @@ export default async function CustomerOrdersPage() {
                     <TableRow className="hover:bg-transparent">
                       <TableHead>Commande</TableHead>
                       <TableHead>Statut</TableHead>
-                      <TableHead>Paiement</TableHead>
+                      <TableHead>Paiement</TableHead>SKU copie.
+
                       <TableHead>Livraison</TableHead>
                       <TableHead className="text-right">Total</TableHead>
                     </TableRow>

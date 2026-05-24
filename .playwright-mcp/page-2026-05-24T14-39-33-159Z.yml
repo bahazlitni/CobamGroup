@@ -1,0 +1,389 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e5]
+      - generic [ref=e7]: "Service Client :"
+      - link "+216 75731731" [ref=e8] [cursor=pointer]:
+        - /url: tel:+21675731731
+    - generic [ref=e9]:
+      - link "Annuaire" [ref=e10] [cursor=pointer]:
+        - /url: /annuaire
+        - img [ref=e11]
+        - text: Annuaire
+      - link "Espace Team" [ref=e15] [cursor=pointer]:
+        - /url: /login/staff
+        - img [ref=e16]
+        - text: Espace Team
+  - banner [ref=e20]:
+    - generic [ref=e21]:
+      - link "COBAM GROUP" [ref=e22] [cursor=pointer]:
+        - /url: /
+        - img "COBAM GROUP" [ref=e23]
+      - navigation [ref=e24]:
+        - link "À PROPOS" [ref=e25] [cursor=pointer]:
+          - /url: /a-propos
+        - button "PRODUITS" [ref=e27] [cursor=pointer]:
+          - generic: PRODUITS
+          - img
+        - button "MARQUES" [ref=e29] [cursor=pointer]:
+          - text: MARQUES
+          - img [ref=e30]
+        - link "ACTUALITÉS" [ref=e32] [cursor=pointer]:
+          - /url: /actualites
+        - link "CONTACT" [ref=e33] [cursor=pointer]:
+          - /url: /contact
+      - button "Rechercher" [ref=e36] [cursor=pointer]:
+        - img [ref=e37]
+  - main [ref=e40]:
+    - generic [ref=e44]:
+      - paragraph [ref=e45]: Catalogue
+      - heading "Tous les produits" [level=1] [ref=e46]
+      - paragraph [ref=e47]: Explorez tous nos produits.
+    - generic [ref=e50]:
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - paragraph [ref=e54]: 28 produits trouvés
+          - generic [ref=e55]:
+            - generic [ref=e56]:
+              - img
+              - searchbox "Rechercher par nom, SKU, marque..." [ref=e57]: carrojoint sika
+              - button "Effacer la recherche" [ref=e58] [cursor=pointer]:
+                - img [ref=e59]
+            - button "Avancée" [ref=e62] [cursor=pointer]:
+              - generic [ref=e63]: Avancée
+              - img [ref=e65]
+        - generic [ref=e67]:
+          - generic [ref=e68]:
+            - generic [ref=e69]: Marque
+            - combobox [ref=e70] [cursor=pointer]:
+              - img
+            - combobox [ref=e71]
+            - 'textbox "Ex : Sika" [ref=e73]'
+          - combobox [ref=e74] [cursor=pointer]:
+            - img
+          - combobox [ref=e75]
+          - generic [ref=e76]:
+            - generic [ref=e77]: Nom
+            - combobox [ref=e78] [cursor=pointer]:
+              - img
+            - combobox [ref=e79]
+            - 'textbox "Ex : Ciment Colle" [ref=e81]'
+          - combobox [ref=e82] [cursor=pointer]:
+            - img
+          - combobox [ref=e83]
+          - generic [ref=e84]:
+            - generic [ref=e85]: SKU
+            - combobox [ref=e86] [cursor=pointer]:
+              - img
+            - combobox [ref=e87]
+            - textbox "..." [ref=e89]
+          - button "Réinitialiser" [ref=e91] [cursor=pointer]
+      - generic [ref=e92]:
+        - generic [ref=e93]:
+          - generic [ref=e94]:
+            - paragraph [ref=e95]: Recherche
+            - heading "Les plus pertinents" [level=2] [ref=e96]
+          - generic [ref=e98]:
+            - link "Voir le produit CARROJOINT ANTRACITE 04 SIKA 5KG" [ref=e99] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-antracite-04-5kg-00228121
+              - article [ref=e100]:
+                - generic [ref=e101]:
+                  - img "Sika - Carrojoint Antracite 04 5kg" [ref=e102]
+                  - generic [ref=e104]: Sika
+                - heading "CARROJOINT ANTRACITE 04 SIKA 5KG" [level=4] [ref=e106]
+            - link "Voir le produit CARROJOINT BEACH WOOD 39 SIKA 5KG" [ref=e108] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-beach-wood-39-5kg-00227971
+              - article [ref=e109]:
+                - generic [ref=e110]:
+                  - img "Sika - Carrojoint Beach Wood 39 5kg" [ref=e111]
+                  - generic [ref=e113]: Sika
+                - heading "CARROJOINT BEACH WOOD 39 SIKA 5KG" [level=4] [ref=e115]
+            - link "Voir le produit CARROJOINT BEIGE 08 SIKA 5KG" [ref=e117] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-beige-08-5kg-00228015
+              - article [ref=e118]:
+                - generic [ref=e119]:
+                  - img "Sika - Carrojoint Beige 08 5kg" [ref=e120]
+                  - generic [ref=e122]: Sika
+                - heading "CARROJOINT BEIGE 08 SIKA 5KG" [level=4] [ref=e124]
+            - link "Voir le produit CARROJOINT BROWN 10 SIKA 5KG" [ref=e126] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-brown-10-5kg-00227933
+              - article [ref=e127]:
+                - generic [ref=e128]:
+                  - img "Sika - Carrojoint Brown 10 5kg" [ref=e129]
+                  - generic [ref=e131]: Sika
+                - heading "CARROJOINT BROWN 10 SIKA 5KG" [level=4] [ref=e133]
+            - link "Voir le produit CARROJOINT CAK WOOD 41 SIKA 5KG" [ref=e135] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-cak-wood-41-5kg-00227995
+              - article [ref=e136]:
+                - generic [ref=e137]:
+                  - img "Sika - Carrojoint Cak Wood 41 5kg" [ref=e138]
+                  - generic [ref=e140]: Sika
+                - heading "CARROJOINT CAK WOOD 41 SIKA 5KG" [level=4] [ref=e142]
+            - link "Voir le produit CARROJOINT CARAMEL 16 SIKA 5KG" [ref=e144] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-caramel-16-5kg-00227957
+              - article [ref=e145]:
+                - generic [ref=e146]:
+                  - img "Sika - Carrojoint Caramel 16 5kg" [ref=e147]
+                  - generic [ref=e149]: Sika
+                - heading "CARROJOINT CARAMEL 16 SIKA 5KG" [level=4] [ref=e151]
+            - link "Voir le produit CARROJOINT CEDAR 38 SIKA 5KG" [ref=e153] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-cedar-38-5kg-00228152
+              - article [ref=e154]:
+                - generic [ref=e155]:
+                  - img "Sika - Carrojoint Cedar 38 5kg" [ref=e156]
+                  - generic [ref=e158]: Sika
+                - heading "CARROJOINT CEDAR 38 SIKA 5KG" [level=4] [ref=e160]
+            - link "Voir le produit CARROJOINT CENERA ASH 03 SIKA 5KG" [ref=e162] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-cenera-ash-03-5kg-00228046
+              - article [ref=e163]:
+                - generic [ref=e164]:
+                  - img "Sika - Carrojoint Cenera Ash 03 5kg" [ref=e165]
+                  - generic [ref=e167]: Sika
+                - heading "CARROJOINT CENERA ASH 03 SIKA 5KG" [level=4] [ref=e169]
+            - link "Voir le produit CARROJOINT GRAPHITE 33 SIKA 5KG" [ref=e171] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-graphite-33-5kg-00228145
+              - article [ref=e172]:
+                - generic [ref=e173]:
+                  - img "Sika - Carrojoint Graphite 33 5kg" [ref=e174]
+                  - generic [ref=e176]: Sika
+                - heading "CARROJOINT GRAPHITE 33 SIKA 5KG" [level=4] [ref=e178]
+            - link "Voir le produit CARROJOINT GREY 32 SIKA 5KG" [ref=e180] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-grey-32-5kg-00228107
+              - article [ref=e181]:
+                - generic [ref=e182]:
+                  - img "Sika - Carrojoint Grey 32 5kg" [ref=e183]
+                  - generic [ref=e185]: Sika
+                - heading "CARROJOINT GREY 32 SIKA 5KG" [level=4] [ref=e187]
+            - link "Voir le produit CARROJOINT ICE 02 SIKA 5KG" [ref=e189] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-ice-02-5kg-00228091
+              - article [ref=e190]:
+                - generic [ref=e191]:
+                  - img "Sika - Carrojoint Ice 02 5kg" [ref=e192]
+                  - generic [ref=e194]: Sika
+                - heading "CARROJOINT ICE 02 SIKA 5KG" [level=4] [ref=e196]
+            - link "Voir le produit CARROJOINT JASMIN 06 SIKA 5KG" [ref=e198] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-jasmin-06-5kg-00227964
+              - article [ref=e199]:
+                - generic [ref=e200]:
+                  - img "Sika - Carrojoint Jasmin 06 5kg" [ref=e201]
+                  - generic [ref=e203]: Sika
+                - heading "CARROJOINT JASMIN 06 SIKA 5KG" [level=4] [ref=e205]
+            - link "Voir le produit CARROJOINT LIGHT GREY 29 SIKA 5KG" [ref=e207] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-light-grey-29-5kg-00228060
+              - article [ref=e208]:
+                - generic [ref=e209]:
+                  - img "Sika - Carrojoint Light Grey 29 5kg" [ref=e210]
+                  - generic [ref=e212]: Sika
+                - heading "CARROJOINT LIGHT GREY 29 SIKA 5KG" [level=4] [ref=e214]
+            - link "Voir le produit CARROJOINT LIGHT SAND 37 SIKA 5KG" [ref=e216] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-light-sand-37-5kg-00228053
+              - article [ref=e217]:
+                - generic [ref=e218]:
+                  - img "Sika - Carrojoint Light Sand 37 5kg" [ref=e219]
+                  - generic [ref=e221]: Sika
+                - heading "CARROJOINT LIGHT SAND 37 SIKA 5KG" [level=4] [ref=e223]
+            - link "Voir le produit CARROJOINT MAHOGANY 42 (MARRON FC) SIKA 5KG" [ref=e225] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-mahogany-42-marron-fc-5kg-00229210
+              - article [ref=e226]:
+                - generic [ref=e227]:
+                  - img "Sika - Carrojoint Mahogany 42 (Marron Fc) 5kg" [ref=e228]
+                  - generic [ref=e230]: Sika
+                - heading "CARROJOINT MAHOGANY 42 (MARRON FC) SIKA 5KG" [level=4] [ref=e232]
+            - link "Voir le produit CARROJOINT MANHATTAN 01 SIKA 5KG" [ref=e234] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-manhattan-01-5kg-00228138
+              - article [ref=e235]:
+                - generic [ref=e236]:
+                  - img "Sika - Carrojoint Manhattan 01 5kg" [ref=e237]
+                  - generic [ref=e239]: Sika
+                - heading "CARROJOINT MANHATTAN 01 SIKA 5KG" [level=4] [ref=e241]
+            - link "Voir le produit CARROJOINT MAPLE WOOD 35 SIKA 5KG" [ref=e243] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-maple-wood-35-5kg-00228008
+              - article [ref=e244]:
+                - generic [ref=e245]:
+                  - img "Sika - Carrojoint Maple Wood 35 5kg" [ref=e246]
+                  - generic [ref=e248]: Sika
+                - heading "CARROJOINT MAPLE WOOD 35 SIKA 5KG" [level=4] [ref=e250]
+            - link "Voir le produit CARROJOINT NERO ABSOLUTO 30 SIKA 5KG" [ref=e252] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-nero-absoluto-30-5kg-00227940
+              - article [ref=e253]:
+                - generic [ref=e254]:
+                  - img "Sika - Carrojoint Nero Absoluto 30 5kg" [ref=e255]
+                  - generic [ref=e257]: Sika
+                - heading "CARROJOINT NERO ABSOLUTO 30 SIKA 5KG" [level=4] [ref=e259]
+            - link "Voir le produit CARROJOINT NOCE/WALNUT 40 SIKA 5KG" [ref=e261] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-noce-walnut-40-5kg-00228114
+              - article [ref=e262]:
+                - generic [ref=e263]:
+                  - img "Sika - Carrojoint Noce/Walnut 40 5kg" [ref=e264]
+                  - generic [ref=e266]: Sika
+                - heading "CARROJOINT NOCE/WALNUT 40 SIKA 5KG" [level=4] [ref=e268]
+            - link "Voir le produit CARROJOINT PERGAMON 24 SIKA 5KG" [ref=e270] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-pergamon-24-5kg-00228084
+              - article [ref=e271]:
+                - generic [ref=e272]:
+                  - img "Sika - Carrojoint Pergamon 24 5kg" [ref=e273]
+                  - generic [ref=e275]: Sika
+                - heading "CARROJOINT PERGAMON 24 SIKA 5KG" [level=4] [ref=e277]
+            - link "Voir le produit CARROJOINT PINE 34 SIKA 5KG" [ref=e279] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-pine-34-5kg-00227988
+              - article [ref=e280]:
+                - generic [ref=e281]:
+                  - img "Sika - Carrojoint Pine 34 5kg" [ref=e282]
+                  - generic [ref=e284]: Sika
+                - heading "CARROJOINT PINE 34 SIKA 5KG" [level=4] [ref=e286]
+            - link "Voir le produit CARROJOINT SAND SABBIA 09 SIKA 5KG" [ref=e288] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-sand-sabbia-09-5kg-00228039
+              - article [ref=e289]:
+                - generic [ref=e290]:
+                  - img "Sika - Carrojoint Sand Sabbia 09 5kg" [ref=e291]
+                  - generic [ref=e293]: Sika
+                - heading "CARROJOINT SAND SABBIA 09 SIKA 5KG" [level=4] [ref=e295]
+            - link "Voir le produit CARROJOINT SILVER 31 SIKA 5KG" [ref=e297] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-silver-31-5kg-00238533
+              - article [ref=e298]:
+                - generic [ref=e299]:
+                  - img "Sika - Carrojoint Silver 31 5kg" [ref=e300]
+                  - generic [ref=e302]: Sika
+                - heading "CARROJOINT SILVER 31 SIKA 5KG" [level=4] [ref=e304]
+            - link "Voir le produit CARROJOINT TORTORA 36 SIKA 5KG" [ref=e306] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-tortora-36-5kg-00228022
+              - article [ref=e307]:
+                - generic [ref=e308]:
+                  - img "Sika - Carrojoint Tortora 36 5kg" [ref=e309]
+                  - generic [ref=e311]: Sika
+                - heading "CARROJOINT TORTORA 36 SIKA 5KG" [level=4] [ref=e313]
+            - link "Voir le produit CARROJOINT WHITE 00 SIKA 5KG" [ref=e315] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-carrojoint-white-00-5kg-00228077
+              - article [ref=e316]:
+                - generic [ref=e317]:
+                  - img "Sika - Carrojoint White 00 5kg" [ref=e318]
+                  - generic [ref=e320]: Sika
+                - heading "CARROJOINT WHITE 00 SIKA 5KG" [level=4] [ref=e322]
+        - generic [ref=e324]:
+          - heading "Autres résultats" [level=2] [ref=e326]
+          - generic [ref=e328]:
+            - link "Voir le produit CIMENT COLLE SIKA CERAM 103 BLANC SAC 25KG" [ref=e329] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-ciment-colle-ceram-103-blanc-sac-25kg
+              - article [ref=e330]:
+                - generic [ref=e331]:
+                  - img "CIMENT COLLE SIKA CERAM 103 BLANC SAC 25KG" [ref=e332]
+                  - generic [ref=e334]: Sika
+                - heading "CIMENT COLLE SIKA CERAM 103 BLANC SAC 25KG" [level=4] [ref=e336]
+            - link "Voir le produit CIMENT COLLE SIKA CERAM 106 BLANC SAC 25KG" [ref=e338] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-ciment-colle-ceram-106-blanc-sac-25kg
+              - article [ref=e339]:
+                - generic [ref=e340]:
+                  - img "CIMENT COLLE SIKA CERAM 106 BLANC SAC 25KG" [ref=e341]
+                  - generic [ref=e343]: Sika
+                - heading "CIMENT COLLE SIKA CERAM 106 BLANC SAC 25KG" [level=4] [ref=e345]
+            - link "Voir le produit CIMENT COLLE SIKA CERAM 206 BLANC SAC 25KG" [ref=e347] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/sika-ciment-colle-ceram-206-blanc-sac-25kg
+              - article [ref=e348]:
+                - generic [ref=e349]:
+                  - img "CIMENT COLLE SIKA CERAM 206 BLANC SAC 25KG" [ref=e350]
+                  - generic [ref=e352]: Sika
+                - heading "CIMENT COLLE SIKA CERAM 206 BLANC SAC 25KG" [level=4] [ref=e354]
+  - contentinfo [ref=e357]:
+    - generic [ref=e358]:
+      - generic [ref=e359]:
+        - generic [ref=e360]:
+          - link "Cobam Group - Accueil" [ref=e361] [cursor=pointer]:
+            - /url: /
+            - img "COBAM GROUP" [ref=e362]
+          - paragraph [ref=e364]: Depuis 1994
+          - paragraph [ref=e365]: Matériaux de construction haut de gamme alliant innovation, qualité et durabilité.
+          - generic [ref=e366]:
+            - link "Facebook" [ref=e367] [cursor=pointer]:
+              - /url: https://www.facebook.com/cobamgrp
+              - img [ref=e368]
+            - link "Instagram" [ref=e370] [cursor=pointer]:
+              - /url: https://www.instagram.com/cobamgroup/
+              - img [ref=e371]
+            - link "Youtube" [ref=e373] [cursor=pointer]:
+              - /url: https://www.youtube.com/@cobamgroup
+              - img [ref=e374]
+            - link "LinkedIn" [ref=e376] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/cobam-group/
+              - img [ref=e377]
+            - link "TikTok" [ref=e379] [cursor=pointer]:
+              - /url: https://www.tiktok.com/@cobam.group
+              - img [ref=e380]
+            - link "Pinterest" [ref=e382] [cursor=pointer]:
+              - /url: https://www.pinterest.com/cobamgroup/
+              - img [ref=e383]
+        - generic [ref=e385]:
+          - heading "Catalogue" [level=4] [ref=e386]
+          - list [ref=e387]:
+            - listitem [ref=e388]:
+              - link "Revêtements de sols et murs" [ref=e389] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs
+            - listitem [ref=e390]:
+              - link "Matériaux de construction" [ref=e391] [cursor=pointer]:
+                - /url: /produits/materiaux-de-construction
+            - listitem [ref=e392]:
+              - link "Isolation et étanchéité" [ref=e393] [cursor=pointer]:
+                - /url: /produits/isolation-et-etancheite
+            - listitem [ref=e394]:
+              - link "Salle de bain et cuisine" [ref=e395] [cursor=pointer]:
+                - /url: /produits/salle-de-bain-et-cuisine
+            - listitem [ref=e396]:
+              - link "Peintures et décoration" [ref=e397] [cursor=pointer]:
+                - /url: /produits/peintures-et-decoration
+            - listitem [ref=e398]:
+              - link "Piscine" [ref=e399] [cursor=pointer]:
+                - /url: /produits/piscine
+            - listitem [ref=e400]:
+              - link "Portes et menuiserie" [ref=e401] [cursor=pointer]:
+                - /url: /produits/portes-et-menuiserie
+        - generic [ref=e402]:
+          - heading "Decouvrir" [level=4] [ref=e403]
+          - list [ref=e404]:
+            - listitem [ref=e405]:
+              - link "À propos de nous" [ref=e406] [cursor=pointer]:
+                - /url: /a-propos
+            - listitem [ref=e407]:
+              - link "Nos agences" [ref=e408] [cursor=pointer]:
+                - /url: /#nos-agences
+            - listitem [ref=e409]:
+              - link "Partenaires" [ref=e410] [cursor=pointer]:
+                - /url: /partenaires
+            - listitem [ref=e411]:
+              - link "Références" [ref=e412] [cursor=pointer]:
+                - /url: /references
+            - listitem [ref=e413]:
+              - link "Actualités" [ref=e414] [cursor=pointer]:
+                - /url: /actualites
+            - listitem [ref=e415]:
+              - link "Annuaire" [ref=e416] [cursor=pointer]:
+                - /url: /annuaire
+        - generic [ref=e417]:
+          - heading "Contact" [level=4] [ref=e418]
+          - list [ref=e419]:
+            - listitem [ref=e420]:
+              - img [ref=e421]
+              - generic [ref=e424]: Siège social, Houmt Souk, Djerba, Tunisie
+            - listitem [ref=e425]:
+              - 'link "Tel : +216 75731731" [ref=e426] [cursor=pointer]':
+                - /url: tel:+21675731731
+                - img [ref=e427]
+                - text: "Tel : +216 75731731"
+            - listitem [ref=e429]:
+              - link "contact@cobamgroup.com" [ref=e430] [cursor=pointer]:
+                - /url: mailto:contact@cobamgroup.com
+                - img [ref=e431]
+                - text: contact@cobamgroup.com
+      - generic [ref=e434]:
+        - paragraph [ref=e435]: © 2026 Cobam Group. Tous droits réservés.
+        - generic [ref=e436]:
+          - link "Politique de confidentialité" [ref=e437] [cursor=pointer]:
+            - /url: /politique-de-confidentialite
+          - link "Mentions légales" [ref=e438] [cursor=pointer]:
+            - /url: /mentions-legales
+          - link "Conditions générales" [ref=e439] [cursor=pointer]:
+            - /url: /conditions-generales
+  - button "Ouvrir WhatsApp" [ref=e441] [cursor=pointer]:
+    - img [ref=e443]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e450] [cursor=pointer]:
+    - img [ref=e451]
+  - alert [ref=e454]

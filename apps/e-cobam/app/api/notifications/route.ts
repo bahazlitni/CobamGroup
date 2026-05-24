@@ -3,6 +3,7 @@ import { getCustomerSession } from "@/lib/customer-auth";
 import {
   listCustomerNotifications,
   markCustomerNotificationsRead,
+  markCustomerNotificationsUnread,
 } from "@/lib/customer-notifications";
 
 export const runtime = "nodejs";
@@ -30,8 +31,18 @@ export async function PATCH(req: Request) {
     return unauthorized();
   }
 
-  const body = (await req.json().catch(() => ({}))) as { all?: boolean; ids?: unknown };
-  await markCustomerNotificationsRead(session, body);
+  const body = (await req.json().catch(() => ({}))) as {
+    all?: boolean;
+    ids?: unknown;
+    unreadIds?: unknown;
+  };
 
-  return NextResponse.json({ ok: true });
+  if (body.unreadIds) {
+    const changedIds = await markCustomerNotificationsUnread(session, { ids: body.unreadIds });
+    return NextResponse.json({ ok: true, changedIds });
+  }
+
+  const changedIds = await markCustomerNotificationsRead(session, body);
+
+  return NextResponse.json({ ok: true, changedIds });
 }

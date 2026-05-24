@@ -88,25 +88,75 @@ export async function markCustomerNotificationsRead(
   const now = new Date();
 
   if (input.all) {
+    const unread = await db.customerNotification.findMany({
+      where: { customerId, readAt: null },
+      select: { id: true },
+    });
+
+    if (unread.length === 0) {
+      return [];
+    }
+
     await db.customerNotification.updateMany({
       where: { customerId, readAt: null },
       data: { readAt: now },
     });
-    return;
+
+    return unread.map((item) => item.id.toString());
   }
 
   const ids = parseNotificationIds(input.ids);
 
   if (ids.length === 0) {
-    return;
+    return [];
+  }
+
+  const unread = await db.customerNotification.findMany({
+    where: {
+      customerId,
+      id: { in: ids },
+      readAt: null,
+    },
+    select: { id: true },
+  });
+
+  if (unread.length === 0) {
+    return [];
+  }
+
+  const unreadIds = unread.map((item) => item.id);
+
+  await db.customerNotification.updateMany({
+    where: {
+      customerId,
+      id: { in: unreadIds },
+      readAt: null,
+    },
+    data: { readAt: now },
+  });
+
+  return unreadIds.map((id) => id.toString());
+}
+
+export async function markCustomerNotificationsUnread(
+  session: CustomerSession,
+  input: { ids?: unknown },
+) {
+  const db = await getPrisma();
+  const customerId = BigInt(session.customerId);
+  const ids = parseNotificationIds(input.ids);
+
+  if (ids.length === 0) {
+    return [];
   }
 
   await db.customerNotification.updateMany({
     where: {
       customerId,
       id: { in: ids },
-      readAt: null,
     },
-    data: { readAt: now },
+    data: { readAt: null },
   });
+
+  return ids.map((id) => id.toString());
 }

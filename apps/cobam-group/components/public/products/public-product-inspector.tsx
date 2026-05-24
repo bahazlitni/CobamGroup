@@ -566,7 +566,7 @@ export default function PublicProductInspectorView({
                   </span>
                   <AnimatedUICopyButton
                     value={selectedVariant.sku}
-                    successText="SKU copie."
+                    successText="SKU copié."
                     errorText="Impossible de copier le SKU."
                     size="xs"
                     variant="light"

@@ -1,13 +1,12 @@
 "use client"
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton"
-import { getArticlePlainText } from "@/features/articles/document"
 import { useState } from "react"
-import PublicRichText from "../../articles/public-rich-text"
+import { PublicRichText, getPublicRichTextPlainText } from "@cobam/shared/ui/PublicRichText"
 import { cn } from "@/lib/utils"
 
 export default function RichDescription({description}: {description?: null | string}){
     const [isExpanded, setIsExpanded] = useState<boolean>(false)
-    const plainTextLength = getArticlePlainText(description).length;
+    const plainTextLength = getPublicRichTextPlainText(description).length;
     const isLong = plainTextLength > 420;
 
     if(!description) return null;

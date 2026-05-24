@@ -1,91 +1,109 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useSyncExternalStore } from "react";
-import { Heart, ShoppingBag, Trash2 } from "lucide-react";
-import { AddToCartButton } from "@/components/cart/add-to-cart-button";
+import { Heart, ShoppingBag } from "lucide-react";
+import { ProductCard, type ProductCardProduct } from "@/components/commerce/product-card";
 import {
-  clearFavorites,
   EMPTY_FAVORITE_ITEMS,
   getFavoritesSnapshot,
-  removeFavorite,
   subscribeFavorites,
   type FavoriteItemSnapshot,
 } from "@/lib/favorites-store";
-import { formatPriceTnd } from "@/lib/format";
 
-function FavoriteCard({ item }: { item: FavoriteItemSnapshot }) {
-  const price = formatPriceTnd(item.price) ?? "Prix sur demande";
+type FavoriteGroup = {
+  key: string;
+  label: string;
+  items: FavoriteItemSnapshot[];
+};
 
-  return (
-    <article className="border-ec-line flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_12px_34px_rgba(20,32,46,0.055)]">
-      <Link
-        href={item.href}
-        className="relative block aspect-square w-full overflow-hidden bg-white"
-      >
-        {item.imageUrl ? (
-          <Image
-            src={item.imageUrl}
-            alt={item.name}
-            fill
-            sizes="(min-width: 1024px) 24vw, (min-width: 640px) 42vw, 92vw"
-            className="object-contain p-6"
-          />
-        ) : (
-          <span className="text-ec-muted/45 grid h-full place-items-center text-xs font-black tracking-[0.2em] uppercase">
-            COBAM
-          </span>
-        )}
-      </Link>
+function favoriteDateKey(item: FavoriteItemSnapshot) {
+  if (!item.addedAt) {
+    return "legacy";
+  }
 
-      <div className="flex flex-1 flex-col p-5">
-        <p className="text-ec-blue line-clamp-1 text-[11px] font-black tracking-[0.18em] uppercase">
-          {item.brandName ?? item.categoryName ?? "COBAM"}
-        </p>
-        <Link
-          href={item.href}
-          className="text-ec-ink hover:text-ec-blue mt-2 line-clamp-2 text-sm font-black"
-        >
-          {item.name}
-        </Link>
-        <p className="text-ec-ink mt-5 text-lg font-black">{price}</p>
+  const date = new Date(item.addedAt);
+  if (Number.isNaN(date.getTime())) {
+    return "legacy";
+  }
 
-        <div className="mt-auto grid gap-3 pt-5">
-          {item.entityType === "PRODUCT" && item.sku ? (
-            <AddToCartButton
-              item={{
-                id: item.id,
-                sku: item.sku,
-                name: item.name,
-                price: item.price,
-                imageUrl: item.imageUrl,
-              }}
-              quantity={1}
-              size="sm"
-              className="sm:w-full"
-            />
-          ) : (
-            <Link
-              href={item.href}
-              className="bg-ec-ink hover:bg-ec-blue inline-flex h-10 items-center justify-center rounded-full px-4 text-sm font-black text-white transition"
-            >
-              Voir la gamme
-            </Link>
-          )}
+  return date.toISOString().slice(0, 10);
+}
 
-          <button
-            type="button"
-            onClick={() => removeFavorite(item)}
-            className="border-ec-line text-ec-muted inline-flex h-10 items-center justify-center gap-2 rounded-full border bg-white px-4 text-sm font-black transition hover:border-rose-200 hover:text-rose-600"
-          >
-            <Trash2 className="size-4" />
-            Retirer
-          </button>
-        </div>
-      </div>
-    </article>
-  );
+function favoriteDateLabel(key: string) {
+  if (key === "legacy") {
+    return "Anciens favoris";
+  }
+
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  const todayKey = today.toISOString().slice(0, 10);
+  const yesterdayKey = yesterday.toISOString().slice(0, 10);
+
+  if (key === todayKey) {
+    return "Aujourd'hui";
+  }
+
+  if (key === yesterdayKey) {
+    return "Hier";
+  }
+
+  return new Intl.DateTimeFormat("fr-TN", {
+    dateStyle: "long",
+  }).format(new Date(`${key}T12:00:00`));
+}
+
+function favoriteToProductCard(item: FavoriteItemSnapshot): ProductCardProduct {
+  return {
+    id: item.id,
+    entityType: item.entityType,
+    sku: item.sku,
+    href: item.href,
+    name: item.name,
+    displayName: item.name,
+    brandName: item.brandName,
+    categoryName: item.categoryName,
+    image: item.imageUrl ? { url: item.imageUrl, thumbnailUrl: item.imageUrl, altText: item.name } : null,
+    price: item.price,
+    stock: {
+      label: "A verifier",
+      tone: "warning",
+    },
+    addToCart:
+      item.entityType === "PRODUCT" && item.sku
+        ? {
+            id: item.id,
+            sku: item.sku,
+            name: item.name,
+            price: item.price,
+            imageUrl: item.imageUrl,
+          }
+        : null,
+    favoriteItem: item,
+  };
+}
+
+function groupFavorites(items: FavoriteItemSnapshot[]): FavoriteGroup[] {
+  const groups = new Map<string, FavoriteItemSnapshot[]>();
+
+  for (const item of items) {
+    const key = favoriteDateKey(item);
+    groups.set(key, [...(groups.get(key) ?? []), item]);
+  }
+
+  return [...groups.entries()]
+    .sort(([a], [b]) => {
+      if (a === "legacy") return 1;
+      if (b === "legacy") return -1;
+      return b.localeCompare(a);
+    })
+    .map(([key, groupItems]) => ({
+      key,
+      label: favoriteDateLabel(key),
+      items: groupItems,
+    }));
 }
 
 export function FavoritesPageClient() {
@@ -95,11 +113,7 @@ export function FavoritesPageClient() {
     () => EMPTY_FAVORITE_ITEMS,
   );
 
-  const productCount = useMemo(
-    () => items.filter((item) => item.entityType === "PRODUCT").length,
-    [items],
-  );
-
+  const groups = useMemo(() => groupFavorites(items), [items]);
   return (
     <main className="bg-ec-paper min-h-[70vh]">
       <section className="commerce-container py-12 sm:py-16">
@@ -112,48 +126,35 @@ export function FavoritesPageClient() {
               Vos produits mis de côté.
             </h1>
           </div>
-          {items.length > 0 ? (
-            <button
-              type="button"
-              onClick={clearFavorites}
-              className="border-ec-line text-ec-ink inline-flex h-11 items-center justify-center gap-2 rounded-full border bg-white px-5 text-sm font-black transition hover:border-rose-200 hover:text-rose-600"
-            >
-              <Trash2 className="size-4" />
-              Vider la liste
-            </button>
-          ) : null}
         </div>
 
-        {items.length > 0 ? (
-          <>
-            <div className="border-ec-line mt-8 grid gap-3 rounded-2xl border bg-white p-4 sm:grid-cols-3">
-              <div>
-                <p className="text-ec-muted text-xs font-black tracking-[0.18em] uppercase">
-                  Total
-                </p>
-                <p className="text-ec-ink mt-1 text-2xl font-black">{items.length}</p>
-              </div>
-              <div>
-                <p className="text-ec-muted text-xs font-black tracking-[0.18em] uppercase">
-                  Produits
-                </p>
-                <p className="text-ec-ink mt-1 text-2xl font-black">{productCount}</p>
-              </div>
-              <div>
-                <p className="text-ec-muted text-xs font-black tracking-[0.18em] uppercase">
-                  Gammes
-                </p>
-                <p className="text-ec-ink mt-1 text-2xl font-black">
-                  {items.length - productCount}
-                </p>
-              </div>
-            </div>
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {items.map((item) => (
-                <FavoriteCard key={`${item.entityType}-${item.id}`} item={item} />
-              ))}
-            </div>
-          </>
+        {groups.length > 0 ? (
+          <div className="mt-10 space-y-12">
+            {groups.map((group) => (
+              <section key={group.key} aria-labelledby={`favorites-${group.key}`}>
+                <div className="mb-5 flex items-end justify-between gap-4">
+                  <h2
+                    id={`favorites-${group.key}`}
+                    className="text-ec-ink text-2xl font-black tracking-tight"
+                  >
+                    {group.label}
+                  </h2>
+                  <p className="text-ec-muted text-sm font-bold">
+                    {group.items.length} reference{group.items.length > 1 ? "s" : ""}
+                  </p>
+                </div>
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                  {group.items.map((item) => (
+                    <ProductCard
+                      key={`${item.entityType}-${item.id}`}
+                      product={favoriteToProductCard(item)}
+                      size="auto"
+                    />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
         ) : (
           <div className="border-ec-line mt-10 rounded-3xl border bg-white px-6 py-14 text-center shadow-sm">
             <Heart className="text-ec-blue mx-auto size-10" />

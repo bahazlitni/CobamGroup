@@ -1,0 +1,797 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Accueil e-cobam" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e7]: ECOMMERCE
+      - navigation "Navigation principale" [ref=e8]:
+        - link "Tous les produits" [ref=e9] [cursor=pointer]:
+          - /url: /catalogue
+        - link "Promotions" [ref=e10] [cursor=pointer]:
+          - /url: /catalogue?sélection=promotion
+        - link "Meilleures ventes" [ref=e11] [cursor=pointer]:
+          - /url: /#best-sellers
+        - link "Nouveautés" [ref=e12] [cursor=pointer]:
+          - /url: /#new-arrivals
+        - link "Suivi commande" [ref=e13] [cursor=pointer]:
+          - /url: /suivi-commande
+      - link "Se connecter" [ref=e15] [cursor=pointer]:
+        - /url: /connexion
+        - img [ref=e16]
+        - generic [ref=e19]: Se connecter
+    - generic [ref=e21]:
+      - button "Ouvrir les rayons" [ref=e23]:
+        - img [ref=e24]
+        - generic [ref=e25]: Catégories
+        - img [ref=e26]
+      - generic [ref=e29]:
+        - img [ref=e30]
+        - searchbox "Produit, marque, référence..." [ref=e33]
+        - button "Rechercher" [ref=e34]:
+          - img [ref=e35]
+          - generic [ref=e38]: Rechercher
+      - generic [ref=e39]:
+        - link "Mes favoris" [ref=e40] [cursor=pointer]:
+          - /url: /favoris
+          - generic [ref=e41]:
+            - img [ref=e42]
+            - generic [ref=e44]: "1"
+        - link "Panier" [ref=e45] [cursor=pointer]:
+          - /url: /panier
+          - generic [ref=e46]:
+            - img [ref=e47]
+            - generic [ref=e50]: "2"
+  - main [ref=e51]:
+    - generic [ref=e52]:
+      - generic [ref=e53]:
+        - navigation "Fil d'Ariane" [ref=e54]:
+          - link "Accueil" [ref=e55] [cursor=pointer]:
+            - /url: /
+          - img [ref=e56]
+          - link "Tous les produits" [ref=e58] [cursor=pointer]:
+            - /url: /catalogue
+          - generic [ref=e59]:
+            - img [ref=e60]
+            - link "Revêtements de sols et murs" [ref=e62] [cursor=pointer]:
+              - /url: /catalogue?categorie=revetements-de-sols-et-murs
+          - generic [ref=e63]:
+            - img [ref=e64]
+            - link "Produits de pose & finition" [ref=e66] [cursor=pointer]:
+              - /url: /catalogue?categorie=produits-de-pose-finition
+        - generic [ref=e67]:
+          - generic [ref=e68]:
+            - generic [ref=e69]:
+              - generic [ref=e70]:
+                - paragraph [ref=e71]: SKU 00228121
+                - paragraph [ref=e73]:
+                  - button "Sika" [ref=e74]
+              - generic [ref=e76]:
+                - img [ref=e77]
+                - text: En stock
+            - heading "Sika - Carrojoint Antracite 04 5kg" [level=1] [ref=e82]
+          - img "Sika - Carrojoint Antracite 04 5kg" [ref=e85]
+          - generic [ref=e87]:
+            - generic [ref=e89]:
+              - paragraph [ref=e90]: Prix TTC
+              - paragraph [ref=e91]:
+                - generic [ref=e92]: 39,473DT
+            - generic [ref=e93]:
+              - generic [ref=e95]:
+                - button "Diminuer la quantite" [ref=e96]:
+                  - img [ref=e97]
+                - generic [ref=e98]:
+                  - spinbutton "Quantite" [ref=e99]: "1"
+                  - generic:
+                    - generic: "1"
+                - button "Augmenter la quantite" [ref=e100]:
+                  - img [ref=e101]
+              - generic [ref=e102]:
+                - button "Ajouter au panier" [ref=e104]:
+                  - generic [ref=e105]:
+                    - img [ref=e107]
+                    - generic [ref=e110]: Ajouter au panier
+                - button "Ajouter aux favoris" [ref=e111]:
+                  - img [ref=e115]
+          - generic [ref=e119]:
+            - generic [ref=e120]:
+              - paragraph [ref=e121]: Couleurs
+              - paragraph [ref=e122]: 25 teintes
+            - generic [ref=e123]:
+              - button "Choisir la couleur Antracite" [pressed] [ref=e124]
+              - button "Choisir la couleur Beach Wood" [ref=e126]
+              - button "Choisir la couleur Beige" [ref=e128]
+              - button "Choisir la couleur Brown" [ref=e130]
+              - button "Choisir la couleur Cak Wood" [ref=e132]
+              - button "Choisir la couleur Caramel" [ref=e134]
+              - button "Choisir la couleur Cedar" [ref=e136]
+              - button "Choisir la couleur Cenera Ash" [ref=e138]
+              - button "Choisir la couleur Graphite" [ref=e140]
+              - button "Choisir la couleur Grey" [ref=e142]
+              - button "Choisir la couleur Ice" [ref=e144]
+              - button "Choisir la couleur Jasmin" [ref=e146]
+              - button "Choisir la couleur Light Grey" [ref=e148]
+              - button "Choisir la couleur Light Sand" [ref=e150]
+              - button "Choisir la couleur Mahogany" [ref=e152]
+              - button "Choisir la couleur Manhattan" [ref=e154]
+              - button "Choisir la couleur Maple Wood" [ref=e156]
+              - button "Choisir la couleur Nero Absoluto" [ref=e158]
+              - button "Choisir la couleur Noce Walnut" [ref=e160]
+              - button "Choisir la couleur Pergamon" [ref=e162]
+              - button "Choisir la couleur Pine" [ref=e164]
+              - button "Choisir la couleur Sand Sabbia" [ref=e166]
+              - button "Choisir la couleur Silver" [ref=e168]
+              - button "Choisir la couleur Tortora" [ref=e170]
+              - button "Choisir la couleur White" [ref=e172]
+          - link "Fiche technique" [ref=e175] [cursor=pointer]:
+            - /url: /api/media/96/file
+            - img [ref=e176]
+            - generic [ref=e179]: Fiche technique
+      - generic [ref=e180]:
+        - generic [ref=e181]:
+          - heading "Même gamme" [level=2] [ref=e182]
+          - paragraph [ref=e183]: 25 références à comparer
+        - generic [ref=e186]:
+          - article [ref=e188]:
+            - generic [ref=e189]:
+              - button "Voir Sika - Carrojoint Antracite 04 5kg" [ref=e190]:
+                - img "Sika - Carrojoint Antracite 04 5kg" [ref=e191]
+              - generic [ref=e192]: Sika
+              - button "Ajouter aux favoris" [ref=e194]:
+                - img [ref=e198]
+            - generic [ref=e200]:
+              - generic [ref=e201]:
+                - paragraph [ref=e202]: "00228121"
+                - button "Voir Sika - Carrojoint Antracite 04 5kg" [ref=e203]:
+                  - heading "Sika - Carrojoint Antracite 04 5kg" [level=3] [ref=e204]
+              - generic [ref=e205]:
+                - paragraph [ref=e207]: 39,473 DT
+                - generic [ref=e208]:
+                  - img [ref=e209]
+                  - text: En stock
+              - button "Ajouter au panier" [ref=e216]:
+                - generic [ref=e217]:
+                  - img [ref=e219]
+                  - generic [ref=e222]: Ajouter au panier
+          - article [ref=e224]:
+            - generic [ref=e225]:
+              - button "Voir Sika - Carrojoint Beach Wood 39 5kg" [ref=e226]:
+                - img "Sika - Carrojoint Beach Wood 39 5kg" [ref=e227]
+              - generic [ref=e228]: Sika
+              - button "Ajouter aux favoris" [ref=e230]:
+                - img [ref=e234]
+            - generic [ref=e236]:
+              - generic [ref=e237]:
+                - paragraph [ref=e238]: "00227971"
+                - button "Voir Sika - Carrojoint Beach Wood 39 5kg" [ref=e239]:
+                  - heading "Sika - Carrojoint Beach Wood 39 5kg" [level=3] [ref=e240]
+              - generic [ref=e241]:
+                - paragraph [ref=e243]: 39,473 DT
+                - generic [ref=e244]:
+                  - img [ref=e245]
+                  - text: En stock
+              - button "Ajouter au panier" [ref=e252]:
+                - generic [ref=e253]:
+                  - img [ref=e255]
+                  - generic [ref=e258]: Ajouter au panier
+          - article [ref=e260]:
+            - generic [ref=e261]:
+              - button "Voir Sika - Carrojoint Beige 08 5kg" [ref=e262]:
+                - img "Sika - Carrojoint Beige 08 5kg" [ref=e263]
+              - generic [ref=e264]: Sika
+              - button "Ajouter aux favoris" [ref=e266]:
+                - img [ref=e270]
+            - generic [ref=e272]:
+              - generic [ref=e273]:
+                - paragraph [ref=e274]: "00228015"
+                - button "Voir Sika - Carrojoint Beige 08 5kg" [ref=e275]:
+                  - heading "Sika - Carrojoint Beige 08 5kg" [level=3] [ref=e276]
+              - generic [ref=e277]:
+                - paragraph [ref=e279]: 39,473 DT
+                - generic [ref=e280]:
+                  - img [ref=e281]
+                  - text: Rupture
+              - button "Ajouter au panier" [ref=e288]:
+                - generic [ref=e289]:
+                  - img [ref=e291]
+                  - generic [ref=e294]: Ajouter au panier
+          - article [ref=e296]:
+            - generic [ref=e297]:
+              - button "Voir Sika - Carrojoint Brown 10 5kg" [ref=e298]:
+                - img "Sika - Carrojoint Brown 10 5kg" [ref=e299]
+              - generic [ref=e300]: Sika
+              - button "Ajouter aux favoris" [ref=e302]:
+                - img [ref=e306]
+            - generic [ref=e308]:
+              - generic [ref=e309]:
+                - paragraph [ref=e310]: "00227933"
+                - button "Voir Sika - Carrojoint Brown 10 5kg" [ref=e311]:
+                  - heading "Sika - Carrojoint Brown 10 5kg" [level=3] [ref=e312]
+              - generic [ref=e313]:
+                - paragraph [ref=e315]: 39,473 DT
+                - generic [ref=e316]:
+                  - img [ref=e317]
+                  - text: Rupture
+              - button "Ajouter au panier" [ref=e324]:
+                - generic [ref=e325]:
+                  - img [ref=e327]
+                  - generic [ref=e330]: Ajouter au panier
+          - article [ref=e332]:
+            - generic [ref=e333]:
+              - button "Voir Sika - Carrojoint Cak Wood 41 5kg" [ref=e334]:
+                - img "Sika - Carrojoint Cak Wood 41 5kg" [ref=e335]
+              - generic [ref=e336]: Sika
+              - button "Ajouter aux favoris" [ref=e338]:
+                - img [ref=e342]
+            - generic [ref=e344]:
+              - generic [ref=e345]:
+                - paragraph [ref=e346]: "00227995"
+                - button "Voir Sika - Carrojoint Cak Wood 41 5kg" [ref=e347]:
+                  - heading "Sika - Carrojoint Cak Wood 41 5kg" [level=3] [ref=e348]
+              - generic [ref=e349]:
+                - paragraph [ref=e351]: 39,473 DT
+                - generic [ref=e352]:
+                  - img [ref=e353]
+                  - text: En stock
+              - button "Ajouter au panier" [ref=e360]:
+                - generic [ref=e361]:
+                  - img [ref=e363]
+                  - generic [ref=e366]: Ajouter au panier
+          - article [ref=e368]:
+            - generic [ref=e369]:
+              - button "Voir Sika - Carrojoint Caramel 16 5kg" [ref=e370]:
+                - img "Sika - Carrojoint Caramel 16 5kg" [ref=e371]
+              - generic [ref=e372]: Sika
+              - button "Ajouter aux favoris" [ref=e374]:
+                - img [ref=e378]
+            - generic [ref=e380]:
+              - generic [ref=e381]:
+                - paragraph [ref=e382]: "00227957"
+                - button "Voir Sika - Carrojoint Caramel 16 5kg" [ref=e383]:
+                  - heading "Sika - Carrojoint Caramel 16 5kg" [level=3] [ref=e384]
+              - generic [ref=e385]:
+                - paragraph [ref=e387]: 39,473 DT
+                - generic [ref=e388]:
+                  - img [ref=e389]
+                  - text: Rupture
+              - button "Ajouter au panier" [ref=e396]:
+                - generic [ref=e397]:
+                  - img [ref=e399]
+                  - generic [ref=e402]: Ajouter au panier
+          - article [ref=e404]:
+            - generic [ref=e405]:
+              - button "Voir Sika - Carrojoint Cedar 38 5kg" [ref=e406]:
+                - img "Sika - Carrojoint Cedar 38 5kg" [ref=e407]
+              - generic [ref=e408]: Sika
+              - button "Ajouter aux favoris" [ref=e410]:
+                - img [ref=e414]
+            - generic [ref=e416]:
+              - generic [ref=e417]:
+                - paragraph [ref=e418]: "00228152"
+                - button "Voir Sika - Carrojoint Cedar 38 5kg" [ref=e419]:
+                  - heading "Sika - Carrojoint Cedar 38 5kg" [level=3] [ref=e420]
+              - generic [ref=e421]:
+                - paragraph [ref=e423]: 39,473 DT
+                - generic [ref=e424]:
+                  - img [ref=e425]
+                  - text: En stock
+              - button "Ajouter au panier" [ref=e432]:
+                - generic [ref=e433]:
+                  - img [ref=e435]
+                  - generic [ref=e438]: Ajouter au panier
+          - article [ref=e440]:
+            - generic [ref=e441]:
+              - button "Voir Sika - Carrojoint Cenera Ash 03 5kg" [ref=e442]:
+                - img "Sika - Carrojoint Cenera Ash 03 5kg" [ref=e443]
+              - generic [ref=e444]: Sika
+              - button "Ajouter aux favoris" [ref=e446]:
+                - img [ref=e450]
+            - generic [ref=e452]:
+              - generic [ref=e453]:
+                - paragraph [ref=e454]: "00228046"
+                - button "Voir Sika - Carrojoint Cenera Ash 03 5kg" [ref=e455]:
+                  - heading "Sika - Carrojoint Cenera Ash 03 5kg" [level=3] [ref=e456]
+              - generic [ref=e457]:
+                - paragraph [ref=e459]: 39,473 DT
+                - generic [ref=e460]:
+                  - img [ref=e461]
+                  - text: Rupture
+              - button "Ajouter au panier" [ref=e468]:
+                - generic [ref=e469]:
+                  - img [ref=e471]
+                  - generic [ref=e474]: Ajouter au panier
+          - article [ref=e476]:
+            - generic [ref=e477]:
+              - button "Voir Sika - Carrojoint Graphite 33 5kg" [ref=e478]:
+                - img "Sika - Carrojoint Graphite 33 5kg" [ref=e479]
+              - generic [ref=e480]: Sika
+              - button "Ajouter aux favoris" [ref=e482]:
+                - img [ref=e486]
+            - generic [ref=e488]:
+              - generic [ref=e489]:
+                - paragraph [ref=e490]: "00228145"
+                - button "Voir Sika - Carrojoint Graphite 33 5kg" [ref=e491]:
+                  - heading "Sika - Carrojoint Graphite 33 5kg" [level=3] [ref=e492]
+              - generic [ref=e493]:
+                - paragraph [ref=e495]: 39,473 DT
+                - generic [ref=e496]:
+                  - img [ref=e497]
+                  - text: Rupture
+              - button "Ajouter au panier" [ref=e504]:
+                - generic [ref=e505]:
+                  - img [ref=e507]
+                  - generic [ref=e510]: Ajouter au panier
+          - article [ref=e512]:
+            - generic [ref=e513]:
+              - button "Voir Sika - Carrojoint Grey 32 5kg" [ref=e514]:
+                - img "Sika - Carrojoint Grey 32 5kg" [ref=e515]
+              - generic [ref=e516]: Sika
+              - button "Ajouter aux favoris" [ref=e518]:
+                - img [ref=e522]
+            - generic [ref=e524]:
+              - generic [ref=e525]:
+                - paragraph [ref=e526]: "00228107"
+                - button "Voir Sika - Carrojoint Grey 32 5kg" [ref=e527]:
+                  - heading "Sika - Carrojoint Grey 32 5kg" [level=3] [ref=e528]
+              - generic [ref=e529]:
+                - paragraph [ref=e531]: 39,470 DT
+                - generic [ref=e532]:
+                  - img [ref=e533]
+                  - text: En stock
+              - button "Ajouter au panier" [ref=e540]:
+                - generic [ref=e541]:
+                  - img [ref=e543]
+                  - generic [ref=e546]: Ajouter au panier
+          - article [ref=e548]:
+            - generic [ref=e549]:
+              - button "Voir Sika - Carrojoint Ice 02 5kg" [ref=e550]:
+                - img "Sika - Carrojoint Ice 02 5kg" [ref=e551]
+              - generic [ref=e552]: Sika
+              - button "Ajouter aux favoris" [ref=e554]:
+                - img [ref=e558]
+            - generic [ref=e560]:
+              - generic [ref=e561]:
+                - paragraph [ref=e562]: "00228091"
+                - button "Voir Sika - Carrojoint Ice 02 5kg" [ref=e563]:
+                  - heading "Sika - Carrojoint Ice 02 5kg" [level=3] [ref=e564]
+              - generic [ref=e565]:
+                - paragraph [ref=e567]: 39,470 DT
+                - generic [ref=e568]:
+                  - img [ref=e569]
+                  - text: En stock
+              - button "Ajouter au panier" [ref=e576]:
+                - generic [ref=e577]:
+                  - img [ref=e579]
+                  - generic [ref=e582]: Ajouter au panier
+          - article [ref=e584]:
+            - generic [ref=e585]:
+              - button "Voir Sika - Carrojoint Jasmin 06 5kg" [ref=e586]:
+                - img "Sika - Carrojoint Jasmin 06 5kg" [ref=e587]
+              - generic [ref=e588]: Sika
+              - button "Ajouter aux favoris" [ref=e590]:
+                - img [ref=e594]
+            - generic [ref=e596]:
+              - generic [ref=e597]:
+                - paragraph [ref=e598]: "00227964"
+                - button "Voir Sika - Carrojoint Jasmin 06 5kg" [ref=e599]:
+                  - heading "Sika - Carrojoint Jasmin 06 5kg" [level=3] [ref=e600]
+              - generic [ref=e601]:
+                - paragraph [ref=e603]: 39,473 DT
+                - generic [ref=e604]:
+                  - img [ref=e605]
+                  - text: Rupture
+              - button "Ajouter au panier" [ref=e612]:
+                - generic [ref=e613]:
+                  - img [ref=e615]
+                  - generic [ref=e618]: Ajouter au panier
+          - article [ref=e620]:
+            - generic [ref=e621]:
+              - button "Voir Sika - Carrojoint Light Grey 29 5kg" [ref=e622]:
+                - img "Sika - Carrojoint Light Grey 29 5kg" [ref=e623]
+              - generic [ref=e624]: Sika
+              - button "Ajouter aux favoris" [ref=e626]:
+                - img [ref=e630]
+            - generic [ref=e632]:
+              - generic [ref=e633]:
+                - paragraph [ref=e634]: "00228060"
+                - button "Voir Sika - Carrojoint Light Grey 29 5kg" [ref=e635]:
+                  - heading "Sika - Carrojoint Light Grey 29 5kg" [level=3] [ref=e636]
+              - generic [ref=e637]:
+                - paragraph [ref=e639]: 39,470 DT
+                - generic [ref=e640]:
+                  - img [ref=e641]
+                  - text: En stock
+              - button "Ajouter au panier" [ref=e648]:
+                - generic [ref=e649]:
+                  - img [ref=e651]
+                  - generic [ref=e654]: Ajouter au panier
+          - article [ref=e656]:
+            - generic [ref=e657]:
+              - button "Voir Sika - Carrojoint Light Sand 37 5kg" [ref=e658]:
+                - img "Sika - Carrojoint Light Sand 37 5kg" [ref=e659]
+              - generic [ref=e660]: Sika
+              - button "Ajouter aux favoris" [ref=e662]:
+                - img [ref=e666]
+            - generic [ref=e668]:
+              - generic [ref=e669]:
+                - paragraph [ref=e670]: "00228053"
+                - button "Voir Sika - Carrojoint Light Sand 37 5kg" [ref=e671]:
+                  - heading "Sika - Carrojoint Light Sand 37 5kg" [level=3] [ref=e672]
+              - generic [ref=e673]:
+                - paragraph [ref=e675]: 39,473 DT
+                - generic [ref=e676]:
+                  - img [ref=e677]
+                  - text: En stock
+              - button "Ajouter au panier" [ref=e684]:
+                - generic [ref=e685]:
+                  - img [ref=e687]
+                  - generic [ref=e690]: Ajouter au panier
+          - article [ref=e692]:
+            - generic [ref=e693]:
+              - button "Voir Sika - Carrojoint Mahogany 42 (Marron Fc) 5kg" [ref=e694]:
+                - img "Sika - Carrojoint Mahogany 42 (Marron Fc) 5kg" [ref=e695]
+              - generic [ref=e696]: Sika
+              - button "Ajouter aux favoris" [ref=e698]:
+                - img [ref=e702]
+            - generic [ref=e704]:
+              - generic [ref=e705]:
+                - paragraph [ref=e706]: "00229210"
+                - button "Voir Sika - Carrojoint Mahogany 42 (Marron Fc) 5kg" [ref=e707]:
+                  - heading "Sika - Carrojoint Mahogany 42 (Marron Fc) 5kg" [level=3] [ref=e708]
+              - generic [ref=e709]:
+                - paragraph [ref=e711]: 39,473 DT
+                - generic [ref=e712]:
+                  - img [ref=e713]
+                  - text: Rupture
+              - button "Ajouter au panier" [ref=e720]:
+                - generic [ref=e721]:
+                  - img [ref=e723]
+                  - generic [ref=e726]: Ajouter au panier
+          - article [ref=e728]:
+            - generic [ref=e729]:
+              - button "Voir Sika - Carrojoint Manhattan 01 5kg" [ref=e730]:
+                - img "Sika - Carrojoint Manhattan 01 5kg" [ref=e731]
+              - generic [ref=e732]: Sika
+              - button "Ajouter aux favoris" [ref=e734]:
+                - img [ref=e738]
+            - generic [ref=e740]:
+              - generic [ref=e741]:
+                - paragraph [ref=e742]: "00228138"
+                - button "Voir Sika - Carrojoint Manhattan 01 5kg" [ref=e743]:
+                  - heading "Sika - Carrojoint Manhattan 01 5kg" [level=3] [ref=e744]
+              - generic [ref=e745]:
+                - paragraph [ref=e747]: 39,473 DT
+                - generic [ref=e748]:
+                  - img [ref=e749]
+                  - text: En stock
+              - button "Ajouter au panier" [ref=e756]:
+                - generic [ref=e757]:
+                  - img [ref=e759]
+                  - generic [ref=e762]: Ajouter au panier
+          - article [ref=e764]:
+            - generic [ref=e765]:
+              - button "Voir Sika - Carrojoint Maple Wood 35 5kg" [ref=e766]:
+                - img "Sika - Carrojoint Maple Wood 35 5kg" [ref=e767]
+              - generic [ref=e768]: Sika
+              - button "Ajouter aux favoris" [ref=e770]:
+                - img [ref=e774]
+            - generic [ref=e776]:
+              - generic [ref=e777]:
+                - paragraph [ref=e778]: "00228008"
+                - button "Voir Sika - Carrojoint Maple Wood 35 5kg" [ref=e779]:
+                  - heading "Sika - Carrojoint Maple Wood 35 5kg" [level=3] [ref=e780]
+              - generic [ref=e781]:
+                - paragraph [ref=e783]: 39,473 DT
+                - generic [ref=e784]:
+                  - img [ref=e785]
+                  - text: Rupture
+              - button "Ajouter au panier" [ref=e792]:
+                - generic [ref=e793]:
+                  - img [ref=e795]
+                  - generic [ref=e798]: Ajouter au panier
+          - article [ref=e800]:
+            - generic [ref=e801]:
+              - button "Voir Sika - Carrojoint Nero Absoluto 30 5kg" [ref=e802]:
+                - img "Sika - Carrojoint Nero Absoluto 30 5kg" [ref=e803]
+              - generic [ref=e804]: Sika
+              - button "Ajouter aux favoris" [ref=e806]:
+                - img [ref=e810]
+            - generic [ref=e812]:
+              - generic [ref=e813]:
+                - paragraph [ref=e814]: "00227940"
+                - button "Voir Sika - Carrojoint Nero Absoluto 30 5kg" [ref=e815]:
+                  - heading "Sika - Carrojoint Nero Absoluto 30 5kg" [level=3] [ref=e816]
+              - generic [ref=e817]:
+                - paragraph [ref=e819]: 39,473 DT
+                - generic [ref=e820]:
+                  - img [ref=e821]
+                  - text: En stock
+              - button "Ajouter au panier" [ref=e828]:
+                - generic [ref=e829]:
+                  - img [ref=e831]
+                  - generic [ref=e834]: Ajouter au panier
+          - article [ref=e836]:
+            - generic [ref=e837]:
+              - button "Voir Sika - Carrojoint Noce/Walnut 40 5kg" [ref=e838]:
+                - img "Sika - Carrojoint Noce/Walnut 40 5kg" [ref=e839]
+              - generic [ref=e840]: Sika
+              - button "Ajouter aux favoris" [ref=e842]:
+                - img [ref=e846]
+            - generic [ref=e848]:
+              - generic [ref=e849]:
+                - paragraph [ref=e850]: "00228114"
+                - button "Voir Sika - Carrojoint Noce/Walnut 40 5kg" [ref=e851]:
+                  - heading "Sika - Carrojoint Noce/Walnut 40 5kg" [level=3] [ref=e852]
+              - generic [ref=e853]:
+                - paragraph [ref=e855]: 39,473 DT
+                - generic [ref=e856]:
+                  - img [ref=e857]
+                  - text: Rupture
+              - button "Ajouter au panier" [ref=e864]:
+                - generic [ref=e865]:
+                  - img [ref=e867]
+                  - generic [ref=e870]: Ajouter au panier
+          - article [ref=e872]:
+            - generic [ref=e873]:
+              - button "Voir Sika - Carrojoint Pergamon 24 5kg" [ref=e874]:
+                - img "Sika - Carrojoint Pergamon 24 5kg" [ref=e875]
+              - generic [ref=e876]: Sika
+              - button "Ajouter aux favoris" [ref=e878]:
+                - img [ref=e882]
+            - generic [ref=e884]:
+              - generic [ref=e885]:
+                - paragraph [ref=e886]: "00228084"
+                - button "Voir Sika - Carrojoint Pergamon 24 5kg" [ref=e887]:
+                  - heading "Sika - Carrojoint Pergamon 24 5kg" [level=3] [ref=e888]
+              - generic [ref=e889]:
+                - paragraph [ref=e891]: 39,470 DT
+                - generic [ref=e892]:
+                  - img [ref=e893]
+                  - text: Rupture
+              - button "Ajouter au panier" [ref=e900]:
+                - generic [ref=e901]:
+                  - img [ref=e903]
+                  - generic [ref=e906]: Ajouter au panier
+          - article [ref=e908]:
+            - generic [ref=e909]:
+              - button "Voir Sika - Carrojoint Pine 34 5kg" [ref=e910]:
+                - img "Sika - Carrojoint Pine 34 5kg" [ref=e911]
+              - generic [ref=e912]: Sika
+              - button "Ajouter aux favoris" [ref=e914]:
+                - img [ref=e918]
+            - generic [ref=e920]:
+              - generic [ref=e921]:
+                - paragraph [ref=e922]: "00227988"
+                - button "Voir Sika - Carrojoint Pine 34 5kg" [ref=e923]:
+                  - heading "Sika - Carrojoint Pine 34 5kg" [level=3] [ref=e924]
+              - generic [ref=e925]:
+                - paragraph [ref=e927]: 39,470 DT
+                - generic [ref=e928]:
+                  - img [ref=e929]
+                  - text: En stock
+              - button "Ajouter au panier" [ref=e936]:
+                - generic [ref=e937]:
+                  - img [ref=e939]
+                  - generic [ref=e942]: Ajouter au panier
+          - article [ref=e944]:
+            - generic [ref=e945]:
+              - button "Voir Sika - Carrojoint Sand Sabbia 09 5kg" [ref=e946]:
+                - img "Sika - Carrojoint Sand Sabbia 09 5kg" [ref=e947]
+              - generic [ref=e948]: Sika
+              - button "Ajouter aux favoris" [ref=e950]:
+                - img [ref=e954]
+            - generic [ref=e956]:
+              - generic [ref=e957]:
+                - paragraph [ref=e958]: "00228039"
+                - button "Voir Sika - Carrojoint Sand Sabbia 09 5kg" [ref=e959]:
+                  - heading "Sika - Carrojoint Sand Sabbia 09 5kg" [level=3] [ref=e960]
+              - generic [ref=e961]:
+                - paragraph [ref=e963]: 39,473 DT
+                - generic [ref=e964]:
+                  - img [ref=e965]
+                  - text: Rupture
+              - button "Ajouter au panier" [ref=e972]:
+                - generic [ref=e973]:
+                  - img [ref=e975]
+                  - generic [ref=e978]: Ajouter au panier
+          - article [ref=e980]:
+            - generic [ref=e981]:
+              - button "Voir Sika - Carrojoint Silver 31 5kg" [ref=e982]:
+                - img "Sika - Carrojoint Silver 31 5kg" [ref=e983]
+              - generic [ref=e984]: Sika
+              - button "Ajouter aux favoris" [ref=e986]:
+                - img [ref=e990]
+            - generic [ref=e992]:
+              - generic [ref=e993]:
+                - paragraph [ref=e994]: "00238533"
+                - button "Voir Sika - Carrojoint Silver 31 5kg" [ref=e995]:
+                  - heading "Sika - Carrojoint Silver 31 5kg" [level=3] [ref=e996]
+              - generic [ref=e997]:
+                - paragraph [ref=e999]: 39,470 DT
+                - generic [ref=e1000]:
+                  - img [ref=e1001]
+                  - text: En stock
+              - button "Ajouter au panier" [ref=e1008]:
+                - generic [ref=e1009]:
+                  - img [ref=e1011]
+                  - generic [ref=e1014]: Ajouter au panier
+          - article [ref=e1016]:
+            - generic [ref=e1017]:
+              - button "Voir Sika - Carrojoint Tortora 36 5kg" [ref=e1018]:
+                - img "Sika - Carrojoint Tortora 36 5kg" [ref=e1019]
+              - generic [ref=e1020]: Sika
+              - button "Ajouter aux favoris" [ref=e1022]:
+                - img [ref=e1026]
+            - generic [ref=e1028]:
+              - generic [ref=e1029]:
+                - paragraph [ref=e1030]: "00228022"
+                - button "Voir Sika - Carrojoint Tortora 36 5kg" [ref=e1031]:
+                  - heading "Sika - Carrojoint Tortora 36 5kg" [level=3] [ref=e1032]
+              - generic [ref=e1033]:
+                - paragraph [ref=e1035]: 39,473 DT
+                - generic [ref=e1036]:
+                  - img [ref=e1037]
+                  - text: Rupture
+              - button "Ajouter au panier" [ref=e1044]:
+                - generic [ref=e1045]:
+                  - img [ref=e1047]
+                  - generic [ref=e1050]: Ajouter au panier
+          - article [ref=e1052]:
+            - generic [ref=e1053]:
+              - button "Voir Sika - Carrojoint White 00 5kg" [ref=e1054]:
+                - img "Sika - Carrojoint White 00 5kg" [ref=e1055]
+              - generic [ref=e1056]: Sika
+              - button "Ajouter aux favoris" [ref=e1058]:
+                - img [ref=e1062]
+            - generic [ref=e1064]:
+              - generic [ref=e1065]:
+                - paragraph [ref=e1066]: "00228077"
+                - button "Voir Sika - Carrojoint White 00 5kg" [ref=e1067]:
+                  - heading "Sika - Carrojoint White 00 5kg" [level=3] [ref=e1068]
+              - generic [ref=e1069]:
+                - paragraph [ref=e1071]: 39,470 DT
+                - generic [ref=e1072]:
+                  - img [ref=e1073]
+                  - text: En stock
+              - button "Ajouter au panier" [ref=e1080]:
+                - generic [ref=e1081]:
+                  - img [ref=e1083]
+                  - generic [ref=e1086]: Ajouter au panier
+      - generic [ref=e1087]:
+        - generic [ref=e1088]:
+          - heading "Détails produit" [level=2] [ref=e1090]
+          - generic [ref=e1093]:
+            - heading "Joint de carrelage Sika - Antracite" [level=2] [ref=e1094]
+            - paragraph [ref=e1095]: "Les Carrojoint Sika correspondent a la famille SikaCeram CleanGrout : un mortier de jointoiement premelange a base de ciment, sable de quartz selectionne et additifs specifiques pour joints de 1 a 8 mm. La formulation vise une finition hydrofuge, stable en couleur et adaptee aux carreaux techniques. La teinte Antracite permet d'accorder le joint au carrelage, au format et a l'ambiance du projet. Cette variante SikaCeram CleanGrout est adaptee aux joints techniques de sols et murs, y compris en pieces humides et zones sollicitees."
+            - paragraph [ref=e1096]: Jointoiement de carreaux ceramiques, terre cuite, mosaique de verre, marbre, pierres naturelles et gres. Convient aussi aux pieces humides, piscines, sols chauffants, facades et locaux soumis a de fortes sollicitations.
+            - list [ref=e1097]:
+              - listitem [ref=e1098]:
+                - paragraph [ref=e1099]: Classe CG2 WA selon EN 13888, absorption d'eau limitee, haute resistance a l'usure, durete elevee, resistance aux UV et au gel, protection contre moisissures, bacteries et champignons.
+              - listitem [ref=e1100]:
+                - paragraph [ref=e1101]: "Conditionnement : sac de 5 kg."
+              - listitem [ref=e1102]:
+                - paragraph [ref=e1103]: "Largeur de joint indicative : 1 a 8 mm."
+              - listitem [ref=e1104]:
+                - paragraph [ref=e1105]: "Teinte : Antracite. Toujours verifier le rendu sur nuancier et sur un essai chantier avant pose definitive."
+            - paragraph [ref=e1106]: Pour un resultat regulier, respecter les dosages d'eau, le temps de repos, le nettoyage a l'eponge et les delais de mise en service indiques dans la fiche technique de la marque.
+        - generic [ref=e1107]:
+          - heading "Spécifications" [level=2] [ref=e1109]
+          - generic [ref=e1110]:
+            - generic [ref=e1111]:
+              - heading "Filtres principaux" [level=3] [ref=e1112]
+              - generic [ref=e1113]:
+                - generic [ref=e1114]:
+                  - term [ref=e1115]: Type de produit
+                  - definition [ref=e1116]: Joint de carrelage
+                - generic [ref=e1117]:
+                  - term [ref=e1118]: Conditionnement
+                  - definition [ref=e1119]: 5 kg
+                - generic [ref=e1120]:
+                  - term [ref=e1121]: Pret a l'emploi
+                  - definition [ref=e1122]: "false"
+            - generic [ref=e1123]:
+              - heading "Caracteristiques techniques" [level=3] [ref=e1124]
+              - generic [ref=e1125]:
+                - generic [ref=e1126]:
+                  - term [ref=e1127]: Gamme
+                  - definition [ref=e1128]: SikaCeram
+                - generic [ref=e1129]:
+                  - term [ref=e1130]: Code couleur
+                  - definition [ref=e1131]: "04"
+                - generic [ref=e1132]:
+                  - term [ref=e1133]: Etanche
+                  - definition [ref=e1134]: "false"
+    - generic [ref=e1135]:
+      - generic [ref=e1137]:
+        - paragraph [ref=e1138]: À comparer
+        - heading "Produits proches" [level=2] [ref=e1139]
+      - article [ref=e1141]:
+        - generic [ref=e1142]:
+          - link "Voir Sika - Ciment Colle Ceram Sac 25KG" [ref=e1143] [cursor=pointer]:
+            - /url: /produits/sika-ciment-colle-ceram-sac-25kg
+            - img "Sika - Ciment Colle Ceram Sac 25KG" [ref=e1144]
+          - generic [ref=e1145]: Sika
+          - button "Ajouter aux favoris" [ref=e1147]:
+            - img [ref=e1151]
+        - generic [ref=e1153]:
+          - generic [ref=e1154]:
+            - paragraph [ref=e1155]: "00227926"
+            - link "Voir Sika - Ciment Colle Ceram Sac 25KG" [ref=e1156] [cursor=pointer]:
+              - /url: /produits/sika-ciment-colle-ceram-sac-25kg
+              - heading "Sika - Ciment Colle Ceram Sac 25KG" [level=3] [ref=e1157]
+            - paragraph [ref=e1158]: Colle, joint & produit de pose
+          - generic [ref=e1159]:
+            - paragraph [ref=e1161]: 43,684 DT
+            - generic [ref=e1162]:
+              - img [ref=e1163]
+              - text: En stock
+          - button "Ajouter au panier" [ref=e1170]:
+            - generic [ref=e1171]:
+              - img [ref=e1173]
+              - generic [ref=e1176]: Ajouter au panier
+  - contentinfo [ref=e1177]:
+    - generic [ref=e1178]:
+      - generic [ref=e1179]:
+        - generic [ref=e1180]:
+          - paragraph [ref=e1181]: ECOMMERCE
+          - paragraph [ref=e1182]: Produits, panier, commandes et suivi client.
+          - generic [ref=e1183]:
+            - link "+216 75731731" [ref=e1184] [cursor=pointer]:
+              - /url: tel:+21675731731
+              - img [ref=e1185]
+              - text: +216 75731731
+            - link "contact@cobamgroup.com" [ref=e1187] [cursor=pointer]:
+              - /url: mailto:contact@cobamgroup.com
+              - img [ref=e1188]
+              - text: contact@cobamgroup.com
+            - paragraph [ref=e1191]:
+              - img [ref=e1192]
+              - text: Djerba, Tunisie
+        - generic [ref=e1195]:
+          - heading "Service client" [level=2] [ref=e1196]
+          - generic [ref=e1197]:
+            - link "Suivre une commande" [ref=e1198] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Panier" [ref=e1199] [cursor=pointer]:
+              - /url: /panier
+            - link "Compte client" [ref=e1200] [cursor=pointer]:
+              - /url: /compte
+            - link "Commander" [ref=e1201] [cursor=pointer]:
+              - /url: /checkout
+        - generic [ref=e1202]:
+          - heading "Aide" [level=2] [ref=e1203]
+          - generic [ref=e1204]:
+            - link "Livraison" [ref=e1205] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Retours" [ref=e1206] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Conditions" [ref=e1207] [cursor=pointer]:
+              - /url: /conditions-generales
+            - link "Confidentialité" [ref=e1208] [cursor=pointer]:
+              - /url: /politique-de-confidentialite
+        - generic [ref=e1209]:
+          - heading "Catégories" [level=2] [ref=e1210]
+          - generic [ref=e1211]:
+            - link "Revêtements de sols et murs" [ref=e1212] [cursor=pointer]:
+              - /url: /catalogue?categorie=revetements-de-sols-et-murs
+            - link "Isolation et étanchéité" [ref=e1213] [cursor=pointer]:
+              - /url: /catalogue?categorie=isolation-et-etancheite
+            - link "Salle de bain et cuisine" [ref=e1214] [cursor=pointer]:
+              - /url: /catalogue?categorie=salle-de-bain-et-cuisine
+            - link "Peintures et décoration" [ref=e1215] [cursor=pointer]:
+              - /url: /catalogue?categorie=peintures-et-decoration
+            - link "Piscine" [ref=e1216] [cursor=pointer]:
+              - /url: /catalogue?categorie=piscine
+            - link "Portes et menuiserie" [ref=e1217] [cursor=pointer]:
+              - /url: /catalogue?categorie=portes-et-menuiserie
+      - generic [ref=e1218]:
+        - paragraph [ref=e1219]: © 2026 COBAM GROUP. Tous droits réservés.
+        - generic [ref=e1220]:
+          - link "Facebook" [ref=e1221] [cursor=pointer]:
+            - /url: https://www.facebook.com/cobamgrp
+          - link "Instagram" [ref=e1222] [cursor=pointer]:
+            - /url: https://www.instagram.com/cobamgroup/
+          - link "LinkedIn" [ref=e1223] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/cobam-group/
+  - button "Open Next.js Dev Tools" [ref=e1229] [cursor=pointer]:
+    - img [ref=e1230]
+  - alert [ref=e1233]

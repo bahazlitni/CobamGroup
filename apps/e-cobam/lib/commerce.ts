@@ -244,6 +244,13 @@ export type CommerceProductCard = {
   };
   badges: string[];
   updatedAt: string;
+  addToCart: {
+    id: number;
+    sku: string;
+    name: string;
+    price: string | null;
+    imageUrl: string | null;
+  } | null;
 };
 
 export type CommerceAttribute = {
@@ -559,6 +566,9 @@ function productBadges(record: Pick<ProductCardRecord, "isNew" | "isFeatured">) 
 
 function mapProductCard(record: ProductCardRecord): CommerceProductCard {
   const trail = firstSubcategory(record);
+  const image = firstImage(record);
+  const price = productPrice(record);
+  const name = record.displayName || record.name;
 
   return {
     id: Number(record.id),
@@ -566,17 +576,24 @@ function mapProductCard(record: ProductCardRecord): CommerceProductCard {
     slug: record.slug,
     href: `/produits/${record.slug}`,
     sku: record.sku,
-    name: record.displayName || record.name,
+    name,
     subtitle: trail.subcategory?.name ?? null,
     summary: productSummary(record),
     brand: mapBrand(record.brand),
     category: trail.category,
     subcategory: trail.subcategory,
-    image: firstImage(record),
-    price: productPrice(record),
+    image,
+    price,
     stock: mapStock(record),
     badges: productBadges(record),
     updatedAt: record.updatedAt.toISOString(),
+    addToCart: {
+      id: Number(record.id),
+      sku: record.sku,
+      name,
+      price,
+      imageUrl: image?.thumbnailUrl ?? image?.url ?? null,
+    },
   };
 }
 
@@ -602,6 +619,9 @@ function mapFamilyCard(record: ProductFamilyRecord): CommerceProductCard | null 
   const trail = firstSubcategory(defaultProduct);
   const familyImage = mapMedia(record.mainImage);
   const productImage = firstImage(defaultProduct);
+  const image = familyImage ?? productImage;
+  const price = productPrice(defaultProduct);
+  const defaultProductName = defaultProduct.displayName || defaultProduct.name;
 
   return {
     id: Number(record.id),
@@ -615,11 +635,18 @@ function mapFamilyCard(record: ProductFamilyRecord): CommerceProductCard | null 
     brand: mapBrand(defaultProduct.brand),
     category: trail.category,
     subcategory: trail.subcategory,
-    image: familyImage ?? productImage,
-    price: productPrice(defaultProduct),
+    image,
+    price,
     stock: mapStock(defaultProduct),
     badges: Array.from(new Set(["Gamme", ...productBadges(defaultProduct)])),
     updatedAt: record.updatedAt.toISOString(),
+    addToCart: {
+      id: Number(defaultProduct.id),
+      sku: defaultProduct.sku,
+      name: defaultProductName,
+      price,
+      imageUrl: image?.thumbnailUrl ?? image?.url ?? null,
+    },
   };
 }
 

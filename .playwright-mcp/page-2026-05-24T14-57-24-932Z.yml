@@ -1,0 +1,294 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e5]
+      - generic [ref=e7]: "Service Client :"
+      - link "+216 75731731" [ref=e8] [cursor=pointer]:
+        - /url: tel:+21675731731
+    - generic [ref=e9]:
+      - link "Annuaire" [ref=e10] [cursor=pointer]:
+        - /url: /annuaire
+        - img [ref=e11]
+        - text: Annuaire
+      - link "Espace Team" [ref=e15] [cursor=pointer]:
+        - /url: /login/staff
+        - img [ref=e16]
+        - text: Espace Team
+  - banner [ref=e20]:
+    - generic [ref=e21]:
+      - link "COBAM GROUP" [ref=e22] [cursor=pointer]:
+        - /url: /
+        - img "COBAM GROUP" [ref=e23]
+      - navigation [ref=e24]:
+        - link "À PROPOS" [ref=e25] [cursor=pointer]:
+          - /url: /a-propos
+        - button "PRODUITS" [ref=e27] [cursor=pointer]:
+          - generic: PRODUITS
+          - img
+        - button "MARQUES" [ref=e29] [cursor=pointer]:
+          - text: MARQUES
+          - img [ref=e30]
+        - link "ACTUALITÉS" [ref=e32] [cursor=pointer]:
+          - /url: /actualites
+        - link "CONTACT" [ref=e33] [cursor=pointer]:
+          - /url: /contact
+      - button "Rechercher" [ref=e36] [cursor=pointer]:
+        - img [ref=e37]
+  - main [ref=e40]:
+    - article [ref=e43]:
+      - navigation "Fil d'Ariane" [ref=e44]:
+        - link "Produits" [ref=e45] [cursor=pointer]:
+          - /url: /produits
+        - img [ref=e46]
+        - link "Revêtements de sols et murs" [ref=e48] [cursor=pointer]:
+          - /url: /produits/revetements-de-sols-et-murs
+        - img [ref=e49]
+        - link "Produits de pose & finition" [ref=e51] [cursor=pointer]:
+          - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition
+        - img [ref=e52]
+        - generic [ref=e54]: Carrojoint Beach Wood
+      - generic [ref=e55]:
+        - complementary [ref=e56]:
+          - button "Agrandir Sika - Carrojoint Beach Wood 39 5kg" [ref=e58]:
+            - img "Sika - Carrojoint Beach Wood 39 5kg" [ref=e59]
+            - img [ref=e61]
+        - generic [ref=e66]:
+          - generic [ref=e67]:
+            - generic [ref=e68]:
+              - generic [ref=e69]:
+                - generic [ref=e70]: Marque
+                - generic [ref=e71]: Sika
+              - generic [ref=e72]:
+                - generic [ref=e73]: SKU
+                - generic [ref=e74]: "00227971"
+                - button "Copier" [ref=e75] [cursor=pointer]:
+                  - img [ref=e77]
+            - generic [ref=e80]:
+              - paragraph [ref=e81]: Sika
+              - heading "Carrojoint Beach Wood" [level=1] [ref=e82]
+              - paragraph [ref=e83]: Joint de carrelage
+              - paragraph [ref=e84]: Beach Wood 39 - SikaCeram - Non etanche - 5 kg
+            - generic [ref=e85]:
+              - generic [ref=e86]: Joint de carrelage
+              - generic [ref=e87]: Beach Wood - Code 39
+              - generic [ref=e88]: 5 kg
+              - generic [ref=e89]: SikaCeram
+            - generic [ref=e90]:
+              - button "Demander un devis" [ref=e91] [cursor=pointer]:
+                - generic [ref=e92]: Demander un devis
+              - link "Contacter un conseiller" [ref=e93] [cursor=pointer]:
+                - /url: /contact
+          - generic [ref=e95]:
+            - generic [ref=e96]:
+              - paragraph [ref=e98]: Palette
+              - paragraph [ref=e99]: 1 teinte
+            - button "Choisir la couleur Beach Wood - Code 39" [pressed] [ref=e101] [cursor=pointer]
+          - generic [ref=e103]:
+            - generic [ref=e104]:
+              - img [ref=e105]
+              - heading "Résumé du produit" [level=2] [ref=e109]
+            - generic [ref=e111]:
+              - generic [ref=e112]:
+                - term [ref=e113]: Type de produit
+                - definition [ref=e114]: Joint de carrelage
+              - generic [ref=e115]:
+                - term [ref=e116]: Couleur
+                - definition [ref=e117]: Beach Wood - Code 39
+              - generic [ref=e118]:
+                - term [ref=e119]: Conditionnement
+                - definition [ref=e120]: 5 kg
+              - generic [ref=e121]:
+                - term [ref=e122]: Gamme
+                - definition [ref=e123]: SikaCeram
+              - generic [ref=e124]:
+                - term [ref=e125]: Preparation
+                - definition [ref=e126]: A melanger
+              - generic [ref=e127]:
+                - term [ref=e128]: Resistance a l'eau
+                - definition [ref=e129]:
+                  - generic [ref=e130]:
+                    - img [ref=e131]
+                    - text: Non etanche
+          - generic [ref=e135]:
+            - generic [ref=e136]:
+              - img [ref=e138]
+              - generic [ref=e143]:
+                - heading "Parcours catalogue" [level=2] [ref=e144]
+                - paragraph [ref=e145]: Catégories et sous-catégories où ce produit apparaît dans le catalogue COBAM.
+            - generic [ref=e147]:
+              - generic [ref=e148]:
+                - link "Revêtements de sols et murs" [ref=e149] [cursor=pointer]:
+                  - /url: /produits/revetements-de-sols-et-murs
+                - img [ref=e150]
+                - generic [ref=e152]: Sous-catégorie
+              - link "Produits de pose & finition" [ref=e154] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition
+      - generic [ref=e155]:
+        - generic [ref=e156]:
+          - img [ref=e157]
+          - heading "Description" [level=2] [ref=e159]
+        - generic [ref=e161]:
+          - generic [ref=e164]:
+            - heading "Joint de carrelage Sika - Beach Wood" [level=2] [ref=e165]
+            - paragraph [ref=e166]: "Les Carrojoint Sika correspondent a la famille SikaCeram CleanGrout : un mortier de jointoiement premelange a base de ciment, sable de quartz selectionne et additifs specifiques pour joints de 1 a 8 mm. La formulation vise une finition hydrofuge, stable en couleur et adaptee aux carreaux techniques. La teinte Beach Wood permet d'accorder le joint au carrelage, au format et a l'ambiance du projet. Cette variante SikaCeram CleanGrout est adaptee aux joints techniques de sols et murs, y compris en pieces humides et zones sollicitees."
+            - paragraph [ref=e167]: Jointoiement de carreaux ceramiques, terre cuite, mosaique de verre, marbre, pierres naturelles et gres. Convient aussi aux pieces humides, piscines, sols chauffants, facades et locaux soumis a de fortes sollicitations.
+            - list [ref=e168]:
+              - listitem [ref=e169]:
+                - paragraph [ref=e170]: Classe CG2 WA selon EN 13888, absorption d'eau limitee, haute resistance a l'usure, durete elevee, resistance aux UV et au gel, protection contre moisissures, bacteries et champignons.
+              - listitem [ref=e171]:
+                - paragraph [ref=e172]: "Conditionnement : sac de 5 kg."
+              - listitem [ref=e173]:
+                - paragraph [ref=e174]: "Largeur de joint indicative : 1 a 8 mm."
+              - listitem [ref=e175]:
+                - paragraph [ref=e176]: "Teinte : Beach Wood. Toujours verifier le rendu sur nuancier et sur un essai chantier avant pose definitive."
+            - paragraph [ref=e177]: Pour un resultat regulier, respecter les dosages d'eau, le temps de repos, le nettoyage a l'eponge et les delais de mise en service indiques dans la fiche technique de la marque.
+          - button "Afficher plus" [ref=e178] [cursor=pointer]:
+            - generic [ref=e179]: Afficher plus
+      - generic [ref=e180]:
+        - generic [ref=e181]:
+          - img [ref=e182]
+          - heading "Caractéristiques techniques" [level=2] [ref=e188]
+        - generic [ref=e190]:
+          - generic [ref=e191]:
+            - term [ref=e192]: Type de produit
+            - definition [ref=e193]: Joint de carrelage
+          - generic [ref=e194]:
+            - term [ref=e195]: Couleur
+            - definition [ref=e196]: Beach Wood - Code 39
+          - generic [ref=e197]:
+            - term [ref=e198]: Conditionnement
+            - definition [ref=e199]: 5 kg
+          - generic [ref=e200]:
+            - term [ref=e201]: Gamme
+            - definition [ref=e202]: SikaCeram
+          - generic [ref=e203]:
+            - term [ref=e204]: Preparation
+            - definition [ref=e205]: A melanger
+          - generic [ref=e206]:
+            - term [ref=e207]: Resistance a l'eau
+            - definition [ref=e208]:
+              - generic [ref=e209]:
+                - img [ref=e210]
+                - text: Non etanche
+      - generic [ref=e215]:
+        - generic [ref=e216]:
+          - paragraph [ref=e217]: Documents & accompagnement
+          - heading "Vérifier, comparer, confirmer." [level=2] [ref=e218]
+          - paragraph [ref=e219]: Consultez les documents techniques disponibles ou contactez COBAM Group pour une validation produit, une disponibilité ou un conseil de mise en oeuvre.
+        - generic [ref=e220]:
+          - generic [ref=e221]:
+            - img [ref=e222]
+            - heading "Documents techniques" [level=3] [ref=e225]
+            - paragraph [ref=e226]: Fiches et informations disponibles selon le produit.
+            - button "Télécharger la fiche" [ref=e229] [cursor=pointer]:
+              - generic [ref=e230]: Télécharger la fiche
+              - img [ref=e232]
+          - generic [ref=e235]:
+            - img [ref=e236]
+            - heading "Accompagnement COBAM" [level=3] [ref=e238]
+            - paragraph [ref=e239]: Disponibilite, showroom et recommandations techniques a confirmer avec nos equipes.
+            - button "Demander un devis" [ref=e241] [cursor=pointer]:
+              - generic [ref=e242]: Demander un devis
+  - contentinfo [ref=e243]:
+    - generic [ref=e244]:
+      - generic [ref=e245]:
+        - generic [ref=e246]:
+          - link "Cobam Group - Accueil" [ref=e247] [cursor=pointer]:
+            - /url: /
+            - img "COBAM GROUP" [ref=e248]
+          - paragraph [ref=e250]: Depuis 1994
+          - paragraph [ref=e251]: Matériaux de construction haut de gamme alliant innovation, qualité et durabilité.
+          - generic [ref=e252]:
+            - link "Facebook" [ref=e253] [cursor=pointer]:
+              - /url: https://www.facebook.com/cobamgrp
+              - img [ref=e254]
+            - link "Instagram" [ref=e256] [cursor=pointer]:
+              - /url: https://www.instagram.com/cobamgroup/
+              - img [ref=e257]
+            - link "Youtube" [ref=e259] [cursor=pointer]:
+              - /url: https://www.youtube.com/@cobamgroup
+              - img [ref=e260]
+            - link "LinkedIn" [ref=e262] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/cobam-group/
+              - img [ref=e263]
+            - link "TikTok" [ref=e265] [cursor=pointer]:
+              - /url: https://www.tiktok.com/@cobam.group
+              - img [ref=e266]
+            - link "Pinterest" [ref=e268] [cursor=pointer]:
+              - /url: https://www.pinterest.com/cobamgroup/
+              - img [ref=e269]
+        - generic [ref=e271]:
+          - heading "Catalogue" [level=4] [ref=e272]
+          - list [ref=e273]:
+            - listitem [ref=e274]:
+              - link "Revêtements de sols et murs" [ref=e275] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs
+            - listitem [ref=e276]:
+              - link "Matériaux de construction" [ref=e277] [cursor=pointer]:
+                - /url: /produits/materiaux-de-construction
+            - listitem [ref=e278]:
+              - link "Isolation et étanchéité" [ref=e279] [cursor=pointer]:
+                - /url: /produits/isolation-et-etancheite
+            - listitem [ref=e280]:
+              - link "Salle de bain et cuisine" [ref=e281] [cursor=pointer]:
+                - /url: /produits/salle-de-bain-et-cuisine
+            - listitem [ref=e282]:
+              - link "Peintures et décoration" [ref=e283] [cursor=pointer]:
+                - /url: /produits/peintures-et-decoration
+            - listitem [ref=e284]:
+              - link "Piscine" [ref=e285] [cursor=pointer]:
+                - /url: /produits/piscine
+            - listitem [ref=e286]:
+              - link "Portes et menuiserie" [ref=e287] [cursor=pointer]:
+                - /url: /produits/portes-et-menuiserie
+        - generic [ref=e288]:
+          - heading "Decouvrir" [level=4] [ref=e289]
+          - list [ref=e290]:
+            - listitem [ref=e291]:
+              - link "À propos de nous" [ref=e292] [cursor=pointer]:
+                - /url: /a-propos
+            - listitem [ref=e293]:
+              - link "Nos agences" [ref=e294] [cursor=pointer]:
+                - /url: /#nos-agences
+            - listitem [ref=e295]:
+              - link "Partenaires" [ref=e296] [cursor=pointer]:
+                - /url: /partenaires
+            - listitem [ref=e297]:
+              - link "Références" [ref=e298] [cursor=pointer]:
+                - /url: /references
+            - listitem [ref=e299]:
+              - link "Actualités" [ref=e300] [cursor=pointer]:
+                - /url: /actualites
+            - listitem [ref=e301]:
+              - link "Annuaire" [ref=e302] [cursor=pointer]:
+                - /url: /annuaire
+        - generic [ref=e303]:
+          - heading "Contact" [level=4] [ref=e304]
+          - list [ref=e305]:
+            - listitem [ref=e306]:
+              - img [ref=e307]
+              - generic [ref=e310]: Siège social, Houmt Souk, Djerba, Tunisie
+            - listitem [ref=e311]:
+              - 'link "Tel : +216 75731731" [ref=e312] [cursor=pointer]':
+                - /url: tel:+21675731731
+                - img [ref=e313]
+                - text: "Tel : +216 75731731"
+            - listitem [ref=e315]:
+              - link "contact@cobamgroup.com" [ref=e316] [cursor=pointer]:
+                - /url: mailto:contact@cobamgroup.com
+                - img [ref=e317]
+                - text: contact@cobamgroup.com
+      - generic [ref=e320]:
+        - paragraph [ref=e321]: © 2026 Cobam Group. Tous droits réservés.
+        - generic [ref=e322]:
+          - link "Politique de confidentialité" [ref=e323] [cursor=pointer]:
+            - /url: /politique-de-confidentialite
+          - link "Mentions légales" [ref=e324] [cursor=pointer]:
+            - /url: /mentions-legales
+          - link "Conditions générales" [ref=e325] [cursor=pointer]:
+            - /url: /conditions-generales
+  - button "Ouvrir WhatsApp" [ref=e327] [cursor=pointer]:
+    - img [ref=e329]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e336] [cursor=pointer]:
+    - img [ref=e337]

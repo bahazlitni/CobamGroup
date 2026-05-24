@@ -66,7 +66,7 @@ export default async function AccountPage() {
       <AccountPageHeader
         eyebrow="Espace client"
         title={<>Bonjour, {fullName(account)}</>}
-        description="Pilotez vos informations, vos adresses, vos commandes et vos preferences de paiement depuis un espace prive."
+        description="Pilotez vos informations, vos adresses, vos commandes et vos préférences de paiement depuis un espace privé."
         actions={
           <ButtonLink
             href="/catalogue"

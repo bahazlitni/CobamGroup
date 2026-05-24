@@ -1,21 +1,34 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ShoppingBag } from "lucide-react";
-import { addCartItem, type CartItemSnapshot } from "@/lib/cart-store";
-import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import {
+  AddToCartButton as AnimatedAddToCartButton,
+  emitCartActionAnimation,
+  type ProductActionSize,
+} from "@/components/commerce/product-action-buttons";
+import { addCartItem, readCart, updateCartLine, type CartItemSnapshot } from "@/lib/cart-store";
 import { cn } from "@/lib/cn";
+import { pushUndoToast } from "@/lib/undo-actions";
 
 export function AddToCartButton({
   item,
   quantity,
   size = "lg",
+  iconOnly = false,
   className,
+  buttonClassName,
+  onAddedToCartAnimation,
+  onRemovedFromCartAnimation,
 }: {
   item: CartItemSnapshot;
   quantity: number;
-  size?: "sm" | "md" | "lg";
+  size?: ProductActionSize;
+  iconOnly?: boolean;
   className?: string;
+  buttonClassName?: string;
+  onAddedToCartAnimation?: () => void;
+  onRemovedFromCartAnimation?: () => void;
 }) {
   const [added, setAdded] = useState(false);
   const [pending, setPending] = useState(false);
@@ -26,11 +39,25 @@ export function AddToCartButton({
     setError(null);
 
     try {
+      const previousCart = await readCart();
+      const previousLine = previousCart.lines.find((line) => line.id === item.id);
       await addCartItem(item, quantity);
       setAdded(true);
+      pushUndoToast({
+        title: "Ajouté au panier",
+        description: quantity > 1 ? `${quantity} x ${item.name}` : item.name,
+        onUndo: async () => {
+          await updateCartLine(item.id, previousLine?.quantity ?? 0);
+        },
+      });
       window.setTimeout(() => setAdded(false), 1600);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Impossible d'ajouter ce produit.");
+      const message = cause instanceof Error ? cause.message : "Impossible d'ajouter ce produit.";
+      setError(message);
+      toast.error("Panier non mis à jour", {
+        description: message,
+      });
+      throw cause;
     } finally {
       setPending(false);
     }
@@ -38,16 +65,22 @@ export function AddToCartButton({
 
   return (
     <div className={cn("w-full space-y-2 sm:w-auto", className)}>
-      <Button
-        type="button"
+      <AnimatedAddToCartButton
+        isInCart={added}
+        onToggle={handleAddToCart}
         size={size}
-        className="w-full sm:w-auto"
-        icon={added ? <Check className="size-5" /> : <ShoppingBag className="size-5" />}
+        iconOnly={iconOnly}
         disabled={pending}
-        onClick={handleAddToCart}
-      >
-        {pending ? "Ajout..." : added ? "Dans le panier" : "Ajouter au panier"}
-      </Button>
+        className={cn("w-full sm:w-auto", buttonClassName)}
+        onAddedToCartAnimation={() => {
+          emitCartActionAnimation("added");
+          onAddedToCartAnimation?.();
+        }}
+        onRemovedFromCartAnimation={() => {
+          emitCartActionAnimation("removed");
+          onRemovedFromCartAnimation?.();
+        }}
+      />
       {error ? <p className="text-sm font-semibold text-rose-600">{error}</p> : null}
     </div>
   );

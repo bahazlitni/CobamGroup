@@ -1,0 +1,115 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Accueil e-cobam" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e7]: ECOMMERCE
+      - navigation "Navigation principale" [ref=e8]:
+        - link "Tous les produits" [ref=e9] [cursor=pointer]:
+          - /url: /catalogue
+        - link "Promotions" [ref=e10] [cursor=pointer]:
+          - /url: /catalogue?sélection=promotion
+        - link "Meilleures ventes" [ref=e11] [cursor=pointer]:
+          - /url: /#best-sellers
+        - link "Nouveautés" [ref=e12] [cursor=pointer]:
+          - /url: /#new-arrivals
+        - link "Suivi commande" [ref=e13] [cursor=pointer]:
+          - /url: /suivi-commande
+      - link "Se connecter" [ref=e15] [cursor=pointer]:
+        - /url: /connexion
+        - img [ref=e16]
+        - generic [ref=e19]: Se connecter
+    - generic [ref=e21]:
+      - button "Ouvrir les rayons" [ref=e23]:
+        - img [ref=e24]
+        - generic [ref=e25]: Catégories
+        - img [ref=e26]
+      - generic [ref=e29]:
+        - img [ref=e30]
+        - searchbox "Produit, marque, référence..." [ref=e33]
+        - button "Rechercher" [ref=e34]:
+          - img [ref=e35]
+          - generic [ref=e38]: Rechercher
+      - generic [ref=e39]:
+        - link "Mes favoris" [ref=e40] [cursor=pointer]:
+          - /url: /favoris
+          - generic [ref=e41]:
+            - img [ref=e42]
+            - generic [ref=e44]: "1"
+        - link "Panier" [ref=e45] [cursor=pointer]:
+          - /url: /panier
+          - img [ref=e47]
+  - main [ref=e50]:
+    - generic [ref=e51]:
+      - paragraph [ref=e52]: "404"
+      - heading "Cette page est introuvable." [level=1] [ref=e53]
+      - paragraph [ref=e54]: Le produit ou la page demandée n’est plus disponible dans cette entrée catalogue.
+      - link "Revenir au catalogue" [ref=e55] [cursor=pointer]:
+        - /url: /catalogue
+  - contentinfo [ref=e56]:
+    - generic [ref=e57]:
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - paragraph [ref=e60]: ECOMMERCE
+          - paragraph [ref=e61]: Produits, panier, commandes et suivi client.
+          - generic [ref=e62]:
+            - link "+216 75731731" [ref=e63] [cursor=pointer]:
+              - /url: tel:+21675731731
+              - img [ref=e64]
+              - text: +216 75731731
+            - link "contact@cobamgroup.com" [ref=e66] [cursor=pointer]:
+              - /url: mailto:contact@cobamgroup.com
+              - img [ref=e67]
+              - text: contact@cobamgroup.com
+            - paragraph [ref=e70]:
+              - img [ref=e71]
+              - text: Djerba, Tunisie
+        - generic [ref=e74]:
+          - heading "Service client" [level=2] [ref=e75]
+          - generic [ref=e76]:
+            - link "Suivre une commande" [ref=e77] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Panier" [ref=e78] [cursor=pointer]:
+              - /url: /panier
+            - link "Compte client" [ref=e79] [cursor=pointer]:
+              - /url: /compte
+            - link "Commander" [ref=e80] [cursor=pointer]:
+              - /url: /checkout
+        - generic [ref=e81]:
+          - heading "Aide" [level=2] [ref=e82]
+          - generic [ref=e83]:
+            - link "Livraison" [ref=e84] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Retours" [ref=e85] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Conditions" [ref=e86] [cursor=pointer]:
+              - /url: /conditions-generales
+            - link "Confidentialité" [ref=e87] [cursor=pointer]:
+              - /url: /politique-de-confidentialite
+        - generic [ref=e88]:
+          - heading "Catégories" [level=2] [ref=e89]
+          - generic [ref=e90]:
+            - link "Revêtements de sols et murs" [ref=e91] [cursor=pointer]:
+              - /url: /catalogue?categorie=revetements-de-sols-et-murs
+            - link "Isolation et étanchéité" [ref=e92] [cursor=pointer]:
+              - /url: /catalogue?categorie=isolation-et-etancheite
+            - link "Salle de bain et cuisine" [ref=e93] [cursor=pointer]:
+              - /url: /catalogue?categorie=salle-de-bain-et-cuisine
+            - link "Peintures et décoration" [ref=e94] [cursor=pointer]:
+              - /url: /catalogue?categorie=peintures-et-decoration
+            - link "Piscine" [ref=e95] [cursor=pointer]:
+              - /url: /catalogue?categorie=piscine
+            - link "Portes et menuiserie" [ref=e96] [cursor=pointer]:
+              - /url: /catalogue?categorie=portes-et-menuiserie
+      - generic [ref=e97]:
+        - paragraph [ref=e98]: © 2026 COBAM GROUP. Tous droits réservés.
+        - generic [ref=e99]:
+          - link "Facebook" [ref=e100] [cursor=pointer]:
+            - /url: https://www.facebook.com/cobamgrp
+          - link "Instagram" [ref=e101] [cursor=pointer]:
+            - /url: https://www.instagram.com/cobamgroup/
+          - link "LinkedIn" [ref=e102] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/cobam-group/
+  - button "Open Next.js Dev Tools" [ref=e108] [cursor=pointer]:
+    - img [ref=e109]
+  - alert [ref=e112]

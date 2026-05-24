@@ -52,7 +52,7 @@ export default async function ProductTypesPage() {
               <div>
                 <p className="text-3xl font-black">{formatCompactNumber(totalProducts)}</p>
                 <p className="mt-1 text-xs font-bold uppercase tracking-[0.18em] text-white/50">
-                  references
+                  références
                 </p>
               </div>
             </CardContent>

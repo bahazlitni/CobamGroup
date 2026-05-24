@@ -40,14 +40,14 @@ export default async function CustomerProfilePage() {
       <AccountPageHeader
         eyebrow="Profil"
         title="Vos informations."
-        description="Gardez vos coordonnees a jour pour faciliter le suivi, la livraison et la facturation."
+        description="Gardez vos coordonnées a jour pour faciliter le suivi, la livraison et la facturation."
       />
 
       <AccountPageShell active="/compte/profil">
         <form action={updateCustomerProfileAction}>
           <Card>
             <CardHeader>
-              <CardTitle>Identite du compte</CardTitle>
+              <CardTitle>Identité du compte</CardTitle>
             </CardHeader>
             <Separator />
             <CardContent className="grid gap-4 pt-5 sm:grid-cols-2 sm:pt-6">

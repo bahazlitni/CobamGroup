@@ -186,6 +186,28 @@ export async function clearCart() {
   return requestCart("/api/cart", { method: "DELETE" }, true);
 }
 
+export async function restoreCartState(previousCart: CartState) {
+  await syncLegacyCart();
+  clearStoredCouponCode();
+  await requestCart("/api/cart", { method: "DELETE" }, false);
+
+  let restoredCart = EMPTY_CART;
+
+  for (const line of previousCart.lines) {
+    restoredCart = await requestCart(
+      "/api/cart",
+      {
+        method: "POST",
+        body: JSON.stringify({ productId: line.id, quantity: line.quantity }),
+      },
+      false,
+    );
+  }
+
+  dispatchCartUpdated(restoredCart);
+  return restoredCart;
+}
+
 export function getCartCount(cart: CartState | CartLine[]) {
   const lines = Array.isArray(cart) ? cart : cart.lines;
 

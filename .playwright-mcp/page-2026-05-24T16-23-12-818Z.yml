@@ -1,0 +1,1152 @@
+- generic:
+  - banner:
+    - generic:
+      - generic:
+        - link:
+          - /url: /
+          - generic:
+            - generic: ECOMMERCE
+        - navigation:
+          - link:
+            - /url: /catalogue
+            - text: Tous les produits
+          - link:
+            - /url: /catalogue?sélection=promotion
+            - text: Promotions
+          - link:
+            - /url: /#best-sellers
+            - text: Meilleures ventes
+          - link:
+            - /url: /#new-arrivals
+            - text: Nouveautés
+          - link:
+            - /url: /suivi-commande
+            - text: Suivi commande
+        - generic:
+          - link:
+            - /url: /connexion
+            - img
+            - generic: Se connecter
+    - generic:
+      - generic:
+        - generic:
+          - button:
+            - img
+            - generic: Catégories
+            - img
+        - generic:
+          - generic:
+            - img
+            - searchbox
+            - button:
+              - img
+              - generic: Rechercher
+        - generic:
+          - button:
+            - generic:
+              - img
+              - generic: "2"
+          - button [expanded]:
+            - generic:
+              - img
+  - main:
+    - generic:
+      - generic:
+        - navigation:
+          - link:
+            - /url: /
+            - text: Accueil
+          - img
+          - link:
+            - /url: /catalogue
+            - text: Tous les produits
+          - generic:
+            - img
+            - link:
+              - /url: /catalogue?categorie=revetements-de-sols-et-murs
+              - text: Revêtements de sols et murs
+          - generic:
+            - img
+            - link:
+              - /url: /catalogue?categorie=produits-de-pose-finition
+              - text: Produits de pose & finition
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - paragraph: SKU 00228121
+                  - button:
+                    - generic:
+                      - img
+                - paragraph:
+                  - button: Sika
+              - generic:
+                - generic:
+                  - img
+                  - text: En stock
+            - heading [level=1]: Sika - Carrojoint Antracite 04 5kg
+          - generic:
+            - complementary:
+              - generic:
+                - button:
+                  - img
+                  - generic:
+                    - img
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - paragraph: Prix TTC
+                  - paragraph:
+                    - generic: 39,473DT
+              - generic:
+                - generic:
+                  - generic:
+                    - button [disabled]:
+                      - img
+                    - generic:
+                      - spinbutton: "1"
+                      - generic:
+                        - generic: "1"
+                    - button:
+                      - img
+                - generic:
+                  - generic:
+                    - button:
+                      - generic:
+                        - generic:
+                          - img
+                        - generic: Ajouter au panier
+                  - button [pressed]:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img
+          - generic:
+            - generic:
+              - generic:
+                - paragraph: Couleurs
+                - generic:
+                  - button [pressed]
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+                  - button
+          - generic:
+            - link:
+              - /url: /api/media/96/file
+              - img
+              - generic: Fiche technique
+      - generic:
+        - generic:
+          - heading [level=2]: Même gamme
+          - paragraph: 25 références à comparer
+        - generic:
+          - button:
+            - generic:
+              - img
+          - button:
+            - generic:
+              - img
+          - generic:
+            - generic:
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button [pressed]:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00228121"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Antracite 04 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,473 DT
+                      - generic:
+                        - img
+                        - text: En stock
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button [pressed]:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00227971"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Beach Wood 39 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,473 DT
+                      - generic:
+                        - img
+                        - text: En stock
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00228015"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Beige 08 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,473 DT
+                      - generic:
+                        - img
+                        - text: Rupture
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00227933"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Brown 10 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,473 DT
+                      - generic:
+                        - img
+                        - text: Rupture
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00227995"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Cak Wood 41 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,473 DT
+                      - generic:
+                        - img
+                        - text: En stock
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00227957"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Caramel 16 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,473 DT
+                      - generic:
+                        - img
+                        - text: Rupture
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00228152"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Cedar 38 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,473 DT
+                      - generic:
+                        - img
+                        - text: En stock
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00228046"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Cenera Ash 03 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,473 DT
+                      - generic:
+                        - img
+                        - text: Rupture
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00228145"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Graphite 33 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,473 DT
+                      - generic:
+                        - img
+                        - text: Rupture
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00228107"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Grey 32 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,470 DT
+                      - generic:
+                        - img
+                        - text: En stock
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00228091"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Ice 02 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,470 DT
+                      - generic:
+                        - img
+                        - text: En stock
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00227964"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Jasmin 06 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,473 DT
+                      - generic:
+                        - img
+                        - text: Rupture
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00228060"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Light Grey 29 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,470 DT
+                      - generic:
+                        - img
+                        - text: En stock
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00228053"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Light Sand 37 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,473 DT
+                      - generic:
+                        - img
+                        - text: En stock
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00229210"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Mahogany 42 (Marron Fc) 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,473 DT
+                      - generic:
+                        - img
+                        - text: Rupture
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00228138"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Manhattan 01 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,473 DT
+                      - generic:
+                        - img
+                        - text: En stock
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00228008"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Maple Wood 35 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,473 DT
+                      - generic:
+                        - img
+                        - text: Rupture
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00227940"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Nero Absoluto 30 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,473 DT
+                      - generic:
+                        - img
+                        - text: En stock
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00228114"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Noce/Walnut 40 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,473 DT
+                      - generic:
+                        - img
+                        - text: Rupture
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00228084"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Pergamon 24 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,470 DT
+                      - generic:
+                        - img
+                        - text: Rupture
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00227988"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Pine 34 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,470 DT
+                      - generic:
+                        - img
+                        - text: En stock
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00228039"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Sand Sabbia 09 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,473 DT
+                      - generic:
+                        - img
+                        - text: Rupture
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00238533"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Silver 31 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,470 DT
+                      - generic:
+                        - img
+                        - text: En stock
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00228022"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint Tortora 36 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,473 DT
+                      - generic:
+                        - img
+                        - text: Rupture
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+              - generic:
+                - article:
+                  - generic:
+                    - button:
+                      - img
+                    - generic: Sika
+                    - generic:
+                      - button:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                  - generic:
+                    - generic:
+                      - paragraph: "00228077"
+                      - button:
+                        - heading [level=3]: Sika - Carrojoint White 00 5kg
+                    - generic:
+                      - generic:
+                        - paragraph: 39,470 DT
+                      - generic:
+                        - img
+                        - text: En stock
+                    - generic:
+                      - generic:
+                        - button:
+                          - generic:
+                            - generic:
+                              - img
+                            - generic: Ajouter au panier
+      - generic:
+        - generic:
+          - generic:
+            - heading [level=2]: Détails produit
+          - generic:
+            - generic:
+              - generic:
+                - heading [level=2]: Joint de carrelage Sika - Antracite
+                - paragraph: "Les Carrojoint Sika correspondent a la famille SikaCeram CleanGrout : un mortier de jointoiement premelange a base de ciment, sable de quartz selectionne et additifs specifiques pour joints de 1 a 8 mm. La formulation vise une finition hydrofuge, stable en couleur et adaptee aux carreaux techniques. La teinte Antracite permet d'accorder le joint au carrelage, au format et a l'ambiance du projet. Cette variante SikaCeram CleanGrout est adaptee aux joints techniques de sols et murs, y compris en pieces humides et zones sollicitees."
+                - paragraph: Jointoiement de carreaux ceramiques, terre cuite, mosaique de verre, marbre, pierres naturelles et gres. Convient aussi aux pieces humides, piscines, sols chauffants, facades et locaux soumis a de fortes sollicitations.
+                - list:
+                  - listitem:
+                    - paragraph: Classe CG2 WA selon EN 13888, absorption d'eau limitee, haute resistance a l'usure, durete elevee, resistance aux UV et au gel, protection contre moisissures, bacteries et champignons.
+                  - listitem:
+                    - paragraph: "Conditionnement : sac de 5 kg."
+                  - listitem:
+                    - paragraph: "Largeur de joint indicative : 1 a 8 mm."
+                  - listitem:
+                    - paragraph: "Teinte : Antracite. Toujours verifier le rendu sur nuancier et sur un essai chantier avant pose definitive."
+                - paragraph: Pour un resultat regulier, respecter les dosages d'eau, le temps de repos, le nettoyage a l'eponge et les delais de mise en service indiques dans la fiche technique de la marque.
+        - generic:
+          - generic:
+            - heading [level=2]: Spécifications
+          - generic:
+            - generic:
+              - heading [level=3]: Filtres principaux
+              - generic:
+                - generic:
+                  - term: Type de produit
+                  - definition: Joint de carrelage
+                - generic:
+                  - term: Conditionnement
+                  - definition: 5 kg
+                - generic:
+                  - term: Pret a l'emploi
+                  - definition: "false"
+            - generic:
+              - heading [level=3]: Caracteristiques techniques
+              - generic:
+                - generic:
+                  - term: Gamme
+                  - definition: SikaCeram
+                - generic:
+                  - term: Code couleur
+                  - definition: "04"
+                - generic:
+                  - term: Etanche
+                  - definition: "false"
+    - generic:
+      - generic:
+        - generic:
+          - paragraph: À comparer
+          - heading [level=2]: Produits proches
+      - generic:
+        - article:
+          - generic:
+            - link:
+              - /url: /produits/sika-ciment-colle-ceram-sac-25kg
+              - img
+            - generic: Sika
+            - generic:
+              - button:
+                - generic:
+                  - generic:
+                    - generic:
+                      - img
+          - generic:
+            - generic:
+              - paragraph: "00227926"
+              - link:
+                - /url: /produits/sika-ciment-colle-ceram-sac-25kg
+                - heading [level=3]: Sika - Ciment Colle Ceram Sac 25KG
+              - paragraph: Colle, joint & produit de pose
+            - generic:
+              - generic:
+                - paragraph: 43,684 DT
+              - generic:
+                - img
+                - text: En stock
+            - generic:
+              - generic:
+                - button:
+                  - generic:
+                    - generic:
+                      - img
+                    - generic: Ajouter au panier
+  - contentinfo:
+    - generic:
+      - generic:
+        - generic:
+          - paragraph: ECOMMERCE
+          - paragraph: Produits, panier, commandes et suivi client.
+          - generic:
+            - link:
+              - /url: tel:+21675731731
+              - img
+              - text: +216 75731731
+            - link:
+              - /url: mailto:contact@cobamgroup.com
+              - img
+              - text: contact@cobamgroup.com
+            - paragraph:
+              - img
+              - text: Djerba, Tunisie
+        - generic:
+          - heading [level=2]: Service client
+          - generic:
+            - link:
+              - /url: /suivi-commande
+              - text: Suivre une commande
+            - link:
+              - /url: /panier
+              - text: Panier
+            - link:
+              - /url: /compte
+              - text: Compte client
+            - link:
+              - /url: /checkout
+              - text: Commander
+        - generic:
+          - heading [level=2]: Aide
+          - generic:
+            - link:
+              - /url: /suivi-commande
+              - text: Livraison
+            - link:
+              - /url: /suivi-commande
+              - text: Retours
+            - link:
+              - /url: /conditions-generales
+              - text: Conditions
+            - link:
+              - /url: /politique-de-confidentialite
+              - text: Confidentialité
+        - generic:
+          - heading [level=2]: Catégories
+          - generic:
+            - link:
+              - /url: /catalogue?categorie=revetements-de-sols-et-murs
+              - text: Revêtements de sols et murs
+            - link:
+              - /url: /catalogue?categorie=isolation-et-etancheite
+              - text: Isolation et étanchéité
+            - link:
+              - /url: /catalogue?categorie=salle-de-bain-et-cuisine
+              - text: Salle de bain et cuisine
+            - link:
+              - /url: /catalogue?categorie=peintures-et-decoration
+              - text: Peintures et décoration
+            - link:
+              - /url: /catalogue?categorie=piscine
+              - text: Piscine
+            - link:
+              - /url: /catalogue?categorie=portes-et-menuiserie
+              - text: Portes et menuiserie
+      - generic:
+        - paragraph: © 2026 COBAM GROUP. Tous droits réservés.
+        - generic:
+          - link:
+            - /url: https://www.facebook.com/cobamgrp
+            - text: Facebook
+          - link:
+            - /url: https://www.instagram.com/cobamgroup/
+            - text: Instagram
+          - link:
+            - /url: https://www.linkedin.com/company/cobam-group/
+            - text: LinkedIn
+  - generic [ref=e1316]:
+    - generic [ref=e1318]:
+      - img [ref=e1320]
+      - generic [ref=e1323]:
+        - paragraph [ref=e1324]: Produit retire du panier
+        - paragraph [ref=e1325]: Sika - Carrojoint Antracite 04 5kg
+      - button [ref=e1326]:
+        - img [ref=e1327]
+        - text: Undo
+    - button [ref=e1332]:
+      - img [ref=e1333]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e1251] [cursor=pointer]:
+    - img [ref=e1252]
+  - alert
+  - dialog [active]:
+    - generic:
+      - heading [level=2]: Panier
+      - paragraph: Votre panier est vide.
+    - generic:
+      - generic:
+        - img
+        - heading [level=3]: Panier vide
+        - paragraph: Ajoutez des produits depuis le catalogue.
+    - generic:
+      - generic:
+        - generic:
+          - generic: Sous-total TTC
+          - generic: Sur devis
+        - generic:
+          - generic: Total
+          - generic: Sur devis
+      - link:
+        - /url: /checkout
+        - img
+        - text: Passer au checkout
+    - button:
+      - img
+      - generic: Fermer
+  - dialog [ref=e1274]:
+    - generic [ref=e1275]:
+      - heading [level=2] [ref=e1276]: Panier
+      - paragraph [ref=e1277]: Votre panier est vide.
+    - generic [ref=e1279]:
+      - img [ref=e1336]
+      - heading [level=3] [ref=e1339]: Panier vide
+      - paragraph [ref=e1340]: Ajoutez des produits depuis le catalogue.
+    - generic [ref=e1300]:
+      - generic [ref=e1301]:
+        - generic [ref=e1302]:
+          - generic [ref=e1303]: Sous-total TTC
+          - generic [ref=e1304]: Sur devis
+        - generic [ref=e1305]:
+          - generic [ref=e1306]: Total
+          - generic [ref=e1307]: Sur devis
+      - link [ref=e1308] [cursor=pointer]:
+        - /url: /checkout
+        - img [ref=e1309]
+        - text: Passer au checkout
+    - button [ref=e1311]:
+      - img [ref=e1312]
+      - generic [ref=e1315]: Fermer

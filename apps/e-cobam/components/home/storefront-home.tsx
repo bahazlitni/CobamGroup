@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock3,
-  PackageCheck,
   RotateCcw,
   Search,
   ShoppingBag,
@@ -13,11 +12,10 @@ import {
   Truck,
 } from "lucide-react";
 
-import { AddToCartButton } from "@/components/cart/add-to-cart-button";
-import { FavoriteToggleButton } from "@/components/favorites/favorite-toggle-button";
+import { ProductCard } from "@/components/commerce/product-card";
 import { SafeMediaImage } from "@/components/home/safe-media-image";
 import { ButtonLink } from "@/components/ui/button";
-import { formatCompactNumber, formatPriceTnd } from "@/lib/format";
+import { formatCompactNumber } from "@/lib/format";
 import type {
   LandingBrand,
   LandingCategory,
@@ -95,108 +93,6 @@ function SearchBar({ large = false }: { large?: boolean }) {
         <Search className="size-4 sm:hidden" aria-hidden="true" />
       </button>
     </form>
-  );
-}
-
-function StockBadge({ stock }: { stock: LandingProduct["stock"] }) {
-  const tone =
-    stock.tone === "available"
-      ? "bg-emerald-50 text-emerald-700"
-      : stock.tone === "warning"
-        ? "bg-amber-50 text-amber-700"
-        : "bg-rose-50 text-rose-700";
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-black ${tone}`}
-    >
-      <PackageCheck className="size-3" aria-hidden="true" />
-      {stock.label}
-    </span>
-  );
-}
-
-function ProductCard({ product }: { product: LandingProduct }) {
-  const image = product.image?.thumbnailUrl ?? product.image?.url ?? null;
-  const price = formatPriceTnd(product.price) ?? "Prix sur demande";
-  const favoriteItem = {
-    id: product.id,
-    entityType: "PRODUCT",
-    sku: product.sku,
-    name: product.name,
-    href: product.href,
-    price: product.price,
-    imageUrl: image,
-    brandName: product.brandName,
-    categoryName: product.categoryName ?? product.subcategoryName,
-  } as const;
-
-  return (
-    <article className="group border-ec-line hover:border-ec-blue/35 relative flex h-full flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_12px_34px_rgba(20,32,46,0.055)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_52px_rgba(20,32,46,0.1)]">
-      <Link
-        href={product.href}
-        className="focus-visible:outline-ec-blue relative block aspect-square w-full overflow-hidden bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-      >
-        {image ? (
-          <SafeMediaImage
-            src={image}
-            alt={product.image?.altText ?? product.name}
-            className="object-contain p-6 transition duration-300 group-hover:scale-[1.025]"
-            fallback="COBAM"
-          />
-        ) : (
-          <span className="text-ec-muted/45 grid h-full place-items-center text-xs font-black tracking-[0.2em] uppercase">
-            COBAM
-          </span>
-        )}
-        {product.badges[0] ? (
-          <span className="text-ec-blue absolute top-3 left-3 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-black tracking-[0.12em] uppercase shadow-sm">
-            {product.badges[0]}
-          </span>
-        ) : null}
-      </Link>
-      <FavoriteToggleButton item={favoriteItem} className="absolute top-3 right-3 z-10" />
-
-      <div className="flex flex-1 flex-col p-5">
-        <div className="min-h-[5.5rem]">
-          <p className="text-ec-blue line-clamp-1 text-[11px] font-black tracking-[0.18em] uppercase">
-            {product.brandName ?? product.categoryName ?? "COBAM"}
-          </p>
-          <Link
-            href={product.href}
-            className="text-ec-ink hover:text-ec-blue mt-2 line-clamp-2 text-sm leading-5 font-black transition"
-          >
-            {product.name}
-          </Link>
-        </div>
-
-        <div className="mt-5 flex items-center justify-between gap-4">
-          <p className="text-ec-ink text-lg font-black">{price}</p>
-          <StockBadge stock={product.stock} />
-        </div>
-
-        <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
-          <AddToCartButton
-            item={{
-              id: product.id,
-              sku: product.sku,
-              name: product.name,
-              price: product.price,
-              imageUrl: image,
-            }}
-            quantity={1}
-            size="sm"
-            className="sm:w-full"
-          />
-          <Link
-            href={product.href}
-            className="border-ec-line text-ec-ink hover:border-ec-blue/40 hover:text-ec-blue inline-flex h-10 items-center justify-center rounded-full border px-4 text-sm font-black transition"
-          >
-            Détails
-          </Link>
-        </div>
-      </div>
-    </article>
   );
 }
 
