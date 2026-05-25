@@ -248,7 +248,7 @@ export default function MediaUploadDialog({
             Importer plusieurs fichiers
           </DialogTitle>
           <DialogDescription className="text-sm leading-6 text-slate-500">
-            Selectionnez un ou plusieurs fichiers pour les ajouter a la mediatheque.
+            Sélectionnez un ou plusieurs fichiers pour les ajouter à la médiathèque.
             Stockage actif:{" "}
             <span className="font-medium text-slate-700">
               {storage?.label ?? "configuration locale"}
@@ -264,10 +264,10 @@ export default function MediaUploadDialog({
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div className="space-y-1">
                     <p className="text-sm font-semibold text-cobam-dark-blue">
-                      Selection des fichiers
+                      Sélection des fichiers
                     </p>
                     <p className="text-sm text-slate-500">
-                      Images, videos, PDF, audio et autres documents legers.
+                      Images, vidéos, PDF, audio et autres documents legers.
                     </p>
                   </div>
 
@@ -373,7 +373,7 @@ export default function MediaUploadDialog({
                   </div>
                   <div className="rounded-lg border border-slate-300 bg-slate-50 px-4 py-3">
                     <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
-                      Importes
+                      Importés
                     </p>
                     <p className="mt-2 text-2xl font-semibold text-emerald-700">
                       {summary.successCount}
@@ -403,16 +403,16 @@ export default function MediaUploadDialog({
               <Card className="rounded-[2rem] border border-slate-300 py-0 ring-0">
                 <CardHeader className="border-b border-slate-300 px-5 py-4">
                   <CardTitle className="text-base text-cobam-dark-blue">
-                    Metadonnees du fichier
+                    Métadonnées du fichier
                   </CardTitle>
                   <CardDescription>
-                    Ces champs s&apos;appliquent uniquement quand un seul fichier est importe.
+                    Ces champs s&apos;appliquent uniquement quand un seul fichier est importé.
                   </CardDescription>
                 </CardHeader>
               <CardContent className="space-y-4 px-5 py-5">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-cobam-dark-blue">
-                    Dossier cible
+                    Dossier ciblé
                   </label>
                   <StaffSearchSelect
                     value={folderId}
@@ -431,7 +431,7 @@ export default function MediaUploadDialog({
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-cobam-dark-blue">
-                    Visibilite initiale
+                    Visibilité initiale
                   </label>
                   <StaffSelect
                     value={visibility}
@@ -484,7 +484,7 @@ export default function MediaUploadDialog({
                 </CardHeader>
                 <CardContent className="space-y-3 px-5 py-5 text-sm leading-6 text-slate-500">
                   <p>
-                    Les nouveaux fichiers sont importes en mode{" "}
+                    Les nouveaux fichiers sont importés en mode{" "}
                     <span className="font-medium text-slate-700">
                       {visibility === "PUBLIC" ? "public" : "prive"}
                     </span>
@@ -498,14 +498,14 @@ export default function MediaUploadDialog({
                     .
                   </p>
                   <p>
-                    Les noms d&apos;origine des fichiers sont conserves automatiquement.
+                    Les noms d&apos;origine des fichiers sont conservés automatiquement.
                   </p>
                   <p>
-                    Les metadonnees avancees pourront etre ajustees ensuite depuis
-                    l&apos;inspecteur de la mediatheque.
+                    Les métadonnées avancées pourront être ajustées ensuite depuis
+                    l&apos;inspecteur de la médiathèque.
                   </p>
                   <p>
-                    En cas d&apos;erreur partielle, seuls les fichiers en echec restent a
+                    En cas d&apos;erreur partielle, seuls les fichiers en échec restent à
                     reprendre.
                   </p>
                 </CardContent>

@@ -4,19 +4,19 @@
 :root {
   --ec-primary: #14202e;
   --ec-secondary: #0a8dc1;
-  --ec-background: #fafaf7;
-  --ec-border: #dbe2ea;
+  --ec-background: #fbfaf6;
+  --ec-border: #ded8ce;
   --ec-paper: var(--ec-background);
   --ec-ink: #14202e;
-  --ec-muted: #647184;
+  --ec-muted: #6d6a63;
   --ec-line: var(--ec-border);
   --ec-blue: #0a8dc1;
   --ec-brass: #b08a5a;
-  --ec-stone: #f1eee8;
-  --ec-stone-strong: #e5ded2;
+  --ec-stone: #f3efe7;
+  --ec-stone-strong: #e6ded1;
   --ec-white: #ffffff;
-  --font-sans: "Sora", "Aptos", "Segoe UI", Arial, sans-serif;
-  --font-serif: "Source Serif 4", Georgia, serif;
+  --font-sans: "Manrope", "Aptos", "Segoe UI", Arial, sans-serif;
+  --font-serif: "Figtree", "Manrope", "Aptos", "Segoe UI", Arial, sans-serif;
 }
 
 @theme inline {
@@ -75,8 +75,28 @@
 }
 
 .commerce-container {
-  width: min(92rem, calc(100vw - 2.5rem));
+  width: min(92rem, calc(100vw - 2rem));
   margin-inline: auto;
+}
+
+.commerce-ui,
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-sans);
+}
+
+.commerce-display {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.commerce-label {
+  font-family: var(--font-sans);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
 }
 
 .commerce-thin-scrollbar {
@@ -94,7 +114,6 @@
 
 .commerce-thin-scrollbar::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--ec-ink) 26%, transparent);
-  border-radius: 999px;
 }
 
 .commerce-thin-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -279,7 +298,6 @@
 }
 
 .ecom-search-panel {
-  border-radius: 0.5rem;
   backdrop-filter: blur(18px);
   box-shadow:
     0 24px 80px rgba(0, 0, 0, 0.18),
@@ -288,7 +306,6 @@
 
 .ecom-hero-orbit {
   border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 1.5rem;
   transform: rotate(-5deg) scale(0.94);
   transform-origin: 50% 50%;
 }
@@ -299,6 +316,12 @@
   position: absolute;
   border-radius: inherit;
   pointer-events: none;
+}
+
+@media (max-width: 639px) {
+  .commerce-container {
+    width: min(100% - 2rem, 92rem);
+  }
 }
 
 .ecom-hero-orbit::before {
@@ -359,5 +382,25 @@
 
   .ecom-brand-marquee-track {
     animation: none;
+  }
+}
+
+@layer utilities {
+  .rounded-sm,
+  .rounded-md,
+  .rounded-lg,
+  .rounded-xl,
+  .rounded-2xl,
+  .rounded-3xl,
+  [class*="rounded-["] {
+    border-radius: 0 !important;
+  }
+
+  .rounded-full:not([class*="size-"]) {
+    border-radius: 0 !important;
+  }
+
+  .rounded-full[class*="size-"] {
+    border-radius: 9999px !important;
   }
 }

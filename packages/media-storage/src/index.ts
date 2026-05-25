@@ -124,7 +124,7 @@ export function getMediaStorageInfo(): MediaStorageInfo {
     driver: "local",
     label: "Stockage local",
     locationLabel: "Stockage partage",
-    hint: "Les applications du workspace utilisent le même dossier local par defaut.",
+    hint: "Les applications du workspace utilisent le même dossier local par défaut.",
   };
 }
 

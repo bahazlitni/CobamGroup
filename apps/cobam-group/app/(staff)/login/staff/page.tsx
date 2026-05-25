@@ -9,11 +9,10 @@ import { staffApiFetch } from "@/lib/api/auth/staff/api-fetch";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import OTPInput from "@/components/ui/custom/OTPInput";
 
-type LoginStep = "password" | "otp";
+type LoginStep = "password" | "otp" | "forgot-password" | "forgot-password-info";
 type OtpVisualState = "idle" | "error" | "success";
 
-const DEFAULT_STAFF_LOGIN_REDIRECT =
-  "/espace/staff/accueil/tableau-de-bord";
+const DEFAULT_STAFF_LOGIN_REDIRECT = "/espace/staff/accueil/tableau-de-bord";
 
 function resolveStaffLoginRedirect(value: string | null) {
   if (!value) {
@@ -26,14 +25,9 @@ function resolveStaffLoginRedirect(value: string | null) {
     return DEFAULT_STAFF_LOGIN_REDIRECT;
   }
 
-  const redirectPath = trimmedValue.startsWith("/")
-    ? trimmedValue
-    : `/${trimmedValue}`;
+  const redirectPath = trimmedValue.startsWith("/") ? trimmedValue : `/${trimmedValue}`;
 
-  if (
-    redirectPath === "/annuaire" ||
-    redirectPath.startsWith("/espace/staff/")
-  ) {
+  if (redirectPath === "/annuaire" || redirectPath.startsWith("/espace/staff/")) {
     return redirectPath;
   }
 
@@ -45,9 +39,7 @@ function getRedirectAfterLogin() {
     return DEFAULT_STAFF_LOGIN_REDIRECT;
   }
 
-  return resolveStaffLoginRedirect(
-    new URLSearchParams(window.location.search).get("redirect"),
-  );
+  return resolveStaffLoginRedirect(new URLSearchParams(window.location.search).get("redirect"));
 }
 
 export default function StaffLoginPage() {
@@ -61,8 +53,13 @@ export default function StaffLoginPage() {
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isResendingOtp, setIsResendingOtp] = useState(false);
+  const [isRequestingPasswordReset, setIsRequestingPasswordReset] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState(
+    "Si votre email est correct, nous vous avons envoyé un lien magique.",
+  );
   const [otpStatusText, setOtpStatusText] = useState<string | null>(null);
   const [otpVisualState, setOtpVisualState] = useState<OtpVisualState>("idle");
 
@@ -146,7 +143,7 @@ export default function StaffLoginPage() {
       setPendingPassword(password);
       setStep("otp");
       setOtpVisualState("idle");
-      setOtpStatusText(null);
+      setOtpStatusText(typeof data.message === "string" ? data.message : null);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erreur inattendue");
     } finally {
@@ -232,10 +229,11 @@ export default function StaffLoginPage() {
         throw new Error(data.message || "Erreur lors du renvoi du code OTP.");
       }
 
-      setOtpStatusText("Nouveau code OTP envoyé.");
+      setOtpStatusText(
+        typeof data.message === "string" ? data.message : "Nouveau Code OTP envoyé.",
+      );
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Erreur lors du renvoi du code OTP.";
+      const message = err instanceof Error ? err.message : "Erreur lors du renvoi du code OTP.";
       setOtpVisualState("error");
       setOtpStatusText(message);
       setError(message);
@@ -244,10 +242,67 @@ export default function StaffLoginPage() {
     }
   };
 
+  const openForgotPasswordFlow = () => {
+    setError(null);
+    setForgotPasswordMessage("Si votre email est correct, nous vous avons envoyé un lien magique.");
+    setStep("forgot-password");
+  };
+
+  const returnToPasswordStep = () => {
+    setStep("password");
+    setError(null);
+    setForgotPasswordEmail("");
+    setForgotPasswordMessage("Si votre email est correct, nous vous avons envoyé un lien magique.");
+  };
+
+  const handleForgotPasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    setIsRequestingPasswordReset(true);
+
+    try {
+      const formData = new FormData(e.currentTarget);
+      const resetEmail = String(formData.get("forgot-email") ?? "")
+        .trim()
+        .toLowerCase();
+
+      setForgotPasswordEmail(resetEmail);
+
+      const res = await fetch("/api/auth/staff/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+      const data = await res.json().catch(() => null);
+
+      setForgotPasswordMessage(
+        typeof data?.message === "string"
+          ? data.message
+          : "Si votre email est correct, nous vous avons envoyé un lien magique.",
+      );
+
+      if (!res.ok) {
+        console.error("FORGOT_PASSWORD_REQUEST_ERROR:", data);
+      }
+
+      setStep("forgot-password-info");
+    } catch (err) {
+      console.error("FORGOT_PASSWORD_REQUEST_ERROR:", err);
+      setForgotPasswordMessage(
+        "Si votre email est correct, nous vous avons envoyé un lien magique.",
+      );
+      setStep("forgot-password-info");
+    } finally {
+      setIsRequestingPasswordReset(false);
+    }
+  };
+
   return (
     <main className="flex min-h-screen flex-col bg-[#FDFDFD] lg:flex-row">
-      <div className="relative hidden min-h-[40vh] w-full flex-col justify-end overflow-hidden bg-cobam-dark-blue lg:fixed lg:inset-y-0 lg:left-0 lg:block lg:min-h-screen lg:w-1/2">
-        <div className="absolute left-6 top-6 z-50 lg:left-10 lg:top-10">
+      <div className="bg-cobam-dark-blue relative hidden min-h-[40vh] w-full flex-col justify-end overflow-hidden lg:fixed lg:inset-y-0 lg:left-0 lg:block lg:min-h-screen lg:w-1/2">
+        <div className="absolute top-6 left-6 z-50 lg:top-10 lg:left-10">
           <AnimatedUIButton href="/" variant="secondary" icon="arrow-left">
             Retour
           </AnimatedUIButton>
@@ -275,20 +330,20 @@ export default function StaffLoginPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
           >
-            <p className="mb-4 text-xs font-bold uppercase tracking-[0.25em] text-cobam-water-blue sm:text-sm">
+            <p className="text-cobam-water-blue mb-4 text-xs font-bold tracking-[0.25em] uppercase sm:text-sm">
               Portail privé
             </p>
 
-            <h1
-              className="mb-6 text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl"
+            <h2
+              className="mb-6 text-4xl leading-tight font-bold text-white sm:text-5xl lg:text-6xl"
               style={{ fontFamily: "var(--font-playfair), serif" }}
             >
               Espace Team
-            </h1>
+            </h2>
 
-            <p className="max-w-lg text-sm font-light leading-relaxed text-white/80 sm:text-base">
-              Gérez le contenu du site, les produits et les marques depuis une
-              interface dédiée aux équipes COBAM GROUP.
+            <p className="max-w-lg text-sm leading-relaxed font-light text-white/80 sm:text-base">
+              Gérez le contenu du site, les produits et les marques depuis une interface dédiée aux
+              équipes COBAM GROUP.
             </p>
           </motion.div>
         </div>
@@ -306,25 +361,18 @@ export default function StaffLoginPage() {
                 transition={{ duration: 0.35, ease: "easeOut" }}
                 className="mb-12"
               >
-                <div className="mb-10">
-                  <h2
-                    className="mb-4 text-3xl font-bold text-cobam-dark-blue sm:text-4xl"
-                    style={{ fontFamily: "var(--font-playfair), serif" }}
-                  >
-                    Connexion
-                  </h2>
-
-                  <p className="text-sm leading-relaxed text-cobam-carbon-grey">
-                    Veuillez saisir vos identifiants professionnels pour accéder
-                    à votre tableau de bord.
-                  </p>
-                </div>
+                <h1
+                  className="text-cobam-dark-blue mb-4 mb-10 text-3xl font-bold sm:text-4xl"
+                  style={{ fontFamily: "var(--font-playfair), serif" }}
+                >
+                  Connexion
+                </h1>
 
                 <form onSubmit={handlePasswordSubmit} className="space-y-6">
                   <div className="space-y-2">
                     <label
                       htmlFor="username"
-                      className="ml-1 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-cobam-dark-blue"
+                      className="text-cobam-dark-blue ml-1 flex items-center gap-2 text-xs font-bold tracking-[0.1em] uppercase"
                     >
                       <Mail size={14} className="text-cobam-water-blue" />
                       Adresse e-mail
@@ -337,7 +385,7 @@ export default function StaffLoginPage() {
                       autoComplete="username"
                       required
                       disabled={isCheckingSession || isSubmitting}
-                      className="w-full rounded-lg border border-gray-200 bg-[#F8F9FA] px-5 py-4 text-sm text-cobam-dark-blue shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all focus:border-cobam-water-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-cobam-water-blue/40 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="text-cobam-dark-blue focus:border-cobam-water-blue focus:ring-cobam-water-blue/40 w-full rounded-lg border border-gray-200 bg-[#F8F9FA] px-5 py-4 text-sm shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all focus:bg-white focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                       placeholder="votre.nom@cobamgroup.com"
                     />
                   </div>
@@ -345,7 +393,7 @@ export default function StaffLoginPage() {
                   <div className="space-y-2">
                     <label
                       htmlFor="password"
-                      className="ml-1 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-cobam-dark-blue"
+                      className="text-cobam-dark-blue ml-1 flex items-center gap-2 text-xs font-bold tracking-[0.1em] uppercase"
                     >
                       <Lock size={14} className="text-cobam-water-blue" />
                       Mot de passe
@@ -358,9 +406,19 @@ export default function StaffLoginPage() {
                       autoComplete="current-password"
                       required
                       disabled={isCheckingSession || isSubmitting}
-                      className="w-full rounded-lg border border-gray-200 bg-[#F8F9FA] px-5 py-4 text-sm text-cobam-dark-blue shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all focus:border-cobam-water-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-cobam-water-blue/40 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="text-cobam-dark-blue focus:border-cobam-water-blue focus:ring-cobam-water-blue/40 w-full rounded-lg border border-gray-200 bg-[#F8F9FA] px-5 py-4 text-sm shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all focus:bg-white focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                       placeholder="••••••••"
                     />
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={openForgotPasswordFlow}
+                        disabled={isCheckingSession || isSubmitting}
+                        className="text-cobam-water-blue hover:text-cobam-dark-blue text-xs font-semibold transition"
+                      >
+                        Mot de passe oublié ?
+                      </button>
+                    </div>
                   </div>
 
                   {error && (
@@ -369,9 +427,7 @@ export default function StaffLoginPage() {
                       animate={{ opacity: 1, y: 0 }}
                       className="rounded-lg border border-red-100 bg-red-50 px-4 py-3"
                     >
-                      <p className="text-center text-xs font-medium text-red-600">
-                        {error}
-                      </p>
+                      <p className="text-center text-xs font-medium text-red-600">{error}</p>
                     </motion.div>
                   )}
 
@@ -382,9 +438,7 @@ export default function StaffLoginPage() {
                       variant="primary"
                       loading={isCheckingSession || isSubmitting}
                       icon="arrow-right"
-                      loadingText={
-                        isCheckingSession ? "Vérification..." : "Connexion..."
-                      }
+                      loadingText={isCheckingSession ? "Vérification..." : "Connexion..."}
                     >
                       {isCheckingSession
                         ? "Vérification..."
@@ -394,6 +448,126 @@ export default function StaffLoginPage() {
                     </AnimatedUIButton>
                   </div>
                 </form>
+              </motion.div>
+            ) : step === "forgot-password" ? (
+              <motion.div
+                key="forgot-password-step"
+                initial={{ opacity: 0, x: 34 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -34 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="mb-12"
+              >
+                <div className="mb-10">
+                  <AnimatedUIButton
+                    type="button"
+                    variant="secondary"
+                    icon="arrow-left"
+                    onClick={returnToPasswordStep}
+                    disabled={isRequestingPasswordReset}
+                  >
+                    Retour
+                  </AnimatedUIButton>
+
+                  <h1
+                    className="mt-8 text-cobam-dark-blue mb-4 text-3xl font-bold sm:text-4xl"
+                    style={{ fontFamily: "var(--font-playfair), serif" }}
+                  >
+                    Mot de passe oublié
+                  </h1>
+                </div>
+
+                <form onSubmit={handleForgotPasswordSubmit} className="space-y-6">
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="forgot-email"
+                      className="text-cobam-dark-blue ml-1 flex items-center gap-2 text-xs font-bold tracking-[0.1em] uppercase"
+                    >
+                      <Mail size={14} className="text-cobam-water-blue" />
+                      Adresse e-mail
+                    </label>
+
+                    <input
+                      id="forgot-email"
+                      name="forgot-email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={forgotPasswordEmail}
+                      onChange={(event) => setForgotPasswordEmail(event.target.value)}
+                      disabled={isRequestingPasswordReset}
+                      className="text-cobam-dark-blue focus:border-cobam-water-blue focus:ring-cobam-water-blue/40 w-full rounded-lg border border-gray-200 bg-[#F8F9FA] px-5 py-4 text-sm shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all focus:bg-white focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder="votre.nom@cobamgroup.com"
+                    />
+                  </div>
+
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="rounded-lg border border-red-100 bg-red-50 px-4 py-3"
+                    >
+                      <p className="text-center text-xs font-medium text-red-600">{error}</p>
+                    </motion.div>
+                  )}
+
+                  <div className="flex justify-end pt-4">
+                    <AnimatedUIButton
+                      type="submit"
+                      disabled={isRequestingPasswordReset}
+                      variant="primary"
+                      loading={isRequestingPasswordReset}
+                      icon="paper-plane"
+                      loadingText="Envoi..."
+                    >
+                      Envoyer le lien
+                    </AnimatedUIButton>
+                  </div>
+                </form>
+              </motion.div>
+            ) : step === "forgot-password-info" ? (
+              <motion.div
+                key="forgot-password-info-step"
+                initial={{ opacity: 0, x: 34 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -34 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="mb-12"
+              >
+                <div className="mb-10">
+                  <AnimatedUIButton
+                    type="button"
+                    variant="secondary"
+                    icon="arrow-left"
+                    onClick={returnToPasswordStep}
+                  >
+                    Retour
+                  </AnimatedUIButton>
+
+                  <div className="mt-8">
+                    <h1
+                      className="text-cobam-dark-blue mb-4 text-3xl font-bold sm:text-4xl"
+                      style={{ fontFamily: "var(--font-playfair), serif" }}
+                    >
+                      Vérifiez votre boîte mail
+                    </h1>
+
+                    <p className="text-cobam-carbon-grey text-sm leading-relaxed">
+                      {forgotPasswordMessage}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <AnimatedUIButton
+                    type="button"
+                    variant="primary"
+                    icon="arrow-right"
+                    onClick={returnToPasswordStep}
+                  >
+                    Continuer
+                  </AnimatedUIButton>
+                </div>
               </motion.div>
             ) : (
               <motion.div
@@ -410,11 +584,7 @@ export default function StaffLoginPage() {
                   disabled={isAuthenticating}
                   loading={isVerifyingOtp || isAuthenticating}
                   visualState={otpVisualState}
-                  statusText={
-                    isAuthenticating
-                      ? "Authentification en cours..."
-                      : otpStatusText
-                  }
+                  statusText={isAuthenticating ? "Authentification en cours..." : otpStatusText}
                   onVerify={handleOtpVerify}
                   onBack={() => {
                     setStep("password");

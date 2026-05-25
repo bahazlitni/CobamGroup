@@ -93,7 +93,7 @@ No,Category,Icon Name,Keywords,Library,Import Code,Usage,Best For,Style
 92,Location,globe,world international global web,Lucide,import { Globe } from 'lucide-react',<Globe />,Globe world,Outline
 93,Time,calendar,date schedule event appointment,Lucide,import { Calendar } from 'lucide-react',<Calendar />,Calendar date,Outline
 94,Time,refresh-cw,reload sync update refresh,Lucide,import { RefreshCw } from 'lucide-react',<RefreshCw />,Refresh reload,Outline
-95,Time,rotate-ccw,undo back revert history,Lucide,import { RotateCcw } from 'lucide-react',<RotateCcw />,Undo revert,Outline
+95,Time,rotate-ccw,undo back revert history,Lucide,import { RotateCcw } from 'lucide-react',<RotateCcw />,Annuler revert,Outline
 96,Time,rotate-cw,redo forward repeat history,Lucide,import { RotateCw } from 'lucide-react',<RotateCw />,Redo forward,Outline
 97,Development,code,develop programming syntax html,Lucide,import { Code } from 'lucide-react',<Code />,Code development,Outline
 98,Development,terminal,console cli command shell,Lucide,import { Terminal } from 'lucide-react',<Terminal />,Terminal console,Outline

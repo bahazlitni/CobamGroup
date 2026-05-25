@@ -1,8 +1,8 @@
 "use client";
 
 import { AnimatedUIButton, type ButtonVariant } from "./AnimatedUIButton";
-import type { AnimatedUISize } from "./animated-ui";
-import { cn } from "./cn";
+import type { AnimatedUISize } from "./animated-ui.shared";
+import { cn } from "@/lib/utils";
 
 export type CopyButtonProps = {
   value: string;

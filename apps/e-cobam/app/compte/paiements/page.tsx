@@ -76,7 +76,7 @@ export default async function CustomerPaymentsPage() {
                   </CardHeader>
                   <CardContent>
                     {method.isDefault ? (
-                      <Badge variant="blue">Paiement par defaut</Badge>
+                      <Badge variant="blue">Paiement par défaut</Badge>
                     ) : (
                       <Badge variant="outline">Preference</Badge>
                     )}
@@ -90,7 +90,7 @@ export default async function CustomerPaymentsPage() {
                         size="sm"
                         icon={<Star className="size-4" />}
                       >
-                        Defaut
+                        Défaut
                       </Button>
                     </form>
                     <form action={deleteCustomerPaymentMethodAction}>
@@ -112,9 +112,9 @@ export default async function CustomerPaymentsPage() {
             <Alert variant="muted">
               <CreditCard />
               <div>
-                <AlertTitle>Aucune preference de paiement</AlertTitle>
+                <AlertTitle>Aucune préférence de paiement</AlertTitle>
                 <AlertDescription>
-                  Ajoutez une preference pour simplifier la validation de vos prochaines commandes.
+                  Ajoutez une préférence pour simplifier la validation de vos prochaines commandes.
                 </AlertDescription>
               </div>
             </Alert>
@@ -136,7 +136,7 @@ export default async function CustomerPaymentsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="BANK_TRANSFER">Virement bancaire</SelectItem>
-                      <SelectItem value="CASH_ON_DELIVERY">Paiement a la livraison</SelectItem>
+                      <SelectItem value="CASH_ON_DELIVERY">Paiement à la livraison</SelectItem>
                       <SelectItem value="PAY_IN_STORE">Paiement en magasin</SelectItem>
                     </SelectContent>
                   </Select>
@@ -162,11 +162,11 @@ export default async function CustomerPaymentsPage() {
               <CardContent className="pt-5 sm:pt-6">
                 <Label className="border-ec-line text-ec-ink flex min-h-16 items-center gap-3 rounded-2xl border p-4 text-sm font-semibold tracking-normal normal-case">
                   <Checkbox name="isDefault" defaultChecked={account.paymentMethods.length === 0} />
-                  Utiliser par defaut
+                  Utiliser par défaut
                 </Label>
               </CardContent>
               <CardFooter>
-                <Button type="submit">Ajouter la preference</Button>
+                <Button type="submit">Ajouter la préférence</Button>
               </CardFooter>
             </Card>
           </form>

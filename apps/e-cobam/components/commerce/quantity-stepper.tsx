@@ -54,7 +54,7 @@ function QuantityStepButton({
       type="button"
       whileTap={disabled ? undefined : { scale: 0.9 }}
       disabled={disabled}
-      className="text-ec-muted hover:text-ec-ink grid size-14 shrink-0 place-items-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ec-blue/25 disabled:pointer-events-none disabled:opacity-45"
+      className="text-ec-muted hover:text-ec-ink grid size-14 shrink-0 place-items-center font-sans transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ec-blue/25 disabled:pointer-events-none disabled:opacity-45"
       onPointerDown={(event) => onPointerStart(delta, event)}
       onPointerUp={onStop}
       onPointerCancel={onStop}
@@ -185,7 +185,7 @@ export function QuantityStepper({
     <motion.div
       layout
       className={cn(
-        "border-ec-line flex h-14 w-full items-center justify-between overflow-hidden rounded-full border bg-white shadow-sm",
+        "border-ec-line flex h-14 w-full items-center justify-between overflow-hidden border bg-white",
         disabled && "opacity-65",
         className,
       )}

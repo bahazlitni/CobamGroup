@@ -8,8 +8,6 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
-    "framer-motion": "^12.40.0",
-    "lucide-react": "^0.561.0",
     "tailwind-merge": "^3.4.0"
   },
   "exports": {
@@ -17,12 +15,6 @@
     "./brand": "./src/brand.ts",
     "./contact": "./src/contact.ts",
     "./search/product-search": "./src/search/product-search.ts",
-    "./ui/AnimatedUIButton": "./src/ui/AnimatedUIButton.tsx",
-    "./ui/AnimatedIcon": "./src/ui/AnimatedIcon.tsx",
-    "./ui/CopyButton": "./src/ui/CopyButton.tsx",
-    "./ui/ImagePreviewCarousel": "./src/ui/ImagePreviewCarousel.tsx",
-    "./ui/PublicRichText": "./src/ui/PublicRichText.tsx",
-    "./ui/RailCarousel": "./src/ui/RailCarousel.tsx",
-    "./ui/animated-ui": "./src/ui/animated-ui.ts"
+    "./ui/PublicRichText": "./src/ui/PublicRichText.tsx"
   }
 }

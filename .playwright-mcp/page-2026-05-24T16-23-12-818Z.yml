@@ -1092,11 +1092,11 @@
     - generic [ref=e1318]:
       - img [ref=e1320]
       - generic [ref=e1323]:
-        - paragraph [ref=e1324]: Produit retire du panier
+        - paragraph [ref=e1324]: Retiré du panier
         - paragraph [ref=e1325]: Sika - Carrojoint Antracite 04 5kg
       - button [ref=e1326]:
         - img [ref=e1327]
-        - text: Undo
+        - text: Annuler
     - button [ref=e1332]:
       - img [ref=e1333]
   - region "Notifications alt+T"

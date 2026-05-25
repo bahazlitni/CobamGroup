@@ -407,7 +407,7 @@ export function CheckoutPageClient() {
             <div className="mt-5 grid gap-3">
               {[
                 ["BANK_TRANSFER", "Virement bancaire"],
-                ["CASH_ON_DELIVERY", "Paiement a la livraison"],
+                ["CASH_ON_DELIVERY", "Paiement à la livraison"],
                 ["PAY_IN_STORE", "Paiement en magasin"],
               ].map(([value, label]) => (
                 <label

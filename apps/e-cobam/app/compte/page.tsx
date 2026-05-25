@@ -5,7 +5,7 @@ import { ArrowRight, CreditCard, MapPin, PackageCheck, UserRound } from "lucide-
 import { AccountPageHeader, AccountPageShell } from "@/components/account/account-shell";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { getCustomerAccount } from "@/lib/customer-account";
 import { getCustomerSession } from "@/lib/customer-auth";
@@ -102,8 +102,7 @@ export default async function AccountPage() {
           <Card>
             <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <CardTitle>Dernieres commandes</CardTitle>
-                <CardDescription>Historique lie a votre compte client.</CardDescription>
+                <CardTitle>Dernières commandes</CardTitle>
               </div>
               <ButtonLink href="/compte/commandes" variant="ghost" size="sm">
                 Tout voir

@@ -531,34 +531,34 @@ function getStartOfMonth() {
 
 const customerOrderStatusLabels: Record<string, string> = {
   PENDING: "en attente de confirmation",
-  CONFIRMED: "confirmee",
-  PREPARING: "en preparation",
-  READY_FOR_PICKUP: "prete pour retrait",
-  SHIPPED: "expediee",
-  DELIVERED: "livree",
-  CANCELLED: "annulee",
-  REFUNDED: "remboursee",
+  CONFIRMED: "confirmée",
+  PREPARING: "en préparation",
+  READY_FOR_PICKUP: "prête pour retrait",
+  SHIPPED: "expédiée",
+  DELIVERED: "livrée",
+  CANCELLED: "annulé",
+  REFUNDED: "remboursé",
 };
 
 const customerPaymentStatusLabels: Record<string, string> = {
   PENDING: "en attente",
   AUTHORIZED: "autorisé",
-  PAID: "paye",
-  FAILED: "echoue",
-  CANCELLED: "annule",
-  REFUNDED: "rembourse",
-  PARTIALLY_REFUNDED: "partiellement rembourse",
+  PAID: "payé",
+  FAILED: "échoué",
+  CANCELLED: "annulé",
+  REFUNDED: "remboursé",
+  PARTIALLY_REFUNDED: "partiellement remboursé",
 };
 
 const customerFulfillmentStatusLabels: Record<string, string> = {
   PENDING: "en attente",
-  SCHEDULED: "planifiee",
-  PREPARING: "en preparation",
-  READY: "prete",
+  SCHEDULED: "planifiée",
+  PREPARING: "en préparation",
+  READY: "prête",
   IN_TRANSIT: "en transit",
-  DELIVERED: "livree",
-  FAILED: "echouee",
-  CANCELLED: "annulee",
+  DELIVERED: "livrée",
+  FAILED: "échoué",
+  CANCELLED: "annulé",
 };
 
 function customerStatusLabel(labels: Record<string, string>, status: string) {
@@ -1430,7 +1430,7 @@ export async function updateEcommercePaymentStatusAdminService(
     if (payment.status !== status) {
       await createOrderCustomerNotification(tx, payment.order, {
         type: "PAYMENT_STATUS",
-        title: `Paiement de ${payment.order.orderNumber} mis a jour`,
+        title: `Paiement de ${payment.order.orderNumber} mis à jour`,
         body: `Le paiement de votre commande est maintenant ${customerStatusLabel(
           customerPaymentStatusLabels,
           status,

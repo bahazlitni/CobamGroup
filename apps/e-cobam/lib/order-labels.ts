@@ -8,40 +8,40 @@ import type {
 
 export const orderStatusLabels: Record<CommerceOrderStatus, string> = {
   DRAFT: "Brouillon",
-  PENDING: "Recue",
-  CONFIRMED: "Confirmee",
-  PREPARING: "Preparation",
-  READY_FOR_PICKUP: "Prete au retrait",
-  SHIPPED: "Expediee",
-  DELIVERED: "Livree",
-  CANCELLED: "Annulee",
-  REFUNDED: "Remboursee",
+  PENDING: "Reçue",
+  CONFIRMED: "Confirmée",
+  PREPARING: "Préparation",
+  READY_FOR_PICKUP: "Prête au retrait",
+  SHIPPED: "Expédiée",
+  DELIVERED: "Livrée",
+  CANCELLED: "Annulée",
+  REFUNDED: "Remboursée",
 };
 
 export const paymentStatusLabels: Record<CommercePaymentStatus, string> = {
   PENDING: "A confirmer",
   AUTHORIZED: "Autorisé",
-  PAID: "Paye",
-  FAILED: "Echoue",
-  CANCELLED: "Annule",
-  REFUNDED: "Rembourse",
-  PARTIALLY_REFUNDED: "Partiellement rembourse",
+  PAID: "Payé",
+  FAILED: "Echoué",
+  CANCELLED: "Annulé",
+  REFUNDED: "Remboursé",
+  PARTIALLY_REFUNDED: "Partiellement remboursé",
 };
 
 export const fulfillmentStatusLabels: Record<CommerceFulfillmentStatus, string> = {
   PENDING: "A planifier",
   SCHEDULED: "Planifié",
-  PREPARING: "En preparation",
-  READY: "Pret",
+  PREPARING: "En préparation",
+  READY: "Prêt",
   IN_TRANSIT: "En transit",
-  DELIVERED: "Livre",
+  DELIVERED: "Livré",
   FAILED: "Echec",
-  CANCELLED: "Annule",
+  CANCELLED: "Annulé",
 };
 
 export const paymentMethodLabels: Record<CommercePaymentMethod, string> = {
   BANK_TRANSFER: "Virement bancaire",
-  CASH_ON_DELIVERY: "Paiement a la livraison",
+  CASH_ON_DELIVERY: "Paiement à la livraison",
   PAY_IN_STORE: "Paiement en magasin",
   CARD: "Carte bancaire",
 };

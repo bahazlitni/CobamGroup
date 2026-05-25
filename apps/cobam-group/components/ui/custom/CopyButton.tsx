@@ -1,6 +1,6 @@
 "use client";
 
-import CopyButton from "@cobam/shared/ui/CopyButton";
+import CopyButton from "@/components/ui/custom/CopyButtonBase";
 import { AnimatedUISize } from "@/components/ui/custom/animated-ui.shared";
 import type { ButtonVariant } from "@/components/ui/custom/AnimatedUIButton";
 import { toast } from "sonner";

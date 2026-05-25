@@ -1,31 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { Bell, CheckCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import {
-  emitNotificationsUpdated,
-  NOTIFICATIONS_UPDATED_EVENT,
-} from "@/lib/notifications-events";
+import { emitNotificationsUpdated } from "@/lib/notifications-events";
 import { pushUndoToast } from "@/lib/undo-actions";
-
-type NotificationItem = {
-  id: string;
-  title: string;
-  body: string;
-  href: string | null;
-  readAt: string | null;
-  createdAt: string;
-};
-
-type NotificationsData = {
-  unreadCount: number;
-  items: NotificationItem[];
-};
+import {
+  useCustomerNotifications,
+  type CustomerNotificationsState,
+} from "@/lib/use-customer-notifications";
 
 type NotificationsMutationResponse = {
   ok: boolean;
@@ -39,21 +26,10 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-export function NotificationsPanel({ initialData }: { initialData: NotificationsData }) {
-  const [data, setData] = useState(initialData);
+export function NotificationsPanel({ initialData }: { initialData: CustomerNotificationsState }) {
+  const { data, refresh } = useCustomerNotifications({ initialData, take: 50 });
   const [isLoading, setIsLoading] = useState(false);
-
-  const reload = useCallback(async () => {
-    const response = await fetch("/api/notifications", {
-      method: "GET",
-      credentials: "same-origin",
-      cache: "no-store",
-    });
-
-    if (response.ok) {
-      setData((await response.json()) as NotificationsData);
-    }
-  }, []);
+  const items = data?.items ?? [];
 
   const markRead = useCallback(
     async (ids?: string[], all = false) => {
@@ -70,7 +46,7 @@ export function NotificationsPanel({ initialData }: { initialData: Notifications
           ? ((await response.json().catch(() => null)) as NotificationsMutationResponse | null)
           : null;
 
-        await reload();
+        await refresh();
         emitNotificationsUpdated();
 
         if (all && mutation?.changedIds?.length) {
@@ -85,7 +61,7 @@ export function NotificationsPanel({ initialData }: { initialData: Notifications
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ unreadIds: changedIds }),
               });
-              await reload();
+              await refresh();
               emitNotificationsUpdated();
             },
           });
@@ -94,14 +70,8 @@ export function NotificationsPanel({ initialData }: { initialData: Notifications
         setIsLoading(false);
       }
     },
-    [reload],
+    [refresh],
   );
-
-  useEffect(() => {
-    window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, reload);
-
-    return () => window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, reload);
-  }, [reload]);
 
   return (
     <Card>
@@ -109,13 +79,13 @@ export function NotificationsPanel({ initialData }: { initialData: Notifications
         <div>
           <CardTitle>Centre de notifications</CardTitle>
           <p className="text-ec-muted mt-1 text-sm font-semibold">
-            {data.unreadCount} notification(s) non lue(s)
+            {data?.unreadCount ?? 0} notification(s) non lue(s)
           </p>
         </div>
         <Button
           type="button"
           variant="secondary"
-          disabled={isLoading || data.unreadCount === 0}
+          disabled={isLoading || !data?.unreadCount}
           onClick={() => void markRead(undefined, true)}
         >
           <CheckCheck className="size-4" />
@@ -124,9 +94,9 @@ export function NotificationsPanel({ initialData }: { initialData: Notifications
       </CardHeader>
       <Separator />
 
-      {data.items.length > 0 ? (
+      {items.length > 0 ? (
         <div className="divide-ec-line divide-y">
-          {data.items.map((item) => {
+          {items.map((item) => {
             const content = (
               <>
                 <div className="flex flex-wrap items-center gap-3">

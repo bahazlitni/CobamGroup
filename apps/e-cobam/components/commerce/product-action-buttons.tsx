@@ -26,7 +26,7 @@ export const productActionSizeMap: Record<ProductActionSize, ProductActionSizeCo
     iconSize: "size-3.5",
     textSize: "text-xs",
     gap: "gap-1.5",
-    radius: "rounded-xl",
+    radius: "rounded-none",
   },
   sm: {
     height: "h-9",
@@ -35,7 +35,7 @@ export const productActionSizeMap: Record<ProductActionSize, ProductActionSizeCo
     iconSize: "size-4",
     textSize: "text-xs",
     gap: "gap-2",
-    radius: "rounded-xl",
+    radius: "rounded-none",
   },
   md: {
     height: "h-10",
@@ -44,7 +44,7 @@ export const productActionSizeMap: Record<ProductActionSize, ProductActionSizeCo
     iconSize: "size-4",
     textSize: "text-sm",
     gap: "gap-2",
-    radius: "rounded-2xl",
+    radius: "rounded-none",
   },
   lg: {
     height: "h-12",
@@ -53,7 +53,7 @@ export const productActionSizeMap: Record<ProductActionSize, ProductActionSizeCo
     iconSize: "size-5",
     textSize: "text-sm",
     gap: "gap-2.5",
-    radius: "rounded-2xl",
+    radius: "rounded-none",
   },
   xl: {
     height: "h-14",
@@ -62,7 +62,7 @@ export const productActionSizeMap: Record<ProductActionSize, ProductActionSizeCo
     iconSize: "size-5",
     textSize: "text-base",
     gap: "gap-3",
-    radius: "rounded-[1.15rem]",
+    radius: "rounded-none",
   },
   "2xl": {
     height: "h-16",
@@ -71,7 +71,7 @@ export const productActionSizeMap: Record<ProductActionSize, ProductActionSizeCo
     iconSize: "size-6",
     textSize: "text-lg",
     gap: "gap-3",
-    radius: "rounded-[1.35rem]",
+    radius: "rounded-none",
   },
 };
 
@@ -282,7 +282,7 @@ export function AddToCartButton({
           : { type: "spring", stiffness: 520, damping: 28 }
       }
       className={cn(
-        "relative isolate inline-flex shrink-0 items-center justify-center overflow-hidden border font-black shadow-[0_14px_32px_rgba(20,32,46,0.16)] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ec-blue disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-55",
+        "relative isolate inline-flex shrink-0 items-center justify-center overflow-hidden border font-sans font-black transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ec-blue disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-55",
         iconOnly
           ? `${sizeConfig.iconOnlySize} rounded-full p-0`
           : `${sizeConfig.height} ${sizeConfig.paddingX} ${sizeConfig.gap} ${sizeConfig.radius} ${sizeConfig.textSize}`,
@@ -398,7 +398,7 @@ export function AddToFavoritesButton({
       onClick={() => void handleClick()}
       whileTap={reducedMotion ? undefined : { scale: 0.94 }}
       className={cn(
-        "relative isolate inline-flex shrink-0 items-center justify-center overflow-hidden border font-black transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ec-blue disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-55",
+        "relative isolate inline-flex shrink-0 items-center justify-center overflow-hidden border font-sans font-black transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ec-blue disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-55",
         iconOnly
           ? `${sizeConfig.iconOnlySize} rounded-full p-0`
           : `${sizeConfig.height} ${sizeConfig.paddingX} ${sizeConfig.gap} ${sizeConfig.radius} ${sizeConfig.textSize}`,

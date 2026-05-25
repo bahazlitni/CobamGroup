@@ -5,25 +5,9 @@ import Link from "next/link";
 import { Bell, CheckCheck } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/cn";
-import {
-  emitNotificationsUpdated,
-  NOTIFICATIONS_UPDATED_EVENT,
-} from "@/lib/notifications-events";
+import { emitNotificationsUpdated } from "@/lib/notifications-events";
 import { pushUndoToast } from "@/lib/undo-actions";
-
-type NotificationItem = {
-  id: string;
-  title: string;
-  body: string;
-  href: string | null;
-  readAt: string | null;
-  createdAt: string;
-};
-
-type NotificationState = {
-  unreadCount: number;
-  items: NotificationItem[];
-};
+import { useCustomerNotifications } from "@/lib/use-customer-notifications";
 
 type NotificationsMutationResponse = {
   ok: boolean;
@@ -48,11 +32,11 @@ export function CustomerNotificationsMenu({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
-  const [data, setData] = useState<NotificationState | null>(null);
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const [isMutating, setIsMutating] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const shouldReduceMotion = useReducedMotion();
+  const { data, refresh } = useCustomerNotifications({ take: 10 });
   const isOpen = open ?? uncontrolledOpen;
   const isSignedIn = data !== null;
 
@@ -66,38 +50,6 @@ export function CustomerNotificationsMenu({
     },
     [onOpenChange, open],
   );
-
-  const load = useCallback(async () => {
-    const response = await fetch("/api/notifications", {
-      method: "GET",
-      credentials: "same-origin",
-      cache: "no-store",
-    });
-
-    if (response.status === 401) {
-      setData(null);
-      return;
-    }
-
-    if (!response.ok) {
-      return;
-    }
-
-    setData((await response.json()) as NotificationState);
-  }, []);
-
-  useEffect(() => {
-    void load();
-    const interval = window.setInterval(() => void load(), 60_000);
-
-    return () => window.clearInterval(interval);
-  }, [load]);
-
-  useEffect(() => {
-    window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, load);
-
-    return () => window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, load);
-  }, [load]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -151,13 +103,13 @@ export function CustomerNotificationsMenu({
           ? ((await response.json().catch(() => null)) as NotificationsMutationResponse | null)
           : null;
 
-        await load();
+        await refresh();
         emitNotificationsUpdated();
 
         if (all && mutation?.changedIds?.length) {
           const changedIds = mutation.changedIds;
           pushUndoToast({
-            title: "Notifications marquees comme lues",
+            title: "Notifications marquées comme lues",
             description: `${changedIds.length} notification(s)`,
             onUndo: async () => {
               await fetch("/api/notifications", {
@@ -166,7 +118,7 @@ export function CustomerNotificationsMenu({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ unreadIds: changedIds }),
               });
-              await load();
+              await refresh();
               emitNotificationsUpdated();
             },
           });
@@ -175,7 +127,7 @@ export function CustomerNotificationsMenu({
         setIsMutating(false);
       }
     },
-    [load],
+    [refresh],
   );
 
   if (!isSignedIn) {

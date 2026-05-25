@@ -780,7 +780,7 @@ export default function ProductTypesAdminPage() {
     try {
       const nextData = await reorderProductTypeGroupsClient(nextGroups.map((group) => group.id));
       setData(nextData);
-      toast.success("Ordre des groupes mis a jour.");
+      toast.success("Ordre des groupes mis à jour.");
     } catch (reorderError: unknown) {
       await loadData();
       toast.error(getErrorMessage(reorderError, "Impossible de reordonner les groupes."));
@@ -840,7 +840,7 @@ export default function ProductTypesAdminPage() {
         nextProductTypes.map((productType) => productType.id),
       );
       setData(nextData);
-      toast.success("Ordre des modèles de produits mis a jour.");
+      toast.success("Ordre des modèles de produits mis à jour.");
     } catch (reorderError: unknown) {
       await loadData();
       toast.error(

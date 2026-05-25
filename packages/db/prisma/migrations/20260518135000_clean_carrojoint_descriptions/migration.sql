@@ -22,7 +22,7 @@ FROM (
       'sika',
       'Carrojoint Sika',
       'SikaCeram CleanGrout, mortier de jointoiement cimentaire hautes performances.',
-      'Les Carrojoint Sika correspondent a la famille SikaCeram CleanGrout : un mortier de jointoiement premelange a base de ciment, sable de quartz sélectionné et additifs specifiques pour joints de 1 a 8 mm. La formulation vise une finition hydrofuge, stable en couleur et adaptee aux carreaux techniques.',
+      'Les Carrojoint Sika correspondent à la famille SikaCeram CleanGrout : un mortier de jointoiement premelange a base de ciment, sable de quartz sélectionné et additifs specifiques pour joints de 1 a 8 mm. La formulation vise une finition hydrofuge, stable en couleur et adaptee aux carreaux techniques.',
       'Jointoiement de carreaux ceramiques, terre cuite, mosaique de verre, marbre, pierres naturelles et gres. Convient aussi aux pieces humides, piscines, sols chauffants, facades et locaux soumis a de fortes sollicitations.',
       'Classe CG2 WA selon EN 13888, absorption d''eau limitee, haute resistance a l''usure, durete elevee, resistance aux UV et au gel, protection contre moisissures, bacteries et champignons.',
       'SikaCeram CleanGrout en sac de 5 kg pour joints de carrelage 1 a 8 mm, sols et murs, chez COBAM GROUP.'

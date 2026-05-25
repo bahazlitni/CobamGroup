@@ -42,14 +42,14 @@ const ALL_FILTER_VALUE = "__all__";
 
 const statusLabels: Record<string, string> = {
   ACTIVE: "Active",
-  ARCHIVED: "Archivee",
+  ARCHIVED: "Archivée",
   AUTHORIZED: "Autorisé",
   BANNED: "Banni",
   BANK_TRANSFER: "Virement",
   CANCELLED: "Annulée",
   CARD: "Carte",
   CASH_ON_DELIVERY: "Paiement livraison",
-  CLOSED: "Ferme",
+  CLOSED: "Fermé",
   COMPANY: "Société",
   CONFIRMED: "Confirmée",
   DELIVERED: "Livrée",
@@ -72,7 +72,7 @@ const statusLabels: Record<string, string> = {
   READY: "Prêt",
   READY_FOR_PICKUP: "Prêt retrait",
   REFUNDED: "Remboursée",
-  SHIPPED: "Expediée",
+  SHIPPED: "Expédiée",
   SCHEDULED: "Planifiée",
   SUSPENDED: "Suspendu",
 };
@@ -565,7 +565,7 @@ export function EcommerceOrdersAdminPage() {
                   void runAction(
                     order.id,
                     () => updateEcommerceOrderStatusAdminClient(order.id, { status }),
-                    "Statut de commande mis a jour.",
+                    "Statut de commande mis à jour.",
                   );
                 }}
               />
@@ -927,7 +927,7 @@ export function EcommercePaymentsAdminPage() {
                   void runAction(
                     payment.id,
                     () => updateEcommercePaymentStatusAdminClient(payment.id, { status }),
-                    "Statut de paiement mis a jour.",
+                    "Statut de paiement mis à jour.",
                   );
                 }}
               />
@@ -992,7 +992,7 @@ export function EcommerceFulfillmentsAdminPage() {
           { label: "Dossiers", value: data?.stats.total ?? 0 },
           { label: "En attente", value: data?.stats.pending ?? 0 },
           { label: "En transit", value: data?.stats.inTransit ?? 0 },
-          { label: "Livrees", value: data?.stats.delivered ?? 0 },
+          { label: "Livrées", value: data?.stats.delivered ?? 0 },
         ]}
       />
 
@@ -1054,7 +1054,7 @@ export function EcommerceFulfillmentsAdminPage() {
                   void runAction(
                     fulfillment.id,
                     () => updateEcommerceFulfillmentStatusAdminClient(fulfillment.id, { status }),
-                    "Statut de livraison mis a jour.",
+                    "Statut de livraison mis à jour.",
                   );
                 }}
               />
@@ -1067,7 +1067,7 @@ export function EcommerceFulfillmentsAdminPage() {
             <td className="px-4 py-4 text-slate-600">
               <p>{formatDate(fulfillment.scheduledAt ?? fulfillment.requestedDate)}</p>
               <p className="text-xs text-slate-500">
-                Livre le {formatDate(fulfillment.deliveredAt)}
+                Livré le {formatDate(fulfillment.deliveredAt)}
               </p>
             </td>
             <td className="px-4 py-4 text-slate-600">{formatDate(fulfillment.createdAt)}</td>

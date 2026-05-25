@@ -1,13 +1,14 @@
 // /api/auth/staff/login/password.ts
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/server/db/prisma";
-import {
-  hashPassword,
-  verifyPassword,
-} from "@/lib/api/auth/shared/password";
+import { hashPassword, verifyPassword } from "@/lib/api/auth/shared/password";
 import { hashOtpCode } from "@/lib/api/auth/otp/hash";
-import { OTP_RULES } from "@/lib/api/auth/otp/config";
+import { OTP_RULES, STAFF_PASSWORD_OTP_CHALLENGE_COOKIE } from "@/lib/api/auth/otp/config";
+import {
+  hashOtpChallengeSecret,
+  parseOtpChallengeCookie,
+} from "@/lib/api/auth/otp/challenge-token";
 import { AuthError, requireStaffSession } from "@/features/auth/server/session";
 import { STAFF_PORTAL } from "@/features/auth/types";
 
@@ -15,7 +16,7 @@ function parsePassword(value: unknown) {
   return String(value ?? "");
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const session = await requireStaffSession(req);
     const body = await req.json();
@@ -23,8 +24,11 @@ export async function POST(req: Request) {
     const currentPassword = parsePassword(body.currentPassword);
     const newPassword = parsePassword(body.newPassword);
     const code = String(body.code ?? body.otpCode ?? "").trim();
+    const parsedChallenge = parseOtpChallengeCookie(
+      req.cookies.get(STAFF_PASSWORD_OTP_CHALLENGE_COOKIE)?.value,
+    );
 
-    if (!currentPassword || !newPassword || !code) {
+    if (!currentPassword || !newPassword || !code || !parsedChallenge) {
       return NextResponse.json(
         { ok: false, message: "Les mots de passe et le code OTP sont requis." },
         { status: 400 },
@@ -61,10 +65,7 @@ export async function POST(req: Request) {
     });
 
     if (!user || user.portal !== STAFF_PORTAL) {
-      return NextResponse.json(
-        { ok: false, message: "Utilisateur introuvable." },
-        { status: 404 },
-      );
+      return NextResponse.json({ ok: false, message: "Utilisateur introuvable." }, { status: 404 });
     }
 
     const matches = await verifyPassword(currentPassword, user.passwordHash);
@@ -76,36 +77,41 @@ export async function POST(req: Request) {
       );
     }
 
-    const challenge = await prisma.oTPChallenge.findUnique({
+    const challenge = await prisma.oTPChallenge.findFirst({
       where: {
-        userId_type: {
-          userId: user.id,
-          type: "RESET_PASSWORD",
-        },
+        id: parsedChallenge.challengeId,
+        userId: user.id,
+        type: "RESET_PASSWORD",
+        challengeTokenHash: hashOtpChallengeSecret(parsedChallenge.secret),
+        consumedAt: null,
       },
     });
 
     if (!challenge) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { ok: false, message: "Code OTP invalide ou expire." },
         { status: 401 },
       );
+      response.cookies.delete(STAFF_PASSWORD_OTP_CHALLENGE_COOKIE);
+      return response;
     }
 
     const rules = OTP_RULES.RESET_PASSWORD;
+    const now = new Date();
+    const expiresAt =
+      challenge.expiresAt ?? new Date(new Date(challenge.createdAt).getTime() + rules.ttlMs);
 
-    if (
-      new Date(challenge.createdAt).getTime() + rules.ttlMs <
-      new Date().getTime()
-    ) {
+    if (expiresAt < now) {
       await prisma.oTPChallenge.delete({
         where: { id: challenge.id },
       });
 
-      return NextResponse.json(
+      const response = NextResponse.json(
         { ok: false, message: "Code OTP expire." },
         { status: 401 },
       );
+      response.cookies.delete(STAFF_PASSWORD_OTP_CHALLENGE_COOKIE);
+      return response;
     }
 
     if (challenge.attempts >= rules.maxAttempts) {
@@ -113,10 +119,12 @@ export async function POST(req: Request) {
         where: { id: challenge.id },
       });
 
-      return NextResponse.json(
+      const response = NextResponse.json(
         { ok: false, message: "Trop de tentatives. Veuillez recommencer." },
         { status: 429 },
       );
+      response.cookies.delete(STAFF_PASSWORD_OTP_CHALLENGE_COOKIE);
+      return response;
     }
 
     const codeHash = hashOtpCode(code);
@@ -131,10 +139,7 @@ export async function POST(req: Request) {
         },
       });
 
-      return NextResponse.json(
-        { ok: false, message: "Code OTP invalide." },
-        { status: 401 },
-      );
+      return NextResponse.json({ ok: false, message: "Code OTP invalide." }, { status: 401 });
     }
 
     const passwordHash = await hashPassword(newPassword);
@@ -147,25 +152,22 @@ export async function POST(req: Request) {
           passwordChangedAt: new Date(),
         },
       }),
-      prisma.oTPChallenge.delete({
+      prisma.oTPChallenge.update({
         where: { id: challenge.id },
+        data: { consumedAt: now },
       }),
     ]);
 
-    return NextResponse.json({ ok: true }, { status: 200 });
+    const response = NextResponse.json({ ok: true }, { status: 200 });
+    response.cookies.delete(STAFF_PASSWORD_OTP_CHALLENGE_COOKIE);
+    return response;
   } catch (error: unknown) {
     if (error instanceof AuthError) {
-      return NextResponse.json(
-        { ok: false, message: error.message },
-        { status: error.status },
-      );
+      return NextResponse.json({ ok: false, message: error.message }, { status: error.status });
     }
 
     console.error("STAFF_PASSWORD_CHANGE_ERROR:", error);
 
-    return NextResponse.json(
-      { ok: false, message: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ ok: false, message: "Internal server error" }, { status: 500 });
   }
 }

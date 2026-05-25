@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
-import "@fontsource/sora/300.css";
-import "@fontsource/sora/400.css";
-import "@fontsource/sora/600.css";
-import "@fontsource/sora/700.css";
-import "@fontsource/source-serif-4/400.css";
-import "@fontsource/source-serif-4/600.css";
+import "@fontsource/manrope/400.css";
+import "@fontsource/manrope/500.css";
+import "@fontsource/manrope/600.css";
+import "@fontsource/manrope/700.css";
+import "@fontsource/manrope/800.css";
+import "@fontsource/figtree/400.css";
+import "@fontsource/figtree/500.css";
+import "@fontsource/figtree/600.css";
+import "@fontsource/figtree/700.css";
+import "@fontsource/figtree/800.css";
 import "./globals.css";
 import { SiteFooter } from "@/components/site/footer";
 import { SiteHeader } from "@/components/site/header";
@@ -66,7 +70,7 @@ export default async function RootLayout({
           toastOptions={{
             classNames: {
               toast:
-                "border-ec-line rounded-2xl bg-white text-ec-ink shadow-[0_18px_50px_rgba(20,32,46,0.14)]",
+                "border-ec-line rounded-none bg-white text-ec-ink shadow-[0_18px_50px_rgba(20,32,46,0.14)]",
               title: "font-black",
               description: "text-ec-muted font-semibold",
             },

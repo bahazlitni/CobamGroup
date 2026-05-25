@@ -1,0 +1,382 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Accueil e-cobam" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e6]:
+          - generic [ref=e7]: E-Cobam
+          - generic [ref=e8]: Boutique
+      - navigation "Navigation principale" [ref=e9]:
+        - link "Tous les produits" [ref=e10] [cursor=pointer]:
+          - /url: /catalogue
+        - link "Promotions" [ref=e11] [cursor=pointer]:
+          - /url: /catalogue?sélection=promotion
+        - link "Meilleures ventes" [ref=e12] [cursor=pointer]:
+          - /url: /#best-sellers
+        - link "Nouveautés" [ref=e13] [cursor=pointer]:
+          - /url: /#new-arrivals
+        - link "Suivi commande" [ref=e14] [cursor=pointer]:
+          - /url: /suivi-commande
+      - link "Se connecter" [ref=e16] [cursor=pointer]:
+        - /url: /connexion
+        - img [ref=e17]
+        - generic [ref=e20]: Se connecter
+    - generic [ref=e22]:
+      - button "Ouvrir les rayons" [ref=e24]:
+        - img [ref=e25]
+        - generic [ref=e26]: Catégories
+        - img [ref=e27]
+      - generic [ref=e30]:
+        - img [ref=e31]
+        - searchbox "Produit, marque, référence..." [ref=e34]
+        - button "Rechercher" [ref=e35]:
+          - img [ref=e36]
+          - generic [ref=e39]: Rechercher
+      - generic [ref=e40]:
+        - button "Ouvrir les favoris" [ref=e42]:
+          - generic [ref=e43]:
+            - img [ref=e44]
+            - generic [ref=e46]: "2"
+        - button "Ouvrir le panier" [ref=e47]:
+          - img [ref=e49]
+  - main [ref=e52]:
+    - generic [ref=e53]:
+      - generic [ref=e54]:
+        - generic [ref=e55]:
+          - generic:
+            - img "L'art de la couleur et des finitions."
+          - generic [ref=e58]:
+            - generic [ref=e60]: DEUTSCH COLOR
+            - heading "L'art de la couleur et des finitions." [level=1] [ref=e62]
+            - paragraph [ref=e64]: Peintures et enduits décoratifs haut de gamme formulés pour la haute architecture et le design contemporain.
+            - generic [ref=e65]:
+              - link "Collection Deutsch Color" [ref=e66] [cursor=pointer]:
+                - /url: /catalogue?marque=deutsch-color
+              - link "Voir le catalogue" [ref=e67] [cursor=pointer]:
+                - /url: /catalogue
+        - generic [ref=e68]:
+          - generic:
+            - img "La pureté de l'eau, réinventée."
+        - generic [ref=e70]:
+          - generic:
+            - img "L'expérience du bien-être absolu."
+        - generic [ref=e72]:
+          - generic:
+            - img "L'excellence technique invisible."
+        - generic [ref=e74]:
+          - generic:
+            - img "La haute facture du design tunisien."
+      - generic [ref=e76]:
+        - generic [ref=e77]:
+          - generic [ref=e78]:
+            - generic [ref=e79]: "01"
+            - generic [ref=e81]: "05"
+          - generic [ref=e82]:
+            - button "Aller au slide 1" [ref=e83]
+            - button "Aller au slide 2" [ref=e84]
+            - button "Aller au slide 3" [ref=e85]
+            - button "Aller au slide 4" [ref=e86]
+            - button "Aller au slide 5" [ref=e87]
+        - generic [ref=e88]:
+          - button "Slide précédent" [ref=e89]:
+            - img [ref=e90]
+          - button "Slide suivant" [ref=e92]:
+            - img [ref=e93]
+    - generic [ref=e96]:
+      - img [ref=e97]
+      - text: Impossible de charger les produits pour le moment.
+    - generic [ref=e102]:
+      - generic [ref=e103]:
+        - generic [ref=e104]:
+          - generic [ref=e105]: Exclusivités
+          - heading "Les plus demandés" [level=2] [ref=e106]
+          - paragraph [ref=e107]: Une sélection de nos références phares plébiscitées par les professionnels du bâtiment.
+        - link "Découvrir tout" [ref=e108] [cursor=pointer]:
+          - /url: /catalogue?sélection=promotion
+          - text: Découvrir tout
+          - img [ref=e109]
+      - generic [ref=e111]:
+        - img [ref=e112]
+        - paragraph [ref=e115]: Produits indisponibles pour le moment.
+        - link "Ouvrir le catalogue" [ref=e116] [cursor=pointer]:
+          - /url: /catalogue
+    - generic [ref=e119]:
+      - generic [ref=e120]:
+        - generic [ref=e121]:
+          - generic [ref=e122]: Nouveautés
+          - heading "Dernières Collections" [level=2] [ref=e123]
+          - paragraph [ref=e124]: Explorez les finitions les plus récentes intégrées à notre catalogue de design.
+        - link "Découvrir tout" [ref=e125] [cursor=pointer]:
+          - /url: /catalogue?tri=latest
+          - text: Découvrir tout
+          - img [ref=e126]
+      - generic [ref=e128]:
+        - img [ref=e129]
+        - paragraph [ref=e132]: Produits indisponibles pour le moment.
+        - link "Ouvrir le catalogue" [ref=e133] [cursor=pointer]:
+          - /url: /catalogue
+    - generic [ref=e136]:
+      - generic [ref=e137]:
+        - generic [ref=e138]:
+          - generic [ref=e139]: Sélection
+          - heading "Recommandé pour vous" [level=2] [ref=e140]
+          - paragraph [ref=e141]: Des matériaux et solutions techniques recommandés en fonction de vos exigences esthétiques.
+        - link "Découvrir tout" [ref=e142] [cursor=pointer]:
+          - /url: /catalogue
+          - text: Découvrir tout
+          - img [ref=e143]
+      - generic [ref=e145]:
+        - img [ref=e146]
+        - paragraph [ref=e149]: Produits indisponibles pour le moment.
+        - link "Ouvrir le catalogue" [ref=e150] [cursor=pointer]:
+          - /url: /catalogue
+    - generic [ref=e152]:
+      - generic [ref=e153]:
+        - generic [ref=e154]: COBAM GROUP
+        - heading "La signature des architectures d'exception." [level=2] [ref=e155]
+        - paragraph [ref=e156]: Depuis notre création, nous sélectionnons et distribuons les matériaux de second œuvre les plus raffinés. Notre vocation est d'accompagner les architectes, designers et maîtres d'ouvrage dans la réalisation de projets résidentiels et commerciaux uniques en Tunisie.
+        - paragraph [ref=e157]: De la céramique d'élite aux finitions de salle de bain de haute technologie, en passant par les revêtements extérieurs les plus exigeants, chaque référence de notre catalogue incarne la durabilité technique et l'harmonie visuelle.
+        - generic [ref=e158]:
+          - link "Découvrir le catalogue" [ref=e159] [cursor=pointer]:
+            - /url: /catalogue
+          - link "Nous contacter" [ref=e160] [cursor=pointer]:
+            - /url: mailto:contact@cobamgroup.tn
+            - text: Nous contacter
+            - img [ref=e161]
+      - generic [ref=e163]:
+        - img "Showroom COBAM" [ref=e164]
+        - generic:
+          - text: Showroom Excellence
+          - paragraph: Des conseils personnalisés pour vos plans sur-mesure.
+    - generic [ref=e166]:
+      - generic [ref=e167]:
+        - generic [ref=e168]:
+          - generic [ref=e169]: Rayons
+          - heading "Acheter par catégorie" [level=2] [ref=e170]
+          - paragraph [ref=e171]: Naviguez parmi nos familles de produits pour trouver les solutions adaptées à votre chantier.
+        - link "Voir tout le catalogue" [ref=e172] [cursor=pointer]:
+          - /url: /catalogue
+          - text: Voir tout le catalogue
+          - img [ref=e173]
+      - generic [ref=e175]:
+        - link "Catalogue Revêtements de sols et murs Carrelage, faïence, mosaïque et grandes dalles Découvrir" [ref=e177] [cursor=pointer]:
+          - /url: /catalogue?search=carrelage
+          - generic [ref=e180]:
+            - generic [ref=e181]: Catalogue
+            - heading "Revêtements de sols et murs" [level=3] [ref=e182]
+            - paragraph: Carrelage, faïence, mosaïque et grandes dalles
+            - generic [ref=e183]:
+              - text: Découvrir
+              - img [ref=e184]
+        - link "Catalogue Matériaux de construction Ciments, briques, sables, graviers et fers Découvrir" [ref=e187] [cursor=pointer]:
+          - /url: /catalogue?search=ciment
+          - generic [ref=e190]:
+            - generic [ref=e191]: Catalogue
+            - heading "Matériaux de construction" [level=3] [ref=e192]
+            - paragraph: Ciments, briques, sables, graviers et fers
+            - generic [ref=e193]:
+              - text: Découvrir
+              - img [ref=e194]
+        - link "Catalogue Isolation et étanchéité Solutions techniques pour protéger le bâti Découvrir" [ref=e197] [cursor=pointer]:
+          - /url: /catalogue?search=étanchéité
+          - generic [ref=e200]:
+            - generic [ref=e201]: Catalogue
+            - heading "Isolation et étanchéité" [level=3] [ref=e202]
+            - paragraph: Solutions techniques pour protéger le bâti
+            - generic [ref=e203]:
+              - text: Découvrir
+              - img [ref=e204]
+        - link "Catalogue Salle de bain et cuisine Sanitaires, robinetterie, éviers et douche Découvrir" [ref=e207] [cursor=pointer]:
+          - /url: /catalogue?search=mitigeur
+          - generic [ref=e210]:
+            - generic [ref=e211]: Catalogue
+            - heading "Salle de bain et cuisine" [level=3] [ref=e212]
+            - paragraph: Sanitaires, robinetterie, éviers et douche
+            - generic [ref=e213]:
+              - text: Découvrir
+              - img [ref=e214]
+        - link "Catalogue Peintures et décoration Peintures, enduits, couleurs et finitions Découvrir" [ref=e217] [cursor=pointer]:
+          - /url: /catalogue?search=peinture
+          - generic [ref=e220]:
+            - generic [ref=e221]: Catalogue
+            - heading "Peintures et décoration" [level=3] [ref=e222]
+            - paragraph: Peintures, enduits, couleurs et finitions
+            - generic [ref=e223]:
+              - text: Découvrir
+              - img [ref=e224]
+        - link "Catalogue Piscine Margelles, mosaïques et finitions extérieures Découvrir" [ref=e227] [cursor=pointer]:
+          - /url: /catalogue?search=piscine
+          - generic [ref=e230]:
+            - generic [ref=e231]: Catalogue
+            - heading "Piscine" [level=3] [ref=e232]
+            - paragraph: Margelles, mosaïques et finitions extérieures
+            - generic [ref=e233]:
+              - text: Découvrir
+              - img [ref=e234]
+        - link "Catalogue Portes et menuiserie Portes, châssis et solutions de fermeture Découvrir" [ref=e237] [cursor=pointer]:
+          - /url: /catalogue?search=porte
+          - generic [ref=e240]:
+            - generic [ref=e241]: Catalogue
+            - heading "Portes et menuiserie" [level=3] [ref=e242]
+            - paragraph: Portes, châssis et solutions de fermeture
+            - generic [ref=e243]:
+              - text: Découvrir
+              - img [ref=e244]
+    - generic [ref=e247]:
+      - generic [ref=e248]:
+        - generic [ref=e249]:
+          - generic [ref=e250]: Privilèges
+          - heading "Collections & Services Exclusifs" [level=2] [ref=e251]
+          - paragraph [ref=e252]: Des offres conçues pour accompagner vos chantiers et projets résidentiels d'exception.
+        - link "Voir toutes les offres" [ref=e253] [cursor=pointer]:
+          - /url: /catalogue?sélection=promotion
+          - text: Voir toutes les offres
+          - img [ref=e254]
+      - generic [ref=e256]:
+        - link "Service logistique Livraison offerte pour vos projets d'envergure Optimisez la gestion de votre chantier. Préparez votre panier de finitions en ligne et profitez d'une livraison sécurisée et coordonnée directement sur site. En savoir plus" [ref=e257] [cursor=pointer]:
+          - /url: /catalogue?sélection=promotion
+          - generic [ref=e258]:
+            - generic [ref=e259]: Service logistique
+            - heading "Livraison offerte pour vos projets d'envergure" [level=3] [ref=e260]
+            - paragraph [ref=e261]: Optimisez la gestion de votre chantier. Préparez votre panier de finitions en ligne et profitez d'une livraison sécurisée et coordonnée directement sur site.
+          - generic [ref=e263]:
+            - text: En savoir plus
+            - img [ref=e264]
+        - generic [ref=e266]:
+          - link "Sélection carrelage Formats, décors et finitions à commander. Découvrir" [ref=e267] [cursor=pointer]:
+            - /url: /catalogue?search=carrelage
+            - generic [ref=e268]:
+              - heading "Sélection carrelage" [level=4] [ref=e269]
+              - paragraph [ref=e270]: Formats, décors et finitions à commander.
+            - generic [ref=e271]:
+              - text: Découvrir
+              - img [ref=e272]
+          - link "Packs salle de bain Sanitaires, robinetterie et accessoires. Découvrir" [ref=e274] [cursor=pointer]:
+            - /url: /catalogue?search=salle%20de%20bain
+            - generic [ref=e275]:
+              - heading "Packs salle de bain" [level=4] [ref=e276]
+              - paragraph [ref=e277]: Sanitaires, robinetterie et accessoires.
+            - generic [ref=e278]:
+              - text: Découvrir
+              - img [ref=e279]
+          - link "Nouveaux arrivages piscine Mosaïques et finitions extérieures. Découvrir" [ref=e281] [cursor=pointer]:
+            - /url: /catalogue?search=piscine
+            - generic [ref=e282]:
+              - heading "Nouveaux arrivages piscine" [level=4] [ref=e283]
+              - paragraph [ref=e284]: Mosaïques et finitions extérieures.
+            - generic [ref=e285]:
+              - text: Découvrir
+              - img [ref=e286]
+    - generic [ref=e289]:
+      - generic [ref=e291]:
+        - generic [ref=e292]: Avantages
+        - heading "L'Engagement COBAM GROUP" [level=2] [ref=e293]
+        - paragraph [ref=e294]: Plus qu'un catalogue en ligne, nous offrons une structure de service dédiée aux professionnels exigeants.
+      - generic [ref=e295]:
+        - generic [ref=e297]:
+          - img [ref=e298]
+          - heading "Qualité Certifiée" [level=3] [ref=e301]
+          - paragraph [ref=e302]: Chaque référence de notre catalogue fait l'objet d'un contrôle rigoureux de durabilité technique.
+        - generic [ref=e304]:
+          - img [ref=e305]
+          - heading "Accompagnement Commercial" [level=3] [ref=e308]
+          - paragraph [ref=e309]: Nos experts projets analysent vos plans et vous proposent des devis précis sous 24 à 48 heures.
+        - generic [ref=e311]:
+          - img [ref=e312]
+          - heading "Logistique Spécialisée" [level=3] [ref=e317]
+          - paragraph [ref=e318]: Des livraisons sécurisées directement sur votre chantier, coordonnées selon vos plannings de travaux.
+        - generic [ref=e320]:
+          - img [ref=e321]
+          - heading "Marques Internationales" [level=3] [ref=e324]
+          - paragraph [ref=e325]: Une sélection exclusive des meilleurs fabricants mondiaux pour garantir le prestige de vos finitions.
+    - generic [ref=e327]:
+      - generic [ref=e328]: Témoignages
+      - blockquote [ref=e329]: « Collaborer avec COBAM GROUP, c’est l’assurance d’obtenir des matériaux d'une justesse esthétique parfaite et d'une technicité irréprochable. Le service devis est un modèle du genre. »
+      - generic [ref=e330]:
+        - generic [ref=e331]: Cabinet Ben Jemaa & Associés
+        - generic [ref=e332]: Architectes DPLG — Tunis
+    - generic [ref=e334]:
+      - generic [ref=e335]: Le Cercle COBAM
+      - heading "Rejoignez le club des professionnels de l'architecture" [level=2] [ref=e336]
+      - paragraph [ref=e337]: Inscrivez-vous pour recevoir nos sélections de nouveautés privées, nos fiches techniques exclusives et nos offres privilèges en avant-première.
+      - generic [ref=e338]:
+        - textbox "Votre adresse email professionnelle" [ref=e339]
+        - button "S'abonner" [ref=e340] [cursor=pointer]
+    - generic [ref=e342]:
+      - generic [ref=e343]:
+        - generic [ref=e344]: Votre Projet, Notre Priorité
+        - heading "Donnez vie à vos plans d'envergure." [level=2] [ref=e345]
+        - paragraph [ref=e346]: Préparez votre panier de finitions en ligne et validez les modalités avec notre équipe commerciale dédiée.
+      - generic [ref=e347]:
+        - link "Explorer les collections" [ref=e348] [cursor=pointer]:
+          - /url: /catalogue
+        - link "Accéder à mon panier" [ref=e349] [cursor=pointer]:
+          - /url: /panier
+  - contentinfo [ref=e350]:
+    - generic [ref=e351]:
+      - generic [ref=e352]:
+        - generic [ref=e353]:
+          - text: COBAM GROUP
+          - paragraph [ref=e354]: Sélection d'excellence de matériaux de second œuvre, revêtements, sanitaires et finitions premium pour projets résidentiels et commerciaux.
+          - generic [ref=e355]:
+            - link "+216 75731731" [ref=e356] [cursor=pointer]:
+              - /url: tel:+21675731731
+              - img [ref=e357]
+              - text: +216 75731731
+            - link "contact@cobamgroup.com" [ref=e359] [cursor=pointer]:
+              - /url: mailto:contact@cobamgroup.com
+              - img [ref=e360]
+              - text: contact@cobamgroup.com
+            - paragraph [ref=e363]:
+              - img [ref=e364]
+              - text: Djerba, Tunisie
+        - generic [ref=e367]:
+          - generic [ref=e368]: Boutique
+          - generic [ref=e369]:
+            - link "Suivre une commande" [ref=e370] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Panier" [ref=e371] [cursor=pointer]:
+              - /url: /panier
+            - link "Compte client" [ref=e372] [cursor=pointer]:
+              - /url: /compte
+            - link "Commander" [ref=e373] [cursor=pointer]:
+              - /url: /checkout
+        - generic [ref=e374]:
+          - generic [ref=e375]: Assistance
+          - generic [ref=e376]:
+            - link "Livraison" [ref=e377] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Retours" [ref=e378] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Conditions" [ref=e379] [cursor=pointer]:
+              - /url: /conditions-generales
+            - link "Confidentialité" [ref=e380] [cursor=pointer]:
+              - /url: /politique-de-confidentialite
+        - generic [ref=e381]:
+          - generic [ref=e382]: Collections
+          - generic [ref=e383]:
+            - link "Revêtements de sols et murs" [ref=e384] [cursor=pointer]:
+              - /url: /catalogue?search=carrelage
+            - link "Matériaux de construction" [ref=e385] [cursor=pointer]:
+              - /url: /catalogue?search=ciment
+            - link "Isolation et étanchéité" [ref=e386] [cursor=pointer]:
+              - /url: /catalogue?search=étanchéité
+            - link "Salle de bain et cuisine" [ref=e387] [cursor=pointer]:
+              - /url: /catalogue?search=mitigeur
+            - link "Peintures et décoration" [ref=e388] [cursor=pointer]:
+              - /url: /catalogue?search=peinture
+            - link "Piscine" [ref=e389] [cursor=pointer]:
+              - /url: /catalogue?search=piscine
+      - generic [ref=e390]:
+        - paragraph [ref=e391]: © 2026 COBAM GROUP. Tous droits réservés.
+        - generic [ref=e392]:
+          - link "Facebook" [ref=e393] [cursor=pointer]:
+            - /url: https://www.facebook.com/cobamgrp
+          - link "Instagram" [ref=e394] [cursor=pointer]:
+            - /url: https://www.instagram.com/cobamgroup/
+          - link "LinkedIn" [ref=e395] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/cobam-group/
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e401] [cursor=pointer]:
+    - img [ref=e402]
+  - alert [ref=e405]

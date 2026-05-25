@@ -73,10 +73,10 @@ export default async function CustomerAddressesPage() {
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
                       {address.isDefaultShipping ? (
-                        <Badge variant="blue">Livraison par defaut</Badge>
+                        <Badge variant="blue">Livraison par défaut</Badge>
                       ) : null}
                       {address.isDefaultBilling ? (
-                        <Badge variant="secondary">Facturation par defaut</Badge>
+                        <Badge variant="secondary">Facturation par défaut</Badge>
                       ) : null}
                     </div>
                   </CardContent>
@@ -195,11 +195,11 @@ export default async function CustomerAddressesPage() {
               <CardContent className="grid gap-3 pt-5 sm:grid-cols-2 sm:pt-6">
                 <Label className="border-ec-line text-ec-ink flex min-h-16 items-center gap-3 rounded-2xl border p-4 text-sm font-semibold tracking-normal normal-case">
                   <Checkbox name="isDefaultShipping" />
-                  Adresse de livraison par defaut
+                  Adresse de livraison par défaut
                 </Label>
                 <Label className="border-ec-line text-ec-ink flex min-h-16 items-center gap-3 rounded-2xl border p-4 text-sm font-semibold tracking-normal normal-case">
                   <Checkbox name="isDefaultBilling" />
-                  Adresse de facturation par defaut
+                  Adresse de facturation par défaut
                 </Label>
               </CardContent>
               <CardFooter>

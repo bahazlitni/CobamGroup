@@ -25,11 +25,13 @@ The palette should not drift into a single blue theme. Use white, stone, ink, bl
 
 ## Typography
 
-- Primary UI font is **Sora**, shared with the main COBAM app.
-- Editorial/supporting serif is available as **Source Serif 4**, but should be used sparingly.
-- Headings are heavy, tight, and direct.
-- Product names use strong sans-serif weight with limited line length.
-- Utility labels use uppercase tracking, but only for metadata like SKU, brand, section labels, and filters.
+- Display typography uses **Figtree** for larger commerce moments: hero headlines, section titles, and editorial emphasis.
+- UI typography uses **Manrope** for commerce clarity: navigation, buttons, forms, badges, filters, labels, and dense product metadata.
+- Product names and prices use **Manrope**, not the display font, because product discovery must stay crisp and readable.
+- Avoid serif fonts in the ecommerce app.
+- Headings should feel refined rather than heavy: use generous line-height, controlled letter spacing, and avoid oversized all-caps blocks.
+- Product names should keep line length controlled so cards stay easy to scan.
+- Utility labels use uppercase tracking only for metadata like SKU, brand, section labels, and filters.
 
 ## Layout & Spacing
 

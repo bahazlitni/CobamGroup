@@ -364,7 +364,7 @@ export default function PromotionEditorPage({ promotionId }: { promotionId?: str
 
       if (couponForm.id) {
         await updateEcommerceCouponAdminClient(selectedPromotion.id, couponForm.id, input);
-        setActionMessage("Coupon mis a jour.");
+        setActionMessage("Coupon mis à jour.");
       } else {
         await createEcommerceCouponAdminClient(selectedPromotion.id, input);
         setActionMessage("Coupon cree.");

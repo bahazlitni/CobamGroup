@@ -80,7 +80,7 @@ export function FavoriteToggleButton({
       size={size}
       iconOnly={iconOnly ?? !showLabel}
       disabled={disabled}
-      className={cn(!showLabel && "shadow-sm", buttonClassName, className)}
+      className={cn(buttonClassName, className)}
       onAddedToFavoritesAnimation={() => {
         emitFavoritesActionAnimation("added");
         onAddedToFavoritesAnimation?.();

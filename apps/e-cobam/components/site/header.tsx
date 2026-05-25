@@ -24,7 +24,10 @@ function Logo() {
   return (
     <Link href="/" className="group flex items-center gap-3" aria-label="Accueil e-cobam">
       <span className="leading-none">
-        <span className="text-ec-ink block text-lg font-black tracking-[0.16em]">ECOMMERCE</span>
+        <span className="text-ec-ink block font-serif text-2xl font-semibold tracking-[0.14em]">E-Cobam</span>
+        <span className="text-ec-muted mt-0.5 hidden font-sans text-[0.62rem] font-black tracking-[0.28em] uppercase sm:block">
+          Boutique
+        </span>
       </span>
     </Link>
   );
@@ -35,7 +38,7 @@ function SearchForm({ compact = false }: { compact?: boolean }) {
     <form
       action="/catalogue"
       className={cn(
-        "group border-ec-line focus-within:border-ec-blue/50 flex items-center gap-2 rounded-2xl border bg-white p-1.5 shadow-[0_10px_28px_rgba(20,32,46,0.06)] transition focus-within:shadow-[0_0_0_4px_rgba(10,141,193,0.08)]",
+        "group border-ec-line focus-within:border-ec-blue/50 flex items-center gap-2 border bg-white p-1.5 transition focus-within:shadow-[0_0_0_4px_rgba(10,141,193,0.08)]",
         compact ? "h-11 w-full" : "h-12 w-full",
       )}
     >
@@ -44,12 +47,12 @@ function SearchForm({ compact = false }: { compact?: boolean }) {
         name="search"
         type="search"
         placeholder="Produit, marque, référence..."
-        className="text-ec-ink placeholder:text-ec-muted/70 min-w-0 flex-1 bg-transparent text-sm outline-none"
+        className="text-ec-ink placeholder:text-ec-muted/70 min-w-0 flex-1 bg-transparent font-sans text-sm outline-none"
       />
       <button
         type="submit"
         className={cn(
-          "bg-ec-ink hover:bg-ec-blue focus-visible:outline-ec-blue inline-flex shrink-0 items-center justify-center rounded-xl text-sm font-black [color:#fff] text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
+          "bg-ec-ink hover:bg-ec-blue focus-visible:outline-ec-blue inline-flex shrink-0 items-center justify-center font-sans text-sm font-black [color:#fff] text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
           compact ? "size-8" : "h-9 px-4",
         )}
       >
@@ -81,11 +84,11 @@ function CategoryDropdown({
         aria-label="Fermer les rayons"
         onClick={onClose}
       />
-      <div className="border-ec-line absolute top-[calc(100%+0.65rem)] left-0 z-50 w-[min(23rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border bg-white shadow-[0_22px_60px_rgba(20,32,46,0.16)]">
+      <div className="border-ec-line absolute top-[calc(100%+0.65rem)] left-0 z-50 w-[min(23rem,calc(100vw-2rem))] overflow-hidden border bg-white shadow-[0_22px_60px_rgba(20,32,46,0.16)]">
         <div className="border-ec-line border-b p-2">
           <Link
             href="/catalogue"
-            className="bg-ec-ink hover:bg-ec-blue flex items-center justify-between rounded-xl px-4 py-3 text-sm font-black [color:#fff] text-white transition"
+            className="bg-ec-ink hover:bg-ec-blue flex items-center justify-between px-4 py-3 font-sans text-sm font-black [color:#fff] text-white transition"
             onClick={onClose}
           >
             <span>Tous les produits</span>
@@ -93,7 +96,7 @@ function CategoryDropdown({
           </Link>
           <Link
             href="/types-produits"
-            className="text-ec-ink hover:bg-ec-paper mt-1 flex items-center justify-between rounded-xl px-4 py-3 text-sm font-bold transition"
+            className="text-ec-ink hover:bg-ec-paper mt-1 flex items-center justify-between px-4 py-3 font-sans text-sm font-bold transition"
             onClick={onClose}
           >
             <span>Types de produits</span>
@@ -102,7 +105,7 @@ function CategoryDropdown({
         </div>
 
         <div className="commerce-thin-scrollbar max-h-[min(26rem,66vh)] overflow-y-auto p-2">
-          <p className="text-ec-muted px-3 py-2 text-[11px] font-black tracking-[0.18em] uppercase">
+          <p className="text-ec-muted px-3 py-2 font-sans text-[11px] font-black tracking-[0.18em] uppercase">
             Catégories
           </p>
           <div className="grid gap-1">
@@ -110,7 +113,7 @@ function CategoryDropdown({
               <Link
                 key={category.slug}
                 href={category.href}
-                className="text-ec-ink hover:bg-ec-paper hover:text-ec-blue flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition"
+                className="text-ec-ink hover:bg-ec-paper hover:text-ec-blue flex items-center justify-between gap-3 px-3 py-2.5 font-sans text-sm font-semibold transition"
                 onClick={onClose}
               >
                 <span className="min-w-0 truncate">{category.name}</span>
@@ -177,7 +180,7 @@ export function SiteHeader({
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-ec-ink hover:bg-ec-paper hover:text-ec-blue inline-flex h-10 items-center rounded-full px-4 text-sm font-bold transition"
+                className="text-ec-ink hover:border-ec-blue hover:text-ec-blue inline-flex h-10 items-center border-b border-transparent px-2 font-sans text-sm font-bold transition"
               >
                 {link.label}
               </Link>
@@ -188,7 +191,7 @@ export function SiteHeader({
             <Link
               href={isSignedIn ? "/compte" : "/connexion"}
               aria-label={isSignedIn ? "Mon compte" : "Se connecter"}
-              className="bg-ec-ink hover:bg-ec-blue inline-flex h-10 items-center justify-center gap-2 rounded-full px-3 text-sm font-black [color:#fff] text-white shadow-[0_14px_30px_rgba(20,32,46,0.16)] transition sm:px-5"
+              className="bg-ec-ink hover:bg-ec-blue inline-flex h-10 items-center justify-center gap-2 px-3 font-sans text-sm font-black [color:#fff] text-white transition sm:px-5"
             >
               <UserRound className="size-4" aria-hidden="true" />
               <span className="hidden sm:inline">{isSignedIn ? "Mon compte" : "Se connecter"}</span>
@@ -202,7 +205,7 @@ export function SiteHeader({
           <div className="relative shrink-0">
             <button
               type="button"
-              className="border-ec-line text-ec-ink hover:border-ec-blue/40 hover:text-ec-blue relative z-50 inline-flex h-11 items-center justify-center gap-2 rounded-2xl border bg-white px-3 text-sm font-black shadow-[0_10px_28px_rgba(20,32,46,0.06)] transition sm:px-4"
+              className="border-ec-line text-ec-ink hover:border-ec-blue/40 hover:text-ec-blue relative z-50 inline-flex h-11 items-center justify-center gap-2 border bg-white px-3 font-sans text-sm font-black transition sm:px-4"
               aria-label="Ouvrir les rayons"
               aria-expanded={categoriesOpen}
               aria-haspopup="menu"

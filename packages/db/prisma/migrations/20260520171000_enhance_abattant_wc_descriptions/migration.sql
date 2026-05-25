@@ -61,7 +61,7 @@ WITH "abattants" AS (
         ELSE 'Cet abattant WC apporte une solution simple et propre pour equiper ou renouveler une cuvette dans une salle de bain, un sanitaire invite ou un espace professionnel.'
       END,
       CASE
-        WHEN "compatibility_notes" IS NOT NULL THEN 'Il est associe a la reference ' || "compatibility_notes" || ', un repere utile pour confirmer le bon accord avec votre installation.'
+        WHEN "compatibility_notes" IS NOT NULL THEN 'Il est associe à la reference ' || "compatibility_notes" || ', un repere utile pour confirmer le bon accord avec votre installation.'
         ELSE NULL
       END
     )) AS "intro_text",

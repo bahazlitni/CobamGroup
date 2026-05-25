@@ -23,7 +23,7 @@ function SelectTrigger({
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
       className={cn(
-        "border-ec-line text-ec-ink placeholder:text-ec-muted focus:border-ec-blue focus:ring-ec-blue/10 disabled:bg-ec-paper flex h-12 w-full items-center justify-between gap-2 rounded-2xl border bg-white px-4 text-sm font-semibold transition outline-none focus:ring-4 disabled:cursor-not-allowed disabled:opacity-80 [&>span]:line-clamp-1",
+        "border-ec-line text-ec-ink placeholder:text-ec-muted focus:border-ec-blue focus:ring-ec-blue/10 disabled:bg-ec-paper flex h-12 w-full items-center justify-between gap-2 border bg-white px-4 font-sans text-sm font-semibold transition outline-none focus:ring-4 disabled:cursor-not-allowed disabled:opacity-80 [&>span]:line-clamp-1",
         className,
       )}
       {...props}
@@ -48,7 +48,7 @@ function SelectContent({
         data-slot="select-content"
         position={position}
         className={cn(
-          "border-ec-line text-ec-ink shadow-ec-ink/10 relative z-50 max-h-80 min-w-36 overflow-hidden rounded-2xl border bg-white shadow-xl data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
+          "border-ec-line text-ec-ink shadow-ec-ink/10 relative z-50 max-h-80 min-w-36 overflow-hidden border bg-white shadow-xl data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
           className,
         )}
         {...props}
@@ -70,7 +70,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "focus:bg-ec-paper relative flex cursor-default items-center rounded-xl py-2.5 pr-3 pl-9 text-sm font-semibold transition outline-none select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "focus:bg-ec-paper relative flex cursor-default items-center py-2.5 pr-3 pl-9 font-sans text-sm font-semibold transition outline-none select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className,
       )}
       {...props}

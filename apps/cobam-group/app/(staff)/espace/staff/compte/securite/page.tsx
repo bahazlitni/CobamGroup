@@ -81,8 +81,8 @@ export default function SecurityPage() {
           : session?.email ?? null,
       );
       setStep("otp");
-      setOtpStatusText("Code OTP envoye. Consultez votre boite e-mail.");
-      toast.success("Code OTP envoye");
+      setOtpStatusText("Code OTP envoyé. Consultez votre boite e-mail.");
+      toast.success("Code OTP envoyé");
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Erreur lors de l'envoi du code OTP";
@@ -120,8 +120,8 @@ export default function SecurityPage() {
       }
 
       setOtpVisualState("success");
-      setOtpStatusText("Mot de passe mis a jour.");
-      toast.success("Mot de passe mis a jour");
+      setOtpStatusText("Mot de passe mis à jour.");
+      toast.success("Mot de passe mis à jour");
       setState({ currentPassword: "", newPassword: "", confirmation: "" });
       setTimeout(() => {
         setStep("form");
@@ -170,7 +170,7 @@ export default function SecurityPage() {
         <Panel
           pretitle="Verification"
           title="Confirmer le changement"
-          description={`Un code de confirmation a ete envoye a ${
+          description={`Un code de confirmation a ete envoyé a ${
             otpEmail ?? session?.email ?? "votre adresse e-mail"
           }.`}
         >

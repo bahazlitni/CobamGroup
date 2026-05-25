@@ -25,7 +25,7 @@ import { QuantityStepper } from "@/components/commerce/quantity-stepper";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { pushUndoToast } from "@/lib/undo-actions";
 
-function cartTotalLabel(value: string, fallback = "Sur devis") {
+function cartTotalLabel(value: string, fallback = "0") {
   const amount = Number(value);
   return amount > 0 ? formatPriceTnd(value) : fallback;
 }
@@ -180,7 +180,7 @@ export function CartPageClient() {
 
       if (quantity <= 0 && previousLine) {
         pushUndoToast({
-          title: "Produit retire du panier",
+          title: "Retiré du panier",
           description: previousLine.name,
           onUndo: async () => {
             setCart(await updateCartLine(previousLine.id, previousLine.quantity));
@@ -354,7 +354,7 @@ export function CartPageClient() {
                 </div>
                 {line.priceChanged ? (
                   <p className="mt-3 text-sm font-semibold text-amber-700">
-                    Prix mis a jour depuis l&apos;ajout au panier.
+                    Prix mis à jour depuis l&apos;ajout au panier.
                   </p>
                 ) : null}
               </div>

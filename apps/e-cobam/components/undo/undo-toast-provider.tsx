@@ -337,7 +337,7 @@ export function UndoToastProvider() {
 
       setItem({
         ...detail,
-        actionLabel: detail.actionLabel ?? "Undo",
+        actionLabel: detail.actionLabel ?? "Annuler",
         durationMs: detail.durationMs ?? DEFAULT_DURATION_MS,
         instanceId: safeRandomUUID(),
         size: detail.size ?? defaultSize,

@@ -25,7 +25,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-function totalLabel(value: string | null | undefined, fallback = "Sur devis") {
+function totalLabel(value: string | null | undefined, fallback = "0 TND") {
   const amount = Number(value);
   return Number.isFinite(amount) && amount > 0 ? formatPriceTnd(value ?? null) : fallback;
 }
@@ -128,7 +128,7 @@ export function CartDrawer({
 
       if (quantity <= 0 && previousLine) {
         pushUndoToast({
-          title: "Produit retire du panier",
+          title: "Retiré du panier",
           description: previousLine.name,
           onUndo: async () => {
             setCart(await updateCartLine(previousLine.id, previousLine.quantity));
@@ -224,12 +224,8 @@ export function CartDrawer({
               ))}
             </div>
           ) : (
-            <div className="rounded-3xl border border-dashed border-ec-line bg-ec-paper/70 px-6 py-12 text-center">
-              <ShoppingBag className="mx-auto size-9 text-ec-blue" />
-              <h3 className="mt-4 text-xl font-black text-ec-ink">Panier vide</h3>
-              <p className="mt-2 text-sm font-semibold text-ec-muted">
-                Ajoutez des produits depuis le catalogue.
-              </p>
+            <div className="text-center h-full items-center justify-center grid">
+              <ShoppingBag className="mx-auto size-14 text-ec-blue opacity-50" />
             </div>
           )}
         </div>

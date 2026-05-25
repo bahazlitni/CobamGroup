@@ -527,7 +527,7 @@ export default function ProductsListPage() {
             aria-label="Selectionner toutes les familles"
           />,
           "Famille",
-          "Variante par defaut",
+          "Variante par défaut",
           "Marque",
           "Sous-categories",
           "Variantes",

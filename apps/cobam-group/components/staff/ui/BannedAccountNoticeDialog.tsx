@@ -39,7 +39,7 @@ export default function BannedAccountNoticeDialog({
             Votre compte staff est actuellement banni
           </h2>
           <p className="mt-2 text-sm leading-6 text-slate-500">
-            Ce message s&apos;affiche a la connexion pour vous informer du motif
+            Ce message s&apos;affiche à la connexion pour vous informer du motif
             du bannissement.
           </p>
         </div>

@@ -2,13 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { ChevronRight, Download, FileBadge, PackageCheck, PackageX, TriangleAlert } from "lucide-react";
-import CopyButton from "@cobam/shared/ui/CopyButton";
-import ImagePreviewCarousel from "@cobam/shared/ui/ImagePreviewCarousel";
-import RailCarousel from "@cobam/shared/ui/RailCarousel";
 import { toast } from "sonner";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
+import CopyButton from "@/components/commerce/copy-button";
+import ProductImageViewer from "@/components/commerce/product-image-viewer";
 import { ProductCard, type ProductCardProduct } from "@/components/commerce/product-card";
 import { QuantityStepper } from "@/components/commerce/quantity-stepper";
 import { RichText } from "@/components/commerce/rich-text";
@@ -89,7 +88,7 @@ function StockBadge({ stock }: { stock: CommerceVariant["stock"] }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black",
+        "inline-flex items-center gap-1.5 border px-3 py-1 text-xs font-black",
         stock.tone === "available" && "bg-emerald-50 text-emerald-700",
         stock.tone === "warning" && "bg-amber-50 text-amber-700",
         stock.tone === "unavailable" && "bg-rose-50 text-rose-700",
@@ -137,7 +136,7 @@ function DocumentAction({
   label: string;
 }) {
   const className =
-    "inline-flex min-h-10 items-center justify-center gap-2 rounded-full border px-3.5 text-xs font-black text-ec-muted transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ec-blue/25";
+    "inline-flex min-h-10 items-center justify-center gap-2 border px-3.5 text-xs font-black text-ec-muted transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ec-blue/25";
 
   return (
     <a
@@ -214,6 +213,84 @@ function variantToProductCard(
     stock: variant.stock,
     addToCart: variant.addToCart,
   };
+}
+
+function VariantRail({
+  product,
+  selectedVariant,
+  onSelectVariant,
+}: {
+  product: CommerceProductDetail;
+  selectedVariant: CommerceVariant;
+  onSelectVariant: (variantId: number) => void;
+}) {
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+
+  function scrollBy(direction: -1 | 1) {
+    viewportRef.current?.scrollBy({
+      left: direction * 360,
+      behavior: "smooth",
+    });
+  }
+
+  return (
+    <section
+      data-ecom-variants-rail
+      className="border-ec-line mx-auto mt-16 max-w-[74rem] border-t pt-10 sm:mt-20"
+    >
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-ec-blue text-xs font-black tracking-[0.28em] uppercase">Meme gamme</p>
+          <h2 className="text-ec-ink mt-2 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
+            References produit
+          </h2>
+        </div>
+        <p className="text-ec-muted text-sm font-semibold">
+          {product.variants.length} reference{product.variants.length > 1 ? "s" : ""} a comparer
+        </p>
+      </div>
+
+      <div className="relative">
+        <button
+          type="button"
+          className="absolute left-0 top-1/2 z-10 hidden size-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-ec-line bg-white text-ec-ink transition hover:border-ec-ink lg:grid"
+          onClick={() => scrollBy(-1)}
+          aria-label="Variantes precedentes"
+        >
+          <ChevronRight className="size-4 rotate-180" aria-hidden="true" />
+        </button>
+        <div
+          ref={viewportRef}
+          className="commerce-thin-scrollbar overflow-x-auto pb-3"
+          tabIndex={0}
+          aria-label="References de la meme gamme"
+        >
+          <div className="grid auto-cols-[18.5rem] grid-flow-col items-stretch gap-4">
+            {product.variants.map((variant) => (
+              <ProductCard
+                key={variant.id}
+                product={variantToProductCard(variant, product)}
+                selected={variant.id === selectedVariant.id}
+                onSelect={() => onSelectVariant(variant.id)}
+                size="auto"
+                flat
+                showSelectedMarker={false}
+                className="h-full w-full shadow-none hover:shadow-none"
+              />
+            ))}
+          </div>
+        </div>
+        <button
+          type="button"
+          className="absolute right-0 top-1/2 z-10 hidden size-11 translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-ec-line bg-white text-ec-ink transition hover:border-ec-ink lg:grid"
+          onClick={() => scrollBy(1)}
+          aria-label="Variantes suivantes"
+        >
+          <ChevronRight className="size-4" aria-hidden="true" />
+        </button>
+      </div>
+    </section>
+  );
 }
 
 function SpecialAttributeBlobs({
@@ -486,7 +563,6 @@ export function ProductDetailClient({ product }: { product: CommerceProductDetai
                     value={selectedVariant.sku}
                     ariaLabel="Copier le SKU"
                     size="xs"
-                    variant="light"
                     onCopy={() => toast.success("SKU copié.", { description: selectedVariant.sku })}
                     onError={() => toast.error("Impossible de copier le SKU.")}
                   />
@@ -501,75 +577,23 @@ export function ProductDetailClient({ product }: { product: CommerceProductDetai
               </div>
             </div>
 
-            <h1 className="text-ec-ink mt-4 text-3xl leading-[1.06] font-black tracking-tight text-balance sm:text-[2.45rem] xl:text-[3rem]">
+            <h1 className="text-ec-ink mt-4 font-sans text-3xl leading-[1.08] font-semibold tracking-tight text-balance sm:text-[2.45rem] xl:text-[3rem]">
               {selectedVariant.displayName}
             </h1>
           </section>
 
           <div className="order-2 space-y-3 lg:sticky lg:top-36 lg:col-start-1 lg:row-start-1 lg:row-span-5">
-            <ImagePreviewCarousel
+            <ProductImageViewer
               key={`${selectedVariant.id}-${previewImages.map((image) => image.id).join("-")}`}
               items={previewImages}
               title={selectedVariant.displayName}
               size="xl"
-              frameClassName="border-ec-line shadow-none"
-              thumbnailClassName="focus-visible:ring-ec-blue/35"
-              activeThumbnailClassName="border-ec-blue ring-ec-blue/10"
-              inactiveThumbnailClassName="border-ec-line hover:border-ec-blue/40"
               emptyLabel="COBAM"
             />
-          </div>
-
-          <section className="order-3 min-w-0 lg:col-start-2 lg:row-start-2">
-            <div className="border-ec-line rounded-[1.5rem] border bg-white p-5 sm:p-6">
-              <div className="text-center">
-                <div className="mx-auto w-fit">
-                  <p className="text-ec-muted text-xs font-black tracking-[0.24em] uppercase">
-                    Prix TTC
-                  </p>
-                  <p className="text-ec-ink mt-2 text-4xl leading-none font-black tracking-tight sm:text-5xl">
-                    <PriceText value={selectedVariant.price} />
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-7 grid gap-3 sm:grid-cols-[9.5rem_minmax(0,1fr)_3.5rem] sm:items-start">
-                <div className="mx-auto w-full max-w-[20rem] sm:mx-0 sm:max-w-none">
-                  <QuantityStepper value={quantity} onChange={setQuantity} />
-                </div>
-
-                <div className="grid w-full grid-cols-[minmax(0,1fr)_3.5rem] gap-3 sm:contents">
-                  <AddToCartButton
-                    item={selectedVariant.addToCart}
-                    quantity={quantity}
-                    size="xl"
-                    className="min-w-0 sm:w-full"
-                    buttonClassName="h-14 w-full justify-center !rounded-full shadow-[0_18px_38px_rgba(20,32,46,0.16)] sm:w-full"
-                  />
-
-                  <FavoriteToggleButton
-                    item={favoriteItem}
-                    size="xl"
-                    iconOnly
-                    buttonClassName="h-14 w-14 !rounded-full shadow-sm"
-                  />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <div className="order-4 min-w-0 lg:col-start-2 lg:row-start-3">
-            <SpecialAttributeBlobs
-              product={product}
-              selectedVariant={selectedVariant}
-              onSelectVariant={selectVariant}
-            />
-          </div>
-
-          {hasDocuments ? (
+            {hasDocuments ? (
             <div
               className={cn(
-                "border-ec-line order-5 grid gap-3 border-t pt-5 lg:col-start-2 lg:row-start-4",
+                "grid gap-3 lg:col-start-2 lg:row-start-4",
                 selectedVariant.datasheet?.url && selectedVariant.certificate?.url
                   ? "sm:grid-cols-2"
                   : "grid-cols-1",
@@ -591,50 +615,57 @@ export function ProductDetailClient({ product }: { product: CommerceProductDetai
               ) : null}
             </div>
           ) : null}
-        </div>
-      </section>
-
-      {product.variants.length > 1 ? (
-        <section
-          data-ecom-variants-rail
-          className="border-ec-line mx-auto mt-12 max-w-[74rem] overflow-hidden border-t pt-9 sm:mt-14"
-        >
-          <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <h2 className="text-ec-ink mt-2 text-2xl font-black tracking-tight sm:text-3xl">
-              Même gamme
-            </h2>
-            <p className="text-ec-muted text-sm font-semibold">
-              {product.variants.length} référence{product.variants.length > 1 ? "s" : ""} à comparer
-            </p>
           </div>
 
-          <RailCarousel
-            className="max-w-full overflow-hidden"
-            showButtons="always"
-            allowDrag
-            applyPhysics
-            scrollStep={300}
-            viewportClassName="max-w-full overflow-hidden px-1 py-1"
-            trackClassName="gap-3"
-            itemClassName="flex w-[16rem] self-stretch sm:w-[17.5rem] lg:w-[18rem]"
-            buttonClassName="shadow-none"
-            previousButtonLabel="Variante précédente"
-            nextButtonLabel="Variante suivante"
-          >
-            {product.variants.map((variant) => (
-              <ProductCard
-                key={variant.id}
-                product={variantToProductCard(variant, product)}
-                selected={variant.id === selectedVariant.id}
-                onSelect={() => selectVariant(variant.id)}
-                size="auto"
-                flat
-                showSelectedMarker={false}
-                className="h-full w-full shadow-none hover:shadow-none"
-              />
-            ))}
-          </RailCarousel>
-        </section>
+          <section className="order-3 min-w-0 lg:col-start-2 lg:row-start-2">
+            <div className="border-ec-line border bg-white p-5 sm:p-6">
+              <div className="text-center">
+                <div className="mx-auto w-fit">
+                  <p className="text-ec-muted font-sans text-xs font-black tracking-[0.24em] uppercase">
+                    Prix TTC
+                  </p>
+                  <p className="text-ec-ink mt-2 font-sans text-4xl leading-none font-semibold tracking-tight sm:text-5xl">
+                    <PriceText value={selectedVariant.price} />
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-7 grid gap-3 sm:grid-cols-[9.5rem_minmax(0,1fr)_3.5rem] sm:items-start">
+                <div className="mx-auto w-full max-w-[20rem] sm:mx-0 sm:max-w-none">
+                  <QuantityStepper value={quantity} onChange={setQuantity} />
+                </div>
+
+                <div className="grid w-full grid-cols-[minmax(0,1fr)_3.5rem] gap-3 sm:contents">
+                  <AddToCartButton
+                    item={selectedVariant.addToCart}
+                    quantity={quantity}
+                    size="xl"
+                    className="min-w-0 sm:w-full"
+                    buttonClassName="h-14 w-full justify-center shadow-none sm:w-full"
+                  />
+
+                  <FavoriteToggleButton
+                    item={favoriteItem}
+                    size="xl"
+                    iconOnly
+                    buttonClassName="size-14 rounded-full shadow-none"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div className="order-4 min-w-0 lg:col-start-2 lg:row-start-3">
+            <SpecialAttributeBlobs
+              product={product}
+              selectedVariant={selectedVariant}
+              onSelectVariant={selectVariant}
+            />
+          </div>
+        </div>
+      </section>
+      {product.variants.length > 1 ? (
+        <VariantRail product={product} selectedVariant={selectedVariant} onSelectVariant={selectVariant} />
       ) : null}
 
       {hasLowerContent ? (

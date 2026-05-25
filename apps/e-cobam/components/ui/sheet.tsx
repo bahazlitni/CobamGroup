@@ -100,13 +100,13 @@ function SheetContent({
           "fixed z-[91] flex flex-col gap-0 bg-white shadow-[0_24px_90px_rgba(20,32,46,0.28)] outline-none",
           "data-[state=closed]:duration-200 data-[state=open]:duration-300",
           side === "right" &&
-            "inset-y-0 right-0 h-full w-[min(29rem,calc(100vw-1rem))] rounded-l-[2rem] border-l border-ec-line data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
+            "inset-y-0 right-0 h-full w-[min(29rem,calc(100vw-1rem))] border-l border-ec-line data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
           side === "left" &&
-            "inset-y-0 left-0 h-full w-[min(29rem,calc(100vw-1rem))] rounded-r-[2rem] border-r border-ec-line data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
+            "inset-y-0 left-0 h-full w-[min(29rem,calc(100vw-1rem))] border-r border-ec-line data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
           side === "top" &&
-            "inset-x-0 top-0 max-h-[88vh] rounded-b-[2rem] border-b border-ec-line data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
+            "inset-x-0 top-0 max-h-[88vh] border-b border-ec-line data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
           side === "bottom" &&
-            "inset-x-0 bottom-0 max-h-[88vh] rounded-t-[2rem] border-t border-ec-line data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+            "inset-x-0 bottom-0 max-h-[88vh] border-t border-ec-line data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
           className,
         )}
         onInteractOutside={handleInteractOutside}
@@ -135,7 +135,7 @@ function SheetTitle({
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
-      className={cn("text-xl font-black tracking-tight text-ec-ink", className)}
+      className={cn("font-serif text-xl font-semibold tracking-tight text-ec-ink", className)}
       {...props}
     />
   );

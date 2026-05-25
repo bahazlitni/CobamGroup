@@ -59,7 +59,7 @@ export default async function CustomerOrdersPage() {
                     <TableRow className="hover:bg-transparent">
                       <TableHead>Commande</TableHead>
                       <TableHead>Statut</TableHead>
-                      <TableHead>Paiement</TableHead>SKU copie.
+                      <TableHead>Paiement</TableHead>
 
                       <TableHead>Livraison</TableHead>
                       <TableHead className="text-right">Total</TableHead>

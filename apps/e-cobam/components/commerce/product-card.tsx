@@ -155,7 +155,7 @@ function StockBadge({ stock, compact = false }: { stock: ProductCardStock; compa
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-center gap-1.5 rounded-full font-bold",
+        "inline-flex items-center justify-center gap-1.5 border font-sans font-bold",
         compact ? "px-2 py-1 text-[0.64rem]" : "px-2.5 py-1 text-xs",
         stock.tone === "available" && "bg-emerald-50 text-emerald-700",
         stock.tone === "warning" && "bg-amber-50 text-amber-700",
@@ -186,6 +186,8 @@ function CardMediaAction({
       <button
         type="button"
         onClick={onSelect}
+        draggable={false}
+        onDragStart={(event) => event.preventDefault()}
         className={cn("block w-full text-left", className)}
         aria-label={label}
       >
@@ -195,7 +197,13 @@ function CardMediaAction({
   }
 
   return (
-    <Link href={href} className={cn("block w-full", className)} aria-label={label}>
+    <Link
+      href={href}
+      className={cn("block w-full", className)}
+      aria-label={label}
+      draggable={false}
+      onDragStart={(event) => event.preventDefault()}
+    >
       {children}
     </Link>
   );
@@ -236,7 +244,7 @@ export function ProductCard({
   const resolvedSize = size === "auto" ? autoSize : size;
   const displayName = product.displayName || product.name;
   const href = product.href || (product.slug ? `/produits/${product.slug}` : "#");
-  const imageUrl = product.image?.thumbnailUrl || product.image?.url || null;
+  const imageUrl = product.image?.url || product.image?.thumbnailUrl || null;
   const imageAlt = product.image?.altText || displayName;
   const brandLabel = product.brandName || product.brand?.name || null;
   const categoryLabel =
@@ -281,14 +289,14 @@ export function ProductCard({
     <article
       ref={cardRef}
       className={cn(
-        "group relative flex min-w-0 flex-col overflow-hidden rounded-[1.45rem] border bg-white text-cobam-900 transition duration-300",
+        "group relative flex min-w-0 flex-col overflow-hidden border bg-white text-cobam-900 transition duration-300",
         flat
           ? selected
-            ? "border-cobam-500 outline outline-2 outline-cobam-200"
+            ? "border-cobam-500 outline outline-1 outline-cobam-500"
             : "border-slate-200 hover:border-cobam-200"
           : selected
-            ? "border-cobam-500 shadow-[0_18px_48px_rgba(0,149,213,0.16)] ring-2 ring-cobam-200"
-            : "border-slate-200 shadow-[0_14px_38px_rgba(15,23,42,0.06)] hover:-translate-y-0.5 hover:border-cobam-200 hover:shadow-[0_20px_52px_rgba(15,23,42,0.11)]",
+            ? "border-cobam-500 ring-1 ring-cobam-500"
+            : "border-slate-200 hover:border-cobam-400",
         className,
       )}
       data-product-card-size={resolvedSize}
@@ -301,6 +309,7 @@ export function ProductCard({
               src={imageUrl}
               alt={imageAlt}
               fill
+              draggable={false}
               priority={priority}
               sizes={IMAGE_SIZES[resolvedSize]}
               unoptimized
@@ -316,8 +325,7 @@ export function ProductCard({
         {showBrand && (
           <span
             className={cn(
-              "absolute left-3 top-3 max-w-[calc(100%-4.5rem)] truncate rounded-full bg-white/92 px-2.5 py-1 text-[0.65rem] font-black uppercase tracking-[0.16em] text-cobam-600 ring-1 ring-slate-200 backdrop-blur",
-              !flat && "shadow-sm",
+              "absolute left-3 top-3 max-w-[calc(100%-4.5rem)] truncate border border-slate-200 bg-white/92 px-2.5 py-1 font-sans text-[0.65rem] font-black uppercase tracking-[0.16em] text-cobam-600 backdrop-blur",
             )}
           >
             {brandLabel}
@@ -340,9 +348,9 @@ export function ProductCard({
           </div>
         )}
 
-        {selected && showSelectedMarker && (
-          <span className="absolute bottom-3 right-3 inline-flex h-3 w-3 rounded-full bg-cobam-500 shadow-[0_0_0_4px_rgba(0,149,213,0.14)]" />
-        )}
+        {selected && showSelectedMarker ? (
+          <span className="absolute inset-x-0 bottom-0 h-1 bg-cobam-500" />
+        ) : null}
       </div>
 
       <div
@@ -353,7 +361,7 @@ export function ProductCard({
       >
         <div className="min-w-0 flex-1">
           {showSku && (
-            <p className="mb-2 truncate font-mono text-[0.68rem] font-black uppercase tracking-[0.22em] text-slate-500">
+            <p className="mb-2 truncate font-sans text-[0.68rem] font-black uppercase tracking-[0.22em] text-slate-500">
               {product.sku}
             </p>
           )}
@@ -361,7 +369,7 @@ export function ProductCard({
           <CardMediaAction href={href} onSelect={onSelect} label={`Voir ${displayName}`}>
             <h3
               className={cn(
-                "line-clamp-2 font-black leading-snug text-cobam-900 transition group-hover:text-cobam-700",
+                "line-clamp-2 font-sans font-semibold leading-snug text-cobam-900 transition group-hover:text-cobam-700",
                 TITLE_SIZE[resolvedSize],
               )}
             >
@@ -376,7 +384,7 @@ export function ProductCard({
 
         <div className={cn("mt-4 flex items-end justify-between gap-3", isTiny && "mt-3")}>
           <div className="min-w-0">
-            <p className={cn("font-black leading-none text-cobam-900", PRICE_SIZE[resolvedSize])}>
+            <p className={cn("font-sans font-semibold leading-none text-cobam-900", PRICE_SIZE[resolvedSize])}>
               {formatPriceTnd(product.price) ?? "Prix sur demande"}
             </p>
           </div>
@@ -415,16 +423,16 @@ export function ProductCardSkeleton({ className }: { className?: string }) {
   return (
     <article
       className={cn(
-        "animate-pulse overflow-hidden rounded-[1.45rem] border border-slate-200 bg-white shadow-[0_14px_38px_rgba(15,23,42,0.06)]",
+        "animate-pulse overflow-hidden border border-slate-200 bg-white",
         className,
       )}
     >
       <div className="aspect-square bg-white" />
       <div className="space-y-3 border-t border-slate-100 p-4">
-        <div className="h-3 w-20 rounded-full bg-slate-100" />
-        <div className="h-5 w-4/5 rounded-full bg-slate-100" />
-        <div className="h-7 w-28 rounded-full bg-slate-100" />
-        <div className="h-10 rounded-2xl bg-slate-100" />
+        <div className="h-3 w-20 bg-slate-100" />
+        <div className="h-5 w-4/5 bg-slate-100" />
+        <div className="h-7 w-28 bg-slate-100" />
+        <div className="h-10 bg-slate-100" />
       </div>
     </article>
   );

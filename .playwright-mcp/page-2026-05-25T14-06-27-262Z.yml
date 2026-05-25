@@ -1,0 +1,924 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Accueil e-cobam" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=e6]:
+          - generic [ref=e7]: E-Cobam
+          - generic [ref=e8]: Boutique
+      - navigation "Navigation principale" [ref=e9]:
+        - link "Tous les produits" [ref=e10] [cursor=pointer]:
+          - /url: /catalogue
+        - link "Promotions" [ref=e11] [cursor=pointer]:
+          - /url: /catalogue?sélection=promotion
+        - link "Meilleures ventes" [ref=e12] [cursor=pointer]:
+          - /url: /#best-sellers
+        - link "Nouveautés" [ref=e13] [cursor=pointer]:
+          - /url: /#new-arrivals
+        - link "Suivi commande" [ref=e14] [cursor=pointer]:
+          - /url: /suivi-commande
+      - link "Se connecter" [ref=e16] [cursor=pointer]:
+        - /url: /connexion
+        - img [ref=e17]
+        - generic [ref=e20]: Se connecter
+    - generic [ref=e22]:
+      - button "Ouvrir les rayons" [ref=e24]:
+        - img [ref=e25]
+        - generic [ref=e26]: Catégories
+        - img [ref=e27]
+      - generic [ref=e30]:
+        - img [ref=e31]
+        - searchbox "Produit, marque, référence..." [ref=e34]
+        - button "Rechercher" [ref=e35]:
+          - img [ref=e36]
+          - generic [ref=e39]: Rechercher
+      - generic [ref=e40]:
+        - button "Ouvrir les favoris" [ref=e42]:
+          - generic [ref=e43]:
+            - img [ref=e44]
+            - generic [ref=e46]: "2"
+        - button "Ouvrir le panier" [ref=e47]:
+          - img [ref=e49]
+  - main [ref=e52]:
+    - generic [ref=e54]:
+      - heading "Tous vos matériaux, prêts à commander." [level=1] [ref=e55]
+      - generic [ref=e57]:
+        - img [ref=e58]
+        - generic [ref=e61]: Rechercher un produit
+        - searchbox "Rechercher un produit" [ref=e62]
+        - button "Rechercher" [ref=e63]:
+          - generic [ref=e64]: Rechercher
+      - generic [ref=e65]:
+        - link "Voir tous les produits" [ref=e66] [cursor=pointer]:
+          - /url: /catalogue
+          - text: Voir tous les produits
+          - img [ref=e67]
+        - link "Suivre une commande" [ref=e70] [cursor=pointer]:
+          - /url: /suivi-commande
+          - text: Suivre une commande
+          - img [ref=e71]
+    - generic [ref=e78]:
+      - generic [ref=e79]:
+        - heading "Les produits les plus demandés" [level=2] [ref=e81]
+        - link "Voir tout" [ref=e82] [cursor=pointer]:
+          - /url: /catalogue?sélection=promotion
+          - text: Voir tout
+          - img [ref=e83]
+      - generic [ref=e85]:
+        - article [ref=e86]:
+          - generic [ref=e87]:
+            - link "Voir Pamesa Ceramica - Mosaique 30 Mat Rusty Metal Silver Pamesa" [ref=e88] [cursor=pointer]:
+              - /url: /produits/pamesa-ceramica-mosaique-30-mat-rusty-metal-silver-pamesa
+              - img "rusty.webp" [ref=e89]
+            - generic [ref=e90]: Pamesa Ceramica
+            - button "Ajouter aux favoris" [ref=e92]:
+              - img [ref=e96]
+          - generic [ref=e98]:
+            - generic [ref=e99]:
+              - paragraph [ref=e100]: "00246620"
+              - link "Voir Pamesa Ceramica - Mosaique 30 Mat Rusty Metal Silver Pamesa" [ref=e101] [cursor=pointer]:
+                - /url: /produits/pamesa-ceramica-mosaique-30-mat-rusty-metal-silver-pamesa
+                - heading "Pamesa Ceramica - Mosaique 30 Mat Rusty Metal Silver Pamesa" [level=3] [ref=e102]
+            - generic [ref=e103]:
+              - paragraph [ref=e105]: 27,778 DT
+              - generic [ref=e106]:
+                - img [ref=e107]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e114]:
+              - generic [ref=e115]:
+                - img [ref=e117]
+                - generic [ref=e120]: Ajouter au panier
+        - article [ref=e121]:
+          - generic [ref=e122]:
+            - link "Voir KTL Ceramica - Mosaique 30 Galaxy Beige Ktl" [ref=e123] [cursor=pointer]:
+              - /url: /produits/ktl-ceramica-mosaique-30-galaxy-beige-ktl
+              - img "CAS1GALXBPHA.webp" [ref=e124]
+            - generic [ref=e125]: KTL Ceramica
+            - button "Ajouter aux favoris" [ref=e127]:
+              - img [ref=e131]
+          - generic [ref=e133]:
+            - generic [ref=e134]:
+              - paragraph [ref=e135]: "00246255"
+              - link "Voir KTL Ceramica - Mosaique 30 Galaxy Beige Ktl" [ref=e136] [cursor=pointer]:
+                - /url: /produits/ktl-ceramica-mosaique-30-galaxy-beige-ktl
+                - heading "KTL Ceramica - Mosaique 30 Galaxy Beige Ktl" [level=3] [ref=e137]
+            - generic [ref=e138]:
+              - paragraph [ref=e140]: 22,223 DT
+              - generic [ref=e141]:
+                - img [ref=e142]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e149]:
+              - generic [ref=e150]:
+                - img [ref=e152]
+                - generic [ref=e155]: Ajouter au panier
+        - article [ref=e156]:
+          - generic [ref=e157]:
+            - link "Voir Alaplana Ceramica - Mosaique 30 Athlone Beige Alaplana" [ref=e158] [cursor=pointer]:
+              - /url: /produits/alaplana-ceramica-mosaique-30-athlone-beige-alaplana
+              - img "Athlone-Beige-Pulido120x120-Rectificado.webp" [ref=e159]
+            - generic [ref=e160]: Alaplana Ceramica
+            - button "Ajouter aux favoris" [ref=e162]:
+              - img [ref=e166]
+          - generic [ref=e168]:
+            - generic [ref=e169]:
+              - paragraph [ref=e170]: "00245395"
+              - link "Voir Alaplana Ceramica - Mosaique 30 Athlone Beige Alaplana" [ref=e171] [cursor=pointer]:
+                - /url: /produits/alaplana-ceramica-mosaique-30-athlone-beige-alaplana
+                - heading "Alaplana Ceramica - Mosaique 30 Athlone Beige Alaplana" [level=3] [ref=e172]
+            - generic [ref=e173]:
+              - paragraph [ref=e175]: 22,222 DT
+              - generic [ref=e176]:
+                - img [ref=e177]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e184]:
+              - generic [ref=e185]:
+                - img [ref=e187]
+                - generic [ref=e190]: Ajouter au panier
+        - article [ref=e191]:
+          - generic [ref=e192]:
+            - link "Voir Deutsch Color - Ciment Colle FM2000 Blanc" [ref=e193] [cursor=pointer]:
+              - /url: /produits/deutsch-color-ciment-colle-fm2000-blanc
+              - img "Ciment colle F2000.png" [ref=e194]
+            - generic [ref=e195]: Deutsch Color
+            - button "Ajouter aux favoris" [ref=e197]:
+              - img [ref=e201]
+          - generic [ref=e203]:
+            - generic [ref=e204]:
+              - paragraph [ref=e205]: "00201575"
+              - link "Voir Deutsch Color - Ciment Colle FM2000 Blanc" [ref=e206] [cursor=pointer]:
+                - /url: /produits/deutsch-color-ciment-colle-fm2000-blanc
+                - heading "Deutsch Color - Ciment Colle FM2000 Blanc" [level=3] [ref=e207]
+            - generic [ref=e208]:
+              - paragraph [ref=e210]: 25,263 DT
+              - generic [ref=e211]:
+                - img [ref=e212]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e219]:
+              - generic [ref=e220]:
+                - img [ref=e222]
+                - generic [ref=e225]: Ajouter au panier
+        - article [ref=e226]:
+          - generic [ref=e227]:
+            - link "Voir Sika - Ciment Colle Ceram 206 Blanc Sac 25KG" [ref=e228] [cursor=pointer]:
+              - /url: /produits/sika-ciment-colle-ceram-206-blanc-sac-25kg
+              - img "Ciment colle SikaCeram 206 blanc sac 25KG.png" [ref=e229]
+            - generic [ref=e230]: Sika
+            - button "Ajouter aux favoris" [ref=e232]:
+              - img [ref=e236]
+          - generic [ref=e238]:
+            - generic [ref=e239]:
+              - paragraph [ref=e240]: "00227926"
+              - link "Voir Sika - Ciment Colle Ceram 206 Blanc Sac 25KG" [ref=e241] [cursor=pointer]:
+                - /url: /produits/sika-ciment-colle-ceram-206-blanc-sac-25kg
+                - heading "Sika - Ciment Colle Ceram 206 Blanc Sac 25KG" [level=3] [ref=e242]
+            - generic [ref=e243]:
+              - paragraph [ref=e245]: 43,684 DT
+              - generic [ref=e246]:
+                - img [ref=e247]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e254]:
+              - generic [ref=e255]:
+                - img [ref=e257]
+                - generic [ref=e260]: Ajouter au panier
+        - article [ref=e261]:
+          - generic [ref=e262]:
+            - link "Voir KTL Ceramica - Mosaique 30 Galaxy Brown Ktl" [ref=e263] [cursor=pointer]:
+              - /url: /produits/ktl-ceramica-mosaique-30-galaxy-brown-ktl
+              - img "CAS1GALXEPHAbrown.webp" [ref=e264]
+            - generic [ref=e265]: KTL Ceramica
+            - button "Ajouter aux favoris" [ref=e267]:
+              - img [ref=e271]
+          - generic [ref=e273]:
+            - generic [ref=e274]:
+              - paragraph [ref=e275]: "00246248"
+              - link "Voir KTL Ceramica - Mosaique 30 Galaxy Brown Ktl" [ref=e276] [cursor=pointer]:
+                - /url: /produits/ktl-ceramica-mosaique-30-galaxy-brown-ktl
+                - heading "KTL Ceramica - Mosaique 30 Galaxy Brown Ktl" [level=3] [ref=e277]
+            - generic [ref=e278]:
+              - paragraph [ref=e280]: 24,445 DT
+              - generic [ref=e281]:
+                - img [ref=e282]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e289]:
+              - generic [ref=e290]:
+                - img [ref=e292]
+                - generic [ref=e295]: Ajouter au panier
+        - article [ref=e296]:
+          - generic [ref=e297]:
+            - link "Voir Mosaique 34 FBZJ001 (Carré)" [ref=e298] [cursor=pointer]:
+              - /url: /produits/mosaique-34-fbzj001-carre
+              - img "Mosaique 34 FBZJ001 (Carré)" [ref=e299]
+            - button "Ajouter aux favoris" [ref=e301]:
+              - img [ref=e305]
+          - generic [ref=e307]:
+            - generic [ref=e308]:
+              - paragraph [ref=e309]: "00215626"
+              - link "Voir Mosaique 34 FBZJ001 (Carré)" [ref=e310] [cursor=pointer]:
+                - /url: /produits/mosaique-34-fbzj001-carre
+                - heading "Mosaique 34 FBZJ001 (Carré)" [level=3] [ref=e311]
+            - generic [ref=e312]:
+              - paragraph [ref=e314]: 17,800 DT
+              - generic [ref=e315]:
+                - img [ref=e316]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e323]:
+              - generic [ref=e324]:
+                - img [ref=e326]
+                - generic [ref=e329]: Ajouter au panier
+        - article [ref=e330]:
+          - generic [ref=e331]:
+            - link "Voir Alaplana Ceramica - Mosaique 30 Mat Brera Oxyd Alaplana" [ref=e332] [cursor=pointer]:
+              - /url: /produits/alaplana-ceramica-mosaique-30-mat-brera-oxyd-alaplana
+              - img "1_result.webp" [ref=e333]
+            - generic [ref=e334]: Alaplana Ceramica
+            - button "Ajouter aux favoris" [ref=e336]:
+              - img [ref=e340]
+          - generic [ref=e342]:
+            - generic [ref=e343]:
+              - paragraph [ref=e344]: "00245388"
+              - link "Voir Alaplana Ceramica - Mosaique 30 Mat Brera Oxyd Alaplana" [ref=e345] [cursor=pointer]:
+                - /url: /produits/alaplana-ceramica-mosaique-30-mat-brera-oxyd-alaplana
+                - heading "Alaplana Ceramica - Mosaique 30 Mat Brera Oxyd Alaplana" [level=3] [ref=e346]
+            - generic [ref=e347]:
+              - paragraph [ref=e349]: 27,778 DT
+              - generic [ref=e350]:
+                - img [ref=e351]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e358]:
+              - generic [ref=e359]:
+                - img [ref=e361]
+                - generic [ref=e364]: Ajouter au panier
+    - generic [ref=e367]:
+      - generic [ref=e368]:
+        - heading "Nouveautés" [level=2] [ref=e370]
+        - link "Voir tout" [ref=e371] [cursor=pointer]:
+          - /url: /catalogue?tri=latest
+          - text: Voir tout
+          - img [ref=e372]
+      - generic [ref=e374]:
+        - article [ref=e375]:
+          - generic [ref=e376]:
+            - link "Voir AATIK Blanc 25kg" [ref=e377] [cursor=pointer]:
+              - /url: /produits/etancheite-tunisienne-aatik-blanc-00244312
+              - img "AATIK Blanc - enduit monocouche" [ref=e378]
+            - generic [ref=e379]: Derbigum
+            - button "Ajouter aux favoris" [ref=e381]:
+              - img [ref=e385]
+          - generic [ref=e387]:
+            - generic [ref=e388]:
+              - paragraph [ref=e389]: "00244312"
+              - link "Voir AATIK Blanc 25kg" [ref=e390] [cursor=pointer]:
+                - /url: /produits/etancheite-tunisienne-aatik-blanc-00244312
+                - heading "AATIK Blanc 25kg" [level=3] [ref=e391]
+            - generic [ref=e392]:
+              - paragraph [ref=e394]: 19 DT
+              - generic [ref=e395]:
+                - img [ref=e396]
+                - text: Rupture
+            - button "Ajouter au panier" [ref=e404]:
+              - generic [ref=e405]:
+                - img [ref=e407]
+                - generic [ref=e410]: Ajouter au panier
+        - article [ref=e411]:
+          - generic [ref=e412]:
+            - link "Voir Deutsch Color - Acrylex 5kg" [ref=e413] [cursor=pointer]:
+              - /url: /produits/deutsch-color-acrylex-5kg-00219648
+              - img "Deutsch Color - Acrylex 5kg" [ref=e414]
+            - generic [ref=e415]: Deutsch Color
+            - button "Ajouter aux favoris" [ref=e417]:
+              - img [ref=e421]
+          - generic [ref=e423]:
+            - generic [ref=e424]:
+              - paragraph [ref=e425]: "00219648"
+              - link "Voir Deutsch Color - Acrylex 5kg" [ref=e426] [cursor=pointer]:
+                - /url: /produits/deutsch-color-acrylex-5kg-00219648
+                - heading "Deutsch Color - Acrylex 5kg" [level=3] [ref=e427]
+            - generic [ref=e428]:
+              - paragraph [ref=e430]: 27,269 DT
+              - generic [ref=e431]:
+                - img [ref=e432]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e439]:
+              - generic [ref=e440]:
+                - img [ref=e442]
+                - generic [ref=e445]: Ajouter au panier
+        - article [ref=e446]:
+          - generic [ref=e447]:
+            - link "Voir Deutsch Color - Acrylex 20kg" [ref=e448] [cursor=pointer]:
+              - /url: /produits/deutsch-color-acrylex-20kg-00233132
+              - img "Deutsch Color - Acrylex 20kg" [ref=e449]
+            - generic [ref=e450]: Deutsch Color
+            - button "Ajouter aux favoris" [ref=e452]:
+              - img [ref=e456]
+          - generic [ref=e458]:
+            - generic [ref=e459]:
+              - paragraph [ref=e460]: "00233132"
+              - link "Voir Deutsch Color - Acrylex 20kg" [ref=e461] [cursor=pointer]:
+                - /url: /produits/deutsch-color-acrylex-20kg-00233132
+                - heading "Deutsch Color - Acrylex 20kg" [level=3] [ref=e462]
+            - generic [ref=e463]:
+              - paragraph [ref=e465]: 75 DT
+              - generic [ref=e466]:
+                - img [ref=e467]
+                - text: Rupture
+            - button "Ajouter au panier" [ref=e475]:
+              - generic [ref=e476]:
+                - img [ref=e478]
+                - generic [ref=e481]: Ajouter au panier
+        - article [ref=e482]:
+          - generic [ref=e483]:
+            - link "Voir Deutsch Color - Ciment Colle FM3000 (piscine)" [ref=e484] [cursor=pointer]:
+              - /url: /produits/deutsch-color-ciment-colle-fm3000-piscine
+              - img "Ciment colle F3000.png" [ref=e485]
+            - generic [ref=e486]: Deutsch Color
+            - button "Ajouter aux favoris" [ref=e488]:
+              - img [ref=e492]
+          - generic [ref=e494]:
+            - generic [ref=e495]:
+              - paragraph [ref=e496]: "00201568"
+              - link "Voir Deutsch Color - Ciment Colle FM3000 (piscine)" [ref=e497] [cursor=pointer]:
+                - /url: /produits/deutsch-color-ciment-colle-fm3000-piscine
+                - heading "Deutsch Color - Ciment Colle FM3000 (piscine)" [level=3] [ref=e498]
+            - generic [ref=e499]:
+              - paragraph [ref=e501]: 40 DT
+              - generic [ref=e502]:
+                - img [ref=e503]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e510]:
+              - generic [ref=e511]:
+                - img [ref=e513]
+                - generic [ref=e516]: Ajouter au panier
+        - article [ref=e517]:
+          - generic [ref=e518]:
+            - link "Voir Deutsch Color - Ciment Colle FM2000 Blanc" [ref=e519] [cursor=pointer]:
+              - /url: /produits/deutsch-color-ciment-colle-fm2000-blanc
+              - img "Ciment colle F2000.png" [ref=e520]
+            - generic [ref=e521]: Deutsch Color
+            - button "Ajouter aux favoris" [ref=e523]:
+              - img [ref=e527]
+          - generic [ref=e529]:
+            - generic [ref=e530]:
+              - paragraph [ref=e531]: "00201575"
+              - link "Voir Deutsch Color - Ciment Colle FM2000 Blanc" [ref=e532] [cursor=pointer]:
+                - /url: /produits/deutsch-color-ciment-colle-fm2000-blanc
+                - heading "Deutsch Color - Ciment Colle FM2000 Blanc" [level=3] [ref=e533]
+            - generic [ref=e534]:
+              - paragraph [ref=e536]: 25,263 DT
+              - generic [ref=e537]:
+                - img [ref=e538]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e545]:
+              - generic [ref=e546]:
+                - img [ref=e548]
+                - generic [ref=e551]: Ajouter au panier
+        - article [ref=e552]:
+          - generic [ref=e553]:
+            - link "Voir Deutsch Color - Ciment Colle FM1000 Blanc" [ref=e554] [cursor=pointer]:
+              - /url: /produits/deutsch-color-ciment-colle-fm1000-blanc
+              - img "Ciment colle F1000.png" [ref=e555]
+            - generic [ref=e556]: Deutsch Color
+            - button "Ajouter aux favoris" [ref=e558]:
+              - img [ref=e562]
+          - generic [ref=e564]:
+            - generic [ref=e565]:
+              - paragraph [ref=e566]: "00201582"
+              - link "Voir Deutsch Color - Ciment Colle FM1000 Blanc" [ref=e567] [cursor=pointer]:
+                - /url: /produits/deutsch-color-ciment-colle-fm1000-blanc
+                - heading "Deutsch Color - Ciment Colle FM1000 Blanc" [level=3] [ref=e568]
+            - generic [ref=e569]:
+              - paragraph [ref=e571]: 16,842 DT
+              - generic [ref=e572]:
+                - img [ref=e573]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e580]:
+              - generic [ref=e581]:
+                - img [ref=e583]
+                - generic [ref=e586]: Ajouter au panier
+        - article [ref=e587]:
+          - generic [ref=e588]:
+            - link "Voir Sika - Ciment Colle Ceram 103 Blanc Sac 25KG" [ref=e589] [cursor=pointer]:
+              - /url: /produits/sika-ciment-colle-ceram-103-blanc-sac-25kg
+              - img "Ciment colle SikaCeram 103 blanc sac 25KG.png" [ref=e590]
+            - generic [ref=e591]: Sika
+            - button "Ajouter aux favoris" [ref=e593]:
+              - img [ref=e597]
+          - generic [ref=e599]:
+            - generic [ref=e600]:
+              - paragraph [ref=e601]: "00227896"
+              - link "Voir Sika - Ciment Colle Ceram 103 Blanc Sac 25KG" [ref=e602] [cursor=pointer]:
+                - /url: /produits/sika-ciment-colle-ceram-103-blanc-sac-25kg
+                - heading "Sika - Ciment Colle Ceram 103 Blanc Sac 25KG" [level=3] [ref=e603]
+            - generic [ref=e604]:
+              - paragraph [ref=e606]: 15,265 DT
+              - generic [ref=e607]:
+                - img [ref=e608]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e615]:
+              - generic [ref=e616]:
+                - img [ref=e618]
+                - generic [ref=e621]: Ajouter au panier
+        - article [ref=e622]:
+          - generic [ref=e623]:
+            - link "Voir Sika - Ciment Colle Ceram 206 Blanc Sac 25KG" [ref=e624] [cursor=pointer]:
+              - /url: /produits/sika-ciment-colle-ceram-206-blanc-sac-25kg
+              - img "Ciment colle SikaCeram 206 blanc sac 25KG.png" [ref=e625]
+            - generic [ref=e626]: Sika
+            - button "Ajouter aux favoris" [ref=e628]:
+              - img [ref=e632]
+          - generic [ref=e634]:
+            - generic [ref=e635]:
+              - paragraph [ref=e636]: "00227926"
+              - link "Voir Sika - Ciment Colle Ceram 206 Blanc Sac 25KG" [ref=e637] [cursor=pointer]:
+                - /url: /produits/sika-ciment-colle-ceram-206-blanc-sac-25kg
+                - heading "Sika - Ciment Colle Ceram 206 Blanc Sac 25KG" [level=3] [ref=e638]
+            - generic [ref=e639]:
+              - paragraph [ref=e641]: 43,684 DT
+              - generic [ref=e642]:
+                - img [ref=e643]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e650]:
+              - generic [ref=e651]:
+                - img [ref=e653]
+                - generic [ref=e656]: Ajouter au panier
+    - generic [ref=e658]:
+      - generic [ref=e659]:
+        - heading "Acheter par catégorie" [level=2] [ref=e661]
+        - link "Tout voir" [ref=e662] [cursor=pointer]:
+          - /url: /catalogue
+          - text: Tout voir
+          - img [ref=e663]
+      - generic [ref=e665]:
+        - link "Revêtements de sols et murs 117 produits" [ref=e666] [cursor=pointer]:
+          - /url: /catalogue?categorie=revetements-de-sols-et-murs
+          - generic [ref=e668]:
+            - generic [ref=e669]:
+              - generic [ref=e670]: Revêtements de sols et murs
+              - generic [ref=e671]: 117 produits
+            - img [ref=e672]
+        - link "Isolation et étanchéité 8 produits" [ref=e674] [cursor=pointer]:
+          - /url: /catalogue?categorie=isolation-et-etancheite
+          - generic [ref=e676]:
+            - generic [ref=e677]:
+              - generic [ref=e678]: Isolation et étanchéité
+              - generic [ref=e679]: 8 produits
+            - img [ref=e680]
+        - link "Salle de bain et cuisine 187 produits" [ref=e682] [cursor=pointer]:
+          - /url: /catalogue?categorie=salle-de-bain-et-cuisine
+          - generic [ref=e684]:
+            - generic [ref=e685]:
+              - generic [ref=e686]: Salle de bain et cuisine
+              - generic [ref=e687]: 187 produits
+            - img [ref=e688]
+        - link "Peintures et décoration 2 produits" [ref=e690] [cursor=pointer]:
+          - /url: /catalogue?categorie=peintures-et-decoration
+          - generic [ref=e692]:
+            - generic [ref=e693]:
+              - generic [ref=e694]: Peintures et décoration
+              - generic [ref=e695]: 2 produits
+            - img [ref=e696]
+        - link "Piscine 217 produits" [ref=e698] [cursor=pointer]:
+          - /url: /catalogue?categorie=piscine
+          - generic [ref=e700]:
+            - generic [ref=e701]:
+              - generic [ref=e702]: Piscine
+              - generic [ref=e703]: 217 produits
+            - img [ref=e704]
+        - link "Portes et menuiserie Voir le rayon" [ref=e706] [cursor=pointer]:
+          - /url: /catalogue?categorie=portes-et-menuiserie
+          - generic [ref=e708]:
+            - generic [ref=e709]:
+              - generic [ref=e710]: Portes et menuiserie
+              - generic [ref=e711]: Voir le rayon
+            - img [ref=e712]
+    - generic [ref=e715]:
+      - generic [ref=e716]:
+        - heading "Offres du moment" [level=2] [ref=e718]
+        - link "Voir les offres" [ref=e719] [cursor=pointer]:
+          - /url: /catalogue?sélection=promotion
+          - text: Voir les offres
+          - img [ref=e720]
+      - generic [ref=e722]:
+        - link "Offre boutique Livraison offerte dès X TND Préparez votre panier et validez les modalités avec l’équipe commerciale. En profiter" [ref=e723] [cursor=pointer]:
+          - /url: /catalogue?sélection=promotion
+          - generic [ref=e725]: Offre boutique
+          - generic [ref=e726]: Livraison offerte dès X TND
+          - generic [ref=e727]: Préparez votre panier et validez les modalités avec l’équipe commerciale.
+          - generic [ref=e728]:
+            - text: En profiter
+            - img [ref=e729]
+        - generic [ref=e731]:
+          - link "Sélection carrelage Formats, décors et finitions à commander. Voir la sélection" [ref=e732] [cursor=pointer]:
+            - /url: /catalogue?search=carrelage
+            - generic [ref=e733]: Sélection carrelage
+            - generic [ref=e734]: Formats, décors et finitions à commander.
+            - generic [ref=e735]:
+              - text: Voir la sélection
+              - img [ref=e736]
+          - link "Packs salle de bain Sanitaires, robinetterie et accessoires. Voir la sélection" [ref=e738] [cursor=pointer]:
+            - /url: /catalogue?search=salle%20de%20bain
+            - generic [ref=e739]: Packs salle de bain
+            - generic [ref=e740]: Sanitaires, robinetterie et accessoires.
+            - generic [ref=e741]:
+              - text: Voir la sélection
+              - img [ref=e742]
+          - link "Nouveaux arrivages piscine Mosaïques et finitions extérieures. Voir la sélection" [ref=e744] [cursor=pointer]:
+            - /url: /catalogue?search=piscine
+            - generic [ref=e745]: Nouveaux arrivages piscine
+            - generic [ref=e746]: Mosaïques et finitions extérieures.
+            - generic [ref=e747]:
+              - text: Voir la sélection
+              - img [ref=e748]
+    - generic [ref=e751]:
+      - heading "Acheter selon votre besoin" [level=2] [ref=e754]
+      - generic [ref=e755]:
+        - link "Je rénove ma salle de bain" [ref=e756] [cursor=pointer]:
+          - /url: /catalogue?search=salle%20de%20bain
+          - text: Je rénove ma salle de bain
+          - img [ref=e757]
+        - link "Je cherche du carrelage extérieur" [ref=e759] [cursor=pointer]:
+          - /url: /catalogue?search=carrelage%20extérieur
+          - text: Je cherche du carrelage extérieur
+          - img [ref=e760]
+        - link "Je prépare une piscine" [ref=e762] [cursor=pointer]:
+          - /url: /catalogue?search=piscine
+          - text: Je prépare une piscine
+          - img [ref=e763]
+        - link "Je peins une maison" [ref=e765] [cursor=pointer]:
+          - /url: /catalogue?search=peinture
+          - text: Je peins une maison
+          - img [ref=e766]
+        - link "Je construis un mur" [ref=e768] [cursor=pointer]:
+          - /url: /catalogue?search=brique
+          - text: Je construis un mur
+          - img [ref=e769]
+        - link "Je cherche des produits d’étanchéité" [ref=e771] [cursor=pointer]:
+          - /url: /catalogue?search=étanchéité
+          - text: Je cherche des produits d’étanchéité
+          - img [ref=e772]
+    - generic [ref=e775]:
+      - heading "Votre espace d’achat simplifié" [level=2] [ref=e778]
+      - generic [ref=e779]:
+        - article [ref=e780]:
+          - img [ref=e782]
+          - heading "Panier rapide" [level=3] [ref=e785]
+          - paragraph [ref=e786]: Ajoutez vos produits, ajustez les quantités et commandez plus vite.
+        - article [ref=e787]:
+          - img [ref=e789]
+          - heading "Suivi de commande" [level=3] [ref=e792]
+          - paragraph [ref=e793]: Consultez l’état de vos commandes à tout moment.
+        - article [ref=e794]:
+          - img [ref=e796]
+          - heading "Réachat facile" [level=3] [ref=e799]
+          - paragraph [ref=e800]: Retrouvez vos anciens achats et recommandez en quelques clics.
+    - generic [ref=e802]:
+      - heading "Pourquoi acheter ici ?" [level=2] [ref=e805]
+      - generic [ref=e806]:
+        - article [ref=e807]:
+          - img [ref=e808]
+          - heading "Large choix" [level=3] [ref=e811]
+          - paragraph [ref=e812]: Des références pour chaque projet.
+        - article [ref=e813]:
+          - img [ref=e814]
+          - heading "Commande rapide" [level=3] [ref=e817]
+          - paragraph [ref=e818]: Panier simple et clair.
+        - article [ref=e819]:
+          - img [ref=e820]
+          - heading "Suivi clair" [level=3] [ref=e823]
+          - paragraph [ref=e824]: Vos commandes restent visibles.
+        - article [ref=e825]:
+          - img [ref=e826]
+          - heading "Support disponible" [level=3] [ref=e829]
+          - paragraph [ref=e830]: Une équipe peut vous aider.
+    - generic [ref=e832]:
+      - generic [ref=e833]:
+        - heading "Marques disponibles" [level=2] [ref=e835]
+        - link "Voir toutes les marques" [ref=e836] [cursor=pointer]:
+          - /url: /catalogue
+          - text: Voir toutes les marques
+          - img [ref=e837]
+      - generic [ref=e839]:
+        - link "Deutsch Color 63 produits" [ref=e840] [cursor=pointer]:
+          - /url: /catalogue?marque=deutsch-color
+          - img "Deutsch Color" [ref=e842]
+          - generic [ref=e843]: 63 produits
+        - link "Sika 29 produits" [ref=e844] [cursor=pointer]:
+          - /url: /catalogue?marque=sika
+          - img "Sika" [ref=e846]
+          - generic [ref=e847]: 29 produits
+        - link "Lilot 24 produits" [ref=e848] [cursor=pointer]:
+          - /url: /catalogue?marque=lilot
+          - generic [ref=e849]: Lilot
+          - generic [ref=e850]: 24 produits
+        - link "Sopal 24 produits" [ref=e851] [cursor=pointer]:
+          - /url: /catalogue?marque=sopal
+          - img "Sopal" [ref=e853]
+          - generic [ref=e854]: 24 produits
+        - link "Ibero 19 produits" [ref=e855] [cursor=pointer]:
+          - /url: /catalogue?marque=ibero
+          - generic [ref=e856]: Ibero
+          - generic [ref=e857]: 19 produits
+        - link "Jaquar 19 produits" [ref=e858] [cursor=pointer]:
+          - /url: /catalogue?marque=jaquar
+          - img "Jaquar" [ref=e860]
+          - generic [ref=e861]: 19 produits
+        - link "Carthago Ceramic 18 produits" [ref=e862] [cursor=pointer]:
+          - /url: /catalogue?marque=carthago-ceramic
+          - img "Carthago Ceramic" [ref=e864]
+          - generic [ref=e865]: 18 produits
+        - link "Duravit 16 produits" [ref=e866] [cursor=pointer]:
+          - /url: /catalogue?marque=duravit
+          - generic [ref=e867]: Duravit
+          - generic [ref=e868]: 16 produits
+        - link "VitraFix 12 produits" [ref=e869] [cursor=pointer]:
+          - /url: /catalogue?marque=vitrafix
+          - img "VitraFix" [ref=e871]
+          - generic [ref=e872]: 12 produits
+        - link "Sanimed 11 produits" [ref=e873] [cursor=pointer]:
+          - /url: /catalogue?marque=sanimed
+          - generic [ref=e874]: Sanimed
+          - generic [ref=e875]: 11 produits
+        - link "Marazzi 10 produits" [ref=e876] [cursor=pointer]:
+          - /url: /catalogue?marque=marazzi
+          - img "Marazzi" [ref=e878]
+          - generic [ref=e879]: 10 produits
+        - link "GSI 8 produits" [ref=e880] [cursor=pointer]:
+          - /url: /catalogue?marque=gsi
+          - generic [ref=e881]: GSI
+          - generic [ref=e882]: 8 produits
+    - generic [ref=e884]:
+      - generic [ref=e885]:
+        - heading "Recommandé pour vous" [level=2] [ref=e887]
+        - link "Voir tout" [ref=e888] [cursor=pointer]:
+          - /url: /catalogue
+          - text: Voir tout
+          - img [ref=e889]
+      - generic [ref=e891]:
+        - article [ref=e892]:
+          - generic [ref=e893]:
+            - link "Voir Pamesa Ceramica - Mosaique 30 Mat Rusty Metal Silver Pamesa" [ref=e894] [cursor=pointer]:
+              - /url: /produits/pamesa-ceramica-mosaique-30-mat-rusty-metal-silver-pamesa
+              - img "rusty.webp" [ref=e895]
+            - generic [ref=e896]: Pamesa Ceramica
+            - button "Ajouter aux favoris" [ref=e898]:
+              - img [ref=e902]
+          - generic [ref=e904]:
+            - generic [ref=e905]:
+              - paragraph [ref=e906]: "00246620"
+              - link "Voir Pamesa Ceramica - Mosaique 30 Mat Rusty Metal Silver Pamesa" [ref=e907] [cursor=pointer]:
+                - /url: /produits/pamesa-ceramica-mosaique-30-mat-rusty-metal-silver-pamesa
+                - heading "Pamesa Ceramica - Mosaique 30 Mat Rusty Metal Silver Pamesa" [level=3] [ref=e908]
+            - generic [ref=e909]:
+              - paragraph [ref=e911]: 27,778 DT
+              - generic [ref=e912]:
+                - img [ref=e913]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e920]:
+              - generic [ref=e921]:
+                - img [ref=e923]
+                - generic [ref=e926]: Ajouter au panier
+        - article [ref=e927]:
+          - generic [ref=e928]:
+            - link "Voir KTL Ceramica - Mosaique 30 Galaxy Beige Ktl" [ref=e929] [cursor=pointer]:
+              - /url: /produits/ktl-ceramica-mosaique-30-galaxy-beige-ktl
+              - img "CAS1GALXBPHA.webp" [ref=e930]
+            - generic [ref=e931]: KTL Ceramica
+            - button "Ajouter aux favoris" [ref=e933]:
+              - img [ref=e937]
+          - generic [ref=e939]:
+            - generic [ref=e940]:
+              - paragraph [ref=e941]: "00246255"
+              - link "Voir KTL Ceramica - Mosaique 30 Galaxy Beige Ktl" [ref=e942] [cursor=pointer]:
+                - /url: /produits/ktl-ceramica-mosaique-30-galaxy-beige-ktl
+                - heading "KTL Ceramica - Mosaique 30 Galaxy Beige Ktl" [level=3] [ref=e943]
+            - generic [ref=e944]:
+              - paragraph [ref=e946]: 22,223 DT
+              - generic [ref=e947]:
+                - img [ref=e948]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e955]:
+              - generic [ref=e956]:
+                - img [ref=e958]
+                - generic [ref=e961]: Ajouter au panier
+        - article [ref=e962]:
+          - generic [ref=e963]:
+            - link "Voir Alaplana Ceramica - Mosaique 30 Athlone Beige Alaplana" [ref=e964] [cursor=pointer]:
+              - /url: /produits/alaplana-ceramica-mosaique-30-athlone-beige-alaplana
+              - img "Athlone-Beige-Pulido120x120-Rectificado.webp" [ref=e965]
+            - generic [ref=e966]: Alaplana Ceramica
+            - button "Ajouter aux favoris" [ref=e968]:
+              - img [ref=e972]
+          - generic [ref=e974]:
+            - generic [ref=e975]:
+              - paragraph [ref=e976]: "00245395"
+              - link "Voir Alaplana Ceramica - Mosaique 30 Athlone Beige Alaplana" [ref=e977] [cursor=pointer]:
+                - /url: /produits/alaplana-ceramica-mosaique-30-athlone-beige-alaplana
+                - heading "Alaplana Ceramica - Mosaique 30 Athlone Beige Alaplana" [level=3] [ref=e978]
+            - generic [ref=e979]:
+              - paragraph [ref=e981]: 22,222 DT
+              - generic [ref=e982]:
+                - img [ref=e983]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e990]:
+              - generic [ref=e991]:
+                - img [ref=e993]
+                - generic [ref=e996]: Ajouter au panier
+        - article [ref=e997]:
+          - generic [ref=e998]:
+            - link "Voir Deutsch Color - Ciment Colle FM2000 Blanc" [ref=e999] [cursor=pointer]:
+              - /url: /produits/deutsch-color-ciment-colle-fm2000-blanc
+              - img "Ciment colle F2000.png" [ref=e1000]
+            - generic [ref=e1001]: Deutsch Color
+            - button "Ajouter aux favoris" [ref=e1003]:
+              - img [ref=e1007]
+          - generic [ref=e1009]:
+            - generic [ref=e1010]:
+              - paragraph [ref=e1011]: "00201575"
+              - link "Voir Deutsch Color - Ciment Colle FM2000 Blanc" [ref=e1012] [cursor=pointer]:
+                - /url: /produits/deutsch-color-ciment-colle-fm2000-blanc
+                - heading "Deutsch Color - Ciment Colle FM2000 Blanc" [level=3] [ref=e1013]
+            - generic [ref=e1014]:
+              - paragraph [ref=e1016]: 25,263 DT
+              - generic [ref=e1017]:
+                - img [ref=e1018]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e1025]:
+              - generic [ref=e1026]:
+                - img [ref=e1028]
+                - generic [ref=e1031]: Ajouter au panier
+        - article [ref=e1032]:
+          - generic [ref=e1033]:
+            - link "Voir Sika - Ciment Colle Ceram 206 Blanc Sac 25KG" [ref=e1034] [cursor=pointer]:
+              - /url: /produits/sika-ciment-colle-ceram-206-blanc-sac-25kg
+              - img "Ciment colle SikaCeram 206 blanc sac 25KG.png" [ref=e1035]
+            - generic [ref=e1036]: Sika
+            - button "Ajouter aux favoris" [ref=e1038]:
+              - img [ref=e1042]
+          - generic [ref=e1044]:
+            - generic [ref=e1045]:
+              - paragraph [ref=e1046]: "00227926"
+              - link "Voir Sika - Ciment Colle Ceram 206 Blanc Sac 25KG" [ref=e1047] [cursor=pointer]:
+                - /url: /produits/sika-ciment-colle-ceram-206-blanc-sac-25kg
+                - heading "Sika - Ciment Colle Ceram 206 Blanc Sac 25KG" [level=3] [ref=e1048]
+            - generic [ref=e1049]:
+              - paragraph [ref=e1051]: 43,684 DT
+              - generic [ref=e1052]:
+                - img [ref=e1053]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e1060]:
+              - generic [ref=e1061]:
+                - img [ref=e1063]
+                - generic [ref=e1066]: Ajouter au panier
+        - article [ref=e1067]:
+          - generic [ref=e1068]:
+            - link "Voir KTL Ceramica - Mosaique 30 Galaxy Brown Ktl" [ref=e1069] [cursor=pointer]:
+              - /url: /produits/ktl-ceramica-mosaique-30-galaxy-brown-ktl
+              - img "CAS1GALXEPHAbrown.webp" [ref=e1070]
+            - generic [ref=e1071]: KTL Ceramica
+            - button "Ajouter aux favoris" [ref=e1073]:
+              - img [ref=e1077]
+          - generic [ref=e1079]:
+            - generic [ref=e1080]:
+              - paragraph [ref=e1081]: "00246248"
+              - link "Voir KTL Ceramica - Mosaique 30 Galaxy Brown Ktl" [ref=e1082] [cursor=pointer]:
+                - /url: /produits/ktl-ceramica-mosaique-30-galaxy-brown-ktl
+                - heading "KTL Ceramica - Mosaique 30 Galaxy Brown Ktl" [level=3] [ref=e1083]
+            - generic [ref=e1084]:
+              - paragraph [ref=e1086]: 24,445 DT
+              - generic [ref=e1087]:
+                - img [ref=e1088]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e1095]:
+              - generic [ref=e1096]:
+                - img [ref=e1098]
+                - generic [ref=e1101]: Ajouter au panier
+        - article [ref=e1102]:
+          - generic [ref=e1103]:
+            - link "Voir Mosaique 34 FBZJ001 (Carré)" [ref=e1104] [cursor=pointer]:
+              - /url: /produits/mosaique-34-fbzj001-carre
+              - img "Mosaique 34 FBZJ001 (Carré)" [ref=e1105]
+            - button "Ajouter aux favoris" [ref=e1107]:
+              - img [ref=e1111]
+          - generic [ref=e1113]:
+            - generic [ref=e1114]:
+              - paragraph [ref=e1115]: "00215626"
+              - link "Voir Mosaique 34 FBZJ001 (Carré)" [ref=e1116] [cursor=pointer]:
+                - /url: /produits/mosaique-34-fbzj001-carre
+                - heading "Mosaique 34 FBZJ001 (Carré)" [level=3] [ref=e1117]
+            - generic [ref=e1118]:
+              - paragraph [ref=e1120]: 17,800 DT
+              - generic [ref=e1121]:
+                - img [ref=e1122]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e1129]:
+              - generic [ref=e1130]:
+                - img [ref=e1132]
+                - generic [ref=e1135]: Ajouter au panier
+        - article [ref=e1136]:
+          - generic [ref=e1137]:
+            - link "Voir Alaplana Ceramica - Mosaique 30 Mat Brera Oxyd Alaplana" [ref=e1138] [cursor=pointer]:
+              - /url: /produits/alaplana-ceramica-mosaique-30-mat-brera-oxyd-alaplana
+              - img "1_result.webp" [ref=e1139]
+            - generic [ref=e1140]: Alaplana Ceramica
+            - button "Ajouter aux favoris" [ref=e1142]:
+              - img [ref=e1146]
+          - generic [ref=e1148]:
+            - generic [ref=e1149]:
+              - paragraph [ref=e1150]: "00245388"
+              - link "Voir Alaplana Ceramica - Mosaique 30 Mat Brera Oxyd Alaplana" [ref=e1151] [cursor=pointer]:
+                - /url: /produits/alaplana-ceramica-mosaique-30-mat-brera-oxyd-alaplana
+                - heading "Alaplana Ceramica - Mosaique 30 Mat Brera Oxyd Alaplana" [level=3] [ref=e1152]
+            - generic [ref=e1153]:
+              - paragraph [ref=e1155]: 27,778 DT
+              - generic [ref=e1156]:
+                - img [ref=e1157]
+                - text: En stock
+            - button "Ajouter au panier" [ref=e1164]:
+              - generic [ref=e1165]:
+                - img [ref=e1167]
+                - generic [ref=e1170]: Ajouter au panier
+    - generic [ref=e1172]:
+      - heading "Suivez nos nouveautés" [level=2] [ref=e1173]
+      - generic [ref=e1174]:
+        - link "Facebook" [ref=e1175] [cursor=pointer]:
+          - /url: https://www.facebook.com/cobamgrp
+        - link "Instagram" [ref=e1176] [cursor=pointer]:
+          - /url: https://www.instagram.com/cobamgroup/
+        - link "LinkedIn" [ref=e1177] [cursor=pointer]:
+          - /url: https://www.linkedin.com/company/cobam-group/
+    - generic [ref=e1179]:
+      - generic [ref=e1180]:
+        - paragraph [ref=e1181]: Commande
+        - heading "Prêt à commander ?" [level=2] [ref=e1182]
+      - generic [ref=e1183]:
+        - link "Voir tous les produits" [ref=e1184] [cursor=pointer]:
+          - /url: /catalogue
+        - link "Voir mon panier" [ref=e1185] [cursor=pointer]:
+          - /url: /panier
+  - contentinfo [ref=e1186]:
+    - generic [ref=e1187]:
+      - generic [ref=e1188]:
+        - generic [ref=e1189]:
+          - paragraph [ref=e1190]: ECOMMERCE
+          - paragraph [ref=e1191]: Produits, panier, commandes et suivi client.
+          - generic [ref=e1192]:
+            - link "+216 75731731" [ref=e1193] [cursor=pointer]:
+              - /url: tel:+21675731731
+              - img [ref=e1194]
+              - text: +216 75731731
+            - link "contact@cobamgroup.com" [ref=e1196] [cursor=pointer]:
+              - /url: mailto:contact@cobamgroup.com
+              - img [ref=e1197]
+              - text: contact@cobamgroup.com
+            - paragraph [ref=e1200]:
+              - img [ref=e1201]
+              - text: Djerba, Tunisie
+        - generic [ref=e1204]:
+          - heading "Service client" [level=2] [ref=e1205]
+          - generic [ref=e1206]:
+            - link "Suivre une commande" [ref=e1207] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Panier" [ref=e1208] [cursor=pointer]:
+              - /url: /panier
+            - link "Compte client" [ref=e1209] [cursor=pointer]:
+              - /url: /compte
+            - link "Commander" [ref=e1210] [cursor=pointer]:
+              - /url: /checkout
+        - generic [ref=e1211]:
+          - heading "Aide" [level=2] [ref=e1212]
+          - generic [ref=e1213]:
+            - link "Livraison" [ref=e1214] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Retours" [ref=e1215] [cursor=pointer]:
+              - /url: /suivi-commande
+            - link "Conditions" [ref=e1216] [cursor=pointer]:
+              - /url: /conditions-generales
+            - link "Confidentialité" [ref=e1217] [cursor=pointer]:
+              - /url: /politique-de-confidentialite
+        - generic [ref=e1218]:
+          - heading "Catégories" [level=2] [ref=e1219]
+          - generic [ref=e1220]:
+            - link "Revêtements de sols et murs" [ref=e1221] [cursor=pointer]:
+              - /url: /catalogue?categorie=revetements-de-sols-et-murs
+            - link "Isolation et étanchéité" [ref=e1222] [cursor=pointer]:
+              - /url: /catalogue?categorie=isolation-et-etancheite
+            - link "Salle de bain et cuisine" [ref=e1223] [cursor=pointer]:
+              - /url: /catalogue?categorie=salle-de-bain-et-cuisine
+            - link "Peintures et décoration" [ref=e1224] [cursor=pointer]:
+              - /url: /catalogue?categorie=peintures-et-decoration
+            - link "Piscine" [ref=e1225] [cursor=pointer]:
+              - /url: /catalogue?categorie=piscine
+            - link "Portes et menuiserie" [ref=e1226] [cursor=pointer]:
+              - /url: /catalogue?categorie=portes-et-menuiserie
+      - generic [ref=e1227]:
+        - paragraph [ref=e1228]: © 2026 COBAM GROUP. Tous droits réservés.
+        - generic [ref=e1229]:
+          - link "Facebook" [ref=e1230] [cursor=pointer]:
+            - /url: https://www.facebook.com/cobamgrp
+          - link "Instagram" [ref=e1231] [cursor=pointer]:
+            - /url: https://www.instagram.com/cobamgroup/
+          - link "LinkedIn" [ref=e1232] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/cobam-group/
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e1238] [cursor=pointer]:
+    - img [ref=e1239]
+  - alert [ref=e1242]

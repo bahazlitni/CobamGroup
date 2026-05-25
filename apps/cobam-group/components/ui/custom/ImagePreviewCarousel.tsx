@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { cn } from "./cn";
+import { cn } from "@/lib/utils";
 
 export type ImagePreviewCarouselSize = "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
 

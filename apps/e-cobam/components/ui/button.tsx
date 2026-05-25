@@ -6,9 +6,9 @@ type ButtonVariant = "primary" | "secondary" | "ghost" | "quiet";
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    "bg-ec-ink text-white [color:#fff] shadow-[0_16px_35px_rgba(16,32,47,0.18)] hover:bg-ec-blue focus-visible:outline-ec-blue",
+    "bg-ec-ink text-white [color:#fff] hover:bg-ec-blue focus-visible:outline-ec-blue",
   secondary:
-    "border border-ec-blue bg-ec-blue text-white [color:#fff] shadow-[0_14px_30px_rgba(10,141,193,0.18)] hover:border-ec-ink hover:bg-ec-ink focus-visible:outline-ec-blue",
+    "border border-ec-blue bg-ec-blue text-white [color:#fff] hover:border-ec-ink hover:bg-ec-ink focus-visible:outline-ec-blue",
   ghost:
     "bg-transparent text-ec-ink hover:bg-ec-stone/70 focus-visible:outline-ec-blue",
   quiet:
@@ -40,7 +40,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex items-center justify-center gap-2 border border-transparent font-sans font-semibold transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50",
         sizes[size],
         variants[variant],
         className,
@@ -66,7 +66,7 @@ export function ButtonLink({
     <Link
       href={href}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
+        "inline-flex items-center justify-center gap-2 border border-transparent font-sans font-semibold transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2",
         sizes[size],
         variants[variant],
         className,

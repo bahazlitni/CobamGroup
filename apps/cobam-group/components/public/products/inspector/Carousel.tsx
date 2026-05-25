@@ -1,6 +1,6 @@
 "use client";
 
-import ImagePreviewCarousel from "@cobam/shared/ui/ImagePreviewCarousel";
+import ImagePreviewCarousel from "@/components/ui/custom/ImagePreviewCarousel";
 import type { PublicProductInspectorMedia } from "@/features/products/types";
 
 type CarouselProps = {
