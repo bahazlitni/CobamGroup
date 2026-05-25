@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { cookies } from "next/headers";
 import type { CustomerType, UserStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { safeRandomUUID } from "@/lib/safe-random-uuid";
 
 export const CUSTOMER_SESSION_COOKIE = "e-cobam-customer-session";
 const CUSTOMER_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
@@ -92,7 +93,7 @@ export async function verifyCustomerPassword(password: string, passwordHash: str
 
 export async function createCustomerSession(userId: string) {
   const db = await getPrisma();
-  const tokenId = crypto.randomUUID();
+  const tokenId = safeRandomUUID();
   const secret = newSessionSecret();
 
   await db.$transaction([

@@ -14,6 +14,7 @@ import {
   quotePromotionForCartId,
   recordPromotionRedemption,
 } from "@/lib/promotions";
+import { safeRandomUUID } from "@/lib/safe-random-uuid";
 
 const CHECKOUT_SESSION_EXPIRY_HOURS = 2;
 const STOCK_RESERVATION_DAYS = 7;
@@ -332,7 +333,7 @@ function orderNumber(date = new Date()) {
   const yyyy = date.getFullYear().toString();
   const mm = (date.getMonth() + 1).toString().padStart(2, "0");
   const dd = date.getDate().toString().padStart(2, "0");
-  const suffix = crypto.randomUUID().slice(0, 8).toUpperCase();
+  const suffix = safeRandomUUID().slice(0, 8).toUpperCase();
 
   return `ECB-${yyyy}${mm}${dd}-${suffix}`;
 }

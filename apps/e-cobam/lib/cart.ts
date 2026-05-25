@@ -1,4 +1,5 @@
 import { Prisma, type ProductAvailability, type StockUnit } from "@prisma/client";
+import { safeRandomUUID } from "@/lib/safe-random-uuid";
 
 export const CART_TOKEN_COOKIE = "e-cobam-cart-token";
 export const CART_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
@@ -315,7 +316,7 @@ async function ensureGuestCart(guestToken: string | null | undefined) {
     }
   }
 
-  const token = crypto.randomUUID();
+  const token = safeRandomUUID();
   const cart = await db.shoppingCart.create({
     data: {
       guestToken: token,

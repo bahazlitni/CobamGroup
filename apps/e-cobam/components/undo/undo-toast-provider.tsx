@@ -5,6 +5,7 @@ import { CheckCircle2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/cn";
+import { safeRandomUUID } from "@/lib/safe-random-uuid";
 import {
   UNDO_TOAST_EVENT,
   type UndoToastEventDetail,
@@ -338,7 +339,7 @@ export function UndoToastProvider() {
         ...detail,
         actionLabel: detail.actionLabel ?? "Undo",
         durationMs: detail.durationMs ?? DEFAULT_DURATION_MS,
-        instanceId: crypto.randomUUID(),
+        instanceId: safeRandomUUID(),
         size: detail.size ?? defaultSize,
       });
     }
