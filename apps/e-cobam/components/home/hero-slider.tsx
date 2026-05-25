@@ -62,6 +62,15 @@ const slides: SlideData[] = [
     primaryCta: "Gamme SOPAL",
     secondaryCta: "Voir le catalogue",
   },
+  {
+    brand: "ALAPLANA CERAMICA",
+    title: "Céramiques d'exception pour des espaces uniques",
+    subtitle: "Céramiques d'exception alliant savoir-faire artisanal tunisien et design contemporain pour des espaces uniques.",
+    image: "/images/hero-banners/alaplana-ceramica-banner.png",
+    href: "/catalogue?marque=alaplana%20ceramica",
+    primaryCta: "Gamme ALAPLANA CERAMICA",
+    secondaryCta: "Voir le catalogue",
+  },
 ];
 
 export function HeroSlider() {

@@ -30,6 +30,7 @@ export function SafeMediaImage({
       src={src}
       alt={alt}
       fill
+      draggable={false}
       unoptimized
       sizes="(min-width: 1280px) 22vw, (min-width: 768px) 34vw, 92vw"
       className={cn("h-full w-full", className)}

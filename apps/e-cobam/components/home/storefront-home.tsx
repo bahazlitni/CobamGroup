@@ -504,6 +504,7 @@ function BrandLoop({ brands }: { brands: LandingBrand[] }) {
               key={brand.slug}
               href={brand.href}
               className="group flex min-h-32 flex-col justify-between border border-ec-line bg-white p-6 transition-all duration-300 hover:border-ec-brass/40 hover:bg-ec-stone/30"
+              draggable={false}
             >
               {brand.logoUrl ? (
                 <span className="relative block h-10 w-full">
