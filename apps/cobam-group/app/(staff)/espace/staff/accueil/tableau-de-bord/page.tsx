@@ -62,7 +62,7 @@ export default function EspaceStaffPage() {
         ? "violet"
         : "blue";
   const accessIcon =
-    user.powerType === "STAFF" ? "user" : "shield";
+    user.powerType === "USER" ? "user" : "shield";
 
   return (
     <>

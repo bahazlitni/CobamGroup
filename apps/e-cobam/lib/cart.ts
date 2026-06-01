@@ -26,6 +26,7 @@ const CART_PRODUCT_SELECT = {
   slug: true,
   name: true,
   displayName: true,
+  lifecycle: true,
   visibleEcommerce: true,
   currentPriceTtcTnd: true,
   basePriceTtcTnd: true,
@@ -155,10 +156,6 @@ function productPrice(product: Pick<CartProductRecord, "currentPriceTtcTnd" | "b
 function stockLabel(availability: ProductAvailability, available: Prisma.Decimal) {
   const amount = decimalToNumber(available) ?? 0;
 
-  if (availability === "DISCONTINUED") {
-    return { label: "Arrêté", tone: "unavailable" as const };
-  }
-
   if (availability === "OUT_OF_STOCK" || amount <= 0) {
     return { label: "Rupture", tone: "unavailable" as const };
   }
@@ -183,7 +180,7 @@ function requestedQuantity(value: unknown) {
 function allowedQuantity(product: CartProductRecord, quantity: number) {
   const available = Math.floor(decimalToNumber(product.stockAvailable) ?? 0);
 
-  if (product.stockAvailability === "DISCONTINUED" || product.stockAvailability === "OUT_OF_STOCK") {
+  if (product.lifecycle === "DISCONTINUED" || product.stockAvailability === "OUT_OF_STOCK") {
     return 0;
   }
 
@@ -195,7 +192,7 @@ function allowedQuantity(product: CartProductRecord, quantity: number) {
 }
 
 function assertPurchasable(product: CartProductRecord, requested: number) {
-  if (!product.visibleEcommerce) {
+  if (!product.visibleEcommerce || product.lifecycle === "DISCONTINUED") {
     throw new CartError("Ce produit n'est pas disponible dans la boutique.", 404);
   }
 

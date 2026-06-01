@@ -12,14 +12,14 @@ import {
 export type AuthenticatedUser = {
   userId: string;
   email: string;
-  powerType: "ROOT" | "ADMIN" | "STAFF";
+  powerType: "ROOT" | "ADMIN" | "USER";
   portal: typeof STAFF_PORTAL;
 };
 
 function toAuthenticatedUser(session: {
   id: string;
   email: string;
-  powerType: "ROOT" | "ADMIN" | "STAFF";
+  powerType: "ROOT" | "ADMIN" | "USER";
   portal: typeof STAFF_PORTAL;
 }): AuthenticatedUser {
   return {

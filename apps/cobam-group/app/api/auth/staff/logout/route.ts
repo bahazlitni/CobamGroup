@@ -6,14 +6,14 @@ import { sha256 } from "@/lib/api/auth/shared/token";
 
 export async function POST(req: NextRequest) {
   try {
-    const refreshToken = req.cookies.get("staff_refresh_token")?.value;
+    const refreshToken = req.cookies.get("refresh_token")?.value;
 
     const response = NextResponse.json({
       ok: true,
       message: "Logged out successfully",
     });
 
-    response.cookies.set("staff_refresh_token", "", {
+    response.cookies.set("refresh_token", "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

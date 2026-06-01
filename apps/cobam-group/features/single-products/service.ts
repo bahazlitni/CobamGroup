@@ -73,6 +73,7 @@ const SINGLE_PRODUCT_SELECT = {
   brand: { select: { name: true } },
   visibleEcommerce: true,
   visibleVitrine: true,
+  lifecycle: true,
   isFeatured: true,
   isNew: true,
   stockAvailable: true,

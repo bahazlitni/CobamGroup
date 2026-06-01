@@ -66,7 +66,7 @@ function toProfilePayload(state: ProfileState): UpdateStaffUserProfileInput {
 
 function toAccessState(user: StaffUserDetailDto | null): AccessState {
   return {
-    powerType: user?.powerType ?? "STAFF",
+    powerType: user?.powerType ?? "USER",
     roleIds: user?.assignedRoles.map((role) => role.id) ?? [],
   };
 }

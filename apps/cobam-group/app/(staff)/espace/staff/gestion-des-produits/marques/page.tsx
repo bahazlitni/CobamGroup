@@ -160,7 +160,7 @@ export default function ProductBrandsAdminPage() {
         await updateOrganizationClient(editingId, payload);
       }
 
-      toast.success("Marque enregistree.");
+      toast.success("Marque enregistrée.");
       resetForm();
       await loadItems();
     } catch (saveError: unknown) {

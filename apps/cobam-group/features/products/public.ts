@@ -71,6 +71,7 @@ const PUBLIC_PRODUCT_SELECT = {
   kind: true,
   name: true,
   displayName: true,
+  lifecycle: true,
   richTextDescription: true,
   descriptionSeo: true,
   brand: { select: { name: true, description: true } },
@@ -306,12 +307,18 @@ function mapMediaRecord(
 }
 
 function isPublicProduct(product: PublicProductRecord) {
-  return product.kind === "VARIANT" && product.visibleVitrine && product.subcategories.length > 0;
+  return (
+    product.kind === "VARIANT" &&
+    product.lifecycle !== "DISCONTINUED" &&
+    product.visibleVitrine &&
+    product.subcategories.length > 0
+  );
 }
 
 function isPublicSingleProduct(product: PublicProductRecord) {
   return (
     (product.kind === "STANDARD" || product.kind === "SINGLE") &&
+    product.lifecycle !== "DISCONTINUED" &&
     product.visibleVitrine &&
     product.subcategories.length > 0
   );
@@ -1019,6 +1026,7 @@ export async function listPublicProductsIndex(input: {
         JOIN products fp ON fp.id = fm2.product_id
         LEFT JOIN organizations fp_brand ON fp_brand.id = fp.brand_id
         WHERE fm2.family_id = f.id
+          AND fp.lifecycle <> 'DISCONTINUED'
       ) AS family_members_text,
       c.id AS category_id,
       c.name AS category_name,
@@ -1043,7 +1051,9 @@ export async function listPublicProductsIndex(input: {
     JOIN product_subcategory_links l ON l.product_id = p.id
     JOIN product_subcategories s ON s.id = l.subcategory_id AND s.is_active = true AND s.visible_vitrine = true
     JOIN product_types c ON c.id = s.category_id AND c.is_active = true
-    WHERE p.kind = 'VARIANT' AND p.visible_vitrine = true
+    WHERE p.kind = 'VARIANT'
+      AND p.lifecycle <> 'DISCONTINUED'
+      AND p.visible_vitrine = true
     ${advancedSearchCondition}
     ${promotionCondition}
     ${input.categorySlug ? Prisma.sql`AND "c".slug = ${input.categorySlug}` : Prisma.empty}
@@ -1140,7 +1150,8 @@ export async function listPublicProductsIndex(input: {
       includeFamilies
         ? Prisma.sql`(p.kind IN ('STANDARD', 'SINGLE') OR (p.kind = 'VARIANT' AND fm.product_id IS NULL))`
         : Prisma.sql`p.kind IN ('STANDARD', 'SINGLE', 'VARIANT')`
-    } AND p.visible_vitrine = true
+    } AND p.lifecycle <> 'DISCONTINUED'
+      AND p.visible_vitrine = true
     ${advancedSearchCondition}
     ${promotionCondition}
     ${input.categorySlug ? Prisma.sql`AND "c".slug = ${input.categorySlug}` : Prisma.empty}
@@ -1221,6 +1232,7 @@ export async function listPublicProductsIndex(input: {
       ? prisma.product.findMany({
           where: {
             id: { in: productIds },
+            lifecycle: { not: "DISCONTINUED" },
           },
           select: PUBLIC_PRODUCT_SELECT,
         })
@@ -1356,6 +1368,7 @@ export async function findPublicSingleProductBySlug(
     where: {
       slug: productSlug,
       kind: { in: ["STANDARD", "SINGLE"] },
+      lifecycle: { not: "DISCONTINUED" },
       visibleVitrine: true,
       subcategories: {
         some: {
@@ -1397,6 +1410,7 @@ export async function findPublicProductBySlug(
       kind: {
         in: ["STANDARD", "SINGLE", "VARIANT"],
       },
+      lifecycle: { not: "DISCONTINUED" },
       visibleVitrine: true,
       subcategories: {
         some: {
@@ -1430,4 +1444,13 @@ export async function findPublicProductBySlug(
     brand,
     brandNames: brandName ? [brandName] : [],
   });
+}
+
+export async function findProductLifecycleBySlug(productSlug: string) {
+  const record = await prisma.product.findUnique({
+    where: { slug: productSlug },
+    select: { lifecycle: true },
+  });
+
+  return record?.lifecycle ?? null;
 }

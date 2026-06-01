@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import StructuredData from "@/components/seo/StructuredData";
 import PublicProductInspectorView from "@/components/public/products/public-product-inspector";
 import StaticHighway from "@/components/ui/custom/StaticHighway";
 import { findPublicProductSubcategoryBySlugs } from "@/features/product-categories/public";
-import { findPublicProductBySlug } from "@/features/products/public";
+import { findProductLifecycleBySlug, findPublicProductBySlug } from "@/features/products/public";
 import {
   buildBreadcrumbStructuredData,
   buildSimpleProductMetadata,
@@ -45,7 +45,16 @@ export default async function PublicProductPage({ params }: ProductPageProps) {
     }),
   ]);
 
-  if (!product || !subcategoryData) {
+  if (!product) {
+    const lifecycle = await findProductLifecycleBySlug(slug);
+    if (lifecycle === "DISCONTINUED") {
+      redirect("/produits");
+    }
+
+    notFound();
+  }
+
+  if (!subcategoryData) {
     notFound();
   }
 

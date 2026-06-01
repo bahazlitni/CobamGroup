@@ -39,6 +39,7 @@ const ORDER_PRODUCT_SELECT = {
   slug: true,
   name: true,
   displayName: true,
+  lifecycle: true,
   visibleEcommerce: true,
   currentPriceTtcTnd: true,
   basePriceTtcTnd: true,
@@ -355,11 +356,11 @@ function prepareCartLines(cart: CheckoutCartRecord) {
       throw new CheckoutError("Une ligne du panier a une quantite invalide.");
     }
 
-    if (!product.visibleEcommerce) {
+    if (!product.visibleEcommerce || product.lifecycle === "DISCONTINUED") {
       throw new CheckoutError(`Le produit ${product.sku} n'est plus disponible.`, 409);
     }
 
-    if (product.stockAvailability === "DISCONTINUED" || product.stockAvailability === "OUT_OF_STOCK") {
+    if (product.stockAvailability === "OUT_OF_STOCK") {
       throw new CheckoutError(`Le produit ${product.sku} est en rupture.`, 409);
     }
 

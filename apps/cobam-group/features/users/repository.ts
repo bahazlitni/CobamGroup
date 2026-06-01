@@ -68,7 +68,7 @@ function buildUsersWhere(
   }
 
   if (query.roleKey) {
-    if (query.roleKey === "ROOT" || query.roleKey === "ADMIN" || query.roleKey === "STAFF") {
+    if (query.roleKey === "ROOT" || query.roleKey === "ADMIN" || query.roleKey === "USER") {
       and.push({ powerType: query.roleKey });
     } else {
       and.push({

@@ -300,6 +300,61 @@ const nextConfig: NextConfig = {
         destination: "/a-propos",
         permanent: true,
       },
+      {
+        "source": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-beige-18-intense-%C3%A9tanche-5kg-00249058",
+        "destination": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-beige-18-intense-etanche-5kg-00249058",
+        "permanent": true
+      },
+      {
+        "source": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-dark-bleu-24-intense-%C3%A9tanche-2kg-00235150",
+        "destination": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-dark-bleu-24-intense-etanche-2kg-00235150",
+        "permanent": true
+      },
+      {
+        "source": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-blanc-intense-%C3%A9tanche-5kg-00221993",
+        "destination": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-blanc-intense-etanche-5kg-00221993",
+        "permanent": true
+      },
+      {
+        "source": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-gris-04-intense-%C3%A9tanche-5kg-00225137",
+        "destination": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-gris-04-intense-etanche-5kg-00225137",
+        "permanent": true
+      },
+      {
+        "source": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-gris-moyen-17-intense-%C3%A9tanche-5kg-00224086",
+        "destination": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-gris-moyen-17-intense-etanche-5kg-00224086",
+        "permanent": true
+      },
+      {
+        "source": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-beige-18-intense-%C3%A9tanche-5kg-00224796",
+        "destination": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-beige-18-intense-etanche-5kg-00224796",
+        "permanent": true
+      },
+      {
+        "source": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-black-02-intense-%C3%A9tanche-5kg-00246699",
+        "destination": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-black-02-intense-etanche-5kg-00246699",
+        "permanent": true
+      },
+      {
+        "source": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-umber-50-intense-%C3%A9tanche-5kg-00248587",
+        "destination": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-umber-50-intense-etanche-5kg-00248587",
+        "permanent": true
+      },
+      {
+        "source": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-light-grey-05-intense-%C3%A9tanche-5kg-00237581",
+        "destination": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-light-grey-05-intense-etanche-5kg-00237581",
+        "permanent": true
+      },
+      {
+        "source": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-manhattan-15-intense-%C3%A9tanche-5kg-00225557",
+        "destination": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-manhattan-15-intense-etanche-5kg-00225557",
+        "permanent": true
+      },
+      {
+        "source": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-silver-grey-16-intense-%C3%A9tanche-5kg-00249065",
+        "destination": "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-silver-grey-16-intense-etanche-5kg-00249065",
+        "permanent": true
+      }
     ];
   },
 };

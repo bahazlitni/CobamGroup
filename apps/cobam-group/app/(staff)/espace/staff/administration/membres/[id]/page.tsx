@@ -303,7 +303,7 @@ export default function UserDetailPage() {
             title="Informations personnelles"
             pretitle="Profil"
             description="Mettez à jour les informations principales du compte."
-            submitLabel="Enregistrer le profil"
+            submitLabel="Enregistrer"
           />
 
           {canEditCredentials ? (
@@ -344,7 +344,7 @@ export default function UserDetailPage() {
               setAccess((current) => ({
                 ...current,
                 powerType: value,
-                roleIds: value === "STAFF" ? current.roleIds : [],
+                roleIds: value === "USER" ? current.roleIds : [],
               }))
             }
             onToggleRole={(roleId) =>

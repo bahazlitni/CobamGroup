@@ -14,6 +14,7 @@ const PROMOTION_PRODUCT_SELECT = {
   brandId: true,
   productTypeId: true,
   visibleEcommerce: true,
+  lifecycle: true,
   currentPriceTtcTnd: true,
   basePriceTtcTnd: true,
   priceVisibility: true,
@@ -132,7 +133,11 @@ function cartSubtotals(cart: PromotionCart) {
 
   const lines = cart.items.map((item) => {
     const quantity = Math.max(0, Math.floor(decimalToNumber(item.quantity) ?? 0));
-    const unitPrice = decimalToNumber(productPrice(item.product));
+    const unitPrice = decimalToNumber(
+      item.product.visibleEcommerce && item.product.lifecycle !== "DISCONTINUED"
+        ? productPrice(item.product)
+        : null,
+    );
     const subtotal = unitPrice == null ? 0 : unitPrice * quantity;
 
     subtotalTtc += subtotal;

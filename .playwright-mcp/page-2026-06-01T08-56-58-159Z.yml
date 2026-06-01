@@ -1,0 +1,30 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - img "Selection de produits COBAM pour l'espace client" [ref=e5]
+        - generic [ref=e7]:
+          - heading "Espace Client" [level=1] [ref=e8]
+          - paragraph [ref=e9]: Retrouvez vos commandes, vos favoris, vos adresses et vos achats récurrents dans un espace pensé pour les professionnels et les projets exigeants.
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - paragraph [ref=e14]: Compte client
+          - heading "Se connecter" [level=2] [ref=e15]
+        - generic [ref=e17]:
+          - generic [ref=e18]:
+            - text: Email
+            - textbox "Email" [ref=e19]
+          - generic [ref=e20]:
+            - text: Mot de passe
+            - textbox "Mot de passe" [ref=e21]
+          - generic [ref=e22]:
+            - link "Mot de passe oublié ?" [ref=e23] [cursor=pointer]:
+              - /url: /connexion?mode=forgot
+            - link "Créer un compte" [ref=e24] [cursor=pointer]:
+              - /url: /connexion?mode=register
+          - button "Se connecter" [ref=e25]:
+            - text: Se connecter
+            - img [ref=e26]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e33] [cursor=pointer]:
+    - img [ref=e34]

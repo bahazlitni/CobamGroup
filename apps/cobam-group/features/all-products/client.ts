@@ -1,5 +1,6 @@
 "use client";
 
+import type { ProductLifecycle } from "@prisma/client";
 import { staffApiFetch } from "@/lib/api/auth/staff/api-fetch";
 import type {
   AllProductsExportAction,
@@ -144,7 +145,7 @@ export async function exportAllProductsClient(
 
 export async function updateAllProductLifecycleClient(
   productId: number,
-  lifecycle: "ACTIVE" | "DRAFT",
+  lifecycle: ProductLifecycle,
 ): Promise<AllProductsListItemDto> {
   const res = await staffApiFetch(`/api/staff/all-products/${productId}/lifecycle`, {
     method: "POST",

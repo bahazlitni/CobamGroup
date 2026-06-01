@@ -72,6 +72,7 @@ export async function GET(
             some: {
               product: {
                 visibleEcommerce: true,
+                lifecycle: { not: "DISCONTINUED" },
               },
             },
           },
@@ -83,6 +84,7 @@ export async function GET(
                 some: {
                   product: {
                     visibleEcommerce: true,
+                    lifecycle: { not: "DISCONTINUED" },
                   },
                 },
               },

@@ -512,7 +512,7 @@ export default function MediaInspectorDialog({
                          </div>
                          <div className="h-px bg-slate-50" />
                          <div className="space-y-1">
-                           <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Cree le</p>
+                           <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Créé le</p>
                            <p className="text-xs font-semibold text-cobam-dark-blue">{formatMediaDateTime(media.createdAt)}</p>
                          </div>
                       </div>

@@ -440,7 +440,7 @@ export function CartPageClient() {
             <div className="text-ec-muted flex justify-between">
               <span>Livraison</span>
               <span className="text-ec-ink font-semibold">
-                {formatPriceTnd(cart.summary.deliveryEstimateTtc) ?? "Etape suivante"}
+                {formatPriceTnd(cart.summary.deliveryEstimateTtc) ?? "Étape suivante"}
               </span>
             </div>
           </div>
@@ -456,12 +456,6 @@ export function CartPageClient() {
           >
             Passer au checkout
           </ButtonLink>
-          <a
-            href={getMailtoHref({ subject: "Demande e-cobam", body: mailBody })}
-            className="text-ec-muted hover:text-ec-ink mt-3 block text-center text-sm font-semibold"
-          >
-            Envoyer par email
-          </a>
           <Link
             href="/catalogue"
             className="text-ec-muted hover:text-ec-ink mt-4 block text-center text-sm font-semibold"

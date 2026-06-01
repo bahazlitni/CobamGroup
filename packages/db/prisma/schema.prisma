@@ -43,7 +43,7 @@ enum Portal {
 enum PowerType {
   ROOT
   ADMIN
-  STAFF
+  USER
 }
 
 enum UserStatus {
@@ -62,6 +62,7 @@ enum ProductKind {
 enum ProductLifecycle {
   DRAFT
   ACTIVE
+  DISCONTINUED
 }
 
 enum ProductTypeAttributeInputType {
@@ -83,7 +84,6 @@ enum ProductAvailability {
   IN_STOCK
   ON_ORDER
   OUT_OF_STOCK
-  DISCONTINUED
 }
 
 enum ProductInventoryVisibility {
@@ -265,7 +265,7 @@ model User {
   email                      String     @unique
   passwordHash               String     @map("password_hash")
   portal                     Portal     @default(STAFF)
-  powerType                  PowerType  @default(STAFF) @map("power_type")
+  powerType                  PowerType  @default(USER) @map("power_type")
   status                     UserStatus @default(ACTIVE)
   bannedAt                   DateTime?  @map("banned_at")
   bannedReason               String?    @map("banned_reason") @db.Text
@@ -1183,11 +1183,12 @@ model Product {
   brandId       BigInt? @map("brand_id")
   productTypeId BigInt  @map("product_type_id")
 
-  kind        ProductKind @default(STANDARD)
-  slug        String      @unique @db.VarChar(255)
-  sku         String      @unique @db.VarChar(100)
-  name        String      @db.VarChar(255)
-  displayName String      @map("display_name") @db.VarChar(255)
+  kind        ProductKind      @default(STANDARD)
+  lifecycle   ProductLifecycle @default(ACTIVE)
+  slug        String           @unique @db.VarChar(255)
+  sku         String           @unique @db.VarChar(100)
+  name        String           @db.VarChar(255)
+  displayName String           @map("display_name") @db.VarChar(255)
 
   richTextDescription Json? @map("rich_text_description") @db.Json
 
@@ -1233,6 +1234,7 @@ model Product {
 
   @@index([brandId])
   @@index([productTypeId])
+  @@index([lifecycle])
   @@index([visibleEcommerce])
   @@index([visibleVitrine])
   @@index([isFeatured])

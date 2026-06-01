@@ -50,7 +50,7 @@ async function syncPermissions() {
 
 async function syncDefaultRoles() {
   await prisma.role.deleteMany({
-    where: { key: "STAFF" },
+    where: { key: { in: ["STAFF", "USER"] } },
   });
 
   const permissions = await prisma.permission.findMany({

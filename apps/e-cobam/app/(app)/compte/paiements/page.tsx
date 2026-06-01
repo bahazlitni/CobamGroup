@@ -53,9 +53,7 @@ export default async function CustomerPaymentsPage() {
   return (
     <main className="commerce-container py-8 sm:py-12">
       <AccountPageHeader
-        eyebrow="Paiements"
-        title="Preferences de paiement."
-        description="Enregistrez vos preferences de reglement manuel. Aucun numero de carte n'est stocke."
+        title="Paiements"
       />
 
       <AccountPageShell active="/compte/paiements">
@@ -113,9 +111,6 @@ export default async function CustomerPaymentsPage() {
               <CreditCard />
               <div>
                 <AlertTitle>Aucune préférence de paiement</AlertTitle>
-                <AlertDescription>
-                  Ajoutez une préférence pour simplifier la validation de vos prochaines commandes.
-                </AlertDescription>
               </div>
             </Alert>
           )}
@@ -129,10 +124,10 @@ export default async function CustomerPaymentsPage() {
               <Separator />
               <CardContent className="grid gap-4 pt-5 sm:grid-cols-2 sm:pt-6">
                 <div className="space-y-2">
-                  <Label htmlFor="method">Methode</Label>
+                  <Label htmlFor="method">Méthode</Label>
                   <Select name="method" defaultValue="BANK_TRANSFER">
                     <SelectTrigger id="method">
-                      <SelectValue placeholder="Methode de paiement" />
+                      <SelectValue placeholder="Méthode de paiement" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="BANK_TRANSFER">Virement bancaire</SelectItem>
@@ -142,7 +137,7 @@ export default async function CustomerPaymentsPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="label">Libelle</Label>
+                  <Label htmlFor="label">Libellé</Label>
                   <Input
                     id="label"
                     name="label"
@@ -166,7 +161,7 @@ export default async function CustomerPaymentsPage() {
                 </Label>
               </CardContent>
               <CardFooter>
-                <Button type="submit">Ajouter la préférence</Button>
+                <Button type="submit">Ajouter</Button>
               </CardFooter>
             </Card>
           </form>

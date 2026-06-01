@@ -38,6 +38,7 @@ const ALL_PRODUCTS_LIST_SELECT = {
   stockUnit: true,
   visibleEcommerce: true,
   visibleVitrine: true,
+  lifecycle: true,
   updatedAt: true,
   media: {
     select: {

@@ -274,7 +274,6 @@ function CategoryShortcuts({ categories }: { categories: LandingCategory[] }) {
         <SectionHeader
           eyebrow="Rayons"
           title="Acheter par catégorie"
-          subtitle="Naviguez parmi nos familles de produits pour trouver les solutions adaptées à votre chantier."
           action={{ href: "/catalogue", label: "Voir tout le catalogue" }}
         />
         <motion.div
@@ -531,40 +530,6 @@ function BrandLoop({ brands }: { brands: LandingBrand[] }) {
   );
 }
 
-function VIPNewsletter() {
-  return (
-    <section className="bg-ec-ink text-white py-20 sm:py-28 border-b border-ec-line/20">
-      <div className="commerce-container max-w-3xl text-center">
-        <span className="text-ec-brass font-sans text-xs font-black tracking-[0.25em] uppercase block mb-4">
-          Le Cercle COBAM
-        </span>
-        <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-tight">
-          Rejoignez le club des professionnels de l&apos;architecture
-        </h2>
-        <p className="mt-4 text-white/70 text-sm max-w-xl mx-auto leading-relaxed font-medium">
-          Inscrivez-vous pour recevoir nos sélections de nouveautés privées, nos fiches techniques
-          exclusives et nos offres privilèges en avant-première.
-        </p>
-
-        <form className="mt-10 max-w-lg mx-auto flex flex-col sm:flex-row gap-3">
-          <input
-            type="email"
-            placeholder="Votre adresse email professionnelle"
-            className="flex-1 bg-white/5 border border-white/20 text-white placeholder:text-white/40 h-13 px-5 text-sm font-sans tracking-wide outline-none focus:border-white/50 transition-colors duration-300"
-            required
-          />
-          <button
-            type="submit"
-            className="bg-white hover:bg-ec-brass hover:text-white text-ec-ink font-sans text-xs font-bold tracking-[0.15em] uppercase h-13 px-8 transition-all duration-300 cursor-pointer"
-          >
-            S&apos;abonner
-          </button>
-        </form>
-      </div>
-    </section>
-  );
-}
-
 function FinalCta() {
   return (
     <section className="bg-ec-ink py-24 text-white relative overflow-hidden border-b border-ec-line/10">
@@ -587,7 +552,7 @@ function FinalCta() {
             href="/catalogue"
             className="inline-flex h-13 items-center justify-center bg-white hover:bg-ec-brass hover:text-white px-6 font-sans text-xs font-bold tracking-[0.15em] uppercase text-ec-ink transition-all duration-300"
           >
-            Explorer les collections
+            Explorer
           </Link>
           <Link
             href="/panier"
@@ -628,7 +593,6 @@ export function StorefrontHome({ data }: { data: LandingHomeData }) {
         <ProductShelf
           eyebrow="Exclusivités"
           title="Les plus demandés"
-          subtitle="Une sélection de nos références phares plébiscitées par les professionnels du bâtiment."
           products={bestSellers}
           actionHref="/catalogue?sélection=promotion"
         />
@@ -637,7 +601,6 @@ export function StorefrontHome({ data }: { data: LandingHomeData }) {
         <ProductShelf
           eyebrow="Nouveautés"
           title="Dernières Collections"
-          subtitle="Explorez les finitions les plus récentes intégrées à notre catalogue de design."
           products={latestProducts}
           actionHref="/catalogue?tri=latest"
         />
@@ -646,19 +609,12 @@ export function StorefrontHome({ data }: { data: LandingHomeData }) {
         <ProductShelf
           eyebrow="Sélection"
           title="Recommandé pour vous"
-          subtitle="Des matériaux et solutions techniques recommandés en fonction de vos exigences esthétiques."
           products={recommendedProducts}
         />
       </div>
 
-      <StorySection />
       <CategoryShortcuts categories={data.categories} />
-      <PromotionsSection />
-      <LuxuryServices />
-      <TestimonialsSection />
       <BrandLoop brands={data.brands} />
-
-      <VIPNewsletter />
       <FinalCta />
     </main>
   );

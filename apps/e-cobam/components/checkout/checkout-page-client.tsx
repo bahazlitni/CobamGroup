@@ -439,7 +439,7 @@ export function CheckoutPageClient() {
         </section>
 
         <aside className="h-fit rounded-[1.5rem] border border-ec-line bg-white p-6 lg:sticky lg:top-28">
-          <h2 className="text-xl font-black text-ec-ink">Resume</h2>
+          <h2 className="text-xl font-black text-ec-ink">Résumé</h2>
           <p className="mt-2 text-sm leading-6 text-ec-muted">{itemLines}</p>
           <div className="mt-5 rounded-2xl bg-ec-paper p-3">
             <label className="text-xs font-bold uppercase tracking-[0.18em] text-ec-muted">

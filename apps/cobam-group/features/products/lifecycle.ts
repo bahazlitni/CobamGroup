@@ -3,6 +3,7 @@ import type { ProductLifecycle } from "@prisma/client";
 export const PRODUCT_LIFECYCLE_VALUES = [
   "DRAFT",
   "ACTIVE",
+  "DISCONTINUED",
 ] satisfies ProductLifecycle[];
 
 export function isProductLifecycle(value: unknown): value is ProductLifecycle {

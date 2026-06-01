@@ -61,7 +61,7 @@ function getAccessBadge(user: StaffUserListItemDto) {
         color: roleColor,
         icon: "shield" as const,
       };
-    case "STAFF":
+    case "USER":
     default:
       return {
         label: user.roleLabel,
@@ -113,7 +113,7 @@ export default function UsersListPage() {
   );
 
   const handlePowerTypeChange = useCallback(
-    async (value: "" | "ROOT" | "ADMIN" | "STAFF") => {
+    async (value: "" | "ROOT" | "ADMIN" | "USER") => {
       setPowerType(value);
       await fetchUsers({ page: 1, search, powerType: value, reset: true });
     },
@@ -145,13 +145,13 @@ export default function UsersListPage() {
           <StaffSelect
             value={powerType}
             onValueChange={(value) =>
-              void handlePowerTypeChange(value as "" | "ROOT" | "ADMIN" | "STAFF")
+              void handlePowerTypeChange(value as "" | "ROOT" | "ADMIN" | "USER")
             }
             emptyLabel="Tous les pouvoirs"
             options={[
               { value: "ROOT", label: "Root" },
               { value: "ADMIN", label: "Admin" },
-              { value: "STAFF", label: "Staff" },
+              { value: "USER", label: "User" },
             ]}
           />
           <StaffSelect

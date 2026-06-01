@@ -125,6 +125,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           in: [ProductKind.STANDARD, ProductKind.SINGLE, ProductKind.VARIANT],
         },
         visibleVitrine: true,
+        lifecycle: { not: "DISCONTINUED" },
         subcategories: {
           some: visibleSubcategoryLinkWhere,
         },
@@ -159,6 +160,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             product: {
               kind: ProductKind.VARIANT,
               visibleVitrine: true,
+              lifecycle: { not: "DISCONTINUED" },
               subcategories: {
                 some: visibleSubcategoryLinkWhere,
               },
@@ -170,6 +172,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         slug: true,
         updatedAt: true,
         members: {
+          where: {
+            product: {
+              lifecycle: { not: "DISCONTINUED" },
+              visibleVitrine: true,
+            },
+          },
           orderBy: [{ sortOrder: "asc" }, { productId: "asc" }],
           select: {
             product: {
@@ -211,6 +219,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     mapUrl("/actualites"),
     mapUrl("/annuaire"),
     mapUrl("/produits"),
+    mapUrl("/politique-de-confidentialite"),
+    mapUrl("/conditions-generales"),
+    mapUrl("/mentions-legales"),
     
     ...categories.map((category) =>
       mapUrl(`/produits/${category.slug}`, category.updatedAt),

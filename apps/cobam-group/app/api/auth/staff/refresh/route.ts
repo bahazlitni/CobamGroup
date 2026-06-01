@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   try {
     await ensureRbacBootstrap();
 
-    const refreshToken = req.cookies.get("staff_refresh_token")?.value;
+    const refreshToken = req.cookies.get("refresh_token")?.value;
 
     if (!refreshToken) {
       return NextResponse.json(
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
       accessToken: newAccessToken,
     });
 
-    response.cookies.set("staff_refresh_token", newRefreshToken, {
+    response.cookies.set("refresh_token", newRefreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

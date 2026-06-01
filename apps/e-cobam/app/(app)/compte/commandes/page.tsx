@@ -44,9 +44,7 @@ export default async function CustomerOrdersPage() {
   return (
     <main className="commerce-container py-8 sm:py-12">
       <AccountPageHeader
-        eyebrow="Commandes"
-        title="Historique et statuts."
-        description="Consultez vos commandes et suivez leur avancement."
+        title="Commandes"
       />
 
       <AccountPageShell active="/compte/commandes">

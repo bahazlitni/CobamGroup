@@ -1,0 +1,4 @@
+ALTER TYPE "PowerType" RENAME VALUE 'STAFF' TO 'USER';
+
+ALTER TABLE "users"
+  ALTER COLUMN "power_type" SET DEFAULT 'USER';

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { AccountNav } from "@/components/account/account-nav";
 
 type AccountPageHeaderProps = {
-  eyebrow: string;
+  eyebrow?: string;
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
@@ -18,7 +18,11 @@ export function AccountPageHeader({
   return (
     <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
       <div>
-        <p className="text-ec-blue text-sm font-semibold tracking-[0.24em] uppercase">{eyebrow}</p>
+        {eyebrow ? (
+          <p className="text-ec-blue text-sm font-semibold tracking-[0.24em] uppercase">
+            {eyebrow}
+          </p>
+        ) : null}
         <h1 className="text-ec-ink mt-3 text-4xl font-black tracking-tight sm:text-6xl">{title}</h1>
         {description ? (
           <p className="text-ec-muted mt-4 max-w-2xl text-sm leading-7">{description}</p>

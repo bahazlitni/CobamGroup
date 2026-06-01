@@ -189,7 +189,7 @@ export function SiteHeader({
 
           <div className="ml-auto flex items-center gap-2">
             <Link
-              href={isSignedIn ? "/compte" : "/connexion"}
+              href={isSignedIn ? "/compte/profil" : "/connexion"}
               aria-label={isSignedIn ? "Mon compte" : "Se connecter"}
               className="bg-ec-ink hover:bg-ec-blue inline-flex h-10 items-center justify-center gap-2 px-3 font-sans text-sm font-black [color:#fff] text-white transition sm:px-5"
             >

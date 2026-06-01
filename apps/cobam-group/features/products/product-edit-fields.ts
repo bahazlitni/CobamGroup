@@ -26,7 +26,6 @@ export const PRODUCT_AVAILABILITY_VALUES = [
   "IN_STOCK",
   "ON_ORDER",
   "OUT_OF_STOCK",
-  "DISCONTINUED",
 ] satisfies ProductAvailability[];
 
 export const PRODUCT_INVENTORY_VISIBILITY_VALUES = [

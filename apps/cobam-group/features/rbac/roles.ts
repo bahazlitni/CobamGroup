@@ -1,6 +1,6 @@
 import type { PermissionKey } from "./permissions";
 
-export const POWER_TYPES = ["ROOT", "ADMIN", "STAFF"] as const;
+export const POWER_TYPES = ["ROOT", "ADMIN", "USER"] as const;
 export type PowerType = (typeof POWER_TYPES)[number];
 
 export type RoleSummary = {
@@ -57,7 +57,7 @@ export function getRoleLabel(subject: {
 }): string {
   if (subject.powerType === "ROOT") return "Root";
   if (subject.powerType === "ADMIN") return "Admin";
-  return subject.effectiveRole?.name ?? "Staff";
+  return subject.effectiveRole?.name ?? "Utilisateur";
 }
 
 export function getRoleKey(subject: {
@@ -66,7 +66,7 @@ export function getRoleKey(subject: {
 }): string {
   if (subject.powerType === "ROOT") return "ROOT";
   if (subject.powerType === "ADMIN") return "ADMIN";
-  return subject.effectiveRole?.key ?? "STAFF";
+  return subject.effectiveRole?.key ?? "USER";
 }
 
 export function getRoleColor(subject: {
@@ -136,10 +136,10 @@ export function isTargetBelowActor(
   }
 
   if (actor.powerType === "ADMIN") {
-    return target.powerType === "STAFF";
+    return target.powerType === "USER";
   }
 
-  if (actor.powerType !== "STAFF" || target.powerType !== "STAFF") {
+  if (actor.powerType !== "USER" || target.powerType !== "USER") {
     return false;
   }
 

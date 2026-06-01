@@ -58,9 +58,8 @@ export function RailCarousel({
     setCanScrollRight(latestX > -maxScroll + 2);
   }, [getMaxScroll]);
 
-  // Sync buttons on update and resize
   useEffect(() => {
-    updateButtons(x.get());
+    const frame = window.requestAnimationFrame(() => updateButtons(x.get()));
 
     const unsubscribe = x.on("change", (latestX) => {
       updateButtons(latestX);
@@ -81,15 +80,11 @@ export function RailCarousel({
     window.addEventListener("resize", handleResize);
 
     return () => {
+      window.cancelAnimationFrame(frame);
       unsubscribe();
       window.removeEventListener("resize", handleResize);
     };
   }, [x, updateButtons, getMaxScroll]);
-
-  // Force first button update once refs are rendered
-  useEffect(() => {
-    updateButtons(x.get());
-  }, [updateButtons, x]);
 
   const scrollByDirection = useCallback(
     (direction: -1 | 1) => {
@@ -116,7 +111,7 @@ export function RailCarousel({
     isDraggingRef.current = true;
   };
 
-  const handleDragEnd = (event: any, info: any) => {
+  const handleDragEnd = () => {
     setTimeout(() => {
       isDraggingRef.current = false;
     }, 50);

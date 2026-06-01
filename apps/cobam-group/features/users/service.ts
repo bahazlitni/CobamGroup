@@ -368,7 +368,7 @@ export async function createUserService(
     throw new UserServiceError("Forbidden", 403);
   }
 
-  await validateRoleAssignment(session, input.powerType ?? "STAFF", input.roleIds);
+  await validateRoleAssignment(session, input.powerType ?? "USER", input.roleIds);
   await assertValidAvatarMedia(input.profile?.avatarMediaId);
 
   const existing = await findUserByEmail(input.email);
@@ -381,7 +381,7 @@ export async function createUserService(
   const created = await createUser({
     email: input.email,
     passwordHash,
-    powerType: input.powerType ?? "STAFF",
+    powerType: input.powerType ?? "USER",
     roleIds: input.roleIds,
     profile: {
       firstName: input.profile?.firstName ?? null,

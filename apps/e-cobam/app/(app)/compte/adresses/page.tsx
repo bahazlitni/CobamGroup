@@ -45,9 +45,7 @@ export default async function CustomerAddressesPage() {
   return (
     <main className="commerce-container py-8 sm:py-12">
       <AccountPageHeader
-        eyebrow="Adresses"
-        title="Chantiers, livraison, facturation."
-        description="Enregistrez vos adresses utiles et choisissez les destinations par défaut pour vos commandes."
+        title="Adresses"
       />
 
       <AccountPageShell active="/compte/adresses">
@@ -124,11 +122,7 @@ export default async function CustomerAddressesPage() {
             <Alert variant="muted">
               <MapPin />
               <div>
-                <AlertTitle>Aucune adresse enregistree</AlertTitle>
-                <AlertDescription>
-                  Ajoutez une adresse de livraison ou de facturation pour accelerer vos prochaines
-                  commandes.
-                </AlertDescription>
+                <AlertTitle>Aucune adresse enregistrée</AlertTitle>
               </div>
             </Alert>
           )}
@@ -154,7 +148,7 @@ export default async function CustomerAddressesPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="label">Libelle</Label>
+                  <Label htmlFor="label">Libellé</Label>
                   <Input id="label" name="label" placeholder="Maison, chantier, depot..." />
                 </div>
                 <div className="space-y-2">
@@ -175,7 +169,7 @@ export default async function CustomerAddressesPage() {
                   <Input id="addressLine1" name="addressLine1" required />
                 </div>
                 <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="addressLine2">Complement</Label>
+                  <Label htmlFor="addressLine2">Complément</Label>
                   <Input id="addressLine2" name="addressLine2" />
                 </div>
                 <div className="space-y-2">
@@ -203,7 +197,7 @@ export default async function CustomerAddressesPage() {
                 </Label>
               </CardContent>
               <CardFooter>
-                <Button type="submit">Ajouter l&apos;adresse</Button>
+                <Button type="submit">Ajouter</Button>
               </CardFooter>
             </Card>
           </form>

@@ -731,7 +731,7 @@ export function EcommerceCustomersAdminPage() {
             <td className="px-4 py-4 text-slate-600">{customer.paymentMethodCount}</td>
             <td className="px-4 py-4 text-slate-600">
               <p>{formatDate(customer.lastLoginAt)}</p>
-              <p className="text-xs text-slate-500">Cree le {formatDate(customer.createdAt)}</p>
+              <p className="text-xs text-slate-500">Créé le {formatDate(customer.createdAt)}</p>
             </td>
           </tr>
         ))}
@@ -885,10 +885,10 @@ export function EcommercePaymentsAdminPage() {
           onChange={setPaymentStatus}
         />
         <FilterSelect
-          label="Methode"
+          label="Méthode"
           value={paymentMethod}
           options={[
-            allOption("Toutes les methodes"),
+            allOption("Toutes les Méthodes"),
             ...["CARD", "BANK_TRANSFER", "CASH_ON_DELIVERY", "PAY_IN_STORE"].map(statusOption),
           ]}
           onChange={setPaymentMethod}
@@ -900,7 +900,7 @@ export function EcommercePaymentsAdminPage() {
           "Commande",
           "Client",
           "Prestataire",
-          "Methode",
+          "Méthode",
           "Statut",
           "Montant",
           "Reference",
@@ -1010,10 +1010,10 @@ export function EcommerceFulfillmentsAdminPage() {
           onChange={setFulfillmentStatus}
         />
         <FilterSelect
-          label="Methode"
+          label="Méthode"
           value={fulfillmentMethod}
           options={[
-            allOption("Toutes les methodes"),
+            allOption("Toutes les Méthodes"),
             { value: "DELIVERY", label: formatStatus("DELIVERY") },
             { value: "PICKUP", label: formatStatus("PICKUP") },
           ]}
@@ -1025,7 +1025,7 @@ export function EcommerceFulfillmentsAdminPage() {
         columns={[
           "Commande",
           "Client",
-          "Methode",
+          "Méthode",
           "Statut",
           "Lieu / transport",
           "Tracking",

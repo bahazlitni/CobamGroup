@@ -58,7 +58,7 @@ export function mapAuthorRecordToDto(
   isOriginalAuthor: boolean,
 ): ArticleAuthorDto {
   const access = resolveAccessFromAssignments({
-    powerType: author.powerType as "ROOT" | "ADMIN" | "STAFF",
+    powerType: author.powerType as "ROOT" | "ADMIN" | "USER",
     status: author.status,
     assignments: author.receivedRoleAssignments,
   });
@@ -79,7 +79,7 @@ export function mapAuthorRecordToAssignableDto(
   author: ArticleAuthorRecord,
 ): ArticleAssignableAuthorDto {
   const access = resolveAccessFromAssignments({
-    powerType: author.powerType as "ROOT" | "ADMIN" | "STAFF",
+    powerType: author.powerType as "ROOT" | "ADMIN" | "USER",
     status: author.status,
     assignments: author.receivedRoleAssignments,
   });

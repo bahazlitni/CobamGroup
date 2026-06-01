@@ -340,6 +340,7 @@ function getPromotionProductWhere(scope: {
 
   return {
     kind: { in: ["STANDARD", "SINGLE", "VARIANT"] },
+    lifecycle: { not: "DISCONTINUED" },
     visibleVitrine: true,
     subcategories: {
       some: {

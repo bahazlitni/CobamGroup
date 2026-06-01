@@ -45,16 +45,23 @@ export function richTextDescriptionToEditorValue(value: RichTextDescriptionValue
 }
 
 export function productLifecycleFromVisibility(record: {
+  lifecycle?: ProductLifecycle | null;
   visibleEcommerce: boolean;
   visibleVitrine: boolean;
 }): ProductLifecycle {
+  if (record.lifecycle) {
+    return record.lifecycle;
+  }
+
   return record.visibleEcommerce || record.visibleVitrine ? "ACTIVE" : "DRAFT";
 }
 
 export function visibilityFromProductLifecycle(lifecycle: ProductLifecycle | null | undefined) {
-  const visible = lifecycle !== "DRAFT";
+  const nextLifecycle = lifecycle ?? "ACTIVE";
+  const visible = nextLifecycle === "ACTIVE";
 
   return {
+    lifecycle: nextLifecycle,
     visibleEcommerce: visible,
     visibleVitrine: visible,
   };

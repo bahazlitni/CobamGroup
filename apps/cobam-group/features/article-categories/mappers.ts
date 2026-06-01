@@ -8,7 +8,7 @@ import type {
 type CreatorRecord = {
   id: string;
   email: string;
-  powerType: "ROOT" | "ADMIN" | "STAFF";
+  powerType: "ROOT" | "ADMIN" | "USER";
   status: string;
   profile: { firstName: string | null; lastName: string | null } | null;
   receivedRoleAssignments: Array<{

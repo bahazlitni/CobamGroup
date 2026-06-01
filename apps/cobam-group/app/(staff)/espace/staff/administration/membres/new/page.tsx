@@ -49,7 +49,7 @@ export default function CreateUserPage() {
     newPassword: "",
     confirmation: "",
   });
-  const [powerType, setPowerType] = useState<PowerType>("STAFF");
+  const [powerType, setPowerType] = useState<PowerType>("USER");
   const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -107,7 +107,7 @@ export default function CreateUserPage() {
         email: personal.email.trim().toLowerCase(),
         password: passwords.newPassword,
         powerType,
-        roleIds: powerType === "STAFF" ? selectedRoleIds : [],
+        roleIds: powerType === "USER" ? selectedRoleIds : [],
         profile: {
           firstName: personal.firstName.trim() || null,
           lastName: personal.lastName.trim() || null,
@@ -228,7 +228,7 @@ export default function CreateUserPage() {
             selectedRoleIds={selectedRoleIds}
             onPowerTypeChange={(value) => {
               setPowerType(value);
-              if (value !== "STAFF") {
+              if (value !== "USER") {
                 setSelectedRoleIds([]);
               }
             }}

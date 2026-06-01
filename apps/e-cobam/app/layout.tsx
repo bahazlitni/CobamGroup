@@ -11,11 +11,6 @@ import "@fontsource/figtree/600.css";
 import "@fontsource/figtree/700.css";
 import "@fontsource/figtree/800.css";
 import "./globals.css";
-import { SiteFooter } from "@/components/site/footer";
-import { SiteHeader } from "@/components/site/header";
-import { UndoToastProvider } from "@/components/undo/undo-toast-provider";
-import { getCustomerSession } from "@/lib/customer-auth";
-import { getSafeNavigationData } from "@/lib/home-data";
 
 export const dynamic = "force-dynamic";
 
@@ -51,18 +46,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [navigation, customerSession] = await Promise.all([
-    getSafeNavigationData(),
-    getCustomerSession(),
-  ]);
-
   return (
     <html lang="fr">
       <body>
-        <SiteHeader categories={navigation.categories} isSignedIn={customerSession !== null} />
         {children}
-        <SiteFooter categories={navigation.categories} />
-        <UndoToastProvider />
         <Toaster
           richColors
           closeButton

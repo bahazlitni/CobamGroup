@@ -249,10 +249,6 @@ function stockLabel(availability: string, stockAvailable: Prisma.Decimal | strin
     return { label: "Sur commande", tone: "warning" as const };
   }
 
-  if (availability === "DISCONTINUED") {
-    return { label: "Arrêté", tone: "unavailable" as const };
-  }
-
   return { label: "En stock", tone: "available" as const };
 }
 
@@ -607,6 +603,7 @@ async function fetchLandingProducts(
       LIMIT 1
     ) "image" ON true
     WHERE "p"."visible_ecommerce" = true
+      AND "p"."lifecycle" <> 'DISCONTINUED'
       AND "p"."kind" IN ('STANDARD', 'SINGLE', 'VARIANT')
       ${promotedFilter}
     ORDER BY ${orderBy}
@@ -621,6 +618,7 @@ async function fetchVisibleProductCount() {
   return db.product.count({
     where: {
       visibleEcommerce: true,
+      lifecycle: { not: "DISCONTINUED" },
       kind: { in: ["STANDARD", "SINGLE", "VARIANT"] },
       subcategories: {
         some: {

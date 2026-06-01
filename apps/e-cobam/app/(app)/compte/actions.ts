@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { CommercePaymentMethod, CustomerAddressType, CustomerType } from "@prisma/client";
-import { destroyCustomerSession, getCustomerSession } from "@/lib/customer-auth";
+import {
+  destroyCustomerSession,
+  getCustomerSession,
+  hashCustomerPassword,
+  verifyCustomerPassword,
+} from "@/lib/customer-auth";
 
 async function getPrisma() {
   const { prisma } = await import("@cobam/db");
@@ -17,6 +22,15 @@ async function requireCustomerId() {
   }
 
   return BigInt(session.customerId);
+}
+
+async function requireCustomerSession() {
+  const session = await getCustomerSession();
+  if (!session) {
+    redirect("/connexion?next=/compte");
+  }
+
+  return session;
 }
 
 function cleanText(value: FormDataEntryValue | null, maxLength: number) {
@@ -64,7 +78,6 @@ export async function updateCustomerProfileAction(formData: FormData) {
   const firstName = cleanText(formData.get("firstName"), 100);
   const lastName = cleanText(formData.get("lastName"), 100);
   const companyName = cleanText(formData.get("companyName"), 255);
-  const taxIdentifier = cleanText(formData.get("taxIdentifier"), 100);
   const phone = cleanText(formData.get("phone"), 50);
   const emailMarketingOptIn = formData.get("emailMarketingOptIn") === "on";
   const smsMarketingOptIn = formData.get("smsMarketingOptIn") === "on";
@@ -77,7 +90,7 @@ export async function updateCustomerProfileAction(formData: FormData) {
       firstName,
       lastName,
       companyName: type === "COMPANY" ? companyName : null,
-      taxIdentifier: type === "COMPANY" ? taxIdentifier : null,
+      taxIdentifier: null,
       phone,
       emailMarketingOptIn,
       smsMarketingOptIn,
@@ -86,6 +99,54 @@ export async function updateCustomerProfileAction(formData: FormData) {
 
   revalidatePath("/compte");
   revalidatePath("/compte/profil");
+}
+
+export async function changeCustomerPasswordAction(formData: FormData) {
+  const session = await requireCustomerSession();
+  const currentPassword =
+    typeof formData.get("currentPassword") === "string" ? String(formData.get("currentPassword")) : "";
+  const password = typeof formData.get("password") === "string" ? String(formData.get("password")) : "";
+  const confirmation =
+    typeof formData.get("confirmation") === "string" ? String(formData.get("confirmation")) : "";
+
+  if (!currentPassword || password.length < 8 || password !== confirmation) {
+    redirect("/compte/securite?error=password");
+  }
+
+  const db = await getPrisma();
+  const user = await db.user.findUnique({
+    where: { id: session.userId },
+    select: { passwordHash: true },
+  });
+
+  if (!user || !(await verifyCustomerPassword(currentPassword, user.passwordHash))) {
+    redirect("/compte/securite?error=password");
+  }
+
+  await db.user.update({
+    where: { id: session.userId },
+    data: {
+      passwordHash: await hashCustomerPassword(password),
+      passwordChangedAt: new Date(),
+    },
+  });
+
+  revalidatePath("/compte/securite");
+  redirect("/compte/securite?updated=password");
+}
+
+export async function updateCustomerTwoFactorAction(formData: FormData) {
+  const session = await requireCustomerSession();
+  const enabled = formData.get("twoFactorEnabled") === "on";
+  const db = await getPrisma();
+
+  await db.user.update({
+    where: { id: session.userId },
+    data: { twoStepVerificationEnabled: enabled },
+  });
+
+  revalidatePath("/compte/securite");
+  redirect(`/compte/securite?updated=${enabled ? "2fa-on" : "2fa-off"}`);
 }
 
 export async function addCustomerAddressAction(formData: FormData) {

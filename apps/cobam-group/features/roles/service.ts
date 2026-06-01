@@ -18,7 +18,7 @@ import type {
   RolesListResult,
 } from "./types";
 
-const RESERVED_ROLE_KEYS = new Set(["ROOT", "ADMIN", "STAFF"]);
+const RESERVED_ROLE_KEYS = new Set(["ROOT", "ADMIN", "USER"]);
 
 export class RoleServiceError extends Error {
   status: number;

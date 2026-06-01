@@ -38,7 +38,6 @@ export async function getCustomerAccount(session: CustomerSession) {
       firstName: true,
       lastName: true,
       companyName: true,
-      taxIdentifier: true,
       phone: true,
       emailMarketingOptIn: true,
       smsMarketingOptIn: true,
@@ -49,6 +48,8 @@ export async function getCustomerAccount(session: CustomerSession) {
           email: true,
           lastLoginAt: true,
           createdAt: true,
+          passwordChangedAt: true,
+          twoStepVerificationEnabled: true,
         },
       },
       addresses: {
@@ -130,16 +131,29 @@ export async function getCustomerAccount(session: CustomerSession) {
       billingAddressId: method.billingAddressId?.toString() ?? null,
       createdAt: method.createdAt.toISOString(),
     })),
-    orders: customer.orders.map((order) => ({
-      ...order,
-      placedAt: order.placedAt.toISOString(),
-      subtotalTtc: order.subtotalTtc.toString(),
-      totalTtc: order.totalTtc.toString(),
-      itemCount: order.items.reduce((total, item) => {
+    orders: customer.orders.map((order) => {
+      const itemCount = order.items.reduce((total, item) => {
         const quantity = Number(item.quantity.toString());
         return total + (Number.isFinite(quantity) ? quantity : 0);
-      }, 0),
-    })),
+      }, 0);
+
+      return {
+        orderNumber: order.orderNumber,
+        placedAt: order.placedAt.toISOString(),
+        status: order.status,
+        paymentStatus: order.paymentStatus,
+        fulfillmentStatus: order.fulfillmentStatus,
+        subtotalTtc: order.subtotalTtc.toString(),
+        totalTtc: order.totalTtc.toString(),
+        itemCount,
+      };
+    }),
+    user: {
+      ...customer.user,
+      createdAt: customer.user.createdAt.toISOString(),
+      lastLoginAt: customer.user.lastLoginAt?.toISOString() ?? null,
+      passwordChangedAt: customer.user.passwordChangedAt?.toISOString() ?? null,
+    },
     orderCount,
   };
 }

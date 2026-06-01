@@ -250,7 +250,7 @@ export function parseCreateStaffUserInput(raw: unknown): CreateStaffUserInput {
   return {
     email,
     password,
-    powerType: powerType ?? "STAFF",
+    powerType: powerType ?? "USER",
     roleIds: parseRoleIds(raw.roleIds),
     profile: {
       firstName: parseOptionalNullableString(profileRaw.firstName),

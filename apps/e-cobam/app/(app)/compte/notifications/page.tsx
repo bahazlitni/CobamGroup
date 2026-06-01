@@ -21,9 +21,7 @@ export default async function CustomerNotificationsPage() {
   return (
     <main className="commerce-container py-8 sm:py-12">
       <AccountPageHeader
-        eyebrow="Notifications"
-        title="Suivi de vos commandes."
-        description="Retrouvez les changements de statut et les messages importants lies a votre compte."
+        title="Notifications"
       />
 
       <AccountPageShell active="/compte/notifications">

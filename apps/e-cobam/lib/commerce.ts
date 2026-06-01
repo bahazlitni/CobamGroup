@@ -52,6 +52,7 @@ const VISIBLE_ECOMMERCE_FAMILY_MEMBER_WHERE = {
   product: {
     is: {
       visibleEcommerce: true,
+      lifecycle: { not: "DISCONTINUED" },
       subcategories: {
         some: VISIBLE_ECOMMERCE_SUBCATEGORY_LINK_WHERE,
       },
@@ -66,6 +67,7 @@ const PRODUCT_CARD_SELECT = {
   slug: true,
   name: true,
   displayName: true,
+  lifecycle: true,
   richTextDescription: true,
   titleSeo: true,
   descriptionSeo: true,
@@ -468,10 +470,6 @@ function stockLabel(availability: ProductAvailability, available: Prisma.Decimal
 
   if (availability === "ON_ORDER") {
     return { label: "Sur commande", tone: "warning" as const };
-  }
-
-  if (availability === "DISCONTINUED") {
-    return { label: "Arrêté", tone: "unavailable" as const };
   }
 
   return { label: "En stock", tone: "available" as const };
@@ -989,6 +987,7 @@ function productBaseWhere(input: {
 
   return {
     visibleEcommerce: true,
+    lifecycle: { not: "DISCONTINUED" },
     kind: { in: ["STANDARD", "SINGLE", "VARIANT"] },
     ...(brandSlugs.length > 0 ? { brand: { is: { slug: { in: brandSlugs } } } } : {}),
     ...(andFilters.length > 0 ? { AND: andFilters } : {}),
@@ -1147,7 +1146,14 @@ export async function getCommerceCategories(): Promise<CommerceCategory[]> {
           name: true,
           slug: true,
           productLinks: {
-            where: { product: { is: { visibleEcommerce: true } } },
+            where: {
+              product: {
+                is: {
+                  visibleEcommerce: true,
+                  lifecycle: { not: "DISCONTINUED" },
+                },
+              },
+            },
             select: { productId: true },
           },
         },
