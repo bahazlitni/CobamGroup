@@ -543,7 +543,6 @@ function SingleProductEditPageContent() {
           brand={form.brand}
           brandOptions={options.productBrandOptions}
           lifecycle={form.lifecycle}
-          showLifecycle={false}
           onSkuChanged={(sku: string) => setForm((current) => ({ ...current, sku }))}
           onNameChanged={handleNameChanged}
           onBrandChanged={(brand: null | string) => setForm((current) => ({ ...current, brand }))}

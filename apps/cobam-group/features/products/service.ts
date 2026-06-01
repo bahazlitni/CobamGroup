@@ -583,6 +583,7 @@ async function writeFamily(familyId: number | null, input: ProductFamilyUpsertIn
           sku: variant.sku,
           slug: variant.slug,
           kind: "VARIANT",
+          lifecycle: variant.lifecycle,
           productTypeId: requireProductTypeId(variant.productTypeId),
           name: variant.name,
           displayName: variant.displayName,

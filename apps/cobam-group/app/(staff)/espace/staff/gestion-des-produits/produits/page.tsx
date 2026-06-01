@@ -49,6 +49,8 @@ import {
   type AllProductsExportMode,
   type AllProductsListItemDto,
 } from "@/features/all-products/types";
+import { PRODUCT_LIFECYCLE_VALUES } from "@/features/products/lifecycle";
+import formatEnumLabel from "@/lib/formatEnumLabel";
 import { EditableCell, EditingState, SelectCell } from "@/components/staff/ui/Cells";
 
 const PAGE_SIZE = 20;
@@ -890,10 +892,10 @@ export default function AllProductsPage() {
                   }
                   saving={false}
                   readOnly={!canChangeLifecycle}
-                  items={[
-                    { label: "Brouillon", value: "DRAFT" },
-                    { label: "Actif", value: "ACTIVE" },
-                  ]}
+                  items={PRODUCT_LIFECYCLE_VALUES.map((value) => ({
+                    label: formatEnumLabel(value),
+                    value,
+                  }))}
                   placeholder="Cycle de vie"
                 />
               </td>

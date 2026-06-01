@@ -256,7 +256,9 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
     PRODUCT_LIFECYCLE_VALUES,
     "lifecycle",
   );
-  const defaultVisible = lifecycle !== "DRAFT";
+  const defaultVisible = lifecycle === "ACTIVE";
+  const visibleEcommerce = parseOptionalBoolean(record.visibleEcommerce, defaultVisible);
+  const visibleVitrine = parseOptionalBoolean(record.visibleVitrine, defaultVisible);
 
   return {
     productTypeId: parseRequiredPositiveInteger(record.productTypeId, "productTypeId"),
@@ -270,8 +272,8 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
     guaranteeMonths: parseNonNegativeInteger(record.guaranteeMonths, "guaranteeMonths"),
     brand: parseOptionalString(record.brand),
     lifecycle,
-    visibleEcommerce: parseOptionalBoolean(record.visibleEcommerce, defaultVisible),
-    visibleVitrine: parseOptionalBoolean(record.visibleVitrine, defaultVisible),
+    visibleEcommerce: defaultVisible ? visibleEcommerce : false,
+    visibleVitrine: defaultVisible ? visibleVitrine : false,
     isFeatured: parseOptionalBoolean(record.isFeatured),
     isNew: parseOptionalBoolean(record.isNew),
     stockAvailable: parseDecimalString(record.stockAvailable, "stockAvailable", "0") ?? "0",

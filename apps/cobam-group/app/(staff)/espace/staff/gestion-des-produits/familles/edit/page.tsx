@@ -53,6 +53,7 @@ import {
   PRODUCT_PRICING_VISIBILITY_VALUES,
   STOCK_UNIT_VALUES,
 } from "@/features/products/product-edit-fields";
+import { PRODUCT_LIFECYCLE_VALUES } from "@/features/products/lifecycle";
 
 type VariantEditorState = ProductVariantInputDto & { formKey: string };
 type FamilyEditorState = Omit<ProductFamilyUpsertInput, "variants"> & {
@@ -1249,6 +1250,26 @@ function ProductEditPageContent() {
                       }
                     />
                   </LinkedFieldControl>
+                </PanelField>
+
+                <PanelField id={`${variant.formKey}-lifecycle`} label="Cycle de vie">
+                  <StaffSelect
+                    id={`${variant.formKey}-lifecycle`}
+                    fullWidth
+                    value={variant.lifecycle}
+                    onValueChange={(lifecycle) =>
+                      setForm((current) =>
+                        updateVariantState(current, variant.formKey, (entry) => ({
+                          ...entry,
+                          lifecycle: lifecycle as typeof entry.lifecycle,
+                        })),
+                      )
+                    }
+                    options={PRODUCT_LIFECYCLE_VALUES.map((value) => ({
+                      value,
+                      label: formatEnumLabel(value),
+                    }))}
+                  />
                 </PanelField>
 
                 <PanelField id={`${variant.formKey}-slug`} label="Slug">

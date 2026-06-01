@@ -250,7 +250,9 @@ function parseVariant(input: unknown): ProductVariantInputDto {
     PRODUCT_LIFECYCLE_VALUES,
     "variant.lifecycle",
   );
-  const defaultVisible = lifecycle !== "DRAFT";
+  const defaultVisible = lifecycle === "ACTIVE";
+  const visibleEcommerce = parseOptionalBoolean(record.visibleEcommerce, defaultVisible);
+  const visibleVitrine = parseOptionalBoolean(record.visibleVitrine, defaultVisible);
 
   return {
     id:
@@ -274,8 +276,8 @@ function parseVariant(input: unknown): ProductVariantInputDto {
     guaranteeMonths: parseNonNegativeInteger(record.guaranteeMonths, "variant.guaranteeMonths"),
     brand: parseOptionalString(record.brand),
     lifecycle,
-    visibleEcommerce: parseOptionalBoolean(record.visibleEcommerce, defaultVisible),
-    visibleVitrine: parseOptionalBoolean(record.visibleVitrine, defaultVisible),
+    visibleEcommerce: defaultVisible ? visibleEcommerce : false,
+    visibleVitrine: defaultVisible ? visibleVitrine : false,
     isFeatured: parseOptionalBoolean(record.isFeatured),
     isNew: parseOptionalBoolean(record.isNew),
     stockAvailable: parseDecimalString(record.stockAvailable, "variant.stockAvailable", "0") ?? "0",

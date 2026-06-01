@@ -338,6 +338,7 @@ async function writeSingleProduct(productId: number | null, input: SingleProduct
               sku: input.sku,
               slug: input.slug,
               kind: "STANDARD",
+              lifecycle: input.lifecycle,
               productTypeId: requireProductTypeId(input.productTypeId),
               name: input.name,
               displayName: input.displayName,
@@ -372,6 +373,7 @@ async function writeSingleProduct(productId: number | null, input: SingleProduct
             data: {
               sku: input.sku,
               slug: input.slug,
+              lifecycle: input.lifecycle,
               productTypeId: requireProductTypeId(input.productTypeId),
               name: input.name,
               displayName: input.displayName,
