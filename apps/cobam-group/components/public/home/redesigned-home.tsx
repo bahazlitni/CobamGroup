@@ -459,29 +459,17 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
             />
           ))}
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(20,32,46,0.98),rgba(20,32,46,0.86)_42%,rgba(20,32,46,0.42)_100%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_var(--hero-light-x,70%)_var(--hero-light-y,38%),rgba(10,141,193,0.3),transparent_34rem)]" />
-          <div className="cobam-luxury-grid absolute inset-0" aria-hidden="true" />
-          <div className="cobam-grain absolute inset-0" aria-hidden="true" />
         </div>
 
         <div className="relative z-10 mx-auto grid min-h-[calc(100svh-5rem)] max-w-[1500px] gap-10 px-5 pb-32 pt-10 sm:px-8 lg:grid-cols-[0.88fr_1.12fr] lg:px-12 lg:pb-24 lg:pt-12">
           <div className="flex flex-col justify-center py-10 lg:py-16" data-landing-reveal>
-            <div className="inline-flex w-fit items-center gap-3 border border-[#fafaf9]/14 bg-[#fafaf9]/7 px-3 py-2 text-xs font-semibold text-[#fafaf9]/72 backdrop-blur-md">
-              <Sparkles className="size-4 text-[#0a8dc1]" aria-hidden="true" />
-              Depuis 1994 / Architecture des matières
-            </div>
 
-            <h1 className="cobam-display mt-8 max-w-5xl text-[clamp(4.6rem,11vw,11.5rem)] font-semibold leading-[0.82] text-[#fafaf9]">
-              COBAM{" "}
-              <span className="block text-[#0a8dc1]">Group</span>
+            <h1 className="cobam-display mt-8 max-w-5xl text-[clamp(2.6rem,8vw,8.5rem)] font-semibold leading-[0.82] text-[#fafaf9]">
+              L'architecture des matières
             </h1>
 
-            <p className="mt-8 max-w-2xl text-2xl font-semibold leading-tight text-[#fafaf9] sm:text-3xl lg:text-4xl">
+            <p className="mt-8 max-w-2xl text-2xl leading-tight text-[#fafaf9] sm:text-3xl lg:text-4xl">
               L&apos;expérience showroom transformée en parcours digital premium.
-            </p>
-            <p className="mt-6 max-w-2xl text-base leading-7 text-[#fafaf9]/70 sm:text-lg sm:leading-8">
-              Matériaux, revêtements, bains, piscines et finitions: COBAM organise la découverte,
-              la comparaison et la validation des choix avec la précision d&apos;un groupe établi.
             </p>
 
             <div className="mt-9 flex max-w-[calc(100%-4.75rem)] flex-col gap-3 sm:max-w-none sm:flex-row">
@@ -504,74 +492,7 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
             </div>
 
           </div>
-
-          <div
-            className="relative hidden min-h-[34rem] items-center lg:flex"
-            data-landing-reveal
-            style={revealDelay(130)}
-          >
-            <div className="cobam-material-stage relative h-[32rem] w-full" data-parallax-speed="-0.026">
-              {heroPanels.map((panel, index) => (
-                <Link
-                  key={panel.id}
-                  href={panel.href}
-                  className={cn(
-                    "cobam-material-slab group absolute overflow-hidden border border-[#fafaf9]/14 bg-[#fafaf9]/8 shadow-[0_32px_90px_rgba(0,0,0,0.22)] outline-none transition duration-700",
-                    index === 0 ? "left-[4%] top-[2%] h-[21rem] w-[50%]" : "",
-                    index === 1 ? "right-[2%] top-[12%] h-[27rem] w-[52%]" : "",
-                    index === 2 ? "bottom-[2%] left-[20%] h-[15rem] w-[52%]" : "",
-                    index === heroIndex ? "z-20 border-[#0a8dc1]/70 opacity-100" : "z-10 opacity-70",
-                  )}
-                  onMouseEnter={() => setHeroIndex(index)}
-                >
-                  <Image
-                    src={panel.image}
-                    alt={panel.title}
-                    fill
-                    loading={index === 0 ? "eager" : "lazy"}
-                    sizes="(min-width: 1024px) 42vw, 100vw"
-                    className="object-cover transition duration-700 group-hover:scale-105"
-                  />
-                  <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,32,46,0.02),rgba(20,32,46,0.76))]" />
-                  <span className="cobam-material-scan absolute inset-0" aria-hidden="true" />
-                  <span className="absolute bottom-0 left-0 right-0 p-5">
-                    <span className="block text-xs font-semibold text-[#0a8dc1]">{panel.label}</span>
-                    <span
-                      className={cn(
-                        "mt-2 block text-2xl font-semibold leading-tight text-[#fafaf9]",
-                        index === heroIndex ? "" : "hidden",
-                      )}
-                    >
-                      {panel.title}
-                    </span>
-                    <span
-                      className={cn(
-                        "mt-3 block max-w-sm text-sm leading-6 text-[#fafaf9]/68",
-                        index === heroIndex ? "" : "hidden",
-                      )}
-                    >
-                      {panel.text}
-                    </span>
-                  </span>
-                </Link>
-              ))}
-
-              <div className="absolute right-8 top-8 z-30 w-64 border border-[#fafaf9]/14 bg-[#14202e]/72 p-4 text-[#fafaf9] backdrop-blur-xl">
-                <p className="text-xs font-semibold text-[#0a8dc1]">Séquence active</p>
-                <p className="mt-3 text-4xl font-semibold leading-none">
-                  {String(heroIndex + 1).padStart(2, "0")}
-                  <span className="ml-2 text-sm text-[#fafaf9]/42">
-                    / {String(heroPanels.length).padStart(2, "0")}
-                  </span>
-                </p>
-                <p className="mt-4 text-sm leading-6 text-[#fafaf9]/62">{activeHero.text}</p>
-              </div>
-            </div>
-          </div>
-
         </div>
-
-       
       </section>
 
       <section className="relative bg-[#fafaf9] py-16 text-[#14202e] sm:py-20" aria-labelledby="numbers-title">

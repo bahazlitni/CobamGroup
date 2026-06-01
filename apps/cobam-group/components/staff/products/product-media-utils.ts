@@ -16,6 +16,7 @@ export function mapMediaListItemToProductMedia(
     mimeType: media.mimeType,
     widthPx: media.widthPx,
     heightPx: media.heightPx,
+    sortOrder: 0,
     durationSeconds:
       media.durationSeconds == null ? null : String(media.durationSeconds),
     sizeBytes: media.sizeBytes == null ? null : String(media.sizeBytes),

@@ -63,12 +63,38 @@ function mapPublicOrganization(record: PublicOrganizationRecord): PublicOrganiza
   };
 }
 
+function isPublicOrganizationReadUnavailable(error: unknown) {
+  const record = error as { code?: string; message?: string } | null;
+  const message = record?.message ?? "";
+
+  return (
+    record?.code === "P1010" ||
+    record?.code === "P2021" ||
+    message.includes("denied access") ||
+    message.includes("does not exist")
+  );
+}
+
 async function listPublicOrganizations(where: Prisma.OrganizationWhereInput) {
-  const organizations = await prisma.organization.findMany({
-    where,
-    orderBy: [{ name: "asc" }],
-    select: PUBLIC_ORGANIZATION_SELECT,
-  });
+  let organizations: PublicOrganizationRecord[];
+
+  try {
+    organizations = await prisma.organization.findMany({
+      where,
+      orderBy: [{ name: "asc" }],
+      select: PUBLIC_ORGANIZATION_SELECT,
+    });
+  } catch (error) {
+    if (isPublicOrganizationReadUnavailable(error)) {
+      console.warn(
+        "[organizations] Organisations publiques indisponibles: la section est masquee pour cette requete.",
+        error,
+      );
+      return [];
+    }
+
+    throw error;
+  }
 
   await makeMediaPublicMany(
     organizations

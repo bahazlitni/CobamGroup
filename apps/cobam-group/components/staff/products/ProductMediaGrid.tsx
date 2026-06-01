@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ImagePlus } from "lucide-react";
 import type { ProductMediaDto } from "@/features/products/types";
 import { cn } from "@/lib/utils";
+import ProductMediaEditDialog from "./ProductMediaEditDialog";
 import ProductMediaPickerDialog from "./ProductMediaPickerDialog";
 import ProductMediaTile from "./ProductMediaTile";
 
@@ -34,6 +35,8 @@ export default function ProductMediaGrid({
   addButtonLabel = "Ajouter un media",
   addButtonHint = "Optionnel : image, video ou document",
   mediaKind = "ALL",
+  documentExtensions,
+  role = "GALLERY",
   maxItems,
 }: {
   items: ProductMediaDto[];
@@ -45,9 +48,12 @@ export default function ProductMediaGrid({
   addButtonLabel?: string;
   addButtonHint?: string;
   mediaKind?: ProductMediaDto["kind"] | "ALL";
+  documentExtensions?: string[];
+  role?: ProductMediaDto["role"];
   maxItems?: number;
 }) {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [editingMedia, setEditingMedia] = useState<ProductMediaDto | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -66,6 +72,7 @@ export default function ProductMediaGrid({
             isDragging={draggedIndex === index}
             isDragOver={dragOverIndex === index}
             onRemove={() => onChange(items.filter((item) => item.id !== media.id))}
+            onEdit={() => setEditingMedia(media)}
             onDragStart={() => {
               setDraggedIndex(index);
               setDragOverIndex(index);
@@ -110,13 +117,28 @@ export default function ProductMediaGrid({
           title={pickerTitle}
           description={pickerDescription}
           mediaKind={mediaKind}
+          documentExtensions={documentExtensions}
           excludedMediaIds={maxItems === 1 ? [] : items.map((item) => item.id)}
           onSelect={(media) => {
-            onChange(maxItems === 1 ? [media] : [...items, media]);
+            const selectedMedia = { ...media, role, sortOrder: items.length };
+            onChange(maxItems === 1 ? [selectedMedia] : [...items, selectedMedia]);
             setIsPickerOpen(false);
           }}
         />
       ) : null}
+
+      <ProductMediaEditDialog
+        media={editingMedia}
+        open={editingMedia != null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingMedia(null);
+          }
+        }}
+        onSave={(updatedMedia) => {
+          onChange(items.map((item) => (item.id === updatedMedia.id ? updatedMedia : item)));
+        }}
+      />
     </div>
   );
 }

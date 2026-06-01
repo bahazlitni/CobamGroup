@@ -15,6 +15,7 @@ export type ProductMediaDto = {
   originalFilename: string | null;
   mimeType: string | null;
   altText: string | null;
+  sortOrder: number;
   widthPx: number | null;
   heightPx: number | null;
   durationSeconds: string | null;
@@ -62,8 +63,8 @@ export type ProductVariantInputDto = ProductEditFieldsDto & {
   lifecycle: ProductLifecycle;
   tags: string;
   subcategoryIds: number[];
-  datasheet: ProductMediaDto | null;
-  certificate: ProductMediaDto | null;
+  datasheets: ProductMediaDto[];
+  certificates: ProductMediaDto[];
   media: ProductMediaDto[];
   attributes: ProductAttributeInputDto[];
 };
@@ -240,6 +241,7 @@ export type PublicProductInspectorMedia = {
   altText: string | null;
   title: string | null;
   mimeType: string | null;
+  sortOrder: number;
 };
 
 export type PublicProductColorReference = {
@@ -280,8 +282,8 @@ export type PublicProductInspectorVariant = {
   name: string;
   displayName: string;
   description: string | null;
-  datasheet: PublicProductInspectorMedia | null;
-  certificate: PublicProductInspectorMedia | null;
+  datasheets: PublicProductInspectorMedia[];
+  certificates: PublicProductInspectorMedia[];
   media: PublicProductInspectorMedia[];
   attributes: PublicProductInspectorAttribute[];
 };
@@ -315,8 +317,8 @@ export type PublicSimpleProductInspector = {
   brand: PublicProductBrand | null;
   brandNames: string[];
   media: PublicProductInspectorMedia[];
-  datasheet: PublicProductInspectorMedia | null;
-  certificate: PublicProductInspectorMedia | null;
+  datasheets: PublicProductInspectorMedia[];
+  certificates: PublicProductInspectorMedia[];
   subcategories: PublicProductSubcategoryLink[];
   attributes: PublicProductInspectorAttribute[];
   colorReferences: PublicProductColorReference[];

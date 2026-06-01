@@ -102,6 +102,7 @@ const STAFF_PRODUCT_SELECT = {
       role: true,
       name: true,
       altText: true,
+      sortOrder: true,
       media: {
         select: STAFF_MEDIA_SELECT,
       },
@@ -216,6 +217,7 @@ function mapMedia(
     role: ProductMediaDto["role"];
     name: string | null;
     altText: string | null;
+    sortOrder: number;
   },
 ): ProductMediaDto {
   return {
@@ -226,6 +228,7 @@ function mapMedia(
     originalFilename: media.originalFilename,
     mimeType: media.mimeType,
     altText: link?.altText ?? media.altText,
+    sortOrder: link?.sortOrder ?? 0,
     widthPx: media.widthPx,
     heightPx: media.heightPx,
     durationSeconds: media.durationSeconds?.toString() ?? null,
@@ -239,8 +242,8 @@ function mapVariant(
   record: StaffFamilyDetailRecord["members"][number]["product"],
 ): ProductVariantInputDto {
   const galleryLinks = record.media.filter((link) => link.role === "GALLERY");
-  const technicalLink = record.media.find((link) => link.role === "TECHNICAL") ?? null;
-  const certificateLink = record.media.find((link) => link.role === "CERTIFICATE") ?? null;
+  const technicalLinks = record.media.filter((link) => link.role === "TECHNICAL");
+  const certificateLinks = record.media.filter((link) => link.role === "CERTIFICATE");
 
   return {
     id: Number(record.id),
@@ -270,8 +273,8 @@ function mapVariant(
     priceVisibility: record.priceVisibility,
     tags: record.tags,
     subcategoryIds: record.subcategories.map((link) => Number(link.subcategoryId)),
-    datasheet: technicalLink ? mapMedia(technicalLink.media, technicalLink) : null,
-    certificate: certificateLink ? mapMedia(certificateLink.media, certificateLink) : null,
+    datasheets: technicalLinks.map((link) => mapMedia(link.media, link)),
+    certificates: certificateLinks.map((link) => mapMedia(link.media, link)),
     media: galleryLinks.map((link) => mapMedia(link.media, link)),
     attributes: record.attributes.map(mapProductAttributeRecord),
   };
@@ -404,11 +407,13 @@ async function syncVariantRelations(
     },
   });
 
-  const technicalMediaId = variant.datasheet?.id ?? null;
-  const certificateMediaId = variant.certificate?.id ?? null;
+  const documentMediaIds = new Set([
+    ...variant.datasheets.map((media) => media.id),
+    ...variant.certificates.map((media) => media.id),
+  ]);
   const productMediaLinks = [
     ...variant.media
-      .filter((media) => media.id !== technicalMediaId && media.id !== certificateMediaId)
+      .filter((media) => !documentMediaIds.has(media.id))
       .map((media, index) => ({
         productId,
         mediaId: BigInt(media.id),
@@ -417,30 +422,22 @@ async function syncVariantRelations(
         altText: media.altText,
         sortOrder: index,
       })),
-    ...(variant.datasheet
-      ? [
-          {
-            productId,
-            mediaId: BigInt(variant.datasheet.id),
-            role: "TECHNICAL" as const,
-            name: variant.datasheet.title ?? "Fiche technique",
-            altText: variant.datasheet.altText,
-            sortOrder: 0,
-          },
-        ]
-      : []),
-    ...(variant.certificate
-      ? [
-          {
-            productId,
-            mediaId: BigInt(variant.certificate.id),
-            role: "CERTIFICATE" as const,
-            name: variant.certificate.title ?? "Certificat",
-            altText: variant.certificate.altText,
-            sortOrder: 0,
-          },
-        ]
-      : []),
+    ...variant.datasheets.map((media, index) => ({
+      productId,
+      mediaId: BigInt(media.id),
+      role: "TECHNICAL" as const,
+      name: media.title,
+      altText: media.altText,
+      sortOrder: index,
+    })),
+    ...variant.certificates.map((media, index) => ({
+      productId,
+      mediaId: BigInt(media.id),
+      role: "CERTIFICATE" as const,
+      name: media.title,
+      altText: media.altText,
+      sortOrder: index,
+    })),
   ];
 
   if (productMediaLinks.length > 0) {

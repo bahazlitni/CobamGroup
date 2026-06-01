@@ -5,6 +5,7 @@ import {
   File,
   FileText,
   GripVertical,
+  Pencil,
   Trash2,
   Video,
 } from "lucide-react";
@@ -32,6 +33,7 @@ export default function ProductMediaTile({
   isDragging = false,
   isDragOver = false,
   onRemove,
+  onEdit,
   onDragStart,
   onDragOver,
   onDrop,
@@ -41,6 +43,7 @@ export default function ProductMediaTile({
   isDragging?: boolean;
   isDragOver?: boolean;
   onRemove: () => void;
+  onEdit: () => void;
   onDragStart: () => void;
   onDragOver: () => void;
   onDrop: () => void;
@@ -54,6 +57,20 @@ export default function ProductMediaTile({
   return (
     <div
       draggable
+      role="button"
+      tabIndex={0}
+      onClick={(event) => {
+        if ((event.target as HTMLElement).closest("button")) {
+          return;
+        }
+        onEdit();
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onEdit();
+        }
+      }}
       onDragStart={onDragStart}
       onDragOver={(event) => {
         event.preventDefault();
@@ -84,6 +101,15 @@ export default function ProductMediaTile({
             {getFallbackIcon(media.kind)}
           </div>
         )}
+
+        <button
+          type="button"
+          onClick={onEdit}
+          className="absolute left-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-slate-500 shadow-sm transition hover:bg-cobam-water-blue/10 hover:text-cobam-water-blue"
+          aria-label={`Modifier ${getMediaLabel(media)}`}
+        >
+          <Pencil className="h-4 w-4" />
+        </button>
 
         <button
           type="button"

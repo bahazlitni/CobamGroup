@@ -18,7 +18,6 @@ import {
   DescriptionSEOTextArea,
   StaffImageImporter,
   StaffPageHeader,
-  StaffPdfImporter,
   StaffSelect,
   StaffStateCard,
   UnsavedChangesGuard,
@@ -186,8 +185,8 @@ function createEmptyVariant(index: number): VariantEditorState {
     lifecycle: "DRAFT",
     tags: "",
     subcategoryIds: [],
-    datasheet: null,
-    certificate: null,
+    datasheets: [],
+    certificates: [],
     media: [],
     attributes: [],
   };
@@ -1482,38 +1481,47 @@ function ProductEditPageContent() {
                   description="Le premier média devient la couverture de la variante."
                 />
 
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <StaffPdfImporter
-                    label="Fiche technique"
-                    description="Optionnel : associez une fiche technique PDF a cette variante."
-                    dialogTitle="Ajouter une fiche technique"
-                    dialogDescription="Choisissez un PDF existant ou importez-en un nouveau pour cette variante."
-                    value={variant.datasheet}
-                    onChange={(datasheet) =>
+                <div className="space-y-8">
+                  <ProductMediaGrid
+                    items={variant.datasheets}
+                    onChange={(datasheets) =>
                       setForm((current) =>
                         updateVariantState(current, variant.formKey, (entry) => ({
                           ...entry,
-                          datasheet,
+                          datasheets,
                         })),
                       )
                     }
+                    title="Fiches techniques"
+                    description="Ajoutez une ou plusieurs fiches techniques PDF, puis glissez-les pour definir leur ordre."
+                    pickerTitle="Ajouter une fiche technique"
+                    pickerDescription="Choisissez un PDF existant ou importez-en un nouveau pour cette variante."
+                    addButtonLabel="Ajouter une fiche"
+                    addButtonHint="PDF uniquement"
+                    mediaKind="DOCUMENT"
+                    documentExtensions={["pdf"]}
+                    role="TECHNICAL"
                   />
 
-                  <StaffPdfImporter
-                    label="Certificat"
-                    description="Optionnel : associez un certificat PDF a cette variante."
-                    dialogTitle="Ajouter un certificat"
-                    dialogDescription="Choisissez un PDF existant ou importez-en un nouveau pour cette variante."
-                    value={variant.certificate}
-                    role="CERTIFICATE"
-                    onChange={(certificate) =>
+                  <ProductMediaGrid
+                    items={variant.certificates}
+                    onChange={(certificates) =>
                       setForm((current) =>
                         updateVariantState(current, variant.formKey, (entry) => ({
                           ...entry,
-                          certificate,
+                          certificates,
                         })),
                       )
                     }
+                    title="Certificats"
+                    description="Ajoutez un ou plusieurs certificats PDF, puis glissez-les pour definir leur ordre."
+                    pickerTitle="Ajouter un certificat"
+                    pickerDescription="Choisissez un PDF existant ou importez-en un nouveau pour cette variante."
+                    addButtonLabel="Ajouter un certificat"
+                    addButtonHint="PDF uniquement"
+                    mediaKind="DOCUMENT"
+                    documentExtensions={["pdf"]}
+                    role="CERTIFICATE"
                   />
                 </div>
 

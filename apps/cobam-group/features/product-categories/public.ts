@@ -37,6 +37,30 @@ type PublicProductCategoryRecord = {
   }>;
 };
 
+function isPublicCategoryReadUnavailable(error: unknown) {
+  const record = error as { code?: string; message?: string } | null;
+  const message = record?.message ?? "";
+
+  return (
+    record?.code === "P1010" ||
+    record?.code === "P2021" ||
+    message.includes("denied access") ||
+    message.includes("does not exist")
+  );
+}
+
+function warnPublicCategoryReadUnavailable(scope: string, error: unknown) {
+  if (!isPublicCategoryReadUnavailable(error)) {
+    return false;
+  }
+
+  console.warn(
+    `[product-categories] ${scope} indisponible: les categories publiques sont masquees pour cette requete.`,
+    error,
+  );
+  return true;
+}
+
 type PublicProductCategoryCardRecord = PublicProductCategoryRecord & {
   subcategories: Array<
     PublicProductCategoryRecord["subcategories"][number] & {
@@ -209,14 +233,36 @@ function activePublicPromotionWhere(now = new Date()): Prisma.CommercePromotionW
 }
 
 async function getPublicPromotedCategoryIds() {
-  const links = await prisma.commercePromotionCategory.findMany({
-    where: {
-      promotion: activePublicPromotionWhere(),
-    },
-    select: {
-      categoryId: true,
-    },
-  });
+  let links: { categoryId: bigint }[];
+
+  try {
+    links = await prisma.commercePromotionCategory.findMany({
+      where: {
+        promotion: activePublicPromotionWhere(),
+      },
+      select: {
+        categoryId: true,
+      },
+    });
+  } catch (error) {
+    const record = error as { code?: string; message?: string } | null;
+    const message = record?.message ?? "";
+
+    if (
+      record?.code === "P1010" ||
+      record?.code === "P2021" ||
+      message.includes("denied access") ||
+      message.includes("does not exist")
+    ) {
+      console.warn(
+        "[promotions] Categories promues indisponibles: les badges promotion sont masques pour cette requete.",
+        error,
+      );
+      return new Set<string>();
+    }
+
+    throw error;
+  }
 
   return new Set(links.map((link) => link.categoryId.toString()));
 }
@@ -440,16 +486,26 @@ export async function listPublicMegaMenuProductCategories(): Promise<
   PublicMegaMenuProductCategory[]
 > {
   const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
-  const categories = (await prisma.productCategory.findMany({
-    where: {
-      isActive: true,
-      subcategories: {
-        some: publicVitrineSubcategoryWhere(hasVisibilityColumns),
+  let categories: PublicProductCategoryRecord[];
+
+  try {
+    categories = (await prisma.productCategory.findMany({
+      where: {
+        isActive: true,
+        subcategories: {
+          some: publicVitrineSubcategoryWhere(hasVisibilityColumns),
+        },
       },
-    },
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
-    select: publicCategorySelectFor(hasVisibilityColumns),
-  })) as unknown as PublicProductCategoryRecord[];
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
+      select: publicCategorySelectFor(hasVisibilityColumns),
+    })) as unknown as PublicProductCategoryRecord[];
+  } catch (error) {
+    if (warnPublicCategoryReadUnavailable("Mega menu", error)) {
+      return [];
+    }
+
+    throw error;
+  }
 
   const [promotedCategoryIds] = await Promise.all([getPublicPromotedCategoryIds()]);
   await ensurePublicCategoryImages(categories);
@@ -466,16 +522,26 @@ export async function findPublicRootProductCategoryBySlug(
   slug: string,
 ): Promise<PublicProductCategoryPageData | null> {
   const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
-  const category = (await prisma.productCategory.findFirst({
-    where: {
-      isActive: true,
-      slug,
-      subcategories: {
-        some: publicVitrineSubcategoryWhere(hasVisibilityColumns),
+  let category: PublicProductCategoryRecord | null;
+
+  try {
+    category = (await prisma.productCategory.findFirst({
+      where: {
+        isActive: true,
+        slug,
+        subcategories: {
+          some: publicVitrineSubcategoryWhere(hasVisibilityColumns),
+        },
       },
-    },
-    select: publicCategorySelectFor(hasVisibilityColumns),
-  })) as unknown as PublicProductCategoryRecord | null;
+      select: publicCategorySelectFor(hasVisibilityColumns),
+    })) as unknown as PublicProductCategoryRecord | null;
+  } catch (error) {
+    if (warnPublicCategoryReadUnavailable("Categorie racine", error)) {
+      return null;
+    }
+
+    throw error;
+  }
 
   if (!category) {
     return null;
@@ -491,17 +557,27 @@ export async function findPublicProductSubcategoryBySlugs(input: {
   subcategorySlug: string;
 }): Promise<PublicProductCategoryPageData | null> {
   const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
-  const subcategory = await prisma.productSubcategory.findFirst({
-    where: {
-      ...publicVitrineSubcategoryWhere(hasVisibilityColumns),
-      slug: input.subcategorySlug,
-      category: {
-        isActive: true,
-        slug: input.categorySlug,
+  let subcategory: PublicProductSubcategoryRecord | null;
+
+  try {
+    subcategory = (await prisma.productSubcategory.findFirst({
+      where: {
+        ...publicVitrineSubcategoryWhere(hasVisibilityColumns),
+        slug: input.subcategorySlug,
+        category: {
+          isActive: true,
+          slug: input.categorySlug,
+        },
       },
-    },
-    select: publicSubcategorySelect,
-  });
+      select: publicSubcategorySelect,
+    })) as PublicProductSubcategoryRecord | null;
+  } catch (error) {
+    if (warnPublicCategoryReadUnavailable("Sous-categorie", error)) {
+      return null;
+    }
+
+    throw error;
+  }
 
   if (!subcategory) {
     return null;
@@ -515,17 +591,27 @@ export async function listPublicProductSubcategoryCardsByCategorySlug(
   categorySlug: string,
 ): Promise<PublicProductSubcategoryCardData[]> {
   const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
-  const category = (await prisma.productCategory.findFirst({
-    where: {
-      isActive: true,
-      slug: categorySlug,
-      subcategories: {
-        some: publicVitrineSubcategoryWhere(hasVisibilityColumns),
+  let category: PublicProductCategoryCardRecord | null;
+
+  try {
+    category = (await prisma.productCategory.findFirst({
+      where: {
+        isActive: true,
+        slug: categorySlug,
+        subcategories: {
+          some: publicVitrineSubcategoryWhere(hasVisibilityColumns),
+        },
       },
-    },
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
-    select: publicCategoryCardSelectFor(hasVisibilityColumns),
-  })) as unknown as PublicProductCategoryCardRecord | null;
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }, { id: "asc" }],
+      select: publicCategoryCardSelectFor(hasVisibilityColumns),
+    })) as unknown as PublicProductCategoryCardRecord | null;
+  } catch (error) {
+    if (warnPublicCategoryReadUnavailable("Cartes sous-categories", error)) {
+      return [];
+    }
+
+    throw error;
+  }
 
   if (!category) {
     return [];

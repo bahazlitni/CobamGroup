@@ -52,6 +52,19 @@ type DetailRow = {
   tone?: "default" | "positive" | "muted";
 };
 
+function getDocumentLabel(
+  document: { title: string | null },
+  fallback: string,
+  index: number,
+  total: number,
+) {
+  if (document.title) {
+    return document.title;
+  }
+
+  return total > 1 ? `${fallback} ${index + 1}` : fallback;
+}
+
 const SUMMARY_ATTRIBUTE_IDS = new Set([
   "product_use",
   "color_code",
@@ -711,12 +724,32 @@ export default function PublicProductInspectorView({
                 <p className="mt-2 text-sm leading-6 text-white/60">
                   Fiches et informations disponibles selon le produit.
                 </p>
-                {selectedVariant.datasheet ? (
-                  <div className="mt-4">
-                    <DatasheetLink
-                      url={selectedVariant.datasheet.url}
-                      label="Télécharger la fiche"
-                    />
+                {selectedVariant.datasheets.length > 0 || selectedVariant.certificates.length > 0 ? (
+                  <div className="mt-4 space-y-2">
+                    {selectedVariant.datasheets.map((datasheet, index) => (
+                      <DatasheetLink
+                        key={`datasheet-${datasheet.id}`}
+                        url={datasheet.url}
+                        label={getDocumentLabel(
+                          datasheet,
+                          "Fiche technique",
+                          index,
+                          selectedVariant.datasheets.length,
+                        )}
+                      />
+                    ))}
+                    {selectedVariant.certificates.map((certificate, index) => (
+                      <DatasheetLink
+                        key={`certificate-${certificate.id}`}
+                        url={certificate.url}
+                        label={getDocumentLabel(
+                          certificate,
+                          "Certificat",
+                          index,
+                          selectedVariant.certificates.length,
+                        )}
+                      />
+                    ))}
                   </div>
                 ) : null}
               </div>
@@ -724,7 +757,7 @@ export default function PublicProductInspectorView({
                 <MessageSquareText className="size-5 text-cobam-water-blue" aria-hidden="true" />
                 <h3 className="mt-3 font-semibold">Accompagnement COBAM</h3>
                 <p className="mt-2 text-sm leading-6 text-white/60">
-                  Disponibilite, showroom et recommandations techniques a confirmer avec nos equipes.
+                  Disponibilité, showroom et recommandations techniques a confirmer avec nos equipes.
                 </p>
                 <div className="mt-4">
                   <ProductDevisDialog

@@ -110,6 +110,7 @@ const PUBLIC_PRODUCT_SELECT = {
       role: true,
       name: true,
       altText: true,
+      sortOrder: true,
       media: {
         select: MEDIA_SELECT,
       },
@@ -289,6 +290,7 @@ function mapMediaRecord(
   link?: {
     name: string | null;
     altText: string | null;
+    sortOrder?: number;
   },
 ): PublicProductInspectorMedia | null {
   if (!media || !isRenderableMedia(media)) {
@@ -303,6 +305,7 @@ function mapMediaRecord(
     altText: link?.altText ?? media.altText,
     title: link?.name ?? media.title,
     mimeType: media.mimeType,
+    sortOrder: link?.sortOrder ?? 0,
   };
 }
 
@@ -515,14 +518,11 @@ function buildProductCoverMedia(product: Pick<PublicProductRecord, "media">) {
   return mapVariantMedia(product as PublicProductRecord)[0] ?? null;
 }
 
-function mapTechnicalMedia(product: PublicProductRecord) {
-  const link = product.media.find((entry) => entry.role === "TECHNICAL") ?? null;
-  return link ? mapMediaRecord(link.media, link) : null;
-}
-
-function mapCertificateMedia(product: PublicProductRecord) {
-  const link = product.media.find((entry) => entry.role === "CERTIFICATE") ?? null;
-  return link ? mapMediaRecord(link.media, link) : null;
+function mapDocumentMedia(product: PublicProductRecord, role: "TECHNICAL" | "CERTIFICATE") {
+  return product.media
+    .filter((entry) => entry.role === role)
+    .map((link) => mapMediaRecord(link.media, link))
+    .filter((media): media is PublicProductInspectorMedia => media != null);
 }
 
 function pickDefaultPublicVariant(record: PublicFamilyRecord) {
@@ -693,8 +693,8 @@ function mapInspectorVariant(product: PublicProductRecord): PublicProductInspect
     name: product.name,
     displayName: product.displayName,
     description: getProductRichDescription(product),
-    datasheet: mapTechnicalMedia(product),
-    certificate: mapCertificateMedia(product),
+    datasheets: mapDocumentMedia(product, "TECHNICAL"),
+    certificates: mapDocumentMedia(product, "CERTIFICATE"),
     media: mapVariantMedia(product),
     attributes: mapVariantAttributes(product),
   };
@@ -727,8 +727,8 @@ async function mapSimpleInspector(
     brand: input.brand,
     brandNames: input.brandNames,
     media,
-    datasheet: mapTechnicalMedia(record),
-    certificate: mapCertificateMedia(record),
+    datasheets: mapDocumentMedia(record, "TECHNICAL"),
+    certificates: mapDocumentMedia(record, "CERTIFICATE"),
     subcategories: mapSubcategoryLinks(record.subcategories),
     attributes,
     colorReferences: buildColorReferencesFromAttributes([attributes], colorLookup),

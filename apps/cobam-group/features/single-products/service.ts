@@ -98,6 +98,7 @@ const SINGLE_PRODUCT_SELECT = {
       role: true,
       name: true,
       altText: true,
+      sortOrder: true,
       media: {
         select: STAFF_MEDIA_SELECT,
       },
@@ -143,6 +144,7 @@ function mapMedia(
     role: ProductMediaDto["role"];
     name: string | null;
     altText: string | null;
+    sortOrder: number;
   },
 ): ProductMediaDto {
   return {
@@ -153,6 +155,7 @@ function mapMedia(
     originalFilename: media.originalFilename,
     mimeType: media.mimeType,
     altText: link?.altText ?? media.altText,
+    sortOrder: link?.sortOrder ?? 0,
     widthPx: media.widthPx,
     heightPx: media.heightPx,
     durationSeconds: media.durationSeconds?.toString() ?? null,
@@ -164,8 +167,8 @@ function mapMedia(
 
 function mapSingleProductDetail(record: SingleProductRecord): SingleProductDetailDto {
   const galleryLinks = record.media.filter((link) => link.role === "GALLERY");
-  const technicalLink = record.media.find((link) => link.role === "TECHNICAL") ?? null;
-  const certificateLink = record.media.find((link) => link.role === "CERTIFICATE") ?? null;
+  const technicalLinks = record.media.filter((link) => link.role === "TECHNICAL");
+  const certificateLinks = record.media.filter((link) => link.role === "CERTIFICATE");
 
   return {
     id: Number(record.id),
@@ -195,8 +198,8 @@ function mapSingleProductDetail(record: SingleProductRecord): SingleProductDetai
     priceVisibility: record.priceVisibility,
     tags: record.tags,
     subcategoryIds: record.subcategories.map((link) => Number(link.subcategoryId)),
-    datasheet: technicalLink ? mapMedia(technicalLink.media, technicalLink) : null,
-    certificate: certificateLink ? mapMedia(certificateLink.media, certificateLink) : null,
+    datasheets: technicalLinks.map((link) => mapMedia(link.media, link)),
+    certificates: certificateLinks.map((link) => mapMedia(link.media, link)),
     media: galleryLinks.map((link) => mapMedia(link.media, link)),
     attributes: record.attributes.map(mapProductAttributeRecord),
     createdAt: record.createdAt.toISOString(),
@@ -258,11 +261,13 @@ async function syncSingleProductRelations(
     },
   });
 
-  const technicalMediaId = input.datasheet?.id ?? null;
-  const certificateMediaId = input.certificate?.id ?? null;
+  const documentMediaIds = new Set([
+    ...input.datasheets.map((media) => media.id),
+    ...input.certificates.map((media) => media.id),
+  ]);
   const productMediaLinks = [
     ...input.media
-      .filter((media) => media.id !== technicalMediaId && media.id !== certificateMediaId)
+      .filter((media) => !documentMediaIds.has(media.id))
       .map((media, index) => ({
         productId,
         mediaId: BigInt(media.id),
@@ -271,30 +276,22 @@ async function syncSingleProductRelations(
         altText: media.altText,
         sortOrder: index,
       })),
-    ...(input.datasheet
-      ? [
-          {
-            productId,
-            mediaId: BigInt(input.datasheet.id),
-            role: "TECHNICAL" as const,
-            name: input.datasheet.title ?? "Fiche technique",
-            altText: input.datasheet.altText,
-            sortOrder: 0,
-          },
-        ]
-      : []),
-    ...(input.certificate
-      ? [
-          {
-            productId,
-            mediaId: BigInt(input.certificate.id),
-            role: "CERTIFICATE" as const,
-            name: input.certificate.title ?? "Certificat",
-            altText: input.certificate.altText,
-            sortOrder: 0,
-          },
-        ]
-      : []),
+    ...input.datasheets.map((media, index) => ({
+      productId,
+      mediaId: BigInt(media.id),
+      role: "TECHNICAL" as const,
+      name: media.title,
+      altText: media.altText,
+      sortOrder: index,
+    })),
+    ...input.certificates.map((media, index) => ({
+      productId,
+      mediaId: BigInt(media.id),
+      role: "CERTIFICATE" as const,
+      name: media.title,
+      altText: media.altText,
+      sortOrder: index,
+    })),
   ];
 
   if (productMediaLinks.length > 0) {

@@ -16,7 +16,6 @@ import PanelInput from "@/components/staff/ui/PanelInput";
 import {
   DescriptionSEOTextArea,
   StaffPageHeader,
-  StaffPdfImporter,
   StaffSelect,
   StaffStateCard,
   StaffTagInput,
@@ -110,8 +109,8 @@ function createEmptyFormState(): SingleProductUpsertInput {
     lifecycle: "ACTIVE",
     tags: "",
     subcategoryIds: [],
-    datasheet: null,
-    certificate: null,
+    datasheets: [],
+    certificates: [],
     media: [],
     attributes: [],
   };
@@ -146,8 +145,8 @@ function mapProductToForm(product: SingleProductDetailDto): SingleProductUpsertI
     priceVisibility: product.priceVisibility,
     tags: product.tags,
     subcategoryIds: product.subcategoryIds,
-    datasheet: product.datasheet,
-    certificate: product.certificate,
+    datasheets: product.datasheets,
+    certificates: product.certificates,
     media: product.media,
     attributes: product.attributes,
   };
@@ -857,34 +856,43 @@ function SingleProductEditPageContent() {
       </Panel>
 
       <Panel pretitle="Documentation" title="Documents produit">
-        <div className="grid gap-4 lg:grid-cols-2">
-          <StaffPdfImporter
-            label="Fiche technique"
-            description="Optionnel : associez une fiche technique PDF a ce produit simple."
-            dialogTitle="Ajouter une fiche technique"
-            dialogDescription="Choisissez un PDF existant ou importez-en un nouveau pour ce produit."
-            value={form.datasheet}
-            onChange={(datasheet) =>
+        <div className="space-y-8">
+          <ProductMediaGrid
+            items={form.datasheets}
+            onChange={(datasheets) =>
               setForm((current) => ({
                 ...current,
-                datasheet,
+                datasheets,
               }))
             }
+            title="Fiches techniques"
+            description="Ajoutez une ou plusieurs fiches techniques PDF, puis glissez-les pour definir leur ordre."
+            pickerTitle="Ajouter une fiche technique"
+            pickerDescription="Choisissez un PDF existant ou importez-en un nouveau pour ce produit."
+            addButtonLabel="Ajouter une fiche"
+            addButtonHint="PDF uniquement"
+            mediaKind="DOCUMENT"
+            documentExtensions={["pdf"]}
+            role="TECHNICAL"
           />
 
-          <StaffPdfImporter
-            label="Certificat"
-            description="Optionnel : associez un certificat PDF a ce produit simple."
-            dialogTitle="Ajouter un certificat"
-            dialogDescription="Choisissez un PDF existant ou importez-en un nouveau pour ce produit."
-            value={form.certificate}
-            role="CERTIFICATE"
-            onChange={(certificate) =>
+          <ProductMediaGrid
+            items={form.certificates}
+            onChange={(certificates) =>
               setForm((current) => ({
                 ...current,
-                certificate,
+                certificates,
               }))
             }
+            title="Certificats"
+            description="Ajoutez un ou plusieurs certificats PDF, puis glissez-les pour definir leur ordre."
+            pickerTitle="Ajouter un certificat"
+            pickerDescription="Choisissez un PDF existant ou importez-en un nouveau pour ce produit."
+            addButtonLabel="Ajouter un certificat"
+            addButtonHint="PDF uniquement"
+            mediaKind="DOCUMENT"
+            documentExtensions={["pdf"]}
+            role="CERTIFICATE"
           />
         </div>
       </Panel>

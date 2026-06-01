@@ -97,6 +97,7 @@ const PRODUCT_CARD_SELECT = {
       role: true,
       altText: true,
       name: true,
+      sortOrder: true,
       media: { select: MEDIA_SELECT },
     },
   },
@@ -198,6 +199,7 @@ export type CommerceMedia = {
   altText: string | null;
   title: string | null;
   mimeType: string | null;
+  sortOrder: number;
 };
 
 export type CommerceCategory = {
@@ -289,8 +291,8 @@ export type CommerceVariant = {
   price: string | null;
   stock: CommerceProductCard["stock"];
   images: CommerceMedia[];
-  datasheet: CommerceMedia | null;
-  certificate: CommerceMedia | null;
+  datasheets: CommerceMedia[];
+  certificates: CommerceMedia[];
   attributes: CommerceAttribute[];
   addToCart: {
     id: number;
@@ -400,7 +402,7 @@ function isRenderableMedia(media: {
 
 function mapMedia(
   media: ProductCardRecord["media"][number]["media"] | ProductFamilyRecord["mainImage"],
-  link?: { altText: string | null; name: string | null },
+  link?: { altText: string | null; name: string | null; sortOrder?: number },
 ): CommerceMedia | null {
   if (!media || !isRenderableMedia(media)) {
     return null;
@@ -414,6 +416,7 @@ function mapMedia(
     altText: link?.altText ?? media.altText,
     title: link?.name ?? media.title,
     mimeType: media.mimeType,
+    sortOrder: link?.sortOrder ?? 0,
   };
 }
 
@@ -432,12 +435,14 @@ function firstImage(product: Pick<ProductCardRecord, "media">) {
   return null;
 }
 
-function technicalMedia(
+function documentMedia(
   product: Pick<ProductDetailRecord, "media">,
   role: "TECHNICAL" | "CERTIFICATE",
 ) {
-  const link = product.media.find((entry) => entry.role === role);
-  return link ? mapMedia(link.media, link) : null;
+  return product.media
+    .filter((entry) => entry.role === role)
+    .map((link) => mapMedia(link.media, link))
+    .filter((media): media is CommerceMedia => media != null);
 }
 
 function gallery(product: Pick<ProductCardRecord, "media">) {
@@ -1619,8 +1624,8 @@ function mapVariant(record: ProductDetailRecord): CommerceVariant {
     price,
     stock: mapStock(record),
     images,
-    datasheet: technicalMedia(record, "TECHNICAL"),
-    certificate: technicalMedia(record, "CERTIFICATE"),
+    datasheets: documentMedia(record, "TECHNICAL"),
+    certificates: documentMedia(record, "CERTIFICATE"),
     attributes: record.attributes.map(mapAttribute),
     addToCart: {
       id: Number(record.id),

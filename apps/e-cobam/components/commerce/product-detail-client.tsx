@@ -154,6 +154,19 @@ function DocumentAction({
   );
 }
 
+function getDocumentLabel(
+  document: { title: string | null },
+  fallback: string,
+  index: number,
+  total: number,
+) {
+  if (document.title) {
+    return document.title;
+  }
+
+  return total > 1 ? `${fallback} ${index + 1}` : fallback;
+}
+
 function PriceText({ value }: { value: string | null }) {
   const formatted = formatPriceTnd(value);
 
@@ -517,7 +530,8 @@ export function ProductDetailClient({ product }: { product: CommerceProductDetai
   } as const;
   const hasLowerContent =
     groupedAttributes.length > 0 || selectedVariant.summary || selectedVariant.description;
-  const hasDocuments = Boolean(selectedVariant.datasheet?.url || selectedVariant.certificate?.url);
+  const hasDocuments =
+    selectedVariant.datasheets.length > 0 || selectedVariant.certificates.length > 0;
 
   function selectVariant(variantId: number) {
     setSelectedVariantId(variantId);
@@ -594,25 +608,37 @@ export function ProductDetailClient({ product }: { product: CommerceProductDetai
             <div
               className={cn(
                 "grid gap-3 lg:col-start-2 lg:row-start-4",
-                selectedVariant.datasheet?.url && selectedVariant.certificate?.url
+                selectedVariant.datasheets.length + selectedVariant.certificates.length > 1
                   ? "sm:grid-cols-2"
                   : "grid-cols-1",
               )}
             >
-              {selectedVariant.datasheet?.url ? (
+              {selectedVariant.datasheets.map((datasheet, index) => (
                 <DocumentAction
-                  href={selectedVariant.datasheet.url}
+                  key={`datasheet-${datasheet.id}`}
+                  href={datasheet.url}
                   icon={<Download className="text-ec-blue/70 size-4 shrink-0" />}
-                  label="Fiche technique"
+                  label={getDocumentLabel(
+                    datasheet,
+                    "Fiche technique",
+                    index,
+                    selectedVariant.datasheets.length,
+                  )}
                 />
-              ) : null}
-              {selectedVariant.certificate?.url ? (
+              ))}
+              {selectedVariant.certificates.map((certificate, index) => (
                 <DocumentAction
-                  href={selectedVariant.certificate.url}
+                  key={`certificate-${certificate.id}`}
+                  href={certificate.url}
                   icon={<FileBadge className="text-ec-blue/70 size-4 shrink-0" />}
-                  label="Certificat"
+                  label={getDocumentLabel(
+                    certificate,
+                    "Certificat",
+                    index,
+                    selectedVariant.certificates.length,
+                  )}
                 />
-              ) : null}
+              ))}
             </div>
           ) : null}
           </div>

@@ -190,7 +190,7 @@
           - generic [ref=e235]:
             - img [ref=e236]
             - heading "Accompagnement COBAM" [level=3] [ref=e238]
-            - paragraph [ref=e239]: Disponibilite, showroom et recommandations techniques a confirmer avec nos equipes.
+            - paragraph [ref=e239]: Disponibilité, showroom et recommandations techniques a confirmer avec nos equipes.
             - button "Demander un devis" [ref=e241] [cursor=pointer]:
               - generic [ref=e242]: Demander un devis
   - contentinfo [ref=e243]:

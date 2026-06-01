@@ -161,6 +161,45 @@ function parseOptionalBoolean(value: unknown, fallback = false) {
   return String(value).toLowerCase() === "true";
 }
 
+function parseMediaEntry(
+  entry: unknown,
+  role: ProductVariantInputDto["media"][number]["role"],
+  fieldName: string,
+  fallbackKind: ProductVariantInputDto["media"][number]["kind"],
+  sortOrder: number,
+) {
+  if (!entry || typeof entry !== "object") {
+    throw new ProductValidationError(`${fieldName} invalide.`);
+  }
+
+  const mediaRecord = entry as Record<string, unknown>;
+  const parsedId = Number(mediaRecord.id);
+  if (!Number.isInteger(parsedId) || parsedId <= 0) {
+    throw new ProductValidationError(`Identifiant de ${fieldName.toLowerCase()} invalide.`);
+  }
+
+  return {
+    id: parsedId,
+    role,
+    kind:
+      "kind" in mediaRecord
+        ? (String(mediaRecord.kind) as ProductVariantInputDto["media"][number]["kind"])
+        : fallbackKind,
+    title: parseOptionalString(mediaRecord.title),
+    originalFilename: parseOptionalString(mediaRecord.originalFilename),
+    mimeType: parseOptionalString(mediaRecord.mimeType),
+    altText: parseOptionalString(mediaRecord.altText),
+    sortOrder,
+    widthPx: mediaRecord.widthPx == null ? null : Number(mediaRecord.widthPx),
+    heightPx: mediaRecord.heightPx == null ? null : Number(mediaRecord.heightPx),
+    durationSeconds:
+      mediaRecord.durationSeconds == null ? null : String(mediaRecord.durationSeconds),
+    sizeBytes: mediaRecord.sizeBytes == null ? null : String(mediaRecord.sizeBytes),
+    url: typeof mediaRecord.url === "string" ? mediaRecord.url : "",
+    thumbnailUrl: typeof mediaRecord.thumbnailUrl === "string" ? mediaRecord.thumbnailUrl : null,
+  };
+}
+
 function parseVariant(input: unknown): ProductVariantInputDto {
   if (!input || typeof input !== "object") {
     throw new ProductValidationError("Variante invalide.");
@@ -169,23 +208,16 @@ function parseVariant(input: unknown): ProductVariantInputDto {
   const record = input as Record<string, unknown>;
   const media = Array.isArray(record.media) ? record.media : [];
   const attributes = Array.isArray(record.attributes) ? record.attributes : [];
-  const datasheet =
-    record.datasheet != null && typeof record.datasheet === "object"
-      ? (record.datasheet as Record<string, unknown>)
-      : null;
-  const certificate =
-    record.certificate != null && typeof record.certificate === "object"
-      ? (record.certificate as Record<string, unknown>)
-      : null;
-  if (
-    datasheet != null &&
-    certificate != null &&
-    Number(datasheet.id) === Number(certificate.id)
-  ) {
-    throw new ProductValidationError(
-      "La fiche technique et le certificat doivent utiliser deux fichiers differents.",
-    );
-  }
+  const datasheets = Array.isArray(record.datasheets)
+    ? record.datasheets
+    : record.datasheet != null
+      ? [record.datasheet]
+      : [];
+  const certificates = Array.isArray(record.certificates)
+    ? record.certificates
+    : record.certificate != null
+      ? [record.certificate]
+      : [];
 
   const parsedAttributes = attributes.map((entry, index) => {
     if (!entry || typeof entry !== "object") {
@@ -254,7 +286,7 @@ function parseVariant(input: unknown): ProductVariantInputDto {
   const visibleEcommerce = parseOptionalBoolean(record.visibleEcommerce, defaultVisible);
   const visibleVitrine = parseOptionalBoolean(record.visibleVitrine, defaultVisible);
 
-  return {
+  const parsedVariant: ProductVariantInputDto = {
     id:
       record.id == null
         ? undefined
@@ -311,100 +343,30 @@ function parseVariant(input: unknown): ProductVariantInputDto {
       Array.isArray(record.subcategoryIds) ? record.subcategoryIds : [],
       "variant.subcategoryIds",
     ),
-    datasheet:
-      datasheet == null
-        ? null
-        : (() => {
-            const parsedId = Number(datasheet.id);
-            if (!Number.isInteger(parsedId) || parsedId <= 0) {
-              throw new ProductValidationError("Identifiant de fiche technique invalide.");
-            }
-
-            return {
-              id: parsedId,
-              role: "TECHNICAL",
-              kind:
-                "kind" in datasheet
-                  ? (String(datasheet.kind) as ProductVariantInputDto["media"][number]["kind"])
-                  : "DOCUMENT",
-              title: parseOptionalString(datasheet.title),
-              originalFilename: parseOptionalString(datasheet.originalFilename),
-              mimeType: parseOptionalString(datasheet.mimeType),
-              altText: parseOptionalString(datasheet.altText),
-              widthPx: datasheet.widthPx == null ? null : Number(datasheet.widthPx),
-              heightPx: datasheet.heightPx == null ? null : Number(datasheet.heightPx),
-              durationSeconds:
-                datasheet.durationSeconds == null ? null : String(datasheet.durationSeconds),
-              sizeBytes: datasheet.sizeBytes == null ? null : String(datasheet.sizeBytes),
-              url: typeof datasheet.url === "string" ? datasheet.url : "",
-              thumbnailUrl:
-                typeof datasheet.thumbnailUrl === "string" ? datasheet.thumbnailUrl : null,
-            };
-          })(),
-    certificate:
-      certificate == null
-        ? null
-        : (() => {
-            const parsedId = Number(certificate.id);
-            if (!Number.isInteger(parsedId) || parsedId <= 0) {
-              throw new ProductValidationError("Identifiant de certificat invalide.");
-            }
-
-            return {
-              id: parsedId,
-              role: "CERTIFICATE",
-              kind:
-                "kind" in certificate
-                  ? (String(certificate.kind) as ProductVariantInputDto["media"][number]["kind"])
-                  : "DOCUMENT",
-              title: parseOptionalString(certificate.title),
-              originalFilename: parseOptionalString(certificate.originalFilename),
-              mimeType: parseOptionalString(certificate.mimeType),
-              altText: parseOptionalString(certificate.altText),
-              widthPx: certificate.widthPx == null ? null : Number(certificate.widthPx),
-              heightPx: certificate.heightPx == null ? null : Number(certificate.heightPx),
-              durationSeconds:
-                certificate.durationSeconds == null ? null : String(certificate.durationSeconds),
-              sizeBytes: certificate.sizeBytes == null ? null : String(certificate.sizeBytes),
-              url: typeof certificate.url === "string" ? certificate.url : "",
-              thumbnailUrl:
-                typeof certificate.thumbnailUrl === "string" ? certificate.thumbnailUrl : null,
-            };
-          })(),
-    media: media.map((entry) => {
-      if (!entry || typeof entry !== "object") {
-        throw new ProductValidationError("Media de variante invalide.");
-      }
-
-      const mediaRecord = entry as Record<string, unknown>;
-      const parsedId = Number(mediaRecord.id);
-      if (!Number.isInteger(parsedId) || parsedId <= 0) {
-        throw new ProductValidationError("Identifiant de média invalide.");
-      }
-
-      return {
-        id: parsedId,
-        role: "GALLERY",
-        kind:
-          "kind" in mediaRecord
-            ? (String(mediaRecord.kind) as ProductVariantInputDto["media"][number]["kind"])
-            : "IMAGE",
-        title: parseOptionalString(mediaRecord.title),
-        originalFilename: parseOptionalString(mediaRecord.originalFilename),
-        mimeType: parseOptionalString(mediaRecord.mimeType),
-        altText: parseOptionalString(mediaRecord.altText),
-        widthPx: mediaRecord.widthPx == null ? null : Number(mediaRecord.widthPx),
-        heightPx: mediaRecord.heightPx == null ? null : Number(mediaRecord.heightPx),
-        durationSeconds:
-          mediaRecord.durationSeconds == null ? null : String(mediaRecord.durationSeconds),
-        sizeBytes: mediaRecord.sizeBytes == null ? null : String(mediaRecord.sizeBytes),
-        url: typeof mediaRecord.url === "string" ? mediaRecord.url : "",
-        thumbnailUrl:
-          typeof mediaRecord.thumbnailUrl === "string" ? mediaRecord.thumbnailUrl : null,
-      };
-    }),
+    datasheets: datasheets.map((entry, index) =>
+      parseMediaEntry(entry, "TECHNICAL", "Fiche technique", "DOCUMENT", index),
+    ),
+    certificates: certificates.map((entry, index) =>
+      parseMediaEntry(entry, "CERTIFICATE", "Certificat", "DOCUMENT", index),
+    ),
+    media: media.map((entry, index) =>
+      parseMediaEntry(entry, "GALLERY", "Media de variante", "IMAGE", index),
+    ),
     attributes: parsedAttributes,
   };
+
+  const mediaIds = [
+    ...parsedVariant.media.map((entry) => entry.id),
+    ...parsedVariant.datasheets.map((entry) => entry.id),
+    ...parsedVariant.certificates.map((entry) => entry.id),
+  ];
+  if (new Set(mediaIds).size !== mediaIds.length) {
+    throw new ProductValidationError(
+      "Un meme media ne peut pas etre utilise plusieurs fois sur le meme produit.",
+    );
+  }
+
+  return parsedVariant;
 }
 
 export function parseProductListQuery(searchParams: URLSearchParams) {

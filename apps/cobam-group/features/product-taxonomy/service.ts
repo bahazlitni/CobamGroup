@@ -73,6 +73,7 @@ function mapMedia(
     originalFilename: media.originalFilename,
     mimeType: media.mimeType,
     altText: media.altText,
+    sortOrder: 0,
     widthPx: media.widthPx,
     heightPx: media.heightPx,
     durationSeconds: media.durationSeconds?.toString() ?? null,

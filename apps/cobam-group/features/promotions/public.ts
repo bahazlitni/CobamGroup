@@ -42,6 +42,30 @@ export type PublicPromotionScope = {
   isGlobal: boolean;
 };
 
+function isPromotionReadUnavailable(error: unknown) {
+  const record = error as { code?: string; message?: string } | null;
+  const message = record?.message ?? "";
+
+  return (
+    record?.code === "P1010" ||
+    record?.code === "P2021" ||
+    message.includes("denied access") ||
+    message.includes("does not exist")
+  );
+}
+
+function warnPromotionReadUnavailable(scope: string, error: unknown) {
+  if (!isPromotionReadUnavailable(error)) {
+    return false;
+  }
+
+  console.warn(
+    `[promotions] ${scope} indisponible: les promotions publiques sont masquees pour cette requete.`,
+    error,
+  );
+  return true;
+}
+
 const PROMOTION_PRODUCT_CARD_SELECT = {
   id: true,
   slug: true,
@@ -461,45 +485,72 @@ function mapPromotion(
 }
 
 export async function hasPublicActivePromotions() {
-  const promotions = await prisma.commercePromotion.findMany({
-    where: activePublicPromotionWhere(),
-    select: {
-      products: { select: { productId: true } },
-      categories: { select: { categoryId: true } },
-      brands: { select: { brandId: true } },
-    },
-  });
+  try {
+    const promotions = await prisma.commercePromotion.findMany({
+      where: activePublicPromotionWhere(),
+      select: {
+        products: { select: { productId: true } },
+        categories: { select: { categoryId: true } },
+        brands: { select: { brandId: true } },
+      },
+    });
 
-  const productCounts = await Promise.all(
-    promotions.map((promotion) =>
-      countConcernedProducts({
-        productIds: promotion.products.map((link) => link.productId),
-        categoryIds: promotion.categories.map((link) => link.categoryId),
-        brandIds: promotion.brands.map((link) => link.brandId),
-      }),
-    ),
-  );
+    const productCounts = await Promise.all(
+      promotions.map((promotion) =>
+        countConcernedProducts({
+          productIds: promotion.products.map((link) => link.productId),
+          categoryIds: promotion.categories.map((link) => link.categoryId),
+          brandIds: promotion.brands.map((link) => link.brandId),
+        }),
+      ),
+    );
 
-  return productCounts.some((count) => count > 0);
+    return productCounts.some((count) => count > 0);
+  } catch (error) {
+    if (warnPromotionReadUnavailable("Indicateur navbar", error)) {
+      return false;
+    }
+
+    throw error;
+  }
 }
 
 export async function resolvePublicPromotionScopeBySlug(
   slug: string,
 ): Promise<PublicPromotionScope | null> {
-  const promotion = await prisma.commercePromotion.findFirst({
-    where: {
-      ...activePublicPromotionWhere(),
-      slug,
-    },
-    select: {
-      id: true,
-      slug: true,
-      displayName: true,
-      products: { select: { productId: true } },
-      categories: { select: { categoryId: true } },
-      brands: { select: { brandId: true } },
-    },
-  });
+  let promotion:
+    | {
+        id: bigint;
+        slug: string;
+        displayName: string;
+        products: { productId: bigint }[];
+        categories: { categoryId: bigint }[];
+        brands: { brandId: bigint }[];
+      }
+    | null;
+
+  try {
+    promotion = await prisma.commercePromotion.findFirst({
+      where: {
+        ...activePublicPromotionWhere(),
+        slug,
+      },
+      select: {
+        id: true,
+        slug: true,
+        displayName: true,
+        products: { select: { productId: true } },
+        categories: { select: { categoryId: true } },
+        brands: { select: { brandId: true } },
+      },
+    });
+  } catch (error) {
+    if (warnPromotionReadUnavailable("Resolution promotion", error)) {
+      return null;
+    }
+
+    throw error;
+  }
 
   if (!promotion) {
     return null;
@@ -544,27 +595,43 @@ export async function findPublicPromotionSummaryBySlug(slug: string) {
 }
 
 export async function listPublicPromotions(): Promise<PublicPromotion[]> {
-  const promotions = await prisma.commercePromotion.findMany({
-    where: activePublicPromotionWhere(),
-    orderBy: [{ startsAt: "desc" }, { createdAt: "desc" }],
-    take: 80,
-    select: PROMOTION_PUBLIC_SELECT,
-  });
+  try {
+    const promotions = await prisma.commercePromotion.findMany({
+      where: activePublicPromotionWhere(),
+      orderBy: [{ startsAt: "desc" }, { createdAt: "desc" }],
+      take: 80,
+      select: PROMOTION_PUBLIC_SELECT,
+    });
 
-  return mapVisiblePublicPromotions(promotions);
+    return mapVisiblePublicPromotions(promotions);
+  } catch (error) {
+    if (warnPromotionReadUnavailable("Liste promotions", error)) {
+      return [];
+    }
+
+    throw error;
+  }
 }
 
 export async function listPublicPromotionBanners() {
-  const promotions = await prisma.commercePromotion.findMany({
-    where: {
-      ...activePublicPromotionWhere(),
-      bannerMediaId: { not: null },
-    },
-    orderBy: [{ startsAt: "desc" }, { createdAt: "desc" }],
-    select: PROMOTION_PUBLIC_SELECT,
-  });
+  try {
+    const promotions = await prisma.commercePromotion.findMany({
+      where: {
+        ...activePublicPromotionWhere(),
+        bannerMediaId: { not: null },
+      },
+      orderBy: [{ startsAt: "desc" }, { createdAt: "desc" }],
+      select: PROMOTION_PUBLIC_SELECT,
+    });
 
-  const visiblePromotions = await mapVisiblePublicPromotions(promotions);
+    const visiblePromotions = await mapVisiblePublicPromotions(promotions);
 
-  return visiblePromotions.filter((promotion) => promotion.bannerImageUrl);
+    return visiblePromotions.filter((promotion) => promotion.bannerImageUrl);
+  } catch (error) {
+    if (warnPromotionReadUnavailable("Bannieres promotions", error)) {
+      return [];
+    }
+
+    throw error;
+  }
 }

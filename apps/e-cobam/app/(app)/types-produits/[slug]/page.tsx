@@ -346,7 +346,7 @@ export default async function ProductTypePage({ params, searchParams }: ProductT
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Filter className="size-4 text-ec-blue" />
-                Disponibilite
+                Disponibilité
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
