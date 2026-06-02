@@ -1,14 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import {
-  File,
-  FileText,
-  GripVertical,
-  Pencil,
-  Trash2,
-  Video,
-} from "lucide-react";
+import { File, FileText, GripVertical, Pencil, Trash2, Video } from "lucide-react";
+import { StaffBadge } from "@/components/staff/ui";
 import { useMediaObjectUrl } from "@/features/media/hooks/use-media-object-url";
 import type { ProductMediaDto } from "@/features/products/types";
 import { cn } from "@/lib/utils";
@@ -49,10 +43,7 @@ export default function ProductMediaTile({
   onDrop: () => void;
   onDragEnd: () => void;
 }) {
-  const { objectUrl } = useMediaObjectUrl(
-    media.kind === "IMAGE" ? media.id : null,
-    "thumbnail",
-  );
+  const { objectUrl } = useMediaObjectUrl(media.kind === "IMAGE" ? media.id : null, "thumbnail");
 
   return (
     <div
@@ -83,7 +74,7 @@ export default function ProductMediaTile({
       onDragEnd={onDragEnd}
       className={cn(
         "group relative overflow-hidden rounded-3xl border border-slate-300 bg-white shadow-sm transition",
-        isDragOver ? "border-cobam-water-blue ring-2 ring-cobam-water-blue/20" : "",
+        isDragOver ? "border-cobam-water-blue ring-cobam-water-blue/20 ring-2" : "",
         isDragging ? "scale-[0.98] opacity-70" : "hover:border-slate-300",
       )}
     >
@@ -105,7 +96,7 @@ export default function ProductMediaTile({
         <button
           type="button"
           onClick={onEdit}
-          className="absolute left-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-slate-500 shadow-sm transition hover:bg-cobam-water-blue/10 hover:text-cobam-water-blue"
+          className="hover:bg-cobam-water-blue/10 hover:text-cobam-water-blue absolute top-2 left-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-slate-500 shadow-sm transition"
           aria-label={`Modifier ${getMediaLabel(media)}`}
         >
           <Pencil className="h-4 w-4" />
@@ -114,7 +105,7 @@ export default function ProductMediaTile({
         <button
           type="button"
           onClick={onRemove}
-          className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-slate-500 shadow-sm transition hover:bg-red-50 hover:text-red-600"
+          className="absolute top-2 right-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-slate-500 shadow-sm transition hover:bg-red-50 hover:text-red-600"
           aria-label={`Retirer ${getMediaLabel(media)}`}
         >
           <Trash2 className="h-4 w-4" />
@@ -127,9 +118,14 @@ export default function ProductMediaTile({
       </div>
 
       <div className="space-y-1 px-3 py-3">
-        <p className="truncate text-sm font-semibold text-cobam-dark-blue">
-          {getMediaLabel(media)}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-cobam-dark-blue min-w-0 truncate text-sm font-semibold">
+            {getMediaLabel(media)}
+          </p>
+          <StaffBadge size="xs" color="secondary" title={`ID media ${media.id}`}>
+            ID #{media.id}
+          </StaffBadge>
+        </div>
         <p className="truncate text-xs text-slate-500">
           {media.originalFilename || `${media.kind.toLowerCase()} #${media.id}`}
         </p>
