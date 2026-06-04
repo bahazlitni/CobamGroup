@@ -79,11 +79,19 @@ const SUMMARY_ATTRIBUTE_IDS = new Set([
   "largeur_de_joint",
 ]);
 
-function attrKey(attribute: PublicProductInspectorAttribute) {
-  return normalizeComparableValue(attribute.attributeId || attribute.kind || attribute.name).replace(
-    /\s+/g,
-    "_",
-  );
+function attributeKeys(attribute: PublicProductInspectorAttribute) {
+  return [
+    attribute.attributeId,
+    attribute.kind,
+    attribute.name,
+    attribute.groupName,
+  ]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => normalizeComparableValue(value).replace(/\s+/g, "_"));
+}
+
+function isSummaryAttribute(attribute: PublicProductInspectorAttribute) {
+  return attributeKeys(attribute).some((key) => SUMMARY_ATTRIBUTE_IDS.has(key));
 }
 
 function findAttribute(
@@ -94,13 +102,7 @@ function findAttribute(
 
   return (
     attributes.find((attribute) => {
-      const normalizedKeys = [
-        attrKey(attribute),
-        normalizeComparableValue(attribute.name).replace(/\s+/g, "_"),
-        normalizeComparableValue(attribute.kind).replace(/\s+/g, "_"),
-      ];
-
-      return normalizedKeys.some((key) => wanted.has(key));
+      return attributeKeys(attribute).some((key) => wanted.has(key));
     }) ?? null
   );
 }
@@ -394,17 +396,14 @@ function RelatedProductsSection({
         nextButtonLabel="Produits proches suivants"
       >
         {products.map((item) => (
-          <div
-            key={`${item.product.entityType}-${item.product.id}-${item.category.slug}-${item.subcategory.slug}`}
-            className="relative h-full"
-          >
-            <div className="pointer-events-none absolute right-3 top-3 z-10 rounded-full border border-white/70 bg-white/85 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-cobam-dark-blue backdrop-blur">
-              Score {item.relationshipScore}
-            </div>
-            <PublicProductCard
-              product={item.product}
-              href={buildRelatedProductHref(item)}
-              themeColor={item.category.themeColor}
+              <div
+                key={`${item.product.entityType}-${item.product.id}-${item.category.slug}-${item.subcategory.slug}`}
+                className="relative h-full"
+              >
+                <PublicProductCard
+                  product={item.product}
+                  href={buildRelatedProductHref(item)}
+                  themeColor={item.category.themeColor}
             />
           </div>
         ))}
@@ -523,7 +522,7 @@ export default function PublicProductInspectorView({
     ...summaryRows,
     jointWidthAttr ? { label: "Largeur de joint", value: formatAttributeValue(jointWidthAttr) } : null,
     ...normalAttributes
-      .filter((attribute) => !SUMMARY_ATTRIBUTE_IDS.has(attrKey(attribute)))
+      .filter((attribute) => !isSummaryAttribute(attribute))
       .map((attribute) => ({
         label: attribute.name,
         value: formatAttributeValue(attribute),

@@ -27,6 +27,8 @@ export default function ProductCard({
       href={href}
       className={cn("group block h-full", className)}
       aria-label={`Voir le produit ${product.name}`}
+      draggable={false}
+      onDragStart={(event) => event.preventDefault()}
     >
       <article className="flex flex-col h-full gap-5">
         {/* Image Container - Clean, softly rounded */}
@@ -38,6 +40,7 @@ export default function ProductCard({
               fill
               className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              draggable={false}
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-[10px] font-bold uppercase tracking-widest text-cobam-quill-grey">
