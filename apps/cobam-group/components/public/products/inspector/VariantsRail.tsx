@@ -80,7 +80,7 @@ function VariantRailCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "w-[78vw] max-w-[17rem] min-w-[14rem] shrink-0 snap-start overflow-hidden rounded-[1.4rem] border bg-white text-left shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobam-water-blue/40 sm:w-64",
+        "w-[78vw] max-w-[17rem] min-w-[14rem] shrink-0 snap-start overflow-hidden rounded-[1.4rem] border bg-white text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobam-water-blue/40 sm:w-64",
         isActive
           ? "border-cobam-dark-blue ring-2 ring-cobam-dark-blue/10"
           : "border-slate-200 hover:border-slate-300",
@@ -103,7 +103,7 @@ function VariantRailCard({
           ) : null}
         </div>
         <p className="line-clamp-2 min-h-12 text-base font-semibold leading-6 text-cobam-dark-blue">
-          {variant.name}
+          {variant.displayName}
         </p>
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
           SKU {variant.sku}

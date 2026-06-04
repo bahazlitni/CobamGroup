@@ -1,0 +1,15 @@
+⨯ Another next dev server is already running.
+
+- Local:        http://localhost:3000
+- PID:          2556
+- Dir:          C:\dev\CobamGroup\apps\cobam-group
+- Log:          .next\dev\logs\next-development.log
+
+Run taskkill /PID 2556 /F to stop it.
+npm error Lifecycle script `dev` failed with error:
+npm error code 1
+npm error path C:\dev\CobamGroup\apps\cobam-group
+npm error workspace @cobam/cobam-group@0.1.0
+npm error location C:\dev\CobamGroup\apps\cobam-group
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c next dev -p 3001

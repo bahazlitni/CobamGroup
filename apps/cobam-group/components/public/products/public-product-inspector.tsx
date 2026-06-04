@@ -4,10 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import {
   CheckCircle2,
-  ClipboardCheck,
   ChevronRight,
   FileText,
-  FolderTree,
   Info,
   MessageSquareText,
   Ruler,
@@ -40,8 +38,11 @@ import ProductDevisDialog from "./inspector/ProductDevisDialog";
 import BrandTooltip from "./inspector/BrandTooltip";
 import BreadCrumb from "./inspector/BreadCrumb";
 import VariantRail from "./inspector/VariantsRail";
+import PublicProductCard from "./public-product-card";
+import RailCarousel from "@/components/ui/custom/RailCarousel";
 import type {
   PublicProductInspectorAttribute,
+  PublicRelatedProductItem,
   PublicProductSubcategoryLink,
   PublicProductInspectorVariant,
 } from "@/features/products/types";
@@ -70,9 +71,12 @@ const SUMMARY_ATTRIBUTE_IDS = new Set([
   "color_code",
   "packaging_weight_kg",
   "product_range",
+  "gamme",
   "ready_to_use",
   "waterproof",
+  "etanche",
   "joint_width_mm",
+  "largeur_de_joint",
 ]);
 
 function attrKey(attribute: PublicProductInspectorAttribute) {
@@ -224,9 +228,9 @@ function TechnicalRows({ rows }: { rows: DetailRow[] }) {
 
   return (
     <dl className="divide-y divide-cobam-quill-grey/30 rounded-[1.35rem] border border-cobam-quill-grey/35 bg-white">
-      {rows.map((row) => (
+      {rows.map((row, index) => (
         <div
-          key={`${row.label}-${row.value}`}
+          key={`${row.label}-${row.value}-${index}`}
           className="grid gap-2 px-4 py-4 sm:grid-cols-[15rem_1fr] sm:px-5"
         >
           <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
@@ -290,36 +294,7 @@ function VariantOptionSelector({
   );
 }
 
-function groupSubcategoriesByCategory(subcategories: PublicProductSubcategoryLink[]) {
-  const groups = new Map<
-    string,
-    {
-      categoryName: string;
-      categorySlug: string;
-      subcategories: PublicProductSubcategoryLink[];
-    }
-  >();
-
-  for (const subcategory of subcategories) {
-    const key = subcategory.categorySlug;
-    const current = groups.get(key);
-
-    if (current) {
-      current.subcategories.push(subcategory);
-      continue;
-    }
-
-    groups.set(key, {
-      categoryName: subcategory.categoryName,
-      categorySlug: subcategory.categorySlug,
-      subcategories: [subcategory],
-    });
-  }
-
-  return [...groups.values()];
-}
-
-function CatalogContextSection({
+function CatalogBreadcrumbs({
   subcategories,
 }: {
   subcategories: PublicProductSubcategoryLink[];
@@ -328,56 +303,112 @@ function CatalogContextSection({
     return null;
   }
 
-  const groups = groupSubcategoriesByCategory(subcategories);
-
   return (
-    <section className="rounded-[1.6rem] border border-cobam-quill-grey/35 bg-white p-5 shadow-sm">
-      <div className="flex items-start gap-3">
-        <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-slate-50 text-cobam-water-blue">
-          <FolderTree className="size-5" aria-hidden="true" />
-        </span>
-        <div>
-          <h2 className="text-xl font-semibold tracking-[-0.03em] text-cobam-dark-blue">
-            Parcours catalogue
-          </h2>
-          <p className="mt-1 text-sm leading-6 text-slate-500">
-            Catégories et sous-catégories où ce produit apparaît dans le catalogue COBAM.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-5 space-y-4">
-        {groups.map((group) => (
-          <div
-            key={group.categorySlug}
-            className="rounded-[1.15rem] border border-cobam-quill-grey/30 bg-slate-50 p-4"
+    <section className="rounded-[1.35rem] border border-cobam-quill-grey/35 bg-white p-4">
+      <div className="space-y-2">
+        {subcategories.map((subcategory) => (
+          <nav
+            key={`${subcategory.categorySlug}-${subcategory.slug}`}
+            aria-label={`Catalogue ${subcategory.categoryName} ${subcategory.name}`}
           >
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              <Link
-                href={`/produits/${group.categorySlug}`}
-                className="font-semibold text-cobam-dark-blue transition hover:text-cobam-water-blue"
-              >
-                {group.categoryName}
-              </Link>
-              <ChevronRight className="size-4 text-slate-300" aria-hidden="true" />
-              <span className="text-slate-500">
-                {group.subcategories.length > 1 ? "Sous-catégories" : "Sous-catégorie"}
-              </span>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {group.subcategories.map((subcategory) => (
+            <ol className="flex flex-wrap items-center gap-2 text-sm">
+              <li>
                 <Link
-                  key={`${subcategory.categorySlug}-${subcategory.slug}`}
+                  href="/produits"
+                  className="font-semibold text-slate-500 transition hover:text-cobam-water-blue"
+                >
+                  Produits
+                </Link>
+              </li>
+              <li>
+                <ChevronRight className="size-4 text-slate-300" aria-hidden="true" />
+              </li>
+              <li>
+                <Link
+                  href={`/produits/${subcategory.categorySlug}`}
+                  className="font-semibold text-cobam-dark-blue transition hover:text-cobam-water-blue"
+                >
+                  {subcategory.categoryName}
+                </Link>
+              </li>
+              <li>
+                <ChevronRight className="size-4 text-slate-300" aria-hidden="true" />
+              </li>
+              <li>
+                <Link
                   href={`/produits/${subcategory.categorySlug}/${subcategory.slug}`}
-                  className="rounded-full border border-cobam-quill-grey/35 bg-white px-3 py-1.5 text-xs font-semibold text-cobam-dark-blue transition hover:border-cobam-water-blue hover:text-cobam-water-blue"
+                  className="font-semibold text-cobam-water-blue transition hover:text-cobam-dark-blue"
                 >
                   {subcategory.name}
                 </Link>
-              ))}
-            </div>
-          </div>
+              </li>
+            </ol>
+          </nav>
         ))}
       </div>
+    </section>
+  );
+}
+
+function buildRelatedProductHref(item: PublicRelatedProductItem) {
+  if (item.product.entityType === "FAMILY") {
+    return `/produits/${item.category.slug}/${item.subcategory.slug}/famille/${item.product.slug}`;
+  }
+
+  return `/produits/${item.category.slug}/${item.subcategory.slug}/${item.product.slug}`;
+}
+
+function RelatedProductsSection({
+  products,
+}: {
+  products: PublicRelatedProductItem[];
+}) {
+  if (products.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="space-y-5 border-t border-cobam-quill-grey/35 pt-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+            Experimental
+          </p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-[-0.03em] text-cobam-dark-blue">
+            Produits proches
+          </h2>
+        </div>
+      </div>
+
+      <RailCarousel
+        autoScroll={false}
+        showButtons="on-hover"
+        allowDrag={true}
+        applyPhysics={true}
+        modularScroll={false}
+        className="-mx-2 px-2"
+        viewportClassName="p-2 pb-4 pr-1"
+        trackClassName="gap-5"
+        itemClassName="w-[min(82vw,18rem)] sm:w-72 lg:w-80"
+        previousButtonLabel="Produits proches precedents"
+        nextButtonLabel="Produits proches suivants"
+      >
+        {products.map((item) => (
+          <div
+            key={`${item.product.entityType}-${item.product.id}-${item.category.slug}-${item.subcategory.slug}`}
+            className="relative h-full"
+          >
+            <div className="pointer-events-none absolute right-3 top-3 z-10 rounded-full border border-white/70 bg-white/85 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-cobam-dark-blue backdrop-blur">
+              Score {item.relationshipScore}
+            </div>
+            <PublicProductCard
+              product={item.product}
+              href={buildRelatedProductHref(item)}
+              themeColor={item.category.themeColor}
+            />
+          </div>
+        ))}
+      </RailCarousel>
     </section>
   );
 }
@@ -385,6 +416,7 @@ function CatalogContextSection({
 export default function PublicProductInspectorView({
   product,
   breadcrumb,
+  relatedProducts = [],
 }: PublicProductInspectorViewProps) {
   const normalizedProduct = normalizeInspectorProduct(product);
   const [selectedVariantId, setSelectedVariantId] = useState<number | null>(null);
@@ -567,7 +599,7 @@ export default function PublicProductInspectorView({
           />
 
           <div className="space-y-7">
-            <header className="rounded-[2rem] border border-cobam-quill-grey/35 bg-white p-5 shadow-[0_24px_80px_rgba(20,32,46,0.06)] sm:p-7">
+            <header className="rounded-[2rem] border border-cobam-quill-grey/35 bg-white p-5 sm:p-7">
               <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
                 <BrandTooltip brand={normalizedProduct.brand} />
                 <div className="inline-flex items-center gap-3">
@@ -588,11 +620,6 @@ export default function PublicProductInspectorView({
               </div>
 
               <div className="mt-6 space-y-3">
-                {brandName ? (
-                  <p className="text-sm font-semibold uppercase tracking-[0.24em] text-cobam-water-blue">
-                    {brandName}
-                  </p>
-                ) : null}
                 <h1 className="max-w-4xl text-4xl font-semibold tracking-[-0.055em] text-cobam-dark-blue sm:text-5xl lg:text-[4rem] lg:leading-[0.95]">
                   {displayTitle}
                 </h1>
@@ -604,17 +631,6 @@ export default function PublicProductInspectorView({
                     {variantSummary.join(" - ")}
                   </p>
                 ) : null}
-              </div>
-
-              <div className="mt-6 flex flex-wrap gap-2">
-                {summaryRows.slice(0, 4).map((row) => (
-                  <span
-                    key={`${row.label}-${row.value}`}
-                    className="rounded-full border border-cobam-quill-grey/35 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-cobam-dark-blue"
-                  >
-                    {row.value}
-                  </span>
-                ))}
               </div>
 
               <div className="flex gap-3 flex-wrap items-center mt-7 rounded-[1.35rem] border border-slate-200 bg-slate-50 p-4">
@@ -663,23 +679,11 @@ export default function PublicProductInspectorView({
               ))}
             </div>
 
-            <section className="rounded-[1.6rem] border border-cobam-quill-grey/35 bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-3">
-                <ClipboardCheck className="size-5 text-cobam-water-blue" aria-hidden="true" />
-                <h2 className="text-xl font-semibold tracking-[-0.03em] text-cobam-dark-blue">
-                  Résumé du produit
-                </h2>
-              </div>
-              <div className="mt-5">
-                <TechnicalRows rows={summaryRows} />
-              </div>
-            </section>
-
-            <CatalogContextSection subcategories={normalizedProduct.subcategories} />
+            <CatalogBreadcrumbs subcategories={normalizedProduct.subcategories} />
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-cobam-quill-grey/35 bg-white p-5 shadow-sm sm:p-7">
+        <section className="rounded-[2rem] border border-cobam-quill-grey/35 bg-white p-5 sm:p-7">
           <div className="flex items-center gap-3">
             <Info className="size-5 text-cobam-water-blue" aria-hidden="true" />
             <h2 className="text-2xl font-semibold tracking-[-0.04em] text-cobam-dark-blue">
@@ -691,7 +695,7 @@ export default function PublicProductInspectorView({
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-cobam-quill-grey/35 bg-white p-5 shadow-sm sm:p-7">
+        <section className="rounded-[2rem] border border-cobam-quill-grey/35 bg-white p-5 sm:p-7">
           <div className="flex items-center gap-3">
             <Ruler className="size-5 text-cobam-water-blue" aria-hidden="true" />
             <h2 className="text-2xl font-semibold tracking-[-0.04em] text-cobam-dark-blue">
@@ -703,7 +707,7 @@ export default function PublicProductInspectorView({
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-cobam-quill-grey/35 bg-cobam-dark-blue p-5 text-white shadow-[0_26px_80px_rgba(20,32,46,0.18)] sm:p-7">
+        <section className="rounded-[2rem] border border-cobam-quill-grey/35 bg-cobam-dark-blue p-5 text-white sm:p-7">
           <div className="grid gap-6 lg:grid-cols-[0.85fr_1fr] lg:items-center">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cobam-water-blue">
@@ -724,8 +728,13 @@ export default function PublicProductInspectorView({
                 <p className="mt-2 text-sm leading-6 text-white/60">
                   Fiches et informations disponibles selon le produit.
                 </p>
-                {selectedVariant.datasheets.length > 0 || selectedVariant.certificates.length > 0 ? (
+                {selectedVariant.datasheets.length > 0 ? (
                   <div className="mt-4 space-y-2">
+                    <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                      {selectedVariant.datasheets.length > 1
+                        ? "Fiches techniques"
+                        : "Fiche technique"}
+                    </h4>
                     {selectedVariant.datasheets.map((datasheet, index) => (
                       <DatasheetLink
                         key={`datasheet-${datasheet.id}`}
@@ -738,6 +747,13 @@ export default function PublicProductInspectorView({
                         )}
                       />
                     ))}
+                  </div>
+                ) : null}
+                {selectedVariant.certificates.length > 0 ? (
+                  <div className="mt-4 space-y-2">
+                    <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                      {selectedVariant.certificates.length > 1 ? "Certificats" : "Certificat"}
+                    </h4>
                     {selectedVariant.certificates.map((certificate, index) => (
                       <DatasheetLink
                         key={`certificate-${certificate.id}`}
@@ -757,7 +773,7 @@ export default function PublicProductInspectorView({
                 <MessageSquareText className="size-5 text-cobam-water-blue" aria-hidden="true" />
                 <h3 className="mt-3 font-semibold">Accompagnement COBAM</h3>
                 <p className="mt-2 text-sm leading-6 text-white/60">
-                  Disponibilité, showroom et recommandations techniques a confirmer avec nos equipes.
+                  Disponibilité, showroom et recommandations techniques a confirmer avec nos équipes.
                 </p>
                 <div className="mt-4">
                   <ProductDevisDialog
@@ -779,6 +795,8 @@ export default function PublicProductInspectorView({
             selectVariant={setSelectedVariantId}
           />
         ) : null}
+
+        <RelatedProductsSection products={relatedProducts} />
       </article>
     </TooltipProvider>
   );

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/commerce/product-card";
 import { ProductDetailClient } from "@/components/commerce/product-detail-client";
+import { RailCarousel } from "@/components/commerce/rail-carousel";
 import { findCommerceProductBySlug } from "@/lib/commerce";
 
 export const dynamic = "force-dynamic";
@@ -64,11 +65,22 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </h2>
             </div>
           </div>
-          <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <RailCarousel
+            className="mt-7"
+            viewportClassName="commerce-thin-scrollbar overflow-hidden pb-4"
+            trackClassName="gap-5"
+            itemClassName="w-[min(82vw,18rem)] sm:w-72 lg:w-80"
+            previousLabel="Produits proches precedents"
+            nextLabel="Produits proches suivants"
+          >
             {product.relatedProducts.map((item) => (
-              <ProductCard key={`${item.entityType}-${item.id}`} product={item} />
+              <ProductCard
+                key={`${item.entityType}-${item.id}`}
+                product={item}
+                className="h-full"
+              />
             ))}
-          </div>
+          </RailCarousel>
         </section>
       ) : null}
     </main>

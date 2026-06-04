@@ -255,7 +255,7 @@ function VariantRail({
         <div>
           <p className="text-ec-blue text-xs font-black tracking-[0.28em] uppercase">Meme gamme</p>
           <h2 className="text-ec-ink mt-2 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
-            References produit
+            Références produit
           </h2>
         </div>
         <p className="text-ec-muted text-sm font-semibold">

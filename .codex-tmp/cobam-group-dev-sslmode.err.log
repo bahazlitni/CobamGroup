@@ -1,0 +1,902 @@
+⨯ The requested resource isn't a valid image for /api/media/612/file?variant=thumbnail received null
+[browser] Image with src "/api/media/33/file" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+⨯ Error: timeout exceeded when trying to connect
+    at async findPublicProductSubcategoryBySlugs (features\product-categories\public.ts:563:20)
+    at async Module.generateMetadata (app\(public)\produits\[category]\[subcategory]\page.tsx:27:27)
+  561 |
+  562 |   try {
+> 563 |     subcategory = (await prisma.productSubcategory.findFirst({
+      |                    ^
+  564 |       where: {
+  565 |         ...publicVitrineSubcategoryWhere(hasVisibilityColumns),
+  566 |         slug: input.subcategorySlug, {
+  clientVersion: '7.6.0',
+  digest: '956613349'
+}
+⨯ Error: timeout exceeded when trying to connect
+    at async findPublicProductSubcategoryBySlugs (features\product-categories\public.ts:563:20)
+    at async ProductSubcategoryPage (app\(public)\produits\[category]\[subcategory]\page.tsx:46:46)
+  561 |
+  562 |   try {
+> 563 |     subcategory = (await prisma.productSubcategory.findFirst({
+      |                    ^
+  564 |       where: {
+  565 |         ...publicVitrineSubcategoryWhere(hasVisibilityColumns),
+  566 |         slug: input.subcategorySlug, {
+  clientVersion: '7.6.0',
+  digest: '3202012571'
+}
+[browser] Uncaught Error: timeout exceeded when trying to connect
+    at  findPublicProductSubcategoryBySlugs (features\product-categories\public.ts:563:20)
+    at  ProductSubcategoryPage (app\(public)\produits\[category]\[subcategory]\page.tsx:46:46)
+  561 |
+  562 |   try {
+> 563 |     subcategory = (await prisma.productSubcategory.findFirst({
+      |                    ^
+  564 |       where: {
+  565 |         ...publicVitrineSubcategoryWhere(hasVisibilityColumns),
+  566 |         slug: input.subcategorySlug,
+⨯ Error: timeout exceeded when trying to connect
+    at async listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  490 |
+  491 |   try {
+> 492 |     categories = (await prisma.productCategory.findMany({
+      |                   ^
+  493 |       where: {
+  494 |         isActive: true,
+  495 |         subcategories: { {
+  clientVersion: '7.6.0',
+  digest: '2348439150'
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicProductSubcategoryBySlugs (features\product-categories\public.ts:563:20)
+    at async PublicProductPage (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:44:38)
+  561 |
+  562 |   try {
+> 563 |     subcategory = (await prisma.productSubcategory.findFirst({
+      |                    ^
+  564 |       where: {
+  565 |         ...publicVitrineSubcategoryWhere(hasVisibilityColumns),
+  566 |         slug: input.subcategorySlug, {
+  clientVersion: '7.6.0',
+  digest: '3407804273',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  490 |
+  491 |   try {
+> 492 |     categories = (await prisma.productCategory.findMany({
+      |                   ^
+  493 |       where: {
+  494 |         isActive: true,
+  495 |         subcategories: { {
+  clientVersion: '7.6.0',
+  digest: '4154126516',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicProductBySlug (features\products\public.ts:1911:18)
+    at async Module.generateMetadata (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:28:19)
+  1909 |   productSlug: string,
+  1910 | ): Promise<PublicSimpleProductInspector | null> {
+> 1911 |   const record = await prisma.product.findFirst({
+       |                  ^
+  1912 |     where: {
+  1913 |       slug: productSlug,
+  1914 |       kind: { {
+  clientVersion: '7.6.0',
+  digest: '456498719',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicProductSubcategoryBySlugs (features\product-categories\public.ts:563:20)
+    at async Module.generateMetadata (app\(public)\produits\[category]\[subcategory]\page.tsx:27:27)
+  561 |
+  562 |   try {
+> 563 |     subcategory = (await prisma.productSubcategory.findFirst({
+      |                    ^
+  564 |       where: {
+  565 |         ...publicVitrineSubcategoryWhere(hasVisibilityColumns),
+  566 |         slug: input.subcategorySlug, {
+  clientVersion: '7.6.0',
+  digest: '2451891853',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicProductSubcategoryBySlugs (features\product-categories\public.ts:563:20)
+    at async ProductSubcategoryPage (app\(public)\produits\[category]\[subcategory]\page.tsx:46:46)
+  561 |
+  562 |   try {
+> 563 |     subcategory = (await prisma.productSubcategory.findFirst({
+      |                    ^
+  564 |       where: {
+  565 |         ...publicVitrineSubcategoryWhere(hasVisibilityColumns),
+  566 |         slug: input.subcategorySlug, {
+  clientVersion: '7.6.0',
+  digest: '3877341363',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  490 |
+  491 |   try {
+> 492 |     categories = (await prisma.productCategory.findMany({
+      |                   ^
+  493 |       where: {
+  494 |         isActive: true,
+  495 |         subcategories: { {
+  clientVersion: '7.6.0',
+  digest: '4154126516',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+[browser] Uncaught Error: Connection terminated due to connection timeout
+    at  listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+    at  PublicLayout (app\(public)\layout.tsx:20:46)
+  490 |
+  491 |   try {
+> 492 |     categories = (await prisma.productCategory.findMany({
+      |                   ^
+  493 |       where: {
+  494 |         isActive: true,
+  495 |         subcategories: {
+[browser] Uncaught Error: timeout exceeded when trying to connect
+    at  listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+    at  PublicLayout (app\(public)\layout.tsx:20:46)
+  490 |
+  491 |   try {
+> 492 |     categories = (await prisma.productCategory.findMany({
+      |                   ^
+  493 |       where: {
+  494 |         isActive: true,
+  495 |         subcategories: {
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicProductBySlug (features\products\public.ts:1911:18)
+    at async PublicProductPage (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:44:38)
+  1909 |   productSlug: string,
+  1910 | ): Promise<PublicSimpleProductInspector | null> {
+> 1911 |   const record = await prisma.product.findFirst({
+       |                  ^
+  1912 |     where: {
+  1913 |       slug: productSlug,
+  1914 |       kind: { {
+  clientVersion: '7.6.0',
+  digest: '756536351',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  490 |
+  491 |   try {
+> 492 |     categories = (await prisma.productCategory.findMany({
+      |                   ^
+  493 |       where: {
+  494 |         isActive: true,
+  495 |         subcategories: { {
+  clientVersion: '7.6.0',
+  digest: '4154126516',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicProductBySlug (features\products\public.ts:1911:18)
+    at async Module.generateMetadata (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:28:19)
+  1909 |   productSlug: string,
+  1910 | ): Promise<PublicSimpleProductInspector | null> {
+> 1911 |   const record = await prisma.product.findFirst({
+       |                  ^
+  1912 |     where: {
+  1913 |       slug: productSlug,
+  1914 |       kind: { {
+  clientVersion: '7.6.0',
+  digest: '456498719',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: timeout exceeded when trying to connect
+    at async listPublicProductsIndex (features\products\public.ts:1212:12)
+    at async listPublicProductsBySubcategory (features\products\public.ts:783:18)
+    at async ProductSubcategoryPage (app\(public)\produits\[category]\[subcategory]\page.tsx:46:46)
+  1210 |     );
+  1211 |   } else {
+> 1212 |     rows = await prisma.$queryRaw<PublicIndexRow[]>(Prisma.sql`
+       |            ^
+  1213 |       ${candidateEntriesQuery}
+  1214 |       LIMIT ${pageSize} OFFSET ${offset}
+  1215 |     `); {
+  clientVersion: '7.6.0',
+  digest: '1552453055'
+}
+⨯ Error: timeout exceeded when trying to connect
+    at async findPublicProductSubcategoryBySlugs (features\product-categories\public.ts:563:20)
+    at async Module.generateMetadata (app\(public)\produits\[category]\[subcategory]\page.tsx:27:27)
+  561 |
+  562 |   try {
+> 563 |     subcategory = (await prisma.productSubcategory.findFirst({
+      |                    ^
+  564 |       where: {
+  565 |         ...publicVitrineSubcategoryWhere(hasVisibilityColumns),
+  566 |         slug: input.subcategorySlug, {
+  clientVersion: '7.6.0',
+  digest: '956613349'
+}
+[browser] Uncaught Error: Switched to client rendering because the server rendering errored:
+
+timeout exceeded when trying to connect
+    at  listPublicProductsIndex (features\products\public.ts:1212:12)
+    at  listPublicProductsBySubcategory (features\products\public.ts:783:18)
+    at  ProductSubcategoryPage (app\(public)\produits\[category]\[subcategory]\page.tsx:46:46)
+  1210 |     );
+  1211 |   } else {
+> 1212 |     rows = await prisma.$queryRaw<PublicIndexRow[]>(Prisma.sql`
+       |            ^
+  1213 |       ${candidateEntriesQuery}
+  1214 |       LIMIT ${pageSize} OFFSET ${offset}
+  1215 |     `);
+[browser] Uncaught Error: timeout exceeded when trying to connect
+    at  listPublicProductsIndex (features\products\public.ts:1212:12)
+    at  listPublicProductsBySubcategory (features\products\public.ts:783:18)
+    at  ProductSubcategoryPage (app\(public)\produits\[category]\[subcategory]\page.tsx:46:46)
+  1210 |     );
+  1211 |   } else {
+> 1212 |     rows = await prisma.$queryRaw<PublicIndexRow[]>(Prisma.sql`
+       |            ^
+  1213 |       ${candidateEntriesQuery}
+  1214 |       LIMIT ${pageSize} OFFSET ${offset}
+  1215 |     `);
+⨯ Error: Connection terminated due to connection timeout
+    at async listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  490 |
+  491 |   try {
+> 492 |     categories = (await prisma.productCategory.findMany({
+      |                   ^
+  493 |       where: {
+  494 |         isActive: true,
+  495 |         subcategories: { {
+  clientVersion: '7.6.0',
+  digest: '4154126516',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicProductSubcategoryBySlugs (features\product-categories\public.ts:563:20)
+    at async Module.generateMetadata (app\(public)\produits\[category]\[subcategory]\page.tsx:27:27)
+  561 |
+  562 |   try {
+> 563 |     subcategory = (await prisma.productSubcategory.findFirst({
+      |                    ^
+  564 |       where: {
+  565 |         ...publicVitrineSubcategoryWhere(hasVisibilityColumns),
+  566 |         slug: input.subcategorySlug, {
+  clientVersion: '7.6.0',
+  digest: '2451891853',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+[browser] Uncaught Error: Connection terminated due to connection timeout
+    at  listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+    at  PublicLayout (app\(public)\layout.tsx:20:46)
+  490 |
+  491 |   try {
+> 492 |     categories = (await prisma.productCategory.findMany({
+      |                   ^
+  493 |       where: {
+  494 |         isActive: true,
+  495 |         subcategories: {
+⨯ Error: timeout exceeded when trying to connect
+    at async listPublicProductsIndex (features\products\public.ts:1241:32)
+    at async listPublicProductsBySubcategory (features\products\public.ts:783:18)
+    at async ProductSubcategoryPage (app\(public)\produits\[category]\[subcategory]\page.tsx:46:46)
+  1239 |   const productIds = rows.map((row) => row.product_id).filter((id): id is bigint => id !...
+  1240 |
+> 1241 |   const [families, products] = await Promise.all([
+       |                                ^
+  1242 |     familyIds.length
+  1243 |       ? prisma.productFamily.findMany({
+  1244 |           where: { {
+  clientVersion: '7.6.0',
+  digest: '3912468339'
+}
+⨯ The requested resource isn't a valid image for /api/media/813/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/814/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/958/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/796/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/717/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/755/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/802/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/962/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/963/file?variant=thumbnail received null
+[browser] Image with src "/api/media/780/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/781/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/782/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/783/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/784/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/785/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/786/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/787/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/788/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/789/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/790/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/791/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/792/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/793/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/794/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/795/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/771/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/772/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/773/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/774/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/775/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/776/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/777/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/778/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Image with src "/api/media/779/file?variant=thumbnail" is using quality "60" which is not configured in images.qualities [75]. Please update your config to [60, 75].
+Read more: https://nextjs.org/docs/messages/next-image-unconfigured-qualities
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+⨯ The requested resource isn't a valid image for /api/media/771/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/772/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/773/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/774/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/775/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/776/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/814/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/963/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/813/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/777/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/778/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/717/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/755/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/802/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/796/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/779/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/780/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/781/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/782/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/783/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/784/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/785/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/786/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/787/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/788/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/789/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/790/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/791/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/792/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/793/file?variant=thumbnail received null
+⨯ Error: timeout exceeded when trying to connect
+    at async findPublicProductBySlug (features\products\public.ts:1911:18)
+    at async PublicProductPage (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:44:38)
+  1909 |   productSlug: string,
+  1910 | ): Promise<PublicSimpleProductInspector | null> {
+> 1911 |   const record = await prisma.product.findFirst({
+       |                  ^
+  1912 |     where: {
+  1913 |       slug: productSlug,
+  1914 |       kind: { {
+  clientVersion: '7.6.0',
+  digest: '2126989815'
+}
+⨯ Error: timeout exceeded when trying to connect
+    at async findPublicProductBySlug (features\products\public.ts:1911:18)
+    at async Module.generateMetadata (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:28:19)
+  1909 |   productSlug: string,
+  1910 | ): Promise<PublicSimpleProductInspector | null> {
+> 1911 |   const record = await prisma.product.findFirst({
+       |                  ^
+  1912 |     where: {
+  1913 |       slug: productSlug,
+  1914 |       kind: { {
+  clientVersion: '7.6.0',
+  digest: '132420599'
+}
+⨯ Error: timeout exceeded when trying to connect
+    at async listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  490 |
+  491 |   try {
+> 492 |     categories = (await prisma.productCategory.findMany({
+      |                   ^
+  493 |       where: {
+  494 |         isActive: true,
+  495 |         subcategories: { {
+  clientVersion: '7.6.0',
+  digest: '2348439150'
+}
+⨯ The requested resource isn't a valid image for /api/media/814/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/755/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/962/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/802/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/963/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/813/file?variant=thumbnail received null
+PUBLIC_MEDIA_FILE_READ_ERROR: Error: Connection terminated due to connection timeout
+    at async readPublicMediaFileService (features\media\service.ts:1046:17)
+    at async GET (app\api\media\[id]\file\route.ts:25:18)
+  1044 |   variant: MediaFileVariant = "original",
+  1045 | ) {
+> 1046 |   const media = await findPublicMediaById(mediaId);
+       |                 ^
+  1047 |
+  1048 |   if (!media) {
+  1049 |     throw new MediaServiceError("Média introuvable.", 404); {
+  clientVersion: '7.6.0',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+PUBLIC_MEDIA_FILE_READ_ERROR: Error: Connection terminated due to connection timeout
+    at async readPublicMediaFileService (features\media\service.ts:1046:17)
+    at async GET (app\api\media\[id]\file\route.ts:25:18)
+  1044 |   variant: MediaFileVariant = "original",
+  1045 | ) {
+> 1046 |   const media = await findPublicMediaById(mediaId);
+       |                 ^
+  1047 |
+  1048 |   if (!media) {
+  1049 |     throw new MediaServiceError("Média introuvable.", 404); {
+  clientVersion: '7.6.0',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ The requested resource isn't a valid image for /api/media/796/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/958/file?variant=thumbnail received null
+PUBLIC_MEDIA_FILE_READ_ERROR: Error: Connection terminated due to connection timeout
+    at async readPublicMediaFileService (features\media\service.ts:1046:17)
+    at async GET (app\api\media\[id]\file\route.ts:25:18)
+  1044 |   variant: MediaFileVariant = "original",
+  1045 | ) {
+> 1046 |   const media = await findPublicMediaById(mediaId);
+       |                 ^
+  1047 |
+  1048 |   if (!media) {
+  1049 |     throw new MediaServiceError("Média introuvable.", 404); {
+  clientVersion: '7.6.0',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ The requested resource isn't a valid image for /api/media/717/file?variant=thumbnail received null
+⨯ Error: timeout exceeded when trying to connect
+    at async findPublicFamilyBySlug (features\products\public.ts:1825:18)
+    at async PublicFamilyPage (app\(public)\produits\[category]\[subcategory]\famille\[slug]\page.tsx:42:37)
+  1823 |   familySlug: string,
+  1824 | ): Promise<PublicProductInspector | null> {
+> 1825 |   const record = await prisma.productFamily.findFirst({
+       |                  ^
+  1826 |     where: {
+  1827 |       slug: familySlug,
+  1828 |     }, {
+  clientVersion: '7.6.0',
+  digest: '2370223286'
+}
+[browser] Uncaught Error: timeout exceeded when trying to connect
+    at  findPublicFamilyBySlug (features\products\public.ts:1825:18)
+    at  PublicFamilyPage (app\(public)\produits\[category]\[subcategory]\famille\[slug]\page.tsx:42:37)
+  1823 |   familySlug: string,
+  1824 | ): Promise<PublicProductInspector | null> {
+> 1825 |   const record = await prisma.productFamily.findFirst({
+       |                  ^
+  1826 |     where: {
+  1827 |       slug: familySlug,
+  1828 |     },
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicFamilyBySlug (features\products\public.ts:1825:18)
+    at async PublicFamilyPage (app\(public)\produits\[category]\[subcategory]\famille\[slug]\page.tsx:42:37)
+  1823 |   familySlug: string,
+  1824 | ): Promise<PublicProductInspector | null> {
+> 1825 |   const record = await prisma.productFamily.findFirst({
+       |                  ^
+  1826 |     where: {
+  1827 |       slug: familySlug,
+  1828 |     }, {
+  clientVersion: '7.6.0',
+  digest: '3094898138',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async hasPublicActivePromotions (features\promotions\public.ts:489:24)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  487 | export async function hasPublicActivePromotions() {
+  488 |   try {
+> 489 |     const promotions = await prisma.commercePromotion.findMany({
+      |                        ^
+  490 |       where: activePublicPromotionWhere(),
+  491 |       select: {
+  492 |         products: { select: { productId: true } }, {
+  clientVersion: '7.6.0',
+  digest: '2676645319',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicFamilyBySlug (features\products\public.ts:1825:18)
+    at async Module.generateMetadata (app\(public)\produits\[category]\[subcategory]\famille\[slug]\page.tsx:26:18)
+  1823 |   familySlug: string,
+  1824 | ): Promise<PublicProductInspector | null> {
+> 1825 |   const record = await prisma.productFamily.findFirst({
+       |                  ^
+  1826 |     where: {
+  1827 |       slug: familySlug,
+  1828 |     }, {
+  clientVersion: '7.6.0',
+  digest: '3503683237',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async hasPublicActivePromotions (features\promotions\public.ts:489:24)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  487 | export async function hasPublicActivePromotions() {
+  488 |   try {
+> 489 |     const promotions = await prisma.commercePromotion.findMany({
+      |                        ^
+  490 |       where: activePublicPromotionWhere(),
+  491 |       select: {
+  492 |         products: { select: { productId: true } }, {
+  clientVersion: '7.6.0',
+  digest: '2676645319',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicProductBySlug (features\products\public.ts:1911:18)
+    at async Module.generateMetadata (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:28:19)
+  1909 |   productSlug: string,
+  1910 | ): Promise<PublicSimpleProductInspector | null> {
+> 1911 |   const record = await prisma.product.findFirst({
+       |                  ^
+  1912 |     where: {
+  1913 |       slug: productSlug,
+  1914 |       kind: { {
+  clientVersion: '7.6.0',
+  digest: '456498719',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicProductBySlug (features\products\public.ts:1911:18)
+    at async PublicProductPage (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:44:38)
+  1909 |   productSlug: string,
+  1910 | ): Promise<PublicSimpleProductInspector | null> {
+> 1911 |   const record = await prisma.product.findFirst({
+       |                  ^
+  1912 |     where: {
+  1913 |       slug: productSlug,
+  1914 |       kind: { {
+  clientVersion: '7.6.0',
+  digest: '756536351',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async hasPublicActivePromotions (features\promotions\public.ts:489:24)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  487 | export async function hasPublicActivePromotions() {
+  488 |   try {
+> 489 |     const promotions = await prisma.commercePromotion.findMany({
+      |                        ^
+  490 |       where: activePublicPromotionWhere(),
+  491 |       select: {
+  492 |         products: { select: { productId: true } }, {
+  clientVersion: '7.6.0',
+  digest: '2676645319',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicFamilyBySlug (features\products\public.ts:1825:18)
+    at async PublicFamilyPage (app\(public)\produits\[category]\[subcategory]\famille\[slug]\page.tsx:42:37)
+  1823 |   familySlug: string,
+  1824 | ): Promise<PublicProductInspector | null> {
+> 1825 |   const record = await prisma.productFamily.findFirst({
+       |                  ^
+  1826 |     where: {
+  1827 |       slug: familySlug,
+  1828 |     }, {
+  clientVersion: '7.6.0',
+  digest: '3094898138',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicFamilyBySlug (features\products\public.ts:1825:18)
+    at async Module.generateMetadata (app\(public)\produits\[category]\[subcategory]\famille\[slug]\page.tsx:26:18)
+  1823 |   familySlug: string,
+  1824 | ): Promise<PublicProductInspector | null> {
+> 1825 |   const record = await prisma.productFamily.findFirst({
+       |                  ^
+  1826 |     where: {
+  1827 |       slug: familySlug,
+  1828 |     }, {
+  clientVersion: '7.6.0',
+  digest: '3503683237',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: timeout exceeded when trying to connect
+    at async hasPublicActivePromotions (features\promotions\public.ts:489:24)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  487 | export async function hasPublicActivePromotions() {
+  488 |   try {
+> 489 |     const promotions = await prisma.commercePromotion.findMany({
+      |                        ^
+  490 |       where: activePublicPromotionWhere(),
+  491 |       select: {
+  492 |         products: { select: { productId: true } }, {
+  clientVersion: '7.6.0',
+  digest: '2757597321'
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicProductBySlug (features\products\public.ts:1911:18)
+    at async PublicProductPage (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:44:38)
+  1909 |   productSlug: string,
+  1910 | ): Promise<PublicSimpleProductInspector | null> {
+> 1911 |   const record = await prisma.product.findFirst({
+       |                  ^
+  1912 |     where: {
+  1913 |       slug: productSlug,
+  1914 |       kind: { {
+  clientVersion: '7.6.0',
+  digest: '756536351',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async hasPublicActivePromotions (features\promotions\public.ts:489:24)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  487 | export async function hasPublicActivePromotions() {
+  488 |   try {
+> 489 |     const promotions = await prisma.commercePromotion.findMany({
+      |                        ^
+  490 |       where: activePublicPromotionWhere(),
+  491 |       select: {
+  492 |         products: { select: { productId: true } }, {
+  clientVersion: '7.6.0',
+  digest: '2676645319',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicProductBySlug (features\products\public.ts:1911:18)
+    at async Module.generateMetadata (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:28:19)
+  1909 |   productSlug: string,
+  1910 | ): Promise<PublicSimpleProductInspector | null> {
+> 1911 |   const record = await prisma.product.findFirst({
+       |                  ^
+  1912 |     where: {
+  1913 |       slug: productSlug,
+  1914 |       kind: { {
+  clientVersion: '7.6.0',
+  digest: '456498719',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicFamilyBySlug (features\products\public.ts:1825:18)
+    at async PublicFamilyPage (app\(public)\produits\[category]\[subcategory]\famille\[slug]\page.tsx:42:37)
+  1823 |   familySlug: string,
+  1824 | ): Promise<PublicProductInspector | null> {
+> 1825 |   const record = await prisma.productFamily.findFirst({
+       |                  ^
+  1826 |     where: {
+  1827 |       slug: familySlug,
+  1828 |     }, {
+  clientVersion: '7.6.0',
+  digest: '3094898138',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: timeout exceeded when trying to connect
+    at async hasPublicActivePromotions (features\promotions\public.ts:489:24)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  487 | export async function hasPublicActivePromotions() {
+  488 |   try {
+> 489 |     const promotions = await prisma.commercePromotion.findMany({
+      |                        ^
+  490 |       where: activePublicPromotionWhere(),
+  491 |       select: {
+  492 |         products: { select: { productId: true } }, {
+  clientVersion: '7.6.0',
+  digest: '2757597321'
+}
+⨯ The requested resource isn't a valid image for /api/media/962/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/813/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/717/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/796/file?variant=thumbnail received null
+[browser] Encountered two children with the same key, `Gamme-Sika Ceram 206`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+⨯ The requested resource isn't a valid image for /api/media/802/file?variant=thumbnail received null
+⨯ The requested resource isn't a valid image for /api/media/755/file?variant=thumbnail received null
+[browser] Uncaught Error: Connection terminated due to connection timeout
+    at  hasPublicActivePromotions (features\promotions\public.ts:489:24)
+    at  PublicLayout (app\(public)\layout.tsx:20:46)
+  487 | export async function hasPublicActivePromotions() {
+  488 |   try {
+> 489 |     const promotions = await prisma.commercePromotion.findMany({
+      |                        ^
+  490 |       where: activePublicPromotionWhere(),
+  491 |       select: {
+  492 |         products: { select: { productId: true } },
+PUBLIC_MEDIA_FILE_READ_ERROR: Error: Connection terminated due to connection timeout
+    at async readPublicMediaFileService (features\media\service.ts:1046:17)
+    at async GET (app\api\media\[id]\file\route.ts:25:18)
+  1044 |   variant: MediaFileVariant = "original",
+  1045 | ) {
+> 1046 |   const media = await findPublicMediaById(mediaId);
+       |                 ^
+  1047 |
+  1048 |   if (!media) {
+  1049 |     throw new MediaServiceError("Média introuvable.", 404); {
+  clientVersion: '7.6.0',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ The requested resource isn't a valid image for /api/media/958/file?variant=thumbnail received null
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicProductBySlug (features\products\public.ts:1911:18)
+    at async PublicProductPage (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:44:38)
+  1909 |   productSlug: string,
+  1910 | ): Promise<PublicSimpleProductInspector | null> {
+> 1911 |   const record = await prisma.product.findFirst({
+       |                  ^
+  1912 |     where: {
+  1913 |       slug: productSlug,
+  1914 |       kind: { {
+  clientVersion: '7.6.0',
+  digest: '756536351',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async hasPublicActivePromotions (features\promotions\public.ts:489:24)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  487 | export async function hasPublicActivePromotions() {
+  488 |   try {
+> 489 |     const promotions = await prisma.commercePromotion.findMany({
+      |                        ^
+  490 |       where: activePublicPromotionWhere(),
+  491 |       select: {
+  492 |         products: { select: { productId: true } }, {
+  clientVersion: '7.6.0',
+  digest: '2676645319',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicProductBySlug (features\products\public.ts:1911:18)
+    at async Module.generateMetadata (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:28:19)
+  1909 |   productSlug: string,
+  1910 | ): Promise<PublicSimpleProductInspector | null> {
+> 1911 |   const record = await prisma.product.findFirst({
+       |                  ^
+  1912 |     where: {
+  1913 |       slug: productSlug,
+  1914 |       kind: { {
+  clientVersion: '7.6.0',
+  digest: '456498719',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicProductBySlug (features\products\public.ts:1911:18)
+    at async PublicProductPage (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:44:38)
+  1909 |   productSlug: string,
+  1910 | ): Promise<PublicSimpleProductInspector | null> {
+> 1911 |   const record = await prisma.product.findFirst({
+       |                  ^
+  1912 |     where: {
+  1913 |       slug: productSlug,
+  1914 |       kind: { {
+  clientVersion: '7.6.0',
+  digest: '756536351',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async hasPublicActivePromotions (features\promotions\public.ts:489:24)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  487 | export async function hasPublicActivePromotions() {
+  488 |   try {
+> 489 |     const promotions = await prisma.commercePromotion.findMany({
+      |                        ^
+  490 |       where: activePublicPromotionWhere(),
+  491 |       select: {
+  492 |         products: { select: { productId: true } }, {
+  clientVersion: '7.6.0',
+  digest: '2676645319',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+[browser] Uncaught Error: Connection terminated due to connection timeout
+    at  hasPublicActivePromotions (features\promotions\public.ts:489:24)
+    at  PublicLayout (app\(public)\layout.tsx:20:46)
+  487 | export async function hasPublicActivePromotions() {
+  488 |   try {
+> 489 |     const promotions = await prisma.commercePromotion.findMany({
+      |                        ^
+  490 |       where: activePublicPromotionWhere(),
+  491 |       select: {
+  492 |         products: { select: { productId: true } },
+⨯ Error: Connection terminated due to connection timeout
+    at async findPublicFamilyBySlug (features\products\public.ts:1825:18)
+    at async PublicFamilyPage (app\(public)\produits\[category]\[subcategory]\famille\[slug]\page.tsx:42:37)
+  1823 |   familySlug: string,
+  1824 | ): Promise<PublicProductInspector | null> {
+> 1825 |   const record = await prisma.productFamily.findFirst({
+       |                  ^
+  1826 |     where: {
+  1827 |       slug: familySlug,
+  1828 |     }, {
+  clientVersion: '7.6.0',
+  digest: '3094898138',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: timeout exceeded when trying to connect
+    at async findPublicProductBySlug (features\products\public.ts:1911:18)
+    at async Module.generateMetadata (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:28:19)
+  1909 |   productSlug: string,
+  1910 | ): Promise<PublicSimpleProductInspector | null> {
+> 1911 |   const record = await prisma.product.findFirst({
+       |                  ^
+  1912 |     where: {
+  1913 |       slug: productSlug,
+  1914 |       kind: { {
+  clientVersion: '7.6.0',
+  digest: '132420599'
+}
+[browser] Uncaught Error: timeout exceeded when trying to connect
+    at  findPublicProductBySlug (features\products\public.ts:1911:18)
+    at  Module.generateMetadata (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:28:19)
+  1909 |   productSlug: string,
+  1910 | ): Promise<PublicSimpleProductInspector | null> {
+> 1911 |   const record = await prisma.product.findFirst({
+       |                  ^
+  1912 |     where: {
+  1913 |       slug: productSlug,
+  1914 |       kind: {
+npm error Lifecycle script `dev` failed with error:
+npm error code 4294967295
+npm error path C:\dev\CobamGroup\apps\cobam-group
+npm error workspace @cobam/cobam-group@0.1.0
+npm error location C:\dev\CobamGroup\apps\cobam-group
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c next dev -p 3000

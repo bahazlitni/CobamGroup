@@ -4,7 +4,11 @@ import StructuredData from "@/components/seo/StructuredData";
 import PublicProductInspectorView from "@/components/public/products/public-product-inspector";
 import StaticHighway from "@/components/ui/custom/StaticHighway";
 import { findPublicProductSubcategoryBySlugs } from "@/features/product-categories/public";
-import { findProductLifecycleBySlug, findPublicProductBySlug } from "@/features/products/public";
+import {
+  findProductLifecycleBySlug,
+  findPublicProductBySlug,
+  findPublicRelatedProducts,
+} from "@/features/products/public";
 import {
   buildBreadcrumbStructuredData,
   buildSimpleProductMetadata,
@@ -58,6 +62,7 @@ export default async function PublicProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
+  const relatedProducts = await findPublicRelatedProducts(product);
   const breadcrumb = {
     categoryName: subcategoryData.parentName ?? "Produits",
     categorySlug: category,
@@ -81,7 +86,11 @@ export default async function PublicProductPage({ params }: ProductPageProps) {
       <StaticHighway direction="left" />
       <section className="py-10 sm:py-12 lg:py-20 border-t border-cobam-quill-grey/30">
         <div className="mx-auto max-w-[92rem] px-4 sm:px-6 lg:px-8">
-          <PublicProductInspectorView product={product} breadcrumb={breadcrumb} />
+          <PublicProductInspectorView
+            product={product}
+            breadcrumb={breadcrumb}
+            relatedProducts={relatedProducts}
+          />
         </div>
       </section>
     </main>

@@ -226,6 +226,11 @@ export type PublicProductIndexItem = {
   relevanceScore?: number;
 };
 
+export type PublicRelatedProductItem = PublicProductIndexItem & {
+  relationshipScore: number;
+  relationshipReasons: string[];
+};
+
 export type PublicProductIndexResult = {
   items: PublicProductIndexItem[];
   total: number;

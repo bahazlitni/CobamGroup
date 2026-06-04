@@ -1,0 +1,10 @@
+
+> @cobam/cobam-group@0.1.0 dev
+> next dev -p 3001
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://10.153.97.155:3001
+- Environments: .env
+✓ Ready in 338ms
+[?25h

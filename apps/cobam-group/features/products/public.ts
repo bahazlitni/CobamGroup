@@ -17,6 +17,13 @@ import {
 } from "@/features/products/attribute-definitions";
 import { rankPublicProductSearchRowsWithScores } from "./search";
 import { productBrandLabel, richTextDescriptionToString } from "./model-b-compat";
+import {
+  RELATED_PRODUCTS_DEFAULT_LIMIT,
+  RELATED_PRODUCTS_DEFAULT_THRESHOLD,
+  rankRelatedProductProfiles,
+  type RelatedProductAttributeProfile,
+  type RelatedProductProfile,
+} from "./related-engine";
 import type {
   PublicProductColorReference,
   PublicProductBrand,
@@ -30,6 +37,7 @@ import type {
   PublicProductIndexResult,
   PublicProductIndexSubcategory,
   PublicProductListResult,
+  PublicRelatedProductItem,
   PublicProductSubcategoryLink,
   PublicProductSummary,
   PublicSimpleProductInspector,
@@ -46,6 +54,7 @@ export type {
   PublicProductIndexItem,
   PublicProductIndexResult,
   PublicProductListResult,
+  PublicRelatedProductItem,
   PublicProductSubcategoryLink,
   PublicProductSummary,
   PublicSimpleProductInspector,
@@ -196,6 +205,16 @@ type PublicIndexRow = {
   subcategory_description: string | null;
   subcategory_description_seo: string | null;
   subcategory_sort: number | null;
+};
+
+type PublicRelatedIndexRow = PublicIndexRow & {
+  product_display_name: string | null;
+  product_type_id: bigint | null;
+  product_type_name: string | null;
+  product_type_slug: string | null;
+  product_ids: bigint[] | null;
+  attributes_json: unknown;
+  family_attributes_json: unknown;
 };
 
 function normalizeComparableValue(value: string | null | undefined) {
@@ -590,14 +609,14 @@ function mapProductSummary(
   return {
     id: Number(record.id),
     entityType,
-    name: record.name,
+    name: record.displayName,
     slug: record.slug,
     subtitle: null,
     description: getProductDescription(record),
     brandName: getBrandName(record.brand),
     imageUrl: coverMedia?.kind === "IMAGE" ? coverMedia.url : null,
     imageThumbnailUrl: coverMedia?.kind === "IMAGE" ? coverMedia.thumbnailUrl : null,
-    imageAlt: coverMedia?.altText ?? record.name,
+    imageAlt: coverMedia?.altText ?? record.displayName,
   };
 }
 
@@ -1313,6 +1332,491 @@ export async function listPublicProductsIndex(input: {
     page: input.page,
     pageSize,
   };
+}
+
+function parseRelatedAttributes(value: unknown): RelatedProductAttributeProfile[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((entry): RelatedProductAttributeProfile | null => {
+      if (!entry || typeof entry !== "object") {
+        return null;
+      }
+
+      const record = entry as Record<string, unknown>;
+      const key = typeof record.key === "string" ? record.key : "";
+      const name = typeof record.name === "string" ? record.name : key;
+      const rawValue = typeof record.value === "string" ? record.value : "";
+      const unit = typeof record.unit === "string" ? record.unit : null;
+      const groupName = typeof record.groupName === "string" ? record.groupName : null;
+
+      if (!key || !name || !rawValue) {
+        return null;
+      }
+
+      return {
+        key,
+        name,
+        value: rawValue,
+        unit,
+        groupName,
+      };
+    })
+    .filter((entry): entry is RelatedProductAttributeProfile => entry != null);
+}
+
+function mapInspectorAttributesForRelated(
+  attributes: PublicProductInspectorAttribute[],
+): RelatedProductAttributeProfile[] {
+  return attributes.map((attribute) => ({
+    key: attribute.attributeId || attribute.kind || attribute.name,
+    name: attribute.name,
+    value: attribute.value,
+    unit: attribute.unit,
+    groupName: attribute.groupName,
+  }));
+}
+
+function normalizeBigintArray(value: unknown) {
+  return Array.isArray(value) ? value.map((entry) => Number(entry)).filter(Number.isFinite) : [];
+}
+
+function splitTags(value: string | null | undefined) {
+  return (value ?? "")
+    .split(/\s+/)
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+}
+
+function buildRelatedProfileFromInspector(
+  product: PublicProductInspector | PublicSimpleProductInspector,
+): RelatedProductProfile {
+  if ("variants" in product) {
+    const attributes = product.variants.flatMap((variant) =>
+      mapInspectorAttributesForRelated(variant.attributes),
+    );
+    const productUseAttributes = attributes
+      .filter((attribute) => normalizeComparableValue(attribute.key) === "product_use")
+      .map((attribute) => attribute.value);
+
+    return {
+      key: `FAMILY:${product.id}`,
+      entityType: "FAMILY",
+      id: product.id,
+      slug: product.slug,
+      productIds: product.variants.map((variant) => variant.id),
+      familyIds: [product.id],
+      names: [
+        product.name,
+        product.subtitle,
+        product.description,
+        ...product.variants.flatMap((variant) => [variant.displayName, variant.name]),
+      ].filter((value): value is string => Boolean(value)),
+      skus: product.variants.map((variant) => variant.sku),
+      brandNames: [product.brand?.name, product.brandName].filter(
+        (value): value is string => Boolean(value),
+      ),
+      productTypeSlugs: [],
+      productTypeNames: productUseAttributes,
+      categorySlugs: product.subcategories.map((subcategory) => subcategory.categorySlug),
+      categoryNames: product.subcategories.map((subcategory) => subcategory.categoryName),
+      subcategorySlugs: product.subcategories.map((subcategory) => subcategory.slug),
+      subcategoryNames: product.subcategories.map((subcategory) => subcategory.name),
+      tags: [],
+      descriptions: [
+        product.description,
+        product.descriptionSeo,
+        ...product.variants.map((variant) => parseRichTextPreview(variant.description)),
+      ].filter((value): value is string => Boolean(value)),
+      attributes,
+    };
+  }
+
+  const attributes = mapInspectorAttributesForRelated(product.attributes);
+  const productUseAttributes = attributes
+    .filter((attribute) => normalizeComparableValue(attribute.key) === "product_use")
+    .map((attribute) => attribute.value);
+
+  return {
+    key: `${product.kind}:${product.id}`,
+    entityType: product.kind,
+    id: product.id,
+    slug: product.slug,
+    productIds: [product.id],
+    familyIds: [],
+    names: [product.displayName, product.name],
+    skus: [product.sku],
+    brandNames: [product.brand?.name, ...product.brandNames].filter(
+      (value): value is string => Boolean(value),
+    ),
+    productTypeSlugs: [],
+    productTypeNames: productUseAttributes,
+    categorySlugs: product.subcategories.map((subcategory) => subcategory.categorySlug),
+    categoryNames: product.subcategories.map((subcategory) => subcategory.categoryName),
+    subcategorySlugs: product.subcategories.map((subcategory) => subcategory.slug),
+    subcategoryNames: product.subcategories.map((subcategory) => subcategory.name),
+    tags: [],
+    descriptions: [
+      parseRichTextPreview(product.description),
+      product.descriptionSeo,
+    ].filter((value): value is string => Boolean(value)),
+    attributes,
+  };
+}
+
+function buildRelatedProfileFromRow(row: PublicRelatedIndexRow): RelatedProductProfile {
+  const entityType = row.entity_type;
+  const id = Number(row.family_id ?? row.product_id ?? 0);
+
+  return {
+    key: `${entityType}:${id}`,
+    entityType,
+    id,
+    slug: row.product_slug,
+    productIds: normalizeBigintArray(row.product_ids),
+    familyIds: row.family_id == null ? [] : [Number(row.family_id)],
+    names: [
+      row.product_display_name,
+      row.product_name,
+      row.family_name,
+      row.family_subtitle,
+      row.product_type_name,
+      row.category_name,
+      row.subcategory_name,
+    ].filter((value): value is string => Boolean(value)),
+    skus: [row.product_sku].filter((value): value is string => Boolean(value)),
+    brandNames: [row.product_brand].filter((value): value is string => Boolean(value)),
+    productTypeSlugs: [row.product_type_slug].filter((value): value is string => Boolean(value)),
+    productTypeNames: [row.product_type_name].filter((value): value is string => Boolean(value)),
+    categorySlugs: [row.category_slug],
+    categoryNames: [row.category_name],
+    subcategorySlugs: [row.subcategory_slug],
+    subcategoryNames: [row.subcategory_name],
+    tags: splitTags(row.product_tags),
+    descriptions: [
+      row.product_description,
+      row.product_description_seo,
+      row.family_description,
+      row.family_description_seo,
+      row.family_members_text,
+    ].filter((value): value is string => Boolean(value)),
+    attributes: [
+      ...parseRelatedAttributes(row.attributes_json),
+      ...parseRelatedAttributes(row.family_attributes_json),
+    ],
+  };
+}
+
+async function listPublicRelatedCandidateRows() {
+  return await prisma.$queryRaw<PublicRelatedIndexRow[]>(Prisma.sql`
+    WITH family_entries AS (
+      SELECT DISTINCT ON (f.id, s.id)
+        'FAMILY'::text AS entity_type,
+        NULL::bigint AS product_id,
+        f.id AS family_id,
+        f.slug AS product_slug,
+        p.sku AS product_sku,
+        p.name AS product_name,
+        p.display_name AS product_display_name,
+        p_brand.name AS product_brand,
+        p.tags AS product_tags,
+        p.rich_text_description::text AS product_description,
+        p.description_seo AS product_description_seo,
+        (
+          SELECT COALESCE(string_agg(concat_ws(' ', pa.name, pa.label, pa.value, pa.unit, pa.group_name), ' '), '')
+          FROM product_attributes pa
+          WHERE pa.product_id = p.id
+        ) AS attributes_text,
+        (
+          SELECT COALESCE(jsonb_agg(jsonb_build_object(
+            'key', pa.name,
+            'name', COALESCE(NULLIF(pa.label, ''), pa.name),
+            'value', pa.value,
+            'unit', pa.unit,
+            'groupName', pa.group_name
+          ) ORDER BY pa.group_sort_order, pa.sort_order, pa.name), '[]'::jsonb)
+          FROM product_attributes pa
+          WHERE pa.product_id = p.id
+        ) AS attributes_json,
+        f.name AS family_name,
+        f.slug AS family_slug,
+        f.subtitle AS family_subtitle,
+        f.description AS family_description,
+        f.description_seo AS family_description_seo,
+        (
+          SELECT COALESCE(string_agg(concat_ws(' ',
+            fp.sku,
+            fp.slug,
+            fp.name,
+            fp.display_name,
+            fp.tags,
+            fp_brand.name,
+            fp.rich_text_description::text,
+            fp.description_seo,
+            (
+              SELECT COALESCE(string_agg(fpa.name || ' ' || fpa.value, ' '), '')
+              FROM product_attributes fpa
+              WHERE fpa.product_id = fp.id
+            )
+          ), ' '), '')
+          FROM product_family_members fm2
+          JOIN products fp ON fp.id = fm2.product_id
+          LEFT JOIN organizations fp_brand ON fp_brand.id = fp.brand_id
+          WHERE fm2.family_id = f.id
+            AND fp.lifecycle <> 'DISCONTINUED'
+            AND fp.visible_vitrine = true
+        ) AS family_members_text,
+        (
+          SELECT COALESCE(jsonb_agg(jsonb_build_object(
+            'key', fpa.name,
+            'name', COALESCE(NULLIF(fpa.label, ''), fpa.name),
+            'value', fpa.value,
+            'unit', fpa.unit,
+            'groupName', fpa.group_name
+          ) ORDER BY fpa.group_sort_order, fpa.sort_order, fpa.name), '[]'::jsonb)
+          FROM product_family_members fm3
+          JOIN products fp ON fp.id = fm3.product_id
+          JOIN product_attributes fpa ON fpa.product_id = fp.id
+          WHERE fm3.family_id = f.id
+            AND fp.lifecycle <> 'DISCONTINUED'
+            AND fp.visible_vitrine = true
+        ) AS family_attributes_json,
+        (
+          SELECT ARRAY_AGG(fp.id ORDER BY fm4.sort_order, fp.id)
+          FROM product_family_members fm4
+          JOIN products fp ON fp.id = fm4.product_id
+          WHERE fm4.family_id = f.id
+            AND fp.lifecycle <> 'DISCONTINUED'
+            AND fp.visible_vitrine = true
+        ) AS product_ids,
+        pt.id AS product_type_id,
+        pt.name AS product_type_name,
+        pt.slug AS product_type_slug,
+        c.id AS category_id,
+        c.name AS category_name,
+        c.slug AS category_slug,
+        c.subtitle AS category_subtitle,
+        c.description AS category_description,
+        c.description_seo AS category_description_seo,
+        c.theme_color AS category_theme_color,
+        c.sort_order AS category_sort,
+        ${publicCategoryPromotionSql} AS category_is_promoted,
+        s.id AS subcategory_id,
+        s.name AS subcategory_name,
+        s.slug AS subcategory_slug,
+        s.subtitle AS subcategory_subtitle,
+        s.description AS subcategory_description,
+        s.description_seo AS subcategory_description_seo,
+        s.sort_order AS subcategory_sort
+      FROM product_families f
+      JOIN product_family_members m ON m.family_id = f.id
+      JOIN products p ON p.id = m.product_id
+      LEFT JOIN organizations p_brand ON p_brand.id = p.brand_id
+      JOIN product_type_templates pt ON pt.id = p.product_type_id
+      JOIN product_subcategory_links l ON l.product_id = p.id
+      JOIN product_subcategories s ON s.id = l.subcategory_id AND s.is_active = true AND s.visible_vitrine = true
+      JOIN product_types c ON c.id = s.category_id AND c.is_active = true
+      WHERE p.kind = 'VARIANT'
+        AND p.lifecycle <> 'DISCONTINUED'
+        AND p.visible_vitrine = true
+      ORDER BY f.id, s.id, m.sort_order ASC, p.id ASC
+    ),
+    product_entries AS (
+      SELECT DISTINCT ON (p.id, s.id)
+        CASE
+          WHEN p.kind IN ('STANDARD', 'SINGLE') THEN 'SINGLE'::text
+          WHEN p.kind = 'VARIANT' THEN 'VARIANT'::text
+        END AS entity_type,
+        p.id AS product_id,
+        NULL::bigint AS family_id,
+        p.slug AS product_slug,
+        p.sku AS product_sku,
+        p.name AS product_name,
+        p.display_name AS product_display_name,
+        p_brand.name AS product_brand,
+        p.tags AS product_tags,
+        p.rich_text_description::text AS product_description,
+        p.description_seo AS product_description_seo,
+        (
+          SELECT COALESCE(string_agg(concat_ws(' ', pa.name, pa.label, pa.value, pa.unit, pa.group_name), ' '), '')
+          FROM product_attributes pa
+          WHERE pa.product_id = p.id
+        ) AS attributes_text,
+        (
+          SELECT COALESCE(jsonb_agg(jsonb_build_object(
+            'key', pa.name,
+            'name', COALESCE(NULLIF(pa.label, ''), pa.name),
+            'value', pa.value,
+            'unit', pa.unit,
+            'groupName', pa.group_name
+          ) ORDER BY pa.group_sort_order, pa.sort_order, pa.name), '[]'::jsonb)
+          FROM product_attributes pa
+          WHERE pa.product_id = p.id
+        ) AS attributes_json,
+        NULL::text AS family_name,
+        NULL::text AS family_slug,
+        NULL::text AS family_subtitle,
+        NULL::text AS family_description,
+        NULL::text AS family_description_seo,
+        NULL::text AS family_members_text,
+        '[]'::jsonb AS family_attributes_json,
+        ARRAY[p.id]::bigint[] AS product_ids,
+        pt.id AS product_type_id,
+        pt.name AS product_type_name,
+        pt.slug AS product_type_slug,
+        c.id AS category_id,
+        c.name AS category_name,
+        c.slug AS category_slug,
+        c.subtitle AS category_subtitle,
+        c.description AS category_description,
+        c.description_seo AS category_description_seo,
+        c.theme_color AS category_theme_color,
+        c.sort_order AS category_sort,
+        ${publicCategoryPromotionSql} AS category_is_promoted,
+        s.id AS subcategory_id,
+        s.name AS subcategory_name,
+        s.slug AS subcategory_slug,
+        s.subtitle AS subcategory_subtitle,
+        s.description AS subcategory_description,
+        s.description_seo AS subcategory_description_seo,
+        s.sort_order AS subcategory_sort
+      FROM products p
+      LEFT JOIN organizations p_brand ON p_brand.id = p.brand_id
+      LEFT JOIN product_family_members fm ON fm.product_id = p.id
+      JOIN product_type_templates pt ON pt.id = p.product_type_id
+      JOIN product_subcategory_links l ON l.product_id = p.id
+      JOIN product_subcategories s ON s.id = l.subcategory_id AND s.is_active = true AND s.visible_vitrine = true
+      JOIN product_types c ON c.id = s.category_id AND c.is_active = true
+      WHERE (p.kind IN ('STANDARD', 'SINGLE') OR (p.kind = 'VARIANT' AND fm.product_id IS NULL))
+        AND p.lifecycle <> 'DISCONTINUED'
+        AND p.visible_vitrine = true
+      ORDER BY p.id, s.id, p.slug ASC
+    )
+    SELECT *
+    FROM family_entries
+    UNION ALL
+    SELECT *
+    FROM product_entries
+  `);
+}
+
+export async function findPublicRelatedProducts(
+  product: PublicProductInspector | PublicSimpleProductInspector,
+  options?: {
+    threshold?: number;
+    limit?: number;
+  },
+): Promise<PublicRelatedProductItem[]> {
+  const rows = await listPublicRelatedCandidateRows();
+  const targetProfile = buildRelatedProfileFromInspector(product);
+  const candidates = rows.map((row) => ({
+    row,
+    profile: buildRelatedProfileFromRow(row),
+  }));
+  const matches = rankRelatedProductProfiles(targetProfile, candidates, {
+    threshold: options?.threshold ?? RELATED_PRODUCTS_DEFAULT_THRESHOLD,
+    limit: options?.limit ?? RELATED_PRODUCTS_DEFAULT_LIMIT,
+  });
+
+  if (matches.length === 0) {
+    return [];
+  }
+
+  const matchedRows = matches.map((match) => match.item.row);
+  const familyIds = matchedRows
+    .map((row) => row.family_id)
+    .filter((id): id is bigint => id != null);
+  const productIds = matchedRows
+    .map((row) => row.product_id)
+    .filter((id): id is bigint => id != null);
+
+  const [families, products] = await Promise.all([
+    familyIds.length
+      ? prisma.productFamily.findMany({
+          where: {
+            id: { in: familyIds },
+          },
+          select: PUBLIC_FAMILY_SELECT,
+        })
+      : Promise.resolve([]),
+    productIds.length
+      ? prisma.product.findMany({
+          where: {
+            id: { in: productIds },
+            lifecycle: { not: "DISCONTINUED" },
+          },
+          select: PUBLIC_PRODUCT_SELECT,
+        })
+      : Promise.resolve([]),
+  ]);
+
+  await Promise.all([
+    makeMediaPublicMany(families.flatMap(collectMediaIdsForPublishing)),
+    makeMediaPublicMany(collectProductMediaIdsForPublishing(products)),
+  ]);
+
+  const familySummaryMap = new Map<number, PublicProductSummary>();
+  for (const family of families) {
+    const { defaultVariant } = pickDefaultPublicVariant(family);
+    if (!defaultVariant) {
+      continue;
+    }
+    familySummaryMap.set(Number(family.id), mapFamilySummary(family, defaultVariant));
+  }
+
+  const productSummaryMap = new Map<number, PublicProductSummary>();
+  for (const productRecord of products) {
+    productSummaryMap.set(
+      Number(productRecord.id),
+      mapProductSummary(
+        productRecord,
+        productRecord.kind === "VARIANT" ? "VARIANT" : "SINGLE",
+      ),
+    );
+  }
+
+  return matches
+    .map((match): PublicRelatedProductItem | null => {
+      const row = match.item.row;
+      const summary =
+        row.entity_type === "FAMILY"
+          ? familySummaryMap.get(Number(row.family_id))
+          : productSummaryMap.get(Number(row.product_id));
+
+      if (!summary) {
+        return null;
+      }
+
+      return {
+        product: summary,
+        category: mapIndexCategory({
+          id: row.category_id,
+          name: row.category_name,
+          slug: row.category_slug,
+          subtitle: row.category_subtitle,
+          themeColor: row.category_theme_color,
+          sortOrder: row.category_sort,
+          isPromoted: row.category_is_promoted,
+        }),
+        subcategory: mapIndexSubcategory({
+          id: row.subcategory_id,
+          name: row.subcategory_name,
+          slug: row.subcategory_slug,
+          subtitle: row.subcategory_subtitle,
+          description: row.subcategory_description,
+          sortOrder: row.subcategory_sort,
+          category: {
+            id: row.category_id,
+            slug: row.category_slug,
+          },
+        }),
+        relationshipScore: match.score,
+        relationshipReasons: match.reasons,
+      };
+    })
+    .filter((item): item is PublicRelatedProductItem => item != null);
 }
 
 export async function findPublicFamilyBySlug(

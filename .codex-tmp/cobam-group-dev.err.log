@@ -1,0 +1,695 @@
+⨯ Error [PrismaClientKnownRequestError]: 
+Invalid `{imported module ./packages/db/src/prisma.ts}["prisma"].article.findMany()` invocation in
+C:\dev\CobamGroup\apps\cobam-group\.next\dev\server\chunks\ssr\[root-of-the-server]__04da~yh._.js:531:174
+
+  528 }
+  529 async function listPublicArticleSummaries(options = {}) {
+  530     const articleSelect = getPublicArticleSelect();
+→ 531     const articles = await {imported module ./packages/db/src/prisma.ts}["prisma"].article.findMany(
+User was denied access on the database `cobamgroup`
+    at <unknown> (features\articles\public.ts:243:41)
+    at async listPublicArticleSummaries (features\articles\public.ts:243:20)
+    at async HomePage (app\(public)\page.tsx:237:48)
+  241 | async function listPublicArticleSummaries(options: { take?: number } = {}): Promise<Publi...
+  242 |   const articleSelect = getPublicArticleSelect();
+> 243 |   const articles = await prisma.article.findMany({
+      |                                         ^
+  244 |     where: {
+  245 |       deletedAt: null,
+  246 |       status: ArticleStatus.PUBLISHED, {
+  code: 'P1010',
+  meta: {
+    modelName: 'Article',
+    driverAdapterError: Error [DriverAdapterError]: DatabaseAccessDenied
+        at async listPublicArticleSummaries (features\articles\public.ts:243:20)
+        at async HomePage (app\(public)\page.tsx:237:48)
+      241 | async function listPublicArticleSummaries(options: { take?: number } = {}): Promise<Publi...
+      242 |   const articleSelect = getPublicArticleSelect();
+    > 243 |   const articles = await prisma.article.findMany({
+          |                    ^
+      244 |     where: {
+      245 |       deletedAt: null,
+      246 |       status: ArticleStatus.PUBLISHED, {
+      [cause]: [Object]
+    }
+  },
+  clientVersion: '7.6.0',
+  digest: '4203975240'
+}
+[promotions] Indicateur navbar indisponible: les promotions publiques sont masquees pour cette requete. Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].commercePromotion.findMany()` invocation in
+C:\dev\CobamGroup\apps\cobam-group\.next\dev\server\chunks\ssr\[root-of-the-server]__0rz1zly._.js:2318:190
+
+  2315 }
+  2316 async function hasPublicActivePromotions() {
+  2317     try {
+→ 2318         const promotions = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].commercePromotion.findMany(
+User was denied access on the database `cobamgroup`
+    at <unknown> (features\promotions\public.ts:489:55)
+    at async hasPublicActivePromotions (features\promotions\public.ts:489:24)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  487 | export async function hasPublicActivePromotions() {
+  488 |   try {
+> 489 |     const promotions = await prisma.commercePromotion.findMany({
+      |                                                       ^
+  490 |       where: activePublicPromotionWhere(),
+  491 |       select: {
+  492 |         products: { select: { productId: true } }, {
+  code: 'P1010',
+  meta: {
+    modelName: 'CommercePromotion',
+    driverAdapterError: Error [DriverAdapterError]: DatabaseAccessDenied
+        at async hasPublicActivePromotions (features\promotions\public.ts:489:24)
+        at async PublicLayout (app\(public)\layout.tsx:20:46)
+      487 | export async function hasPublicActivePromotions() {
+      488 |   try {
+    > 489 |     const promotions = await prisma.commercePromotion.findMany({
+          |                        ^
+      490 |       where: activePublicPromotionWhere(),
+      491 |       select: {
+      492 |         products: { select: { productId: true } }, {
+      [cause]: [Object]
+    }
+  },
+  clientVersion: '7.6.0'
+}
+[organizations] Organisations publiques indisponibles: la section est masquee pour cette requete. Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].organization.findMany()` invocation in
+C:\dev\CobamGroup\apps\cobam-group\.next\dev\server\chunks\ssr\[root-of-the-server]__04da~yh._.js:770:182
+
+  767 async function listPublicOrganizations(where) {
+  768     let organizations;
+  769     try {
+→ 770         organizations = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].organization.findMany(
+User was denied access on the database `cobamgroup`
+    at <unknown> (features\organizations\public.ts:82:47)
+    at async listPublicOrganizations (features\organizations\public.ts:82:21)
+  80 |
+  81 |   try {
+> 82 |     organizations = await prisma.organization.findMany({
+     |                                               ^
+  83 |       where,
+  84 |       orderBy: [{ name: "asc" }],
+  85 |       select: PUBLIC_ORGANIZATION_SELECT, {
+  code: 'P1010',
+  meta: {
+    modelName: 'Organization',
+    driverAdapterError: Error [DriverAdapterError]: DatabaseAccessDenied
+        at async listPublicOrganizations (features\organizations\public.ts:82:21)
+      80 |
+      81 |   try {
+    > 82 |     organizations = await prisma.organization.findMany({
+         |                     ^
+      83 |       where,
+      84 |       orderBy: [{ name: "asc" }],
+      85 |       select: PUBLIC_ORGANIZATION_SELECT, {
+      [cause]: [Object]
+    }
+  },
+  clientVersion: '7.6.0'
+}
+[product-categories] Mega menu indisponible: les categories publiques sont masquees pour cette requete. Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].productCategory.findMany()` invocation in
+C:\dev\CobamGroup\apps\cobam-group\.next\dev\server\chunks\ssr\[root-of-the-server]__0rz1zly._.js:1764:182
+
+  1761 const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
+  1762 let categories;
+  1763 try {
+→ 1764     categories = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].productCategory.findMany(
+User was denied access on the database `cobamgroup`
+    at <unknown> (features\product-categories\public.ts:492:48)
+    at async listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  490 |
+  491 |   try {
+> 492 |     categories = (await prisma.productCategory.findMany({
+      |                                                ^
+  493 |       where: {
+  494 |         isActive: true,
+  495 |         subcategories: { {
+  code: 'P1010',
+  meta: {
+    modelName: 'ProductCategory',
+    driverAdapterError: Error [DriverAdapterError]: DatabaseAccessDenied
+        at async listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+        at async PublicLayout (app\(public)\layout.tsx:20:46)
+      490 |
+      491 |   try {
+    > 492 |     categories = (await prisma.productCategory.findMany({
+          |                   ^
+      493 |       where: {
+      494 |         isActive: true,
+      495 |         subcategories: { {
+      [cause]: [Object]
+    }
+  },
+  clientVersion: '7.6.0'
+}
+[product-categories] Mega menu indisponible: les categories publiques sont masquees pour cette requete. Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].productCategory.findMany()` invocation in
+C:\dev\CobamGroup\apps\cobam-group\.next\dev\server\chunks\ssr\[root-of-the-server]__0rz1zly._.js:1764:182
+
+  1761 const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
+  1762 let categories;
+  1763 try {
+→ 1764     categories = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].productCategory.findMany(
+User was denied access on the database `cobamgroup`
+    at <unknown> (features\product-categories\public.ts:492:48)
+    at async listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+  490 |
+  491 |   try {
+> 492 |     categories = (await prisma.productCategory.findMany({
+      |                                                ^
+  493 |       where: {
+  494 |         isActive: true,
+  495 |         subcategories: { {
+  code: 'P1010',
+  meta: {
+    modelName: 'ProductCategory',
+    driverAdapterError: Error [DriverAdapterError]: DatabaseAccessDenied
+        at async listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+      490 |
+      491 |   try {
+    > 492 |     categories = (await prisma.productCategory.findMany({
+          |                   ^
+      493 |       where: {
+      494 |         isActive: true,
+      495 |         subcategories: { {
+      [cause]: [Object]
+    }
+  },
+  clientVersion: '7.6.0'
+}
+[browser] Uncaught PrismaClientKnownRequestError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].article.findMany()` invocation in
+C:\dev\CobamGroup\apps\cobam-group\.next\dev\server\chunks\ssr\[root-of-the-server]__04da~yh._.js:531:174
+
+  528 }
+  529 async function listPublicArticleSummaries(options = {}) {
+  530     const articleSelect = getPublicArticleSelect();
+→ 531     const articles = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].article.findMany(
+User was denied access on the database `cobamgroup`
+    at <unknown> (features\articles\public.ts:243:41)
+    at  listPublicArticleSummaries (features\articles\public.ts:243:20)
+    at  HomePage (app\(public)\page.tsx:237:48)
+  241 | async function listPublicArticleSummaries(options: { take?: number } = {}): Promise<Publi...
+  242 |   const articleSelect = getPublicArticleSelect();
+> 243 |   const articles = await prisma.article.findMany({
+      |                                         ^
+  244 |     where: {
+  245 |       deletedAt: null,
+  246 |       status: ArticleStatus.PUBLISHED,
+[promotions] Indicateur navbar indisponible: les promotions publiques sont masquees pour cette requete. Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].commercePromotion.findMany()` invocation in
+C:\dev\CobamGroup\apps\cobam-group\.next\dev\server\chunks\ssr\[root-of-the-server]__0rz1zly._.js:2318:190
+
+  2315 }
+  2316 async function hasPublicActivePromotions() {
+  2317     try {
+→ 2318         const promotions = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].commercePromotion.findMany(
+User was denied access on the database `cobamgroup`
+    at <unknown> (features\promotions\public.ts:489:55)
+    at async hasPublicActivePromotions (features\promotions\public.ts:489:24)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  487 | export async function hasPublicActivePromotions() {
+  488 |   try {
+> 489 |     const promotions = await prisma.commercePromotion.findMany({
+      |                                                       ^
+  490 |       where: activePublicPromotionWhere(),
+  491 |       select: {
+  492 |         products: { select: { productId: true } }, {
+  code: 'P1010',
+  meta: {
+    modelName: 'CommercePromotion',
+    driverAdapterError: Error [DriverAdapterError]: DatabaseAccessDenied
+        at async hasPublicActivePromotions (features\promotions\public.ts:489:24)
+        at async PublicLayout (app\(public)\layout.tsx:20:46)
+      487 | export async function hasPublicActivePromotions() {
+      488 |   try {
+    > 489 |     const promotions = await prisma.commercePromotion.findMany({
+          |                        ^
+      490 |       where: activePublicPromotionWhere(),
+      491 |       select: {
+      492 |         products: { select: { productId: true } }, {
+      [cause]: [Object]
+    }
+  },
+  clientVersion: '7.6.0'
+}
+[product-categories] Mega menu indisponible: les categories publiques sont masquees pour cette requete. Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].productCategory.findMany()` invocation in
+C:\dev\CobamGroup\apps\cobam-group\.next\dev\server\chunks\ssr\[root-of-the-server]__0rz1zly._.js:1764:182
+
+  1761 const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
+  1762 let categories;
+  1763 try {
+→ 1764     categories = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].productCategory.findMany(
+User was denied access on the database `cobamgroup`
+    at <unknown> (features\product-categories\public.ts:492:48)
+    at async listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  490 |
+  491 |   try {
+> 492 |     categories = (await prisma.productCategory.findMany({
+      |                                                ^
+  493 |       where: {
+  494 |         isActive: true,
+  495 |         subcategories: { {
+  code: 'P1010',
+  meta: {
+    modelName: 'ProductCategory',
+    driverAdapterError: Error [DriverAdapterError]: DatabaseAccessDenied
+        at async listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+        at async PublicLayout (app\(public)\layout.tsx:20:46)
+      490 |
+      491 |   try {
+    > 492 |     categories = (await prisma.productCategory.findMany({
+          |                   ^
+      493 |       where: {
+      494 |         isActive: true,
+      495 |         subcategories: { {
+      [cause]: [Object]
+    }
+  },
+  clientVersion: '7.6.0'
+}
+[organizations] Organisations publiques indisponibles: la section est masquee pour cette requete. Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].organization.findMany()` invocation in
+C:\dev\CobamGroup\apps\cobam-group\.next\dev\server\chunks\ssr\[root-of-the-server]__04da~yh._.js:770:182
+
+  767 async function listPublicOrganizations(where) {
+  768     let organizations;
+  769     try {
+→ 770         organizations = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].organization.findMany(
+User was denied access on the database `cobamgroup`
+    at <unknown> (features\organizations\public.ts:82:47)
+    at async listPublicOrganizations (features\organizations\public.ts:82:21)
+    at async HomePage (app\(public)\page.tsx:237:48)
+  80 |
+  81 |   try {
+> 82 |     organizations = await prisma.organization.findMany({
+     |                                               ^
+  83 |       where,
+  84 |       orderBy: [{ name: "asc" }],
+  85 |       select: PUBLIC_ORGANIZATION_SELECT, {
+  code: 'P1010',
+  meta: {
+    modelName: 'Organization',
+    driverAdapterError: Error [DriverAdapterError]: DatabaseAccessDenied
+        at async listPublicOrganizations (features\organizations\public.ts:82:21)
+        at async HomePage (app\(public)\page.tsx:237:48)
+      80 |
+      81 |   try {
+    > 82 |     organizations = await prisma.organization.findMany({
+         |                     ^
+      83 |       where,
+      84 |       orderBy: [{ name: "asc" }],
+      85 |       select: PUBLIC_ORGANIZATION_SELECT, {
+      [cause]: [Object]
+    }
+  },
+  clientVersion: '7.6.0'
+}
+⨯ Error [PrismaClientKnownRequestError]: 
+Invalid `{imported module ./packages/db/src/prisma.ts}["prisma"].article.findMany()` invocation in
+C:\dev\CobamGroup\apps\cobam-group\.next\dev\server\chunks\ssr\[root-of-the-server]__04da~yh._.js:531:174
+
+  528 }
+  529 async function listPublicArticleSummaries(options = {}) {
+  530     const articleSelect = getPublicArticleSelect();
+→ 531     const articles = await {imported module ./packages/db/src/prisma.ts}["prisma"].article.findMany(
+User was denied access on the database `cobamgroup`
+    at <unknown> (features\articles\public.ts:243:41)
+    at async listPublicArticleSummaries (features\articles\public.ts:243:20)
+    at async HomePage (app\(public)\page.tsx:237:48)
+  241 | async function listPublicArticleSummaries(options: { take?: number } = {}): Promise<Publi...
+  242 |   const articleSelect = getPublicArticleSelect();
+> 243 |   const articles = await prisma.article.findMany({
+      |                                         ^
+  244 |     where: {
+  245 |       deletedAt: null,
+  246 |       status: ArticleStatus.PUBLISHED, {
+  code: 'P1010',
+  meta: {
+    modelName: 'Article',
+    driverAdapterError: Error [DriverAdapterError]: DatabaseAccessDenied
+        at async listPublicArticleSummaries (features\articles\public.ts:243:20)
+        at async HomePage (app\(public)\page.tsx:237:48)
+      241 | async function listPublicArticleSummaries(options: { take?: number } = {}): Promise<Publi...
+      242 |   const articleSelect = getPublicArticleSelect();
+    > 243 |   const articles = await prisma.article.findMany({
+          |                    ^
+      244 |     where: {
+      245 |       deletedAt: null,
+      246 |       status: ArticleStatus.PUBLISHED, {
+      [cause]: [Object]
+    }
+  },
+  clientVersion: '7.6.0',
+  digest: '4203975240'
+}
+[product-categories] Mega menu indisponible: les categories publiques sont masquees pour cette requete. Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].productCategory.findMany()` invocation in
+C:\dev\CobamGroup\apps\cobam-group\.next\dev\server\chunks\ssr\[root-of-the-server]__0rz1zly._.js:1764:182
+
+  1761 const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
+  1762 let categories;
+  1763 try {
+→ 1764     categories = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].productCategory.findMany(
+User was denied access on the database `cobamgroup`
+    at <unknown> (features\product-categories\public.ts:492:48)
+    at async listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+  490 |
+  491 |   try {
+> 492 |     categories = (await prisma.productCategory.findMany({
+      |                                                ^
+  493 |       where: {
+  494 |         isActive: true,
+  495 |         subcategories: { {
+  code: 'P1010',
+  meta: {
+    modelName: 'ProductCategory',
+    driverAdapterError: Error [DriverAdapterError]: DatabaseAccessDenied
+        at async listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+      490 |
+      491 |   try {
+    > 492 |     categories = (await prisma.productCategory.findMany({
+          |                   ^
+      493 |       where: {
+      494 |         isActive: true,
+      495 |         subcategories: { {
+      [cause]: [Object]
+    }
+  },
+  clientVersion: '7.6.0'
+}
+[product-categories] Mega menu indisponible: les categories publiques sont masquees pour cette requete. Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].productCategory.findMany()` invocation in
+C:\dev\CobamGroup\apps\cobam-group\.next\dev\server\chunks\ssr\[root-of-the-server]__0rz1zly._.js:1764:182
+
+  1761 const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
+  1762 let categories;
+  1763 try {
+→ 1764     categories = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].productCategory.findMany(
+User was denied access on the database `cobamgroup`
+    at <unknown> (features\product-categories\public.ts:492:48)
+    at async listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  490 |
+  491 |   try {
+> 492 |     categories = (await prisma.productCategory.findMany({
+      |                                                ^
+  493 |       where: {
+  494 |         isActive: true,
+  495 |         subcategories: { {
+  code: 'P1010',
+  meta: {
+    modelName: 'ProductCategory',
+    driverAdapterError: Error [DriverAdapterError]: DatabaseAccessDenied
+        at async listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+        at async PublicLayout (app\(public)\layout.tsx:20:46)
+      490 |
+      491 |   try {
+    > 492 |     categories = (await prisma.productCategory.findMany({
+          |                   ^
+      493 |       where: {
+      494 |         isActive: true,
+      495 |         subcategories: { {
+      [cause]: [Object]
+    }
+  },
+  clientVersion: '7.6.0'
+}
+⨯ Error [PrismaClientKnownRequestError]: 
+Invalid `{imported module ./packages/db/src/prisma.ts}["prisma"].product.findFirst()` invocation in
+C:\dev\CobamGroup\apps\cobam-group\.next\dev\server\chunks\ssr\[root-of-the-server]__0b5~-4a._.js:2990:172
+
+  2987     });
+  2988 }
+  2989 async function findPublicProductBySlug(productSlug) {
+→ 2990     const record = await {imported module ./packages/db/src/prisma.ts}["prisma"].product.findFirst(
+User was denied access on the database `cobamgroup`
+    at <unknown> (features\products\public.ts:1911:39)
+    at async findPublicProductBySlug (features\products\public.ts:1911:18)
+    at async PublicProductPage (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:44:38)
+  1909 |   productSlug: string,
+  1910 | ): Promise<PublicSimpleProductInspector | null> {
+> 1911 |   const record = await prisma.product.findFirst({
+       |                                       ^
+  1912 |     where: {
+  1913 |       slug: productSlug,
+  1914 |       kind: { {
+  code: 'P1010',
+  meta: {
+    modelName: 'Product',
+    driverAdapterError: Error [DriverAdapterError]: DatabaseAccessDenied
+        at async findPublicProductBySlug (features\products\public.ts:1911:18)
+        at async PublicProductPage (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:44:38)
+      1909 |   productSlug: string,
+      1910 | ): Promise<PublicSimpleProductInspector | null> {
+    > 1911 |   const record = await prisma.product.findFirst({
+           |                  ^
+      1912 |     where: {
+      1913 |       slug: productSlug,
+      1914 |       kind: { {
+      [cause]: [Object]
+    }
+  },
+  clientVersion: '7.6.0',
+  digest: '3181463663'
+}
+[product-categories] Sous-categorie indisponible: les categories publiques sont masquees pour cette requete. Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].productSubcategory.findFirst()` invocation in
+C:\dev\CobamGroup\apps\cobam-group\.next\dev\server\chunks\ssr\[root-of-the-server]__0rz1zly._.js:1834:186
+
+  1831 const hasVisibilityColumns = await hasProductSubcategoryVisibilityColumns();
+  1832 let subcategory;
+  1833 try {
+→ 1834     subcategory = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].productSubcategory.findFirst(
+User was denied access on the database `cobamgroup`
+    at <unknown> (features\product-categories\public.ts:563:52)
+    at async findPublicProductSubcategoryBySlugs (features\product-categories\public.ts:563:20)
+  561 |
+  562 |   try {
+> 563 |     subcategory = (await prisma.productSubcategory.findFirst({
+      |                                                    ^
+  564 |       where: {
+  565 |         ...publicVitrineSubcategoryWhere(hasVisibilityColumns),
+  566 |         slug: input.subcategorySlug, {
+  code: 'P1010',
+  meta: {
+    modelName: 'ProductSubcategory',
+    driverAdapterError: Error [DriverAdapterError]: DatabaseAccessDenied
+        at async findPublicProductSubcategoryBySlugs (features\product-categories\public.ts:563:20)
+      561 |
+      562 |   try {
+    > 563 |     subcategory = (await prisma.productSubcategory.findFirst({
+          |                    ^
+      564 |       where: {
+      565 |         ...publicVitrineSubcategoryWhere(hasVisibilityColumns),
+      566 |         slug: input.subcategorySlug, {
+      [cause]: [Object]
+    }
+  },
+  clientVersion: '7.6.0'
+}
+⨯ Error [PrismaClientKnownRequestError]: 
+Invalid `{imported module ./packages/db/src/prisma.ts}["prisma"].product.findFirst()` invocation in
+C:\dev\CobamGroup\apps\cobam-group\.next\dev\server\chunks\ssr\[root-of-the-server]__0b5~-4a._.js:2990:172
+
+  2987     });
+  2988 }
+  2989 async function findPublicProductBySlug(productSlug) {
+→ 2990     const record = await {imported module ./packages/db/src/prisma.ts}["prisma"].product.findFirst(
+User was denied access on the database `cobamgroup`
+    at <unknown> (features\products\public.ts:1911:39)
+    at async findPublicProductBySlug (features\products\public.ts:1911:18)
+    at async Module.generateMetadata (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:28:19)
+  1909 |   productSlug: string,
+  1910 | ): Promise<PublicSimpleProductInspector | null> {
+> 1911 |   const record = await prisma.product.findFirst({
+       |                                       ^
+  1912 |     where: {
+  1913 |       slug: productSlug,
+  1914 |       kind: { {
+  code: 'P1010',
+  meta: {
+    modelName: 'Product',
+    driverAdapterError: Error [DriverAdapterError]: DatabaseAccessDenied
+        at async findPublicProductBySlug (features\products\public.ts:1911:18)
+        at async Module.generateMetadata (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:28:19)
+      1909 |   productSlug: string,
+      1910 | ): Promise<PublicSimpleProductInspector | null> {
+    > 1911 |   const record = await prisma.product.findFirst({
+           |                  ^
+      1912 |     where: {
+      1913 |       slug: productSlug,
+      1914 |       kind: { {
+      [cause]: [Object]
+    }
+  },
+  clientVersion: '7.6.0',
+  digest: '1560580719'
+}
+[promotions] Indicateur navbar indisponible: les promotions publiques sont masquees pour cette requete. Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].commercePromotion.findMany()` invocation in
+C:\dev\CobamGroup\apps\cobam-group\.next\dev\server\chunks\ssr\[root-of-the-server]__0rz1zly._.js:2318:190
+
+  2315 }
+  2316 async function hasPublicActivePromotions() {
+  2317     try {
+→ 2318         const promotions = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].commercePromotion.findMany(
+User was denied access on the database `cobamgroup`
+    at <unknown> (features\promotions\public.ts:489:55)
+    at async hasPublicActivePromotions (features\promotions\public.ts:489:24)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  487 | export async function hasPublicActivePromotions() {
+  488 |   try {
+> 489 |     const promotions = await prisma.commercePromotion.findMany({
+      |                                                       ^
+  490 |       where: activePublicPromotionWhere(),
+  491 |       select: {
+  492 |         products: { select: { productId: true } }, {
+  code: 'P1010',
+  meta: {
+    modelName: 'CommercePromotion',
+    driverAdapterError: Error [DriverAdapterError]: DatabaseAccessDenied
+        at async hasPublicActivePromotions (features\promotions\public.ts:489:24)
+        at async PublicLayout (app\(public)\layout.tsx:20:46)
+      487 | export async function hasPublicActivePromotions() {
+      488 |   try {
+    > 489 |     const promotions = await prisma.commercePromotion.findMany({
+          |                        ^
+      490 |       where: activePublicPromotionWhere(),
+      491 |       select: {
+      492 |         products: { select: { productId: true } }, {
+      [cause]: [Object]
+    }
+  },
+  clientVersion: '7.6.0'
+}
+[browser] Uncaught PrismaClientKnownRequestError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].product.findFirst()` invocation in
+C:\dev\CobamGroup\apps\cobam-group\.next\dev\server\chunks\ssr\[root-of-the-server]__0b5~-4a._.js:2990:172
+
+  2987     });
+  2988 }
+  2989 async function findPublicProductBySlug(productSlug) {
+→ 2990     const record = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].product.findFirst(
+User was denied access on the database `cobamgroup`
+    at <unknown> (features\products\public.ts:1911:39)
+    at  findPublicProductBySlug (features\products\public.ts:1911:18)
+    at  PublicProductPage (app\(public)\produits\[category]\[subcategory]\[slug]\page.tsx:44:38)
+  1909 |   productSlug: string,
+  1910 | ): Promise<PublicSimpleProductInspector | null> {
+> 1911 |   const record = await prisma.product.findFirst({
+       |                                       ^
+  1912 |     where: {
+  1913 |       slug: productSlug,
+  1914 |       kind: {
+[browser] Uncaught PrismaClientKnownRequestError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].article.findMany()` invocation in
+C:\dev\CobamGroup\apps\cobam-group\.next\dev\server\chunks\ssr\[root-of-the-server]__04da~yh._.js:531:174
+
+  528 }
+  529 async function listPublicArticleSummaries(options = {}) {
+  530     const articleSelect = getPublicArticleSelect();
+→ 531     const articles = await __TURBOPACK__imported__module__$5b$project$5d2f$packages$2f$db$2f$src$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].article.findMany(
+User was denied access on the database `cobamgroup`
+    at <unknown> (features\articles\public.ts:243:41)
+    at  listPublicArticleSummaries (features\articles\public.ts:243:20)
+    at  HomePage (app\(public)\page.tsx:237:48)
+  241 | async function listPublicArticleSummaries(options: { take?: number } = {}): Promise<Publi...
+  242 |   const articleSelect = getPublicArticleSelect();
+> 243 |   const articles = await prisma.article.findMany({
+      |                                         ^
+  244 |     where: {
+  245 |       deletedAt: null,
+  246 |       status: ArticleStatus.PUBLISHED,
+⨯ Error: Connection terminated due to connection timeout
+    at async listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+    at async HomePage (app\(public)\page.tsx:237:48)
+  490 |
+  491 |   try {
+> 492 |     categories = (await prisma.productCategory.findMany({
+      |                   ^
+  493 |       where: {
+  494 |         isActive: true,
+  495 |         subcategories: { {
+  clientVersion: '7.6.0',
+  digest: '3416301501',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  490 |
+  491 |   try {
+> 492 |     categories = (await prisma.productCategory.findMany({
+      |                   ^
+  493 |       where: {
+  494 |         isActive: true,
+  495 |         subcategories: { {
+  clientVersion: '7.6.0',
+  digest: '4154126516',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+[browser] Uncaught Error: Connection terminated due to connection timeout
+    at  listPublicMegaMenuProductCategories (features\product-categories\public.ts:492:19)
+    at  PublicLayout (app\(public)\layout.tsx:20:46)
+  490 |
+  491 |   try {
+> 492 |     categories = (await prisma.productCategory.findMany({
+      |                   ^
+  493 |       where: {
+  494 |         isActive: true,
+  495 |         subcategories: {
+⨯ Error: Connection terminated due to connection timeout
+    at async listPublicArticleSummaries (features\articles\public.ts:243:20)
+    at async HomePage (app\(public)\page.tsx:237:48)
+  241 | async function listPublicArticleSummaries(options: { take?: number } = {}): Promise<Publi...
+  242 |   const articleSelect = getPublicArticleSelect();
+> 243 |   const articles = await prisma.article.findMany({
+      |                    ^
+  244 |     where: {
+  245 |       deletedAt: null,
+  246 |       status: ArticleStatus.PUBLISHED, {
+  clientVersion: '7.6.0',
+  digest: '163896138',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+⨯ Error: Connection terminated due to connection timeout
+    at async hasPublicActivePromotions (features\promotions\public.ts:489:24)
+    at async PublicLayout (app\(public)\layout.tsx:20:46)
+  487 | export async function hasPublicActivePromotions() {
+  488 |   try {
+> 489 |     const promotions = await prisma.commercePromotion.findMany({
+      |                        ^
+  490 |       where: activePublicPromotionWhere(),
+  491 |       select: {
+  492 |         products: { select: { productId: true } }, {
+  clientVersion: '7.6.0',
+  digest: '2676645319',
+  [cause]: Error: Connection terminated unexpectedly
+      at ignore-listed frames
+}
+[browser] Uncaught Error: Connection terminated due to connection timeout
+    at  hasPublicActivePromotions (features\promotions\public.ts:489:24)
+    at  PublicLayout (app\(public)\layout.tsx:20:46)
+  487 | export async function hasPublicActivePromotions() {
+  488 |   try {
+> 489 |     const promotions = await prisma.commercePromotion.findMany({
+      |                        ^
+  490 |       where: activePublicPromotionWhere(),
+  491 |       select: {
+  492 |         products: { select: { productId: true } },
+npm error Lifecycle script `dev` failed with error:
+npm error code 4294967295
+npm error path C:\dev\CobamGroup\apps\cobam-group
+npm error workspace @cobam/cobam-group@0.1.0
+npm error location C:\dev\CobamGroup\apps\cobam-group
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c next dev -p 3000

@@ -1,4 +1,5 @@
 import { PublicProductBreadcrumb } from "@/features/products/public-breadcrumb";
+import type { PublicRelatedProductItem } from "@/features/products/types";
 import {
   PublicProductBrand,
   PublicProductColorReference,
@@ -45,6 +46,7 @@ export type UnifiedInspectorProduct = {
 export type PublicProductInspectorViewProps = {
   product: PublicProductInspector | PublicSimpleProductInspector;
   breadcrumb?: PublicProductBreadcrumb | null;
+  relatedProducts?: PublicRelatedProductItem[];
 };
 
 export type VariantSpecialValue = {

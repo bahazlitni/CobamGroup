@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "A propos",
   description:
-    "Decouvrez l'histoire, la vision, les valeurs et les equipes de COBAM GROUP depuis 1994.",
+    "Decouvrez l'histoire, la vision, les valeurs et les équipes de COBAM GROUP depuis 1994.",
   alternates: {
     canonical: "/a-propos",
   },
