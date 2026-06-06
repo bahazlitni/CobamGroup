@@ -4,6 +4,8 @@ import {
   getArticleFirstParagraphText,
   replaceArticleImageSources,
 } from "./document";
+import { canPreviewDraftArticleOnPublicPage } from "@/features/articles/access";
+import type { StaffSession } from "@/features/auth/types";
 import { makeMediaPublicMany } from "@/features/media/repository";
 import { prisma } from "@/lib/server/db/prisma";
 
@@ -39,6 +41,7 @@ export type PublicArticleDetail = PublicArticleSummary & {
 
 type PublicArticleRecord = {
   id: bigint;
+  authorId: string;
   slug: string;
   title: string;
   displayTitle: string | null;
@@ -47,6 +50,7 @@ type PublicArticleRecord = {
   createdAt: Date;
   updatedAt: Date;
   publishedAt: Date | null;
+  status: ArticleStatus;
   coverMediaId: bigint | null;
   coverMedia: {
     id: bigint;
@@ -62,6 +66,7 @@ type PublicArticleRecord = {
     profile: { firstName: string | null; lastName: string | null } | null;
   };
   authorLinks: Array<{
+    userId: string;
     user: {
       email: string;
       profile: { firstName: string | null; lastName: string | null } | null;
@@ -174,6 +179,7 @@ function mapPublicArticleSummary(article: PublicArticleRecord): PublicArticleSum
 function getPublicArticleSelect() {
   return Prisma.validator<Prisma.ArticleSelect>()({
     id: true,
+    authorId: true,
     slug: true,
     title: true,
     displayTitle: true,
@@ -182,6 +188,7 @@ function getPublicArticleSelect() {
     createdAt: true,
     updatedAt: true,
     publishedAt: true,
+    status: true,
     coverMediaId: true,
     coverMedia: {
       select: {
@@ -208,6 +215,7 @@ function getPublicArticleSelect() {
     authorLinks: {
       orderBy: AUTHOR_LINK_ORDER_BY,
       select: {
+        userId: true,
         user: {
           select: {
             email: true,
@@ -353,12 +361,12 @@ async function listPublicArticleSuggestions(input: {
 
 export async function findPublicArticleBySlug(
   slug: string,
+  options: { staffSession?: StaffSession | null } = {},
 ): Promise<PublicArticleDetail | null> {
   const articleSelect = getPublicArticleSelect();
   const article = await prisma.article.findFirst({
     where: {
       deletedAt: null,
-      status: ArticleStatus.PUBLISHED,
       slug,
     },
     select: {
@@ -374,11 +382,19 @@ export async function findPublicArticleBySlug(
     return null;
   }
 
-  await ensurePublishedArticleMediaPublic({
-    coverMediaId: article.coverMediaId,
-    ogImageMediaId: article.ogImageMediaId,
-    content: article.content,
-  });
+  if (article.status === ArticleStatus.PUBLISHED) {
+    await ensurePublishedArticleMediaPublic({
+      coverMediaId: article.coverMediaId,
+      ogImageMediaId: article.ogImageMediaId,
+      content: article.content,
+    });
+  } else if (
+    article.status !== ArticleStatus.DRAFT ||
+    !options.staffSession ||
+    !canPreviewDraftArticleOnPublicPage(options.staffSession, article)
+  ) {
+    return null;
+  }
 
   const summary = mapPublicArticleSummary(article);
   const suggestions = await listPublicArticleSuggestions({

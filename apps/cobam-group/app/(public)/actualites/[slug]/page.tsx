@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import ArticleDocumentReader from "@/components/staff/articles/article-document-reader";
 import PublicArticleMeta from "@/components/public/articles/public-article-meta";
 import PublicArticleSuggestions from "@/components/public/articles/public-article-suggestions";
 import { findPublicArticleBySlug } from "@/features/articles/public";
+import { getStaffSessionByRefreshToken } from "@/features/auth/server/session";
 
 export const dynamic = "force-dynamic";
 
@@ -12,11 +14,18 @@ type ArticlePageProps = {
   params: Promise<{ slug: string }>;
 };
 
+async function getPublicArticleStaffSession() {
+  const cookieStore = await cookies();
+
+  return getStaffSessionByRefreshToken(cookieStore.get("staff_refresh_token")?.value);
+}
+
 export async function generateMetadata({
   params,
 }: ArticlePageProps): Promise<Metadata> {
   const { slug } = await params;
-  const article = await findPublicArticleBySlug(slug);
+  const staffSession = await getPublicArticleStaffSession();
+  const article = await findPublicArticleBySlug(slug, { staffSession });
 
   if (!article) {
     return {
@@ -37,7 +46,8 @@ export default async function PublicArticleDetailPage({
   params,
 }: ArticlePageProps) {
   const { slug } = await params;
-  const article = await findPublicArticleBySlug(slug);
+  const staffSession = await getPublicArticleStaffSession();
+  const article = await findPublicArticleBySlug(slug, { staffSession });
 
   if (!article) {
     notFound();

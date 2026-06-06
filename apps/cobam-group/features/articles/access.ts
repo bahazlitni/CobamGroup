@@ -28,3 +28,24 @@ export function canAccessArticles(session: StaffSession): boolean {
 export function canCreateArticles(session: StaffSession): boolean {
   return hasPermission(session, PERMISSIONS.ARTICLES_CREATE);
 }
+
+export function canPreviewDraftArticleOnPublicPage(
+  session: StaffSession,
+  article: {
+    authorId: string;
+    authorLinks?: Array<{ userId: string }>;
+  },
+): boolean {
+  if (hasPermission(session, PERMISSIONS.ARTICLES_VIEW_ALL)) {
+    return true;
+  }
+
+  if (!hasPermission(session, PERMISSIONS.ARTICLES_VIEW_OWN)) {
+    return false;
+  }
+
+  return (
+    article.authorId === session.id ||
+    (article.authorLinks ?? []).some((link) => link.userId === session.id)
+  );
+}

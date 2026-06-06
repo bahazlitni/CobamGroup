@@ -154,15 +154,26 @@ export default function ArticlesListPage() {
                 {new Date(article.updatedAt).toLocaleDateString("fr-FR")}
               </td>
 
-              <td className="px-4 py-3 align-top text-right">
-                <AnimatedUIButton
-                  href={`${pathname}/edit?id=${article.id}`}
-                  icon="modify"
-                  variant="ghost"
-                  iconPosition="left"
-                >
-                  Modifier
-                </AnimatedUIButton>
+              <td className="px-4 py-3 align-top">
+                <div className="flex justify-end gap-2">
+                  <AnimatedUIButton
+                    href={`/actualites/${article.slug}`}
+                    target="_blank"
+                    variant="outline"
+                    size="sm"
+                  >
+                    Voir
+                  </AnimatedUIButton>
+                  <AnimatedUIButton
+                    href={`${pathname}/edit?id=${article.id}`}
+                    icon="modify"
+                    variant="ghost"
+                    iconPosition="left"
+                    size="sm"
+                  >
+                    Modifier
+                  </AnimatedUIButton>
+                </div>
               </td>
             </tr>
           );
