@@ -1,6 +1,7 @@
 import { Prisma, type ProductLifecycle } from "@prisma/client";
 import {
   getArticlePlainText,
+  isArticleDocumentEmpty,
   normalizeArticleContent,
   parseArticleContent,
   type ArticleDocument,
@@ -9,9 +10,7 @@ import {
 export type RichTextDescriptionValue = Prisma.JsonValue | null | undefined;
 
 export function stringToRichTextDescription(value: string | null | undefined) {
-  const text = getArticlePlainText(value ?? "").trim();
-
-  if (!text) {
+  if (isArticleDocumentEmpty(value ?? "")) {
     return Prisma.DbNull;
   }
 
@@ -37,7 +36,7 @@ export function richTextDescriptionToString(value: RichTextDescriptionValue) {
 export function richTextDescriptionToEditorValue(value: RichTextDescriptionValue) {
   const input = toArticleDocumentInput(value);
 
-  if (!getArticlePlainText(input).trim()) {
+  if (isArticleDocumentEmpty(input)) {
     return null;
   }
 

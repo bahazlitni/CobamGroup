@@ -188,6 +188,24 @@ function getImageMediaIdFromNode(node: JSONContent): number | null {
   return null;
 }
 
+function hasRenderableContent(node: JSONContent): boolean {
+  if (node.type === "text" && typeof node.text === "string" && node.text.trim()) {
+    return true;
+  }
+
+  if (node.type === "image" && isRecord(node.attrs)) {
+    const srcValue = node.attrs.src;
+
+    return typeof srcValue === "string" && srcValue.trim().length > 0;
+  }
+
+  if (Array.isArray(node.content)) {
+    return node.content.some(hasRenderableContent);
+  }
+
+  return false;
+}
+
 function getNodePlainText(node: JSONContent): string {
   const parts: string[] = [];
 
@@ -266,9 +284,8 @@ export function isArticleDocumentEmpty(
   value: string | ArticleDocument | null | undefined,
 ): boolean {
   const document = parseArticleContent(value);
-  const plainText = getArticlePlainText(document);
 
-  return plainText.length === 0;
+  return !hasRenderableContent(document);
 }
 
 export function getArticlePlainText(

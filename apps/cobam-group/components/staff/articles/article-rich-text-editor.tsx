@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import { parseArticleContent, serializeArticleContent } from "@/features/articles/document";
 import { createArticleEditorExtensions } from "@/features/articles/editor/extensions";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,120 @@ type ArticleRichTextEditorProps = {
   className?: string;
 };
 
+type PastedImage = {
+  src: string;
+  alt: string;
+};
+
+function isImageFile(file: File | null | undefined): file is File {
+  return Boolean(file && file.type.startsWith("image/"));
+}
+
+function getClipboardImageFiles(event: ClipboardEvent): File[] {
+  const clipboardData = event.clipboardData;
+
+  if (!clipboardData) {
+    return [];
+  }
+
+  const files: File[] = [];
+  const seen = new Set<string>();
+  const addFile = (file: File | null) => {
+    if (!isImageFile(file)) {
+      return;
+    }
+
+    const key = `${file.name}:${file.type}:${file.size}:${file.lastModified}`;
+
+    if (seen.has(key)) {
+      return;
+    }
+
+    seen.add(key);
+    files.push(file);
+  };
+
+  Array.from(clipboardData.items).forEach((item) => {
+    if (item.kind === "file" && item.type.startsWith("image/")) {
+      addFile(item.getAsFile());
+    }
+  });
+
+  Array.from(clipboardData.files).forEach(addFile);
+
+  return files;
+}
+
+function readImageFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = reader.result;
+
+      if (typeof result === "string" && result.startsWith("data:image/")) {
+        resolve(result);
+        return;
+      }
+
+      reject(new Error("Invalid pasted image data."));
+    };
+    reader.onerror = () => {
+      reject(reader.error ?? new Error("Unable to read pasted image."));
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+function getPastedImageAlt(file: File, index: number, count: number) {
+  const fileNameWithoutExtension = file.name.replace(/\.[^.]+$/, "").trim();
+
+  if (fileNameWithoutExtension && fileNameWithoutExtension.toLowerCase() !== "image") {
+    return fileNameWithoutExtension;
+  }
+
+  return count > 1 ? `Image collee ${index + 1}` : "Image collee";
+}
+
+async function readPastedImages(files: File[]): Promise<PastedImage[]> {
+  const images = await Promise.all(
+    files.map(async (file, index) => {
+      try {
+        return {
+          src: await readImageFileAsDataUrl(file),
+          alt: getPastedImageAlt(file, index, files.length),
+        };
+      } catch {
+        return null;
+      }
+    }),
+  );
+
+  return images.filter((image): image is PastedImage => image !== null);
+}
+
+function insertPastedImages(editor: Editor | null, images: PastedImage[]) {
+  if (!editor?.isEditable || images.length === 0) {
+    return;
+  }
+
+  editor
+    .chain()
+    .focus()
+    .insertContent([
+      ...images.map((image) => ({
+        type: "image",
+        attrs: {
+          src: image.src,
+          alt: image.alt,
+        },
+      })),
+      { type: "paragraph" },
+    ])
+    .run();
+}
+
 export default function ArticleRichTextEditor({
   editorId,
   value,
@@ -25,6 +139,7 @@ export default function ArticleRichTextEditor({
   className,
 }: ArticleRichTextEditorProps) {
   const onChangeRef = useRef(onChange);
+  const editorRef = useRef<Editor | null>(null);
   const isSyncingExternalContentRef = useRef(false);
   const document = useMemo(() => parseArticleContent(value), [value]);
   const normalizedValue = useMemo(() => serializeArticleContent(document), [document]);
@@ -44,6 +159,31 @@ export default function ArticleRichTextEditor({
         ...(editorId ? { id: editorId } : {}),
         class: "tiptap article-document article-document--editor",
       },
+      handlePaste: (_view, event) => {
+        if (!editorRef.current?.isEditable) {
+          return false;
+        }
+
+        const imageFiles = getClipboardImageFiles(event);
+
+        if (imageFiles.length === 0) {
+          return false;
+        }
+
+        event.preventDefault();
+
+        void readPastedImages(imageFiles).then((images) => {
+          insertPastedImages(editorRef.current, images);
+        });
+
+        return true;
+      },
+    },
+    onCreate: ({ editor: nextEditor }) => {
+      editorRef.current = nextEditor;
+    },
+    onDestroy: () => {
+      editorRef.current = null;
     },
     onUpdate: ({ editor: nextEditor }) => {
       if (isSyncingExternalContentRef.current) {

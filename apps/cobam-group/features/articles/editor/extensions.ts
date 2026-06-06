@@ -31,7 +31,7 @@ const ArticleImage = Image.extend({
     };
   },
 }).configure({
-  allowBase64: false,
+  allowBase64: true,
   HTMLAttributes: {
     loading: "lazy",
     decoding: "async",
