@@ -143,7 +143,10 @@ export default function ArticleRichTextEditor({
   const isSyncingExternalContentRef = useRef(false);
   const document = useMemo(() => parseArticleContent(value), [value]);
   const normalizedValue = useMemo(() => serializeArticleContent(document), [document]);
-  const extensions = useMemo(() => createArticleEditorExtensions({ placeholder }), [placeholder]);
+  const extensions = useMemo(
+    () => createArticleEditorExtensions({ placeholder, enableImageAltEditor: true }),
+    [placeholder],
+  );
 
   useEffect(() => {
     onChangeRef.current = onChange;

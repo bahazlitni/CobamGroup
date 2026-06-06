@@ -5,6 +5,7 @@ import { useEditorState, type Editor } from "@tiptap/react";
 import {
   Bold,
   Eraser,
+  ImagePlus,
   Italic,
   Link2,
   List,
@@ -31,7 +32,9 @@ import {
   ARTICLE_EDITOR_COLOR_PRESETS,
   normalizeArticleEditorColor,
 } from "@/features/articles/editor/colors";
+import type { MediaListItemDto } from "@/features/media/types";
 import { cn } from "@/lib/utils";
+import ImagePickerDialog from "../media/importers/image-picker-dialog";
 
 type ArticleRichTextToolbarProps = {
   editor: Editor | null;
@@ -125,8 +128,38 @@ function normalizeLinkUrl(value: string) {
   return `https://${normalized}`;
 }
 
+function insertMediaImage(editor: Editor | null, media: MediaListItemDto) {
+  if (!editor?.isEditable) {
+    return;
+  }
+
+  const src = media.fileEndpoint || media.publicFileEndpoint;
+
+  if (!src) {
+    return;
+  }
+
+  editor
+    .chain()
+    .focus()
+    .insertContent([
+      {
+        type: "image",
+        attrs: {
+          src,
+          alt: media.resolvedAltText || "",
+          title: media.resolvedTitle || "",
+          mediaId: String(media.id),
+        },
+      },
+      { type: "paragraph" },
+    ])
+    .run();
+}
+
 export default function ArticleRichTextToolbar({ editor }: ArticleRichTextToolbarProps) {
   const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
+  const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
   const [linkValue, setLinkValue] = useState("");
   const [linkTextValue, setLinkTextValue] = useState("");
   const isReadOnly = !editor?.isEditable;
@@ -362,6 +395,15 @@ export default function ArticleRichTextToolbar({ editor }: ArticleRichTextToolba
         </Popover>
 
         <ToolbarButton
+          label="Importer une image"
+          iconOnly
+          disabled={isReadOnly}
+          onClick={() => setIsImagePickerOpen(true)}
+        >
+          <ImagePlus className="h-4 w-4" />
+        </ToolbarButton>
+
+        <ToolbarButton
           label="Citation"
           active={editorState.isBlockquote}
           disabled={isReadOnly}
@@ -527,6 +569,18 @@ export default function ArticleRichTextToolbar({ editor }: ArticleRichTextToolba
           </ToolbarButton>
         </div>
       ) : null}
+
+      <ImagePickerDialog
+        open={isImagePickerOpen}
+        onOpenChange={setIsImagePickerOpen}
+        title="Importer une image dans l'article"
+        description="Choisissez une image existante ou importez-en une nouvelle depuis la mediatheque."
+        selectedMediaId={null}
+        onSelect={(media) => {
+          insertMediaImage(editor, media);
+          setIsImagePickerOpen(false);
+        }}
+      />
     </div>
   );
 }

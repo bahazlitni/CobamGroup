@@ -9,9 +9,11 @@ import TableHeader from "@tiptap/extension-table-header";
 import TableRow from "@tiptap/extension-table-row";
 import { TextStyle } from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
+import { ReactNodeViewRenderer } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import ArticleImageNodeView from "./article-image-node-view";
 
-const ArticleImage = Image.extend({
+const BaseArticleImage = Image.extend({
   addAttributes() {
     return {
       ...this.parent?.(),
@@ -30,16 +32,25 @@ const ArticleImage = Image.extend({
       },
     };
   },
-}).configure({
+});
+
+const ArticleImageWithAltEditor = BaseArticleImage.extend({
+  addNodeView() {
+    return ReactNodeViewRenderer(ArticleImageNodeView);
+  },
+});
+
+const articleImageOptions = {
   allowBase64: true,
   HTMLAttributes: {
     loading: "lazy",
     decoding: "async",
   },
-});
+};
 
 type ArticleEditorExtensionsOptions = {
   placeholder?: string;
+  enableImageAltEditor?: boolean;
 };
 
 export function createArticleEditorExtensions(
@@ -73,7 +84,9 @@ export function createArticleEditorExtensions(
     TableRow,
     TableHeader,
     TableCell,
-    ArticleImage,
+    (options.enableImageAltEditor ? ArticleImageWithAltEditor : BaseArticleImage).configure(
+      articleImageOptions,
+    ),
   ];
 
   if (options.placeholder) {
