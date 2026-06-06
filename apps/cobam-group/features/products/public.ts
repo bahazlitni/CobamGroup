@@ -28,6 +28,7 @@ import type {
   PublicProductColorReference,
   PublicProductBrand,
   PublicProductFinishReference,
+  PublicProductCertificate,
   PublicProductInspector,
   PublicProductInspectorAttribute,
   PublicProductInspectorMedia,
@@ -47,6 +48,7 @@ export type {
   PublicProductBrand,
   PublicProductColorReference,
   PublicProductFinishReference,
+  PublicProductCertificate,
   PublicProductInspector,
   PublicProductInspectorAttribute,
   PublicProductInspectorMedia,
@@ -122,6 +124,23 @@ const PUBLIC_PRODUCT_SELECT = {
       sortOrder: true,
       media: {
         select: MEDIA_SELECT,
+      },
+    },
+  },
+  certificateAssociations: {
+    orderBy: [{ certificate: { name: "asc" } }, { certificateId: "asc" }],
+    select: {
+      certificate: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          imageMediaId: true,
+          imageMedia: {
+            select: MEDIA_SELECT,
+          },
+        },
       },
     },
   },
@@ -409,13 +428,21 @@ function collectMediaIdsForPublishing(record: PublicFamilyRecord) {
         ids.add(Number(link.media.id));
       }
     }
+
+    for (const link of member.product.certificateAssociations) {
+      if (isRenderableMedia(link.certificate.imageMedia)) {
+        ids.add(Number(link.certificate.imageMedia.id));
+      }
+    }
   }
 
   return [...ids];
 }
 
 function collectProductMediaIdsForPublishing(
-  records: Array<Pick<PublicProductRecord, "media" | "richTextDescription">>,
+  records: Array<
+    Pick<PublicProductRecord, "media" | "richTextDescription" | "certificateAssociations">
+  >,
 ) {
   const ids = new Set<number>();
 
@@ -425,6 +452,12 @@ function collectProductMediaIdsForPublishing(
     for (const link of record.media) {
       if (isRenderableMedia(link.media)) {
         ids.add(Number(link.media.id));
+      }
+    }
+
+    for (const link of record.certificateAssociations) {
+      if (isRenderableMedia(link.certificate.imageMedia)) {
+        ids.add(Number(link.certificate.imageMedia.id));
       }
     }
   }
@@ -542,6 +575,31 @@ function mapDocumentMedia(product: PublicProductRecord, role: "TECHNICAL" | "CER
     .filter((entry) => entry.role === role)
     .map((link) => mapMediaRecord(link.media, link))
     .filter((media): media is PublicProductInspectorMedia => media != null);
+}
+
+function mapProductCertificates(product: PublicProductRecord): PublicProductCertificate[] {
+  return product.certificateAssociations
+    .map((link, index) => {
+      const certificate = link.certificate;
+      const media = certificate.imageMedia;
+      if (!isRenderableMedia(media) || media.kind !== "IMAGE") {
+        return null;
+      }
+
+      const mappedCertificate: PublicProductCertificate = {
+        id: Number(certificate.id),
+        name: certificate.name,
+        slug: certificate.slug,
+        description: certificate.description,
+        imageUrl: buildPublicMediaUrl(certificate.imageMediaId, "original"),
+        imageThumbnailUrl: buildPublicMediaUrl(certificate.imageMediaId, "thumbnail"),
+        imageAltText: media.altText ?? certificate.name,
+        sortOrder: index,
+      };
+
+      return mappedCertificate;
+    })
+    .filter((certificate): certificate is PublicProductCertificate => certificate != null);
 }
 
 function pickDefaultPublicVariant(record: PublicFamilyRecord) {
@@ -714,6 +772,7 @@ function mapInspectorVariant(product: PublicProductRecord): PublicProductInspect
     description: getProductRichDescription(product),
     datasheets: mapDocumentMedia(product, "TECHNICAL"),
     certificates: mapDocumentMedia(product, "CERTIFICATE"),
+    productCertificates: mapProductCertificates(product),
     media: mapVariantMedia(product),
     attributes: mapVariantAttributes(product),
   };
@@ -748,6 +807,7 @@ async function mapSimpleInspector(
     media,
     datasheets: mapDocumentMedia(record, "TECHNICAL"),
     certificates: mapDocumentMedia(record, "CERTIFICATE"),
+    productCertificates: mapProductCertificates(record),
     subcategories: mapSubcategoryLinks(record.subcategories),
     attributes,
     colorReferences: buildColorReferencesFromAttributes([attributes], colorLookup),
@@ -1415,8 +1475,8 @@ function buildRelatedProfileFromInspector(
         ...product.variants.flatMap((variant) => [variant.displayName, variant.name]),
       ].filter((value): value is string => Boolean(value)),
       skus: product.variants.map((variant) => variant.sku),
-      brandNames: [product.brand?.name, product.brandName].filter(
-        (value): value is string => Boolean(value),
+      brandNames: [product.brand?.name, product.brandName].filter((value): value is string =>
+        Boolean(value),
       ),
       productTypeSlugs: [],
       productTypeNames: productUseAttributes,
@@ -1448,8 +1508,8 @@ function buildRelatedProfileFromInspector(
     familyIds: [],
     names: [product.displayName, product.name],
     skus: [product.sku],
-    brandNames: [product.brand?.name, ...product.brandNames].filter(
-      (value): value is string => Boolean(value),
+    brandNames: [product.brand?.name, ...product.brandNames].filter((value): value is string =>
+      Boolean(value),
     ),
     productTypeSlugs: [],
     productTypeNames: productUseAttributes,
@@ -1458,10 +1518,9 @@ function buildRelatedProfileFromInspector(
     subcategorySlugs: product.subcategories.map((subcategory) => subcategory.slug),
     subcategoryNames: product.subcategories.map((subcategory) => subcategory.name),
     tags: [],
-    descriptions: [
-      parseRichTextPreview(product.description),
-      product.descriptionSeo,
-    ].filter((value): value is string => Boolean(value)),
+    descriptions: [parseRichTextPreview(product.description), product.descriptionSeo].filter(
+      (value): value is string => Boolean(value),
+    ),
     attributes,
   };
 }
@@ -1770,10 +1829,7 @@ export async function findPublicRelatedProducts(
   for (const productRecord of products) {
     productSummaryMap.set(
       Number(productRecord.id),
-      mapProductSummary(
-        productRecord,
-        productRecord.kind === "VARIANT" ? "VARIANT" : "SINGLE",
-      ),
+      mapProductSummary(productRecord, productRecord.kind === "VARIANT" ? "VARIANT" : "SINGLE"),
     );
   }
 

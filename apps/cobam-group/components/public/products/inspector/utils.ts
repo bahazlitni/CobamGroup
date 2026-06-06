@@ -136,6 +136,7 @@ export function normalizeInspectorProduct(
         description: product.description,
         datasheets: product.datasheets,
         certificates: product.certificates,
+        productCertificates: product.productCertificates,
         media: product.media,
         attributes: product.attributes,
       },

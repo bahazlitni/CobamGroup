@@ -24,6 +24,17 @@ export type ProductMediaDto = {
   thumbnailUrl: string | null;
 };
 
+export type ProductCertificateOptionDto = {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  imageMediaId: number;
+  imageUrl: string;
+  imageThumbnailUrl: string | null;
+  imageAltText: string | null;
+};
+
 export type ProductSubcategoryOptionDto = {
   id: number;
   categoryId: number;
@@ -65,6 +76,7 @@ export type ProductVariantInputDto = ProductEditFieldsDto & {
   subcategoryIds: number[];
   datasheets: ProductMediaDto[];
   certificates: ProductMediaDto[];
+  certificateIds: number[];
   media: ProductMediaDto[];
   attributes: ProductAttributeInputDto[];
 };
@@ -166,6 +178,7 @@ export type ProductFormOptionsDto = {
   productSubcategories: ProductSubcategoryOptionDto[];
   productTypeGroups: ProductTypeGroupOptionDto[];
   productBrandOptions: string[];
+  certificates: ProductCertificateOptionDto[];
 };
 
 export type PublicProductEntityType = "FAMILY" | "SINGLE" | "VARIANT";
@@ -249,6 +262,17 @@ export type PublicProductInspectorMedia = {
   sortOrder: number;
 };
 
+export type PublicProductCertificate = {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  imageUrl: string;
+  imageThumbnailUrl: string | null;
+  imageAltText: string | null;
+  sortOrder: number;
+};
+
 export type PublicProductColorReference = {
   key: string;
   label: string;
@@ -289,6 +313,7 @@ export type PublicProductInspectorVariant = {
   description: string | null;
   datasheets: PublicProductInspectorMedia[];
   certificates: PublicProductInspectorMedia[];
+  productCertificates: PublicProductCertificate[];
   media: PublicProductInspectorMedia[];
   attributes: PublicProductInspectorAttribute[];
 };
@@ -324,6 +349,7 @@ export type PublicSimpleProductInspector = {
   media: PublicProductInspectorMedia[];
   datasheets: PublicProductInspectorMedia[];
   certificates: PublicProductInspectorMedia[];
+  productCertificates: PublicProductCertificate[];
   subcategories: PublicProductSubcategoryLink[];
   attributes: PublicProductInspectorAttribute[];
   colorReferences: PublicProductColorReference[];

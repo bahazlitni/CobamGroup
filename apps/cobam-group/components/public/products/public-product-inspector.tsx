@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import {
   CheckCircle2,
@@ -42,6 +43,7 @@ import PublicProductCard from "./public-product-card";
 import RailCarousel from "@/components/ui/custom/RailCarousel";
 import type {
   PublicProductInspectorAttribute,
+  PublicProductCertificate,
   PublicRelatedProductItem,
   PublicProductSubcategoryLink,
   PublicProductInspectorVariant,
@@ -66,6 +68,62 @@ function getDocumentLabel(
   return total > 1 ? `${fallback} ${index + 1}` : fallback;
 }
 
+function ProductCertificatesGrid({ certificates }: { certificates: PublicProductCertificate[] }) {
+  if (certificates.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="border-cobam-quill-grey/35 rounded-[2rem] border bg-white p-5 sm:p-7">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-cobam-water-blue text-xs font-semibold tracking-[0.24em] uppercase">
+            Certifications
+          </p>
+          <h2 className="text-cobam-dark-blue mt-3 text-3xl font-semibold">Certificats produit</h2>
+        </div>
+      </div>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {certificates.map((certificate) => {
+          const tooltipId = `certificate-tooltip-${certificate.id}`;
+
+          return (
+            <figure
+              key={certificate.id}
+              tabIndex={certificate.description ? 0 : undefined}
+              aria-describedby={certificate.description ? tooltipId : undefined}
+              className="group/certificate border-cobam-quill-grey/35 hover:border-cobam-water-blue/45 focus-visible:ring-cobam-water-blue/25 relative rounded-xl border bg-slate-50 p-4 transition outline-none hover:-translate-y-0.5 hover:bg-white hover:shadow-sm focus-visible:ring-2"
+            >
+              <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-white">
+                <Image
+                  src={certificate.imageThumbnailUrl ?? certificate.imageUrl}
+                  alt={certificate.imageAltText ?? certificate.name}
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1280px) 25vw, 220px"
+                  className="object-contain p-3"
+                  draggable={false}
+                />
+              </div>
+              <figcaption className="text-cobam-dark-blue mt-3 truncate text-sm font-semibold">
+                {certificate.name}
+              </figcaption>
+              {certificate.description ? (
+                <div
+                  id={tooltipId}
+                  role="tooltip"
+                  className="bg-cobam-dark-blue pointer-events-none absolute top-full left-1/2 z-20 mt-3 w-64 -translate-x-1/2 rounded-lg px-3 py-2 text-xs leading-5 text-white opacity-0 shadow-xl transition group-hover/certificate:translate-y-1 group-hover/certificate:opacity-100 group-focus/certificate:translate-y-1 group-focus/certificate:opacity-100"
+                >
+                  {certificate.description}
+                </div>
+              ) : null}
+            </figure>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 const SUMMARY_ATTRIBUTE_IDS = new Set([
   "product_use",
   "color_code",
@@ -80,12 +138,7 @@ const SUMMARY_ATTRIBUTE_IDS = new Set([
 ]);
 
 function attributeKeys(attribute: PublicProductInspectorAttribute) {
-  return [
-    attribute.attributeId,
-    attribute.kind,
-    attribute.name,
-    attribute.groupName,
-  ]
+  return [attribute.attributeId, attribute.kind, attribute.name, attribute.groupName]
     .filter((value): value is string => Boolean(value))
     .map((value) => normalizeComparableValue(value).replace(/\s+/g, "_"));
 }
@@ -94,10 +147,7 @@ function isSummaryAttribute(attribute: PublicProductInspectorAttribute) {
   return attributeKeys(attribute).some((key) => SUMMARY_ATTRIBUTE_IDS.has(key));
 }
 
-function findAttribute(
-  attributes: PublicProductInspectorAttribute[],
-  keys: string[],
-) {
+function findAttribute(attributes: PublicProductInspectorAttribute[], keys: string[]) {
   const wanted = new Set(keys.map((key) => normalizeComparableValue(key).replace(/\s+/g, "_")));
 
   return (
@@ -220,7 +270,7 @@ function DetailValue({ row }: { row: DetailRow }) {
     );
   }
 
-  return <span className="font-semibold text-cobam-dark-blue">{row.value}</span>;
+  return <span className="text-cobam-dark-blue font-semibold">{row.value}</span>;
 }
 
 function TechnicalRows({ rows }: { rows: DetailRow[] }) {
@@ -229,13 +279,13 @@ function TechnicalRows({ rows }: { rows: DetailRow[] }) {
   }
 
   return (
-    <dl className="divide-y divide-cobam-quill-grey/30 rounded-[1.35rem] border border-cobam-quill-grey/35 bg-white">
+    <dl className="divide-cobam-quill-grey/30 border-cobam-quill-grey/35 divide-y rounded-[1.35rem] border bg-white">
       {rows.map((row, index) => (
         <div
           key={`${row.label}-${row.value}-${index}`}
           className="grid gap-2 px-4 py-4 sm:grid-cols-[15rem_1fr] sm:px-5"
         >
-          <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+          <dt className="text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
             {row.label}
           </dt>
           <dd className="text-sm">
@@ -268,7 +318,7 @@ function VariantOptionSelector({
   return (
     <section className="space-y-3">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{title}</p>
+        <p className="text-xs font-semibold tracking-[0.2em] text-slate-400 uppercase">{title}</p>
       </div>
       <div className="flex flex-wrap gap-2.5">
         {group.options.map((option) => {
@@ -280,10 +330,10 @@ function VariantOptionSelector({
               type="button"
               onClick={() => onSelect(group.attributeId, option.key)}
               className={cn(
-                "rounded-full border px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobam-water-blue/45",
+                "focus-visible:ring-cobam-water-blue/45 rounded-full border px-4 py-2 text-sm font-semibold transition focus-visible:ring-2 focus-visible:outline-none",
                 active
                   ? "border-cobam-dark-blue bg-cobam-dark-blue text-white shadow-sm"
-                  : "border-cobam-quill-grey/45 bg-white text-slate-600 hover:border-cobam-water-blue/60 hover:text-cobam-dark-blue",
+                  : "border-cobam-quill-grey/45 hover:border-cobam-water-blue/60 hover:text-cobam-dark-blue bg-white text-slate-600",
               )}
               aria-pressed={active}
             >
@@ -296,17 +346,13 @@ function VariantOptionSelector({
   );
 }
 
-function CatalogBreadcrumbs({
-  subcategories,
-}: {
-  subcategories: PublicProductSubcategoryLink[];
-}) {
+function CatalogBreadcrumbs({ subcategories }: { subcategories: PublicProductSubcategoryLink[] }) {
   if (subcategories.length === 0) {
     return null;
   }
 
   return (
-    <section className="rounded-[1.35rem] border border-cobam-quill-grey/35 bg-white p-4">
+    <section className="border-cobam-quill-grey/35 rounded-[1.35rem] border bg-white p-4">
       <div className="space-y-2">
         {subcategories.map((subcategory) => (
           <nav
@@ -317,7 +363,7 @@ function CatalogBreadcrumbs({
               <li>
                 <Link
                   href="/produits"
-                  className="font-semibold text-slate-500 transition hover:text-cobam-water-blue"
+                  className="hover:text-cobam-water-blue font-semibold text-slate-500 transition"
                 >
                   Produits
                 </Link>
@@ -328,7 +374,7 @@ function CatalogBreadcrumbs({
               <li>
                 <Link
                   href={`/produits/${subcategory.categorySlug}`}
-                  className="font-semibold text-cobam-dark-blue transition hover:text-cobam-water-blue"
+                  className="text-cobam-dark-blue hover:text-cobam-water-blue font-semibold transition"
                 >
                   {subcategory.categoryName}
                 </Link>
@@ -339,7 +385,7 @@ function CatalogBreadcrumbs({
               <li>
                 <Link
                   href={`/produits/${subcategory.categorySlug}/${subcategory.slug}`}
-                  className="font-semibold text-cobam-water-blue transition hover:text-cobam-dark-blue"
+                  className="text-cobam-water-blue hover:text-cobam-dark-blue font-semibold transition"
                 >
                   {subcategory.name}
                 </Link>
@@ -360,23 +406,19 @@ function buildRelatedProductHref(item: PublicRelatedProductItem) {
   return `/produits/${item.category.slug}/${item.subcategory.slug}/${item.product.slug}`;
 }
 
-function RelatedProductsSection({
-  products,
-}: {
-  products: PublicRelatedProductItem[];
-}) {
+function RelatedProductsSection({ products }: { products: PublicRelatedProductItem[] }) {
   if (products.length === 0) {
     return null;
   }
 
   return (
-    <section className="space-y-5 border-t border-cobam-quill-grey/35 pt-8">
+    <section className="border-cobam-quill-grey/35 space-y-5 border-t pt-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+          <p className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
             Experimental
           </p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-[-0.03em] text-cobam-dark-blue">
+          <h2 className="text-cobam-dark-blue mt-1 text-2xl font-semibold tracking-[-0.03em]">
             Produits proches
           </h2>
         </div>
@@ -396,14 +438,14 @@ function RelatedProductsSection({
         nextButtonLabel="Produits proches suivants"
       >
         {products.map((item) => (
-              <div
-                key={`${item.product.entityType}-${item.product.id}-${item.category.slug}-${item.subcategory.slug}`}
-                className="relative h-full"
-              >
-                <PublicProductCard
-                  product={item.product}
-                  href={buildRelatedProductHref(item)}
-                  themeColor={item.category.themeColor}
+          <div
+            key={`${item.product.entityType}-${item.product.id}-${item.category.slug}-${item.subcategory.slug}`}
+            className="relative h-full"
+          >
+            <PublicProductCard
+              product={item.product}
+              href={buildRelatedProductHref(item)}
+              themeColor={item.category.themeColor}
             />
           </div>
         ))}
@@ -456,10 +498,7 @@ export default function PublicProductInspectorView({
     (attribute) => attribute.specialType == null,
   );
   const productUseAttr = findAttribute(normalAttributes, ["product_use", "type de produit"]);
-  const packagingAttr = findAttribute(normalAttributes, [
-    "packaging_weight_kg",
-    "conditionnement",
-  ]);
+  const packagingAttr = findAttribute(normalAttributes, ["packaging_weight_kg", "conditionnement"]);
   const rangeAttr = findAttribute(normalAttributes, ["product_range", "gamme"]);
   const colorCodeAttr = findAttribute(normalAttributes, ["color_code", "code couleur"]);
   const readyAttr = findAttribute(normalAttributes, ["ready_to_use", "pret a l'emploi"]);
@@ -520,7 +559,9 @@ export default function PublicProductInspectorView({
 
   const technicalRows: DetailRow[] = [
     ...summaryRows,
-    jointWidthAttr ? { label: "Largeur de joint", value: formatAttributeValue(jointWidthAttr) } : null,
+    jointWidthAttr
+      ? { label: "Largeur de joint", value: formatAttributeValue(jointWidthAttr) }
+      : null,
     ...normalAttributes
       .filter((attribute) => !isSummaryAttribute(attribute))
       .map((attribute) => ({
@@ -598,14 +639,14 @@ export default function PublicProductInspectorView({
           />
 
           <div className="space-y-7">
-            <header className="rounded-[2rem] border border-cobam-quill-grey/35 bg-white p-5 sm:p-7">
+            <header className="border-cobam-quill-grey/35 rounded-[2rem] border bg-white p-5 sm:p-7">
               <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
                 <BrandTooltip brand={normalizedProduct.brand} />
                 <div className="inline-flex items-center gap-3">
-                  <span className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                  <span className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
                     SKU
                   </span>
-                  <span className="text-sm font-semibold text-cobam-dark-blue">
+                  <span className="text-cobam-dark-blue text-sm font-semibold">
                     {selectedVariant.sku}
                   </span>
                   <AnimatedUICopyButton
@@ -619,31 +660,31 @@ export default function PublicProductInspectorView({
               </div>
 
               <div className="mt-6 space-y-3">
-                <h1 className="max-w-4xl text-4xl font-semibold tracking-[-0.055em] text-cobam-dark-blue sm:text-5xl lg:text-[4rem] lg:leading-[0.95]">
+                <h1 className="text-cobam-dark-blue max-w-4xl text-4xl font-semibold tracking-[-0.055em] sm:text-5xl lg:text-[4rem] lg:leading-[0.95]">
                   {displayTitle}
                 </h1>
                 {productUse ? (
                   <p className="text-xl font-medium text-slate-500">{productUse}</p>
                 ) : null}
                 {variantSummary.length > 0 ? (
-                  <p className="text-base font-semibold text-cobam-dark-blue/75">
+                  <p className="text-cobam-dark-blue/75 text-base font-semibold">
                     {variantSummary.join(" - ")}
                   </p>
                 ) : null}
               </div>
 
-              <div className="flex gap-3 flex-wrap items-center mt-7 rounded-[1.35rem] border border-slate-200 bg-slate-50 p-4">
-                  <ProductDevisDialog
-                    productName={selectedVariant.displayName}
-                    sku={selectedVariant.sku}
-                    triggerLabel="Demander un devis"
-                  />
-                  <Link
-                    href="/contact"
-                    className="inline-flex min-h-11 items-center rounded-full border border-cobam-quill-grey/40 bg-white px-5 text-sm font-semibold text-cobam-dark-blue transition hover:border-cobam-water-blue hover:text-cobam-water-blue"
-                  >
-                    Contacter un conseiller
-                  </Link>
+              <div className="mt-7 flex flex-wrap items-center gap-3 rounded-[1.35rem] border border-slate-200 bg-slate-50 p-4">
+                <ProductDevisDialog
+                  productName={selectedVariant.displayName}
+                  sku={selectedVariant.sku}
+                  triggerLabel="Demander un devis"
+                />
+                <Link
+                  href="/contact"
+                  className="border-cobam-quill-grey/40 text-cobam-dark-blue hover:border-cobam-water-blue hover:text-cobam-water-blue inline-flex min-h-11 items-center rounded-full border bg-white px-5 text-sm font-semibold transition"
+                >
+                  Contacter un conseiller
+                </Link>
               </div>
             </header>
 
@@ -668,9 +709,11 @@ export default function PublicProductInspectorView({
               {selectorGroups.map((group) => (
                 <VariantOptionSelector
                   key={group.attributeId}
-                  title={normalizeComparableValue(group.attributeId).includes("packaging")
-                    ? "Conditionnement"
-                    : group.name}
+                  title={
+                    normalizeComparableValue(group.attributeId).includes("packaging")
+                      ? "Conditionnement"
+                      : group.name
+                  }
                   group={group}
                   selectedVariant={selectedVariant}
                   onSelect={handleNormalAttributeSelect}
@@ -682,10 +725,10 @@ export default function PublicProductInspectorView({
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-cobam-quill-grey/35 bg-white p-5 sm:p-7">
+        <section className="border-cobam-quill-grey/35 rounded-[2rem] border bg-white p-5 sm:p-7">
           <div className="flex items-center gap-3">
-            <Info className="size-5 text-cobam-water-blue" aria-hidden="true" />
-            <h2 className="text-2xl font-semibold tracking-[-0.04em] text-cobam-dark-blue">
+            <Info className="text-cobam-water-blue size-5" aria-hidden="true" />
+            <h2 className="text-cobam-dark-blue text-2xl font-semibold tracking-[-0.04em]">
               Description
             </h2>
           </div>
@@ -694,10 +737,10 @@ export default function PublicProductInspectorView({
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-cobam-quill-grey/35 bg-white p-5 sm:p-7">
+        <section className="border-cobam-quill-grey/35 rounded-[2rem] border bg-white p-5 sm:p-7">
           <div className="flex items-center gap-3">
-            <Ruler className="size-5 text-cobam-water-blue" aria-hidden="true" />
-            <h2 className="text-2xl font-semibold tracking-[-0.04em] text-cobam-dark-blue">
+            <Ruler className="text-cobam-water-blue size-5" aria-hidden="true" />
+            <h2 className="text-cobam-dark-blue text-2xl font-semibold tracking-[-0.04em]">
               Caractéristiques techniques
             </h2>
           </div>
@@ -706,10 +749,10 @@ export default function PublicProductInspectorView({
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-cobam-quill-grey/35 bg-cobam-dark-blue p-5 text-white sm:p-7">
+        <section className="border-cobam-quill-grey/35 bg-cobam-dark-blue rounded-[2rem] border p-5 text-white sm:p-7">
           <div className="grid gap-6 lg:grid-cols-[0.85fr_1fr] lg:items-center">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cobam-water-blue">
+              <p className="text-cobam-water-blue text-xs font-semibold tracking-[0.24em] uppercase">
                 Documents & accompagnement
               </p>
               <h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em]">
@@ -722,14 +765,14 @@ export default function PublicProductInspectorView({
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-[1.35rem] border border-white/10 bg-white/6 p-4">
-                <FileText className="size-5 text-cobam-water-blue" aria-hidden="true" />
+                <FileText className="text-cobam-water-blue size-5" aria-hidden="true" />
                 <h3 className="mt-3 font-semibold">Documents techniques</h3>
                 <p className="mt-2 text-sm leading-6 text-white/60">
                   Fiches et informations disponibles selon le produit.
                 </p>
                 {selectedVariant.datasheets.length > 0 ? (
                   <div className="mt-4 space-y-2">
-                    <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                    <h4 className="text-xs font-semibold tracking-[0.18em] text-white/45 uppercase">
                       {selectedVariant.datasheets.length > 1
                         ? "Fiches techniques"
                         : "Fiche technique"}
@@ -750,7 +793,7 @@ export default function PublicProductInspectorView({
                 ) : null}
                 {selectedVariant.certificates.length > 0 ? (
                   <div className="mt-4 space-y-2">
-                    <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                    <h4 className="text-xs font-semibold tracking-[0.18em] text-white/45 uppercase">
                       {selectedVariant.certificates.length > 1 ? "Certificats" : "Certificat"}
                     </h4>
                     {selectedVariant.certificates.map((certificate, index) => (
@@ -769,10 +812,11 @@ export default function PublicProductInspectorView({
                 ) : null}
               </div>
               <div className="rounded-[1.35rem] border border-white/10 bg-white/6 p-4">
-                <MessageSquareText className="size-5 text-cobam-water-blue" aria-hidden="true" />
+                <MessageSquareText className="text-cobam-water-blue size-5" aria-hidden="true" />
                 <h3 className="mt-3 font-semibold">Accompagnement COBAM</h3>
                 <p className="mt-2 text-sm leading-6 text-white/60">
-                  Disponibilité, showroom et recommandations techniques a confirmer avec nos équipes.
+                  Disponibilité, showroom et recommandations techniques a confirmer avec nos
+                  équipes.
                 </p>
                 <div className="mt-4">
                   <ProductDevisDialog
@@ -785,6 +829,8 @@ export default function PublicProductInspectorView({
             </div>
           </div>
         </section>
+
+        <ProductCertificatesGrid certificates={selectedVariant.productCertificates} />
 
         {normalizedProduct.variants.length > 1 ? (
           <VariantRail

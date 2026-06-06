@@ -7,6 +7,7 @@ import { ExternalLink, Package } from "lucide-react";
 import { toast } from "sonner";
 import Loading from "@/components/staff/Loading";
 import ArticleRichTextEditor from "@/components/staff/articles/article-rich-text-editor";
+import ProductCertificateSelector from "@/components/staff/products/ProductCertificateSelector";
 import ProductMediaGrid from "@/components/staff/products/ProductMediaGrid";
 import ProductSubcategoriesField from "@/components/staff/products/ProductSubcategoriesField";
 import Panel from "@/components/staff/ui/Panel";
@@ -111,6 +112,7 @@ function createEmptyFormState(): SingleProductUpsertInput {
     subcategoryIds: [],
     datasheets: [],
     certificates: [],
+    certificateIds: [],
     media: [],
     attributes: [],
   };
@@ -147,6 +149,7 @@ function mapProductToForm(product: SingleProductDetailDto): SingleProductUpsertI
     subcategoryIds: product.subcategoryIds,
     datasheets: product.datasheets,
     certificates: product.certificates,
+    certificateIds: product.certificateIds,
     media: product.media,
     attributes: product.attributes,
   };
@@ -275,6 +278,7 @@ function SingleProductEditPageContent() {
     productSubcategories: [],
     productTypeGroups: [],
     productBrandOptions: [],
+    certificates: [],
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -893,6 +897,17 @@ function SingleProductEditPageContent() {
             mediaKind="DOCUMENT"
             documentExtensions={["pdf"]}
             role="CERTIFICATE"
+          />
+
+          <ProductCertificateSelector
+            options={options.certificates}
+            selectedIds={form.certificateIds}
+            onChange={(certificateIds) =>
+              setForm((current) => ({
+                ...current,
+                certificateIds,
+              }))
+            }
           />
         </div>
       </Panel>

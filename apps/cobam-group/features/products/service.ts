@@ -16,6 +16,7 @@ import type {
   ProductFamilyListItemDto,
   ProductFamilyListResult,
   ProductFamilyUpsertInput,
+  ProductCertificateOptionDto,
   ProductFormOptionsDto,
   ProductMediaDto,
   ProductVariantInputDto,
@@ -106,6 +107,12 @@ const STAFF_PRODUCT_SELECT = {
       media: {
         select: STAFF_MEDIA_SELECT,
       },
+    },
+  },
+  certificateAssociations: {
+    orderBy: [{ certificate: { name: "asc" } }, { certificateId: "asc" }],
+    select: {
+      certificateId: true,
     },
   },
   attributes: {
@@ -238,6 +245,28 @@ function mapMedia(
   };
 }
 
+function mapProductCertificateOption(record: {
+  id: bigint;
+  name: string;
+  slug: string;
+  description: string | null;
+  imageMediaId: bigint;
+  imageMedia: {
+    altText: string | null;
+  };
+}): ProductCertificateOptionDto {
+  return {
+    id: Number(record.id),
+    name: record.name,
+    slug: record.slug,
+    description: record.description,
+    imageMediaId: Number(record.imageMediaId),
+    imageUrl: buildMediaUrl(record.imageMediaId, "original"),
+    imageThumbnailUrl: buildMediaUrl(record.imageMediaId, "thumbnail"),
+    imageAltText: record.imageMedia.altText,
+  };
+}
+
 function mapVariant(
   record: StaffFamilyDetailRecord["members"][number]["product"],
 ): ProductVariantInputDto {
@@ -275,6 +304,7 @@ function mapVariant(
     subcategoryIds: record.subcategories.map((link) => Number(link.subcategoryId)),
     datasheets: technicalLinks.map((link) => mapMedia(link.media, link)),
     certificates: certificateLinks.map((link) => mapMedia(link.media, link)),
+    certificateIds: record.certificateAssociations.map((link) => Number(link.certificateId)),
     media: galleryLinks.map((link) => mapMedia(link.media, link)),
     attributes: record.attributes.map(mapProductAttributeRecord),
   };
@@ -394,6 +424,21 @@ async function syncVariantRelations(
       data: variant.subcategoryIds.map((subcategoryId) => ({
         productId,
         subcategoryId: BigInt(subcategoryId),
+      })),
+    });
+  }
+
+  await tx.productCertificateAssociation.deleteMany({
+    where: {
+      productId,
+    },
+  });
+
+  if (variant.certificateIds.length > 0) {
+    await tx.productCertificateAssociation.createMany({
+      data: variant.certificateIds.map((certificateId) => ({
+        productId,
+        certificateId: BigInt(certificateId),
       })),
     });
   }
@@ -666,7 +711,7 @@ export async function getProductFormOptionsService(
     throw new ProductServiceError("Accès refusé.", 403);
   }
 
-  const [subcategories, productTypes, productBrands] = await Promise.all([
+  const [subcategories, productTypes, productBrands, certificates] = await Promise.all([
     prisma.productSubcategory.findMany({
       where: {
         isActive: true,
@@ -767,6 +812,21 @@ export async function getProductFormOptionsService(
         name: true,
       },
     }),
+    prisma.productCertificate.findMany({
+      orderBy: [{ name: "asc" }, { id: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        imageMediaId: true,
+        imageMedia: {
+          select: {
+            altText: true,
+          },
+        },
+      },
+    }),
   ]);
 
   const groupMap = new Map<string, ProductFormOptionsDto["productTypeGroups"][number]>();
@@ -834,6 +894,7 @@ export async function getProductFormOptionsService(
         left.sortOrder - right.sortOrder || left.name.localeCompare(right.name, "fr-FR"),
     ),
     productBrandOptions: productBrands.map((brand) => brand.name),
+    certificates: certificates.map(mapProductCertificateOption),
   };
 }
 

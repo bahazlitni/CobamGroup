@@ -12,6 +12,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  BadgeCheck,
   Building2,
   BadgePercent,
   ChevronDown,
@@ -196,6 +197,11 @@ const STAFF_TABS: Record<string, StaffTabGroup> = {
         label: "Attributs",
         icon: Tags,
       },
+      certificats: {
+        key: "certificats",
+        label: "Certificats",
+        icon: BadgeCheck,
+      },
       "types-produits": {
         key: "types-produits",
         label: "Modèles de produits",
@@ -316,6 +322,7 @@ function StaffLayoutShell({ children }: { children: ReactNode }) {
         "categories-produits": user ? canAccessProductCategories(user) : false,
         marques: user ? canAccessProducts(user) : false,
         attributs: user ? canAccessProductAttributes(user) : false,
+        certificats: user ? canAccessProducts(user) : false,
         "types-produits": user ? canAccessProductTemplates(user) : false,
         couleurs: user ? canAccessProductColors(user) : false,
         finitions: user ? canAccessProductFinishes(user) : false,

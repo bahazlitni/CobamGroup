@@ -6,6 +6,7 @@ import { ExternalLink, Package, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Loading from "@/components/staff/Loading";
 import ArticleRichTextEditor from "@/components/staff/articles/article-rich-text-editor";
+import ProductCertificateSelector from "@/components/staff/products/ProductCertificateSelector";
 import ProductMediaGrid from "@/components/staff/products/ProductMediaGrid";
 import ProductSubcategoriesField from "@/components/staff/products/ProductSubcategoriesField";
 import PanelAttributesInput from "@/components/staff/ui/PanelAttributesInput";
@@ -187,6 +188,7 @@ function createEmptyVariant(index: number): VariantEditorState {
     subcategoryIds: [],
     datasheets: [],
     certificates: [],
+    certificateIds: [],
     media: [],
     attributes: [],
   };
@@ -463,6 +465,7 @@ function ProductEditPageContent() {
     productSubcategories: [],
     productTypeGroups: [],
     productBrandOptions: [],
+    certificates: [],
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -1522,6 +1525,19 @@ function ProductEditPageContent() {
                     mediaKind="DOCUMENT"
                     documentExtensions={["pdf"]}
                     role="CERTIFICATE"
+                  />
+
+                  <ProductCertificateSelector
+                    options={options.certificates}
+                    selectedIds={variant.certificateIds}
+                    onChange={(certificateIds) =>
+                      setForm((current) =>
+                        updateVariantState(current, variant.formKey, (entry) => ({
+                          ...entry,
+                          certificateIds,
+                        })),
+                      )
+                    }
                   />
                 </div>
 

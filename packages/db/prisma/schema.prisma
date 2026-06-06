@@ -1219,18 +1219,19 @@ model Product {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
-  familyMembership   ProductFamilyMember?
-  defaultForFamilies ProductFamily[]            @relation("ProductFamilyDefaultProduct")
-  brand              Organization?              @relation(fields: [brandId], references: [id], onDelete: SetNull)
-  productType        ProductType                @relation(fields: [productTypeId], references: [id], onDelete: Restrict)
-  subcategories      ProductSubcategoryLink[]
-  media              ProductMedia[]
-  attributes         ProductAttribute[]
-  cartItems          ShoppingCartItem[]
-  orderItems         CommerceOrderItem[]
-  promotionLinks     CommercePromotionProduct[]
-  wishlistItems      CommerceWishlistItem[]
-  stockReservations  CommerceStockReservation[]
+  familyMembership        ProductFamilyMember?
+  defaultForFamilies      ProductFamily[]                 @relation("ProductFamilyDefaultProduct")
+  brand                   Organization?                   @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  productType             ProductType                     @relation(fields: [productTypeId], references: [id], onDelete: Restrict)
+  subcategories           ProductSubcategoryLink[]
+  media                   ProductMedia[]
+  certificateAssociations ProductCertificateAssociation[]
+  attributes              ProductAttribute[]
+  cartItems               ShoppingCartItem[]
+  orderItems              CommerceOrderItem[]
+  promotionLinks          CommercePromotionProduct[]
+  wishlistItems           CommerceWishlistItem[]
+  stockReservations       CommerceStockReservation[]
 
   @@index([brandId])
   @@index([productTypeId])
@@ -1300,6 +1301,36 @@ model ProductMedia {
   @@index([productId, role])
   @@index([productId, sortOrder])
   @@map("product_media")
+}
+
+model ProductCertificate {
+  id BigInt @id @default(autoincrement())
+
+  name         String  @db.VarChar(255)
+  slug         String  @unique @db.VarChar(255)
+  description  String? @db.Text
+  imageMediaId BigInt  @map("image_media_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  imageMedia   Media                           @relation("ProductCertificateImageMedia", fields: [imageMediaId], references: [id], onDelete: Restrict)
+  associations ProductCertificateAssociation[]
+
+  @@index([imageMediaId])
+  @@map("product_certificates")
+}
+
+model ProductCertificateAssociation {
+  productId     BigInt @map("product_id")
+  certificateId BigInt @map("certificate_id")
+
+  product     Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  certificate ProductCertificate @relation(fields: [certificateId], references: [id], onDelete: Restrict)
+
+  @@id([productId, certificateId])
+  @@index([certificateId])
+  @@map("product_certificate_associations")
 }
 
 model ProductFamily {
@@ -1665,6 +1696,7 @@ model Media {
   productCategoryImageFor    ProductCategory[]    @relation("ProductCategoryImageMedia")
   productSubcategoryImageFor ProductSubcategory[] @relation("ProductSubcategoryImageMedia")
   productTypeMediaImageFor   ProductType[]        @relation("ProductTypeMediaImage")
+  productCertificateImages   ProductCertificate[] @relation("ProductCertificateImageMedia")
   staffProfileAvatarFor      StaffProfile[]       @relation("StaffProfileAvatarMedia")
   productFinishImageFor      ProductFinish[]      @relation("ProductFinishImageMedia")
   organizationLogoFor        Organization[]       @relation("OrganizationLogoMedia")

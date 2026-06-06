@@ -341,6 +341,14 @@ export function parseSingleProductCreateInput(input: unknown): SingleProductUpse
     certificates: certificates.map((entry, index) =>
       parseMediaEntry(entry, "CERTIFICATE", "Certificat", "DOCUMENT", index),
     ),
+    certificateIds: [
+      ...new Set(
+        parseOptionalIntegerArray(
+          Array.isArray(record.certificateIds) ? record.certificateIds : [],
+          "certificateIds",
+        ),
+      ),
+    ],
     media: media.map((entry, index) => parseMediaEntry(entry, "GALLERY", "Media", "IMAGE", index)),
     attributes: parsedAttributes,
   };

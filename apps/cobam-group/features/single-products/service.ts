@@ -104,6 +104,12 @@ const SINGLE_PRODUCT_SELECT = {
       },
     },
   },
+  certificateAssociations: {
+    orderBy: [{ certificate: { name: "asc" } }, { certificateId: "asc" }],
+    select: {
+      certificateId: true,
+    },
+  },
   attributes: {
     orderBy: [{ groupSortOrder: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
     select: {
@@ -200,6 +206,7 @@ function mapSingleProductDetail(record: SingleProductRecord): SingleProductDetai
     subcategoryIds: record.subcategories.map((link) => Number(link.subcategoryId)),
     datasheets: technicalLinks.map((link) => mapMedia(link.media, link)),
     certificates: certificateLinks.map((link) => mapMedia(link.media, link)),
+    certificateIds: record.certificateAssociations.map((link) => Number(link.certificateId)),
     media: galleryLinks.map((link) => mapMedia(link.media, link)),
     attributes: record.attributes.map(mapProductAttributeRecord),
     createdAt: record.createdAt.toISOString(),
@@ -248,6 +255,21 @@ async function syncSingleProductRelations(
       data: input.subcategoryIds.map((subcategoryId) => ({
         productId,
         subcategoryId: BigInt(subcategoryId),
+      })),
+    });
+  }
+
+  await tx.productCertificateAssociation.deleteMany({
+    where: {
+      productId,
+    },
+  });
+
+  if (input.certificateIds.length > 0) {
+    await tx.productCertificateAssociation.createMany({
+      data: input.certificateIds.map((certificateId) => ({
+        productId,
+        certificateId: BigInt(certificateId),
       })),
     });
   }
