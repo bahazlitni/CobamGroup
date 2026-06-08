@@ -3,7 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { type ReactNode, useRef, useState } from "react";
-import { ChevronRight, Download, FileBadge, PackageCheck, PackageX, TriangleAlert } from "lucide-react";
+import {
+  ChevronRight,
+  Download,
+  FileBadge,
+  PackageCheck,
+  PackageX,
+  TriangleAlert,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import CopyButton from "@/components/commerce/copy-button";
@@ -14,7 +21,11 @@ import { RichText } from "@/components/commerce/rich-text";
 import { FavoriteToggleButton } from "@/components/favorites/favorite-toggle-button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/cn";
-import type { CommerceProductDetail, CommerceVariant } from "@/lib/commerce";
+import type {
+  CommerceProductCertificate,
+  CommerceProductDetail,
+  CommerceVariant,
+} from "@/lib/commerce";
 import { formatPriceTnd } from "@/lib/format";
 
 function groupAttributes(attributes: CommerceVariant["attributes"]) {
@@ -126,15 +137,7 @@ function BrandValue({ brand }: { brand: CommerceProductDetail["brand"] }) {
   );
 }
 
-function DocumentAction({
-  href,
-  icon,
-  label,
-}: {
-  href: string;
-  icon: ReactNode;
-  label: string;
-}) {
+function DocumentAction({ href, icon, label }: { href: string; icon: ReactNode; label: string }) {
   const className =
     "inline-flex min-h-10 items-center justify-center gap-2 border px-3.5 text-xs font-black text-ec-muted transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ec-blue/25";
 
@@ -145,12 +148,72 @@ function DocumentAction({
       rel="noreferrer"
       className={cn(
         className,
-        "border-ec-line/80 bg-white/60 hover:border-ec-blue/25 hover:bg-ec-blue/5 hover:text-ec-blue",
+        "border-ec-line/80 hover:border-ec-blue/25 hover:bg-ec-blue/5 hover:text-ec-blue bg-white/60",
       )}
     >
       {icon}
       <span>{label}</span>
     </a>
+  );
+}
+
+function CertificateTile({ certificate }: { certificate: CommerceProductCertificate }) {
+  const tile = (
+    <figure
+      tabIndex={certificate.description ? 0 : undefined}
+      className="group/certificate border-ec-line bg-ec-soft/60 focus-visible:ring-ec-blue/25 hover:border-ec-blue/35 relative border p-4 transition outline-none hover:-translate-y-0.5 hover:bg-white hover:shadow-sm focus-visible:ring-2"
+    >
+      <div className="relative aspect-[4/3] bg-white">
+        <Image
+          src={certificate.imageThumbnailUrl ?? certificate.imageUrl}
+          alt={certificate.imageAltText ?? certificate.name}
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1280px) 25vw, 220px"
+          className="object-contain p-3"
+          draggable={false}
+        />
+      </div>
+      <figcaption className="text-ec-ink mt-3 truncate text-sm font-black">
+        {certificate.name}
+      </figcaption>
+    </figure>
+  );
+
+  if (!certificate.description) {
+    return tile;
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{tile}</TooltipTrigger>
+      <TooltipContent side="top" align="center" sideOffset={12} className="max-w-72">
+        {certificate.description}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+function ProductCertificatesGrid({ certificates }: { certificates: CommerceProductCertificate[] }) {
+  if (certificates.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="border-ec-line mx-auto mt-14 max-w-[74rem] border-t pt-10 sm:mt-16 sm:pt-12">
+      <div className="mb-6 flex flex-col gap-2">
+        <p className="text-ec-blue text-xs font-black tracking-[0.28em] uppercase">
+          Certifications
+        </p>
+        <h2 className="text-ec-ink font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
+          Certificats produit
+        </h2>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {certificates.map((certificate) => (
+          <CertificateTile key={certificate.id} certificate={certificate} />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -266,7 +329,7 @@ function VariantRail({
       <div className="relative">
         <button
           type="button"
-          className="absolute left-0 top-1/2 z-10 hidden size-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-ec-line bg-white text-ec-ink transition hover:border-ec-ink lg:grid"
+          className="border-ec-line text-ec-ink hover:border-ec-ink absolute top-1/2 left-0 z-10 hidden size-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border bg-white transition lg:grid"
           onClick={() => scrollBy(-1)}
           aria-label="Variantes precedentes"
         >
@@ -295,7 +358,7 @@ function VariantRail({
         </div>
         <button
           type="button"
-          className="absolute right-0 top-1/2 z-10 hidden size-11 translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-ec-line bg-white text-ec-ink transition hover:border-ec-ink lg:grid"
+          className="border-ec-line text-ec-ink hover:border-ec-ink absolute top-1/2 right-0 z-10 hidden size-11 translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border bg-white transition lg:grid"
           onClick={() => scrollBy(1)}
           aria-label="Variantes suivantes"
         >
@@ -539,215 +602,223 @@ export function ProductDetailClient({ product }: { product: CommerceProductDetai
 
   return (
     <TooltipProvider>
-    <div>
-      <section className="mx-auto max-w-[74rem]">
-        <nav
-          aria-label="Fil d'Ariane"
-          className="text-ec-muted mb-6 flex flex-wrap items-center gap-1.5 text-sm font-semibold"
-        >
-          <Link href="/" className="hover:text-ec-blue transition">
-            Accueil
-          </Link>
-          <ChevronRight className="text-ec-muted/45 size-3.5" aria-hidden="true" />
-          <Link href="/catalogue" className="hover:text-ec-blue transition">
-            Tous les produits
-          </Link>
-          {product.categoryTrail.map((entry) => (
-            <span key={entry.slug} className="inline-flex items-center gap-1.5">
-              <ChevronRight className="text-ec-muted/45 size-3.5" aria-hidden="true" />
-              <Link
-                href={`/catalogue?categorie=${entry.slug}`}
-                className="hover:text-ec-blue transition"
-              >
-                {entry.name}
-              </Link>
-            </span>
-          ))}
-        </nav>
+      <div>
+        <section className="mx-auto max-w-[74rem]">
+          <nav
+            aria-label="Fil d'Ariane"
+            className="text-ec-muted mb-6 flex flex-wrap items-center gap-1.5 text-sm font-semibold"
+          >
+            <Link href="/" className="hover:text-ec-blue transition">
+              Accueil
+            </Link>
+            <ChevronRight className="text-ec-muted/45 size-3.5" aria-hidden="true" />
+            <Link href="/catalogue" className="hover:text-ec-blue transition">
+              Tous les produits
+            </Link>
+            {product.categoryTrail.map((entry) => (
+              <span key={entry.slug} className="inline-flex items-center gap-1.5">
+                <ChevronRight className="text-ec-muted/45 size-3.5" aria-hidden="true" />
+                <Link
+                  href={`/catalogue?categorie=${entry.slug}`}
+                  className="hover:text-ec-blue transition"
+                >
+                  {entry.name}
+                </Link>
+              </span>
+            ))}
+          </nav>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(19rem,30rem)_minmax(0,1fr)] lg:items-start lg:gap-8 xl:gap-12">
-          <section className="order-1 min-w-0 lg:col-start-2 lg:row-start-1">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-              <div className="flex min-w-0 flex-wrap items-center gap-3">
-                <div className="inline-flex min-w-0 items-center gap-2">
-                  <p className="text-ec-muted text-xs font-black tracking-[0.24em] uppercase">
-                    SKU {selectedVariant.sku}
-                  </p>
-                  <CopyButton
-                    value={selectedVariant.sku}
-                    ariaLabel="Copier le SKU"
-                    size="xs"
-                    onCopy={() => toast.success("SKU copié.", { description: selectedVariant.sku })}
-                    onError={() => toast.error("Impossible de copier le SKU.")}
-                  />
-                </div>
-                <span className="bg-ec-line h-1 w-1 rounded-full" />
-                <p className="text-ec-muted min-w-0 text-xs font-black tracking-[0.24em] uppercase">
-                  <BrandValue brand={product.brand} />
-                </p>
-              </div>
-              <div className="ml-auto shrink-0">
-                <StockBadge stock={selectedVariant.stock} />
-              </div>
-            </div>
-
-            <h1 className="text-ec-ink mt-4 font-sans text-3xl leading-[1.08] font-semibold tracking-tight text-balance sm:text-[2.45rem] xl:text-[3rem]">
-              {selectedVariant.displayName}
-            </h1>
-          </section>
-
-          <div className="order-2 space-y-3 lg:sticky lg:top-36 lg:col-start-1 lg:row-start-1 lg:row-span-5">
-            <ProductImageViewer
-              key={`${selectedVariant.id}-${previewImages.map((image) => image.id).join("-")}`}
-              items={previewImages}
-              title={selectedVariant.displayName}
-              size="xl"
-              emptyLabel="COBAM"
-            />
-            {hasDocuments ? (
-            <div
-              className={cn(
-                "grid gap-3 lg:col-start-2 lg:row-start-4",
-                selectedVariant.datasheets.length + selectedVariant.certificates.length > 1
-                  ? "sm:grid-cols-2"
-                  : "grid-cols-1",
-              )}
-            >
-              {selectedVariant.datasheets.map((datasheet, index) => (
-                <DocumentAction
-                  key={`datasheet-${datasheet.id}`}
-                  href={datasheet.url}
-                  icon={<Download className="text-ec-blue/70 size-4 shrink-0" />}
-                  label={getDocumentLabel(
-                    datasheet,
-                    "Fiche technique",
-                    index,
-                    selectedVariant.datasheets.length,
-                  )}
-                />
-              ))}
-              {selectedVariant.certificates.map((certificate, index) => (
-                <DocumentAction
-                  key={`certificate-${certificate.id}`}
-                  href={certificate.url}
-                  icon={<FileBadge className="text-ec-blue/70 size-4 shrink-0" />}
-                  label={getDocumentLabel(
-                    certificate,
-                    "Certificat",
-                    index,
-                    selectedVariant.certificates.length,
-                  )}
-                />
-              ))}
-            </div>
-          ) : null}
-          </div>
-
-          <section className="order-3 min-w-0 lg:col-start-2 lg:row-start-2">
-            <div className="border-ec-line border bg-white p-5 sm:p-6">
-              <div className="text-center">
-                <div className="mx-auto w-fit">
-                  <p className="text-ec-muted font-sans text-xs font-black tracking-[0.24em] uppercase">
-                    Prix TTC
-                  </p>
-                  <p className="text-ec-ink mt-2 font-sans text-4xl leading-none font-semibold tracking-tight sm:text-5xl">
-                    <PriceText value={selectedVariant.price} />
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-7 grid gap-3 sm:grid-cols-[9.5rem_minmax(0,1fr)_3.5rem] sm:items-start">
-                <div className="mx-auto w-full max-w-[20rem] sm:mx-0 sm:max-w-none">
-                  <QuantityStepper value={quantity} onChange={setQuantity} />
-                </div>
-
-                <div className="grid w-full grid-cols-[minmax(0,1fr)_3.5rem] gap-3 sm:contents">
-                  <AddToCartButton
-                    item={selectedVariant.addToCart}
-                    quantity={quantity}
-                    size="xl"
-                    className="min-w-0 sm:w-full"
-                    buttonClassName="h-14 w-full justify-center shadow-none sm:w-full"
-                  />
-
-                  <FavoriteToggleButton
-                    item={favoriteItem}
-                    size="xl"
-                    iconOnly
-                    buttonClassName="size-14 rounded-full shadow-none"
-                  />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <div className="order-4 min-w-0 lg:col-start-2 lg:row-start-3">
-            <SpecialAttributeBlobs
-              product={product}
-              selectedVariant={selectedVariant}
-              onSelectVariant={selectVariant}
-            />
-          </div>
-        </div>
-      </section>
-      {product.variants.length > 1 ? (
-        <VariantRail product={product} selectedVariant={selectedVariant} onSelectVariant={selectVariant} />
-      ) : null}
-
-      {hasLowerContent ? (
-        <section className="border-ec-line mx-auto mt-14 max-w-[74rem] space-y-14 border-t pt-12 sm:mt-16 sm:pt-16">
-          {selectedVariant.summary || selectedVariant.description ? (
-            <div className="grid gap-8 lg:grid-cols-[17rem_1fr] xl:gap-14">
-              <div>
-                <h2 className="text-ec-ink mt-3 text-3xl leading-tight font-black tracking-tight">
-                  Détails produit
-                </h2>
-              </div>
-              <div className="max-w-4xl">
-                {selectedVariant.description ? (
-                  <RichText value={selectedVariant.description} />
-                ) : (
-                  <p className="text-ec-muted text-lg leading-9">{selectedVariant.summary}</p>
-                )}
-              </div>
-            </div>
-          ) : null}
-
-          {groupedAttributes.length > 0 ? (
-            <div className="border-ec-line grid gap-8 border-t pt-12 lg:grid-cols-[17rem_1fr] xl:gap-14">
-              <div>
-                <h2 className="text-ec-ink mt-3 text-3xl leading-tight font-black tracking-tight">
-                  Spécifications
-                </h2>
-              </div>
-              <div className="space-y-10">
-                {groupedAttributes.map((group) => (
-                  <div key={group.name}>
-                    <h3 className="text-ec-ink text-lg font-black">{group.name}</h3>
-                    <dl className="mt-4 grid gap-x-8 gap-y-0 sm:grid-cols-2 xl:grid-cols-3">
-                      {group.values.map((attribute) => (
-                        <div
-                          key={`${attribute.name}-${attribute.value}`}
-                          className="border-ec-line border-b py-4"
-                        >
-                          <dt className="text-ec-muted text-xs font-semibold tracking-[0.18em] uppercase">
-                            {attribute.name}
-                          </dt>
-                          <dd className="text-ec-ink mt-2 font-semibold">
-                            {attribute.value}
-                            {attribute.unit ? ` ${attribute.unit}` : ""}
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
+          <div className="grid gap-6 lg:grid-cols-[minmax(19rem,30rem)_minmax(0,1fr)] lg:items-start lg:gap-8 xl:gap-12">
+            <section className="order-1 min-w-0 lg:col-start-2 lg:row-start-1">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-3">
+                  <div className="inline-flex min-w-0 items-center gap-2">
+                    <p className="text-ec-muted text-xs font-black tracking-[0.24em] uppercase">
+                      SKU {selectedVariant.sku}
+                    </p>
+                    <CopyButton
+                      value={selectedVariant.sku}
+                      ariaLabel="Copier le SKU"
+                      size="xs"
+                      onCopy={() =>
+                        toast.success("SKU copié.", { description: selectedVariant.sku })
+                      }
+                      onError={() => toast.error("Impossible de copier le SKU.")}
+                    />
                   </div>
-                ))}
+                  <span className="bg-ec-line h-1 w-1 rounded-full" />
+                  <p className="text-ec-muted min-w-0 text-xs font-black tracking-[0.24em] uppercase">
+                    <BrandValue brand={product.brand} />
+                  </p>
+                </div>
+                <div className="ml-auto shrink-0">
+                  <StockBadge stock={selectedVariant.stock} />
+                </div>
               </div>
+
+              <h1 className="text-ec-ink mt-4 font-sans text-3xl leading-[1.08] font-semibold tracking-tight text-balance sm:text-[2.45rem] xl:text-[3rem]">
+                {selectedVariant.displayName}
+              </h1>
+            </section>
+
+            <div className="order-2 space-y-3 lg:sticky lg:top-36 lg:col-start-1 lg:row-span-5 lg:row-start-1">
+              <ProductImageViewer
+                key={`${selectedVariant.id}-${previewImages.map((image) => image.id).join("-")}`}
+                items={previewImages}
+                title={selectedVariant.displayName}
+                size="xl"
+                emptyLabel="COBAM"
+              />
+              {hasDocuments ? (
+                <div
+                  className={cn(
+                    "grid gap-3 lg:col-start-2 lg:row-start-4",
+                    selectedVariant.datasheets.length + selectedVariant.certificates.length > 1
+                      ? "sm:grid-cols-2"
+                      : "grid-cols-1",
+                  )}
+                >
+                  {selectedVariant.datasheets.map((datasheet, index) => (
+                    <DocumentAction
+                      key={`datasheet-${datasheet.id}`}
+                      href={datasheet.url}
+                      icon={<Download className="text-ec-blue/70 size-4 shrink-0" />}
+                      label={getDocumentLabel(
+                        datasheet,
+                        "Fiche technique",
+                        index,
+                        selectedVariant.datasheets.length,
+                      )}
+                    />
+                  ))}
+                  {selectedVariant.certificates.map((certificate, index) => (
+                    <DocumentAction
+                      key={`certificate-${certificate.id}`}
+                      href={certificate.url}
+                      icon={<FileBadge className="text-ec-blue/70 size-4 shrink-0" />}
+                      label={getDocumentLabel(
+                        certificate,
+                        "Certificat",
+                        index,
+                        selectedVariant.certificates.length,
+                      )}
+                    />
+                  ))}
+                </div>
+              ) : null}
             </div>
-          ) : null}
+
+            <section className="order-3 min-w-0 lg:col-start-2 lg:row-start-2">
+              <div className="border-ec-line border bg-white p-5 sm:p-6">
+                <div className="text-center">
+                  <div className="mx-auto w-fit">
+                    <p className="text-ec-muted font-sans text-xs font-black tracking-[0.24em] uppercase">
+                      Prix TTC
+                    </p>
+                    <p className="text-ec-ink mt-2 font-sans text-4xl leading-none font-semibold tracking-tight sm:text-5xl">
+                      <PriceText value={selectedVariant.price} />
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-7 grid gap-3 sm:grid-cols-[9.5rem_minmax(0,1fr)_3.5rem] sm:items-start">
+                  <div className="mx-auto w-full max-w-[20rem] sm:mx-0 sm:max-w-none">
+                    <QuantityStepper value={quantity} onChange={setQuantity} />
+                  </div>
+
+                  <div className="grid w-full grid-cols-[minmax(0,1fr)_3.5rem] gap-3 sm:contents">
+                    <AddToCartButton
+                      item={selectedVariant.addToCart}
+                      quantity={quantity}
+                      size="xl"
+                      className="min-w-0 sm:w-full"
+                      buttonClassName="h-14 w-full justify-center shadow-none sm:w-full"
+                    />
+
+                    <FavoriteToggleButton
+                      item={favoriteItem}
+                      size="xl"
+                      iconOnly
+                      buttonClassName="size-14 rounded-full shadow-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <div className="order-4 min-w-0 lg:col-start-2 lg:row-start-3">
+              <SpecialAttributeBlobs
+                product={product}
+                selectedVariant={selectedVariant}
+                onSelectVariant={selectVariant}
+              />
+            </div>
+          </div>
         </section>
-      ) : null}
-    </div>
+        <ProductCertificatesGrid certificates={selectedVariant.productCertificates} />
+
+        {product.variants.length > 1 ? (
+          <VariantRail
+            product={product}
+            selectedVariant={selectedVariant}
+            onSelectVariant={selectVariant}
+          />
+        ) : null}
+
+        {hasLowerContent ? (
+          <section className="border-ec-line mx-auto mt-14 max-w-[74rem] space-y-14 border-t pt-12 sm:mt-16 sm:pt-16">
+            {selectedVariant.summary || selectedVariant.description ? (
+              <div className="grid gap-8 lg:grid-cols-[17rem_1fr] xl:gap-14">
+                <div>
+                  <h2 className="text-ec-ink mt-3 text-3xl leading-tight font-black tracking-tight">
+                    Détails produit
+                  </h2>
+                </div>
+                <div className="max-w-4xl">
+                  {selectedVariant.description ? (
+                    <RichText value={selectedVariant.description} />
+                  ) : (
+                    <p className="text-ec-muted text-lg leading-9">{selectedVariant.summary}</p>
+                  )}
+                </div>
+              </div>
+            ) : null}
+
+            {groupedAttributes.length > 0 ? (
+              <div className="border-ec-line grid gap-8 border-t pt-12 lg:grid-cols-[17rem_1fr] xl:gap-14">
+                <div>
+                  <h2 className="text-ec-ink mt-3 text-3xl leading-tight font-black tracking-tight">
+                    Spécifications
+                  </h2>
+                </div>
+                <div className="space-y-10">
+                  {groupedAttributes.map((group) => (
+                    <div key={group.name}>
+                      <h3 className="text-ec-ink text-lg font-black">{group.name}</h3>
+                      <dl className="mt-4 grid gap-x-8 gap-y-0 sm:grid-cols-2 xl:grid-cols-3">
+                        {group.values.map((attribute) => (
+                          <div
+                            key={`${attribute.name}-${attribute.value}`}
+                            className="border-ec-line border-b py-4"
+                          >
+                            <dt className="text-ec-muted text-xs font-semibold tracking-[0.18em] uppercase">
+                              {attribute.name}
+                            </dt>
+                            <dd className="text-ec-ink mt-2 font-semibold">
+                              {attribute.value}
+                              {attribute.unit ? ` ${attribute.unit}` : ""}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+      </div>
     </TooltipProvider>
   );
 }

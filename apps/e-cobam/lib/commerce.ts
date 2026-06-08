@@ -163,6 +163,23 @@ const PRODUCT_DETAIL_SELECT = {
   titleSeo: true,
   descriptionSeo: true,
   guaranteeMonths: true,
+  certificateAssociations: {
+    orderBy: [{ certificate: { name: "asc" } }, { certificateId: "asc" }],
+    select: {
+      certificate: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          imageMediaId: true,
+          imageMedia: {
+            select: MEDIA_SELECT,
+          },
+        },
+      },
+    },
+  },
   attributes: {
     orderBy: [{ groupSortOrder: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
     select: {
@@ -199,6 +216,17 @@ export type CommerceMedia = {
   altText: string | null;
   title: string | null;
   mimeType: string | null;
+  sortOrder: number;
+};
+
+export type CommerceProductCertificate = {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  imageUrl: string;
+  imageThumbnailUrl: string | null;
+  imageAltText: string | null;
   sortOrder: number;
 };
 
@@ -293,6 +321,7 @@ export type CommerceVariant = {
   images: CommerceMedia[];
   datasheets: CommerceMedia[];
   certificates: CommerceMedia[];
+  productCertificates: CommerceProductCertificate[];
   attributes: CommerceAttribute[];
   addToCart: {
     id: number;
@@ -443,6 +472,31 @@ function documentMedia(
     .filter((entry) => entry.role === role)
     .map((link) => mapMedia(link.media, link))
     .filter((media): media is CommerceMedia => media != null);
+}
+
+function productCertificates(product: Pick<ProductDetailRecord, "certificateAssociations">) {
+  return product.certificateAssociations
+    .map((link, index) => {
+      const certificate = link.certificate;
+      const media = certificate.imageMedia;
+      if (!isRenderableMedia(media) || media.kind !== "IMAGE") {
+        return null;
+      }
+
+      const mappedCertificate: CommerceProductCertificate = {
+        id: Number(certificate.id),
+        name: certificate.name,
+        slug: certificate.slug,
+        description: certificate.description,
+        imageUrl: mediaUrl(certificate.imageMediaId, "original"),
+        imageThumbnailUrl: mediaUrl(certificate.imageMediaId, "thumbnail"),
+        imageAltText: media.altText ?? certificate.name,
+        sortOrder: index,
+      };
+
+      return mappedCertificate;
+    })
+    .filter((certificate): certificate is CommerceProductCertificate => certificate != null);
 }
 
 function gallery(product: Pick<ProductCardRecord, "media">) {
@@ -1424,7 +1478,6 @@ async function buildProductTypeFilters(
   productType: {
     slug: string;
     attributes: Array<{
-      label: string;
       sortOrder: number;
       attributeDefinition: {
         id: bigint;
@@ -1469,7 +1522,7 @@ async function buildProductTypeFilters(
 
       return {
         key: definition.key,
-        label: attribute.label || definition.label,
+        label: definition.label,
         unit: definition.unit,
         inputType: definition.inputType,
         options: values.map((value) => ({
@@ -1521,7 +1574,6 @@ export async function getCommerceProductTypeDetail(input: {
         where: { isFilterable: true },
         orderBy: [{ sortOrder: "asc" }],
         select: {
-          label: true,
           sortOrder: true,
           attributeDefinition: {
             select: {
@@ -1626,6 +1678,7 @@ function mapVariant(record: ProductDetailRecord): CommerceVariant {
     images,
     datasheets: documentMedia(record, "TECHNICAL"),
     certificates: documentMedia(record, "CERTIFICATE"),
+    productCertificates: productCertificates(record),
     attributes: record.attributes.map(mapAttribute),
     addToCart: {
       id: Number(record.id),

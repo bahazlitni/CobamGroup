@@ -418,7 +418,6 @@ export function parseAttributeInput(value: unknown): ProductTaxonomyAttributeInp
       record.attributeDefinitionId ?? record.attributeDefId,
       "La definition d'attribut",
     ),
-    label: optionalString(record.label) ?? "",
     isRequired: booleanValue(record.isRequired),
     isFilterable: booleanValue(record.isFilterable),
     sortOrder: integerValue(record.sortOrder, "L'ordre"),
@@ -495,7 +494,6 @@ function mapAttribute(record: {
   productTypeId: bigint;
   attributeGroupId: bigint | null;
   attributeDefinitionId: bigint;
-  label: string;
   isRequired: boolean;
   isFilterable: boolean;
   sortOrder: number;
@@ -518,8 +516,7 @@ function mapAttribute(record: {
     attributeDefinitionId: Number(record.attributeDefinitionId),
     definitionLabel,
     name: record.attributeDefinition.key,
-    label: record.label || definitionLabel,
-    labelOverride: record.label,
+    label: definitionLabel,
     unit: record.attributeDefinition.unit,
     inputType: record.attributeDefinition.inputType,
     selectOptions: record.attributeDefinition.selectOptions,
@@ -938,7 +935,6 @@ async function syncProductTypeSpecialAttributes(
       create: {
         productTypeId,
         attributeDefinitionId: definition.id,
-        label: "",
         isRequired: false,
         isFilterable: true,
         sortOrder: ++maxSortOrder,
@@ -1179,7 +1175,6 @@ export async function createTaxonomyAttributeService(
         productTypeId: BigInt(input.productTypeId),
         attributeGroupId: input.attributeGroupId == null ? null : BigInt(input.attributeGroupId),
         attributeDefinitionId: BigInt(input.attributeDefinitionId),
-        label: input.label,
         isRequired: input.isRequired,
         isFilterable: input.isFilterable,
         sortOrder: input.sortOrder,
@@ -1211,7 +1206,6 @@ export async function updateTaxonomyAttributeService(
         productTypeId: BigInt(input.productTypeId),
         attributeGroupId: input.attributeGroupId == null ? null : BigInt(input.attributeGroupId),
         attributeDefinitionId: BigInt(input.attributeDefinitionId),
-        label: input.label,
         isRequired: input.isRequired,
         isFilterable: input.isFilterable,
         sortOrder: input.sortOrder,

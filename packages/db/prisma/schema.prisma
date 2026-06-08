@@ -1468,7 +1468,6 @@ model ProductTypeAttribute {
   productTypeId         BigInt   @map("product_type_id")
   attributeGroupId      BigInt?  @map("attribute_group_id")
   attributeDefinitionId BigInt   @map("attribute_definition_id")
-  label                 String   @default("") @db.VarChar(255)
   isRequired            Boolean  @default(false) @map("is_required")
   isFilterable          Boolean  @default(false) @map("is_filterable")
   sortOrder             Int      @default(0) @map("sort_order")

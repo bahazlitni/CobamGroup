@@ -84,7 +84,6 @@ type AttributeGroupFormState = {
 type AttributeFormState = {
   attributeGroupId: string;
   attributeDefinitionId: string;
-  label: string;
   isRequired: boolean;
   isFilterable: boolean;
   sortOrder: string;
@@ -131,7 +130,6 @@ function emptyAttributeForm(): AttributeFormState {
   return {
     attributeGroupId: "",
     attributeDefinitionId: "",
-    label: "",
     isRequired: false,
     isFilterable: false,
     sortOrder: "0",
@@ -498,7 +496,6 @@ export default function ProductTypesAdminPage() {
       attributeGroupId:
         attribute.attributeGroupId == null ? "" : String(attribute.attributeGroupId),
       attributeDefinitionId: String(attribute.attributeDefinitionId),
-      label: attribute.labelOverride,
       isRequired: attribute.isRequired,
       isFilterable: attribute.isFilterable,
       sortOrder: String(attribute.sortOrder),
@@ -696,7 +693,6 @@ export default function ProductTypesAdminPage() {
           ? Number(attributeForm.attributeGroupId)
           : null,
         attributeDefinitionId: Number(attributeForm.attributeDefinitionId),
-        label: attributeForm.label,
         isRequired: attributeForm.isRequired,
         isFilterable: attributeForm.isFilterable,
         sortOrder: numberFromForm(attributeForm.sortOrder),
@@ -1522,20 +1518,6 @@ export default function ProductTypesAdminPage() {
                         setAttributeForm((current) => ({
                           ...current,
                           attributeDefinitionId: value,
-                        }))
-                      }
-                    />
-                  </PanelField>
-                  <PanelField id="attribute-label" label="">
-                    <PanelInput
-                      id="attribute-label"
-                      fullWidth
-                      value={attributeForm.label}
-                      placeholder={selectedAttributeDefinition?.label ?? "Libellé de la definition"}
-                      onChange={(event) =>
-                        setAttributeForm((current) => ({
-                          ...current,
-                          label: event.target.value,
                         }))
                       }
                     />

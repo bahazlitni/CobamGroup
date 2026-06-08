@@ -42,7 +42,6 @@ export type ProductTaxonomyAttributeDto = {
   definitionLabel: string;
   name: string;
   label: string;
-  labelOverride: string;
   unit: string | null;
   inputType: ProductTypeAttributeInputType;
   selectOptions: string[];
@@ -120,7 +119,6 @@ export type ProductTaxonomyAttributeInput = {
   productTypeId: number;
   attributeGroupId: number | null;
   attributeDefinitionId: number;
-  label: string;
   isRequired: boolean;
   isFilterable: boolean;
   sortOrder: number;
