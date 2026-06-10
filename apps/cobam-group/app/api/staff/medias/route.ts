@@ -7,7 +7,12 @@ import {
   parseMediaListQuery,
   parseMediaUploadFormData,
 } from "@/features/media/schemas";
-import { listMediaService, MediaServiceError, uploadMediaService } from "@/features/media/service";
+import {
+  listMediaService,
+  MediaFilenameConflictError,
+  MediaServiceError,
+  uploadMediaService,
+} from "@/features/media/service";
 import { getMediaMaxUploadBytes } from "@/lib/server/storage/media/upload-limits";
 
 export const runtime = "nodejs";
@@ -80,6 +85,20 @@ export async function GET(req: Request) {
       error instanceof MediaValidationError ||
       error instanceof MediaServiceError
     ) {
+      if (error instanceof MediaFilenameConflictError) {
+        return NextResponse.json(
+          {
+            ok: false,
+            message: error.message,
+            code: error.code,
+            conflict: {
+              media: error.conflictMedia,
+            },
+          },
+          { status: error.status },
+        );
+      }
+
       return NextResponse.json({ ok: false, message: error.message }, { status: error.status });
     }
 
@@ -117,6 +136,20 @@ export async function POST(req: Request) {
       error instanceof MediaValidationError ||
       error instanceof MediaServiceError
     ) {
+      if (error instanceof MediaFilenameConflictError) {
+        return NextResponse.json(
+          {
+            ok: false,
+            message: error.message,
+            code: error.code,
+            conflict: {
+              media: error.conflictMedia,
+            },
+          },
+          { status: error.status },
+        );
+      }
+
       return NextResponse.json({ ok: false, message: error.message }, { status: error.status });
     }
 

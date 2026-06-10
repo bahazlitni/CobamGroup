@@ -155,9 +155,12 @@ type MediaUsageCounts = {
   brandLogoFor: number;
   productCategoryImageFor: number;
   productTypeMediaImageFor: number;
+  productCertificateImageFor: number;
   productFinishImageFor: number;
   productSubcategoryImageFor: number;
   staffProfileAvatarFor: number;
+  commerceInvoicePdfFor: number;
+  commercePromotionBannerFor: number;
   articleMediaLinks: number;
   articleCoverFor: number;
   articleOgImageFor: number;
@@ -169,9 +172,12 @@ export type DetachedMediaReferenceCounts = {
   brandLogos: number;
   productCategoryImages: number;
   productTypeImages: number;
+  productCertificateImages: number;
   productFinishImages: number;
   productSubcategoryImages: number;
   staffAvatars: number;
+  commerceInvoicePdfs: number;
+  commercePromotionBanners: number;
   articleAttachments: number;
   articleCovers: number;
   articleOgImages: number;
@@ -240,9 +246,12 @@ function createEmptyMediaUsageCounts(): MediaUsageCounts {
     brandLogoFor: 0,
     productCategoryImageFor: 0,
     productTypeMediaImageFor: 0,
+    productCertificateImageFor: 0,
     productFinishImageFor: 0,
     productSubcategoryImageFor: 0,
     staffProfileAvatarFor: 0,
+    commerceInvoicePdfFor: 0,
+    commercePromotionBannerFor: 0,
     articleMediaLinks: 0,
     articleCoverFor: 0,
     articleOgImageFor: 0,
@@ -286,7 +295,12 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
     productCategoryImages,
     productSubcategoryImages,
     productTypeImages,
+    productCertificateImages,
+    productFinishImages,
+    organizationLogos,
     staffAvatars,
+    commerceInvoicePdfs,
+    commercePromotionBanners,
     articleAttachments,
     articleCovers,
     articleOgImages,
@@ -341,6 +355,36 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
         mediaImageId: true,
       },
     }),
+    prisma.productCertificate.findMany({
+      where: {
+        imageMediaId: {
+          in: mediaIds,
+        },
+      },
+      select: {
+        imageMediaId: true,
+      },
+    }),
+    prisma.productFinish.findMany({
+      where: {
+        imageMediaId: {
+          in: mediaIds,
+        },
+      },
+      select: {
+        imageMediaId: true,
+      },
+    }),
+    prisma.organization.findMany({
+      where: {
+        logoMediaId: {
+          in: mediaIds,
+        },
+      },
+      select: {
+        logoMediaId: true,
+      },
+    }),
     prisma.staffProfile.findMany({
       where: {
         avatarMediaId: {
@@ -349,6 +393,26 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
       },
       select: {
         avatarMediaId: true,
+      },
+    }),
+    prisma.commerceInvoice.findMany({
+      where: {
+        pdfMediaId: {
+          in: mediaIds,
+        },
+      },
+      select: {
+        pdfMediaId: true,
+      },
+    }),
+    prisma.commercePromotion.findMany({
+      where: {
+        bannerMediaId: {
+          in: mediaIds,
+        },
+      },
+      select: {
+        bannerMediaId: true,
       },
     }),
     prisma.articleMediaLink.findMany({
@@ -408,8 +472,28 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
     incrementUsageCount(countsByMediaId, productType.mediaImageId, "productTypeMediaImageFor");
   }
 
+  for (const certificate of productCertificateImages) {
+    incrementUsageCount(countsByMediaId, certificate.imageMediaId, "productCertificateImageFor");
+  }
+
+  for (const finish of productFinishImages) {
+    incrementUsageCount(countsByMediaId, finish.imageMediaId, "productFinishImageFor");
+  }
+
+  for (const organization of organizationLogos) {
+    incrementUsageCount(countsByMediaId, organization.logoMediaId, "brandLogoFor");
+  }
+
   for (const profile of staffAvatars) {
     incrementUsageCount(countsByMediaId, profile.avatarMediaId, "staffProfileAvatarFor");
+  }
+
+  for (const invoice of commerceInvoicePdfs) {
+    incrementUsageCount(countsByMediaId, invoice.pdfMediaId, "commerceInvoicePdfFor");
+  }
+
+  for (const promotion of commercePromotionBanners) {
+    incrementUsageCount(countsByMediaId, promotion.bannerMediaId, "commercePromotionBannerFor");
   }
 
   for (const link of articleAttachments) {
@@ -625,6 +709,35 @@ export async function findMediaById(mediaId: number) {
   return media;
 }
 
+export async function findMediaByFolderAndOriginalFilename(input: {
+  folderId: number | null;
+  originalFilename: string;
+  excludeMediaId?: number;
+}) {
+  const record = await prisma.media.findFirst({
+    where: {
+      deletedAt: null,
+      folderId: input.folderId != null ? BigInt(input.folderId) : null,
+      originalFilename: input.originalFilename,
+      ...(input.excludeMediaId != null
+        ? {
+            id: {
+              not: BigInt(input.excludeMediaId),
+            },
+          }
+        : {}),
+    },
+    select: mediaSelect,
+  });
+
+  if (!record) {
+    return null;
+  }
+
+  const [media] = await attachMediaUsageCounts([record]);
+  return media;
+}
+
 export async function findImageMediaById(mediaId: number) {
   return prisma.media.findFirst({
     where: {
@@ -715,6 +828,50 @@ export async function createMediaRecord(input: {
       isActive: true,
       uploadedByUserId: input.uploadedByUserId,
       updatedByUserId: input.uploadedByUserId,
+    },
+    select: mediaSelect,
+  });
+
+  const [media] = await attachMediaUsageCounts([record]);
+  return media;
+}
+
+export async function updateMediaFileRecord(
+  mediaId: number,
+  input: {
+    kind: MediaKind;
+    visibility: MediaVisibility;
+    storagePath: string;
+    originalFilename: string | null;
+    mimeType: string | null;
+    extension: string | null;
+    title: string | null;
+    altText: string | null;
+    widthPx?: number | null;
+    heightPx?: number | null;
+    sizeBytes: bigint;
+    sha256Hash: string;
+    updatedByUserId: string;
+  },
+) {
+  const record = await prisma.media.update({
+    where: { id: BigInt(mediaId) },
+    data: {
+      kind: input.kind,
+      visibility: input.visibility,
+      storagePath: input.storagePath,
+      originalFilename: input.originalFilename,
+      mimeType: input.mimeType,
+      extension: input.extension,
+      title: input.title,
+      altText: input.altText,
+      widthPx: input.widthPx ?? null,
+      heightPx: input.heightPx ?? null,
+      durationSeconds: null,
+      sizeBytes: input.sizeBytes,
+      sha256Hash: input.sha256Hash,
+      isActive: true,
+      updatedByUserId: input.updatedByUserId,
     },
     select: mediaSelect,
   });
@@ -922,6 +1079,301 @@ export async function makeMediaPublicMany(mediaIds: readonly number[]) {
   });
 }
 
+async function replaceMediaReferences(
+  tx: Prisma.TransactionClient,
+  input: {
+    fromMediaId: bigint;
+    toMediaId: bigint;
+  },
+): Promise<DetachedMediaReferenceCounts> {
+  const { fromMediaId, toMediaId } = input;
+  const productVariantLinksToMove = await tx.productMedia.findMany({
+    where: {
+      mediaId: fromMediaId,
+    },
+    select: {
+      productId: true,
+    },
+  });
+  const productIds = [
+    ...new Set(productVariantLinksToMove.map((link) => link.productId.toString())),
+  ].map((id) => BigInt(id));
+  const collidingProductIds =
+    productIds.length === 0
+      ? []
+      : (
+          await tx.productMedia.findMany({
+            where: {
+              mediaId: toMediaId,
+              productId: {
+                in: productIds,
+              },
+            },
+            select: {
+              productId: true,
+            },
+          })
+        ).map((link) => link.productId);
+  const deletedCollidingProductLinks =
+    collidingProductIds.length === 0
+      ? { count: 0 }
+      : await tx.productMedia.deleteMany({
+          where: {
+            mediaId: fromMediaId,
+            productId: {
+              in: collidingProductIds,
+            },
+          },
+        });
+  const movedProductVariantLinks = await tx.productMedia.updateMany({
+    where: {
+      mediaId: fromMediaId,
+    },
+    data: {
+      mediaId: toMediaId,
+    },
+  });
+
+  const articleLinksToMove = await tx.articleMediaLink.findMany({
+    where: {
+      mediaId: fromMediaId,
+    },
+    select: {
+      articleId: true,
+    },
+  });
+  const articleIds = [...new Set(articleLinksToMove.map((link) => link.articleId.toString()))].map(
+    (id) => BigInt(id),
+  );
+  const collidingArticleIds =
+    articleIds.length === 0
+      ? []
+      : (
+          await tx.articleMediaLink.findMany({
+            where: {
+              mediaId: toMediaId,
+              articleId: {
+                in: articleIds,
+              },
+            },
+            select: {
+              articleId: true,
+            },
+          })
+        ).map((link) => link.articleId);
+  const deletedCollidingArticleLinks =
+    collidingArticleIds.length === 0
+      ? { count: 0 }
+      : await tx.articleMediaLink.deleteMany({
+          where: {
+            mediaId: fromMediaId,
+            articleId: {
+              in: collidingArticleIds,
+            },
+          },
+        });
+  const movedArticleAttachments = await tx.articleMediaLink.updateMany({
+    where: {
+      mediaId: fromMediaId,
+    },
+    data: {
+      mediaId: toMediaId,
+    },
+  });
+
+  const [
+    productFamilyLinks,
+    productCategoryImages,
+    productSubcategoryImages,
+    productTypeImages,
+    productCertificateImages,
+    productFinishImages,
+    brandLogos,
+    staffAvatars,
+    commerceInvoicePdfs,
+    commercePromotionBanners,
+    articleCovers,
+    articleOgImages,
+  ] = await Promise.all([
+    tx.productFamily.updateMany({
+      where: {
+        mainImageMediaId: fromMediaId,
+      },
+      data: {
+        mainImageMediaId: toMediaId,
+      },
+    }),
+    tx.productCategory.updateMany({
+      where: {
+        imageMediaId: fromMediaId,
+      },
+      data: {
+        imageMediaId: toMediaId,
+      },
+    }),
+    tx.productSubcategory.updateMany({
+      where: {
+        imageMediaId: fromMediaId,
+      },
+      data: {
+        imageMediaId: toMediaId,
+      },
+    }),
+    tx.productType.updateMany({
+      where: {
+        mediaImageId: fromMediaId,
+      },
+      data: {
+        mediaImageId: toMediaId,
+      },
+    }),
+    tx.productCertificate.updateMany({
+      where: {
+        imageMediaId: fromMediaId,
+      },
+      data: {
+        imageMediaId: toMediaId,
+      },
+    }),
+    tx.productFinish.updateMany({
+      where: {
+        imageMediaId: fromMediaId,
+      },
+      data: {
+        imageMediaId: toMediaId,
+      },
+    }),
+    tx.organization.updateMany({
+      where: {
+        logoMediaId: fromMediaId,
+      },
+      data: {
+        logoMediaId: toMediaId,
+      },
+    }),
+    tx.staffProfile.updateMany({
+      where: {
+        avatarMediaId: fromMediaId,
+      },
+      data: {
+        avatarMediaId: toMediaId,
+      },
+    }),
+    tx.commerceInvoice.updateMany({
+      where: {
+        pdfMediaId: fromMediaId,
+      },
+      data: {
+        pdfMediaId: toMediaId,
+      },
+    }),
+    tx.commercePromotion.updateMany({
+      where: {
+        bannerMediaId: fromMediaId,
+      },
+      data: {
+        bannerMediaId: toMediaId,
+      },
+    }),
+    tx.article.updateMany({
+      where: {
+        coverMediaId: fromMediaId,
+      },
+      data: {
+        coverMediaId: toMediaId,
+      },
+    }),
+    tx.article.updateMany({
+      where: {
+        ogImageMediaId: fromMediaId,
+      },
+      data: {
+        ogImageMediaId: toMediaId,
+      },
+    }),
+  ]);
+
+  const productVariantLinks = deletedCollidingProductLinks.count + movedProductVariantLinks.count;
+  const articleAttachments = deletedCollidingArticleLinks.count + movedArticleAttachments.count;
+
+  return {
+    productFamilyLinks: productFamilyLinks.count,
+    productVariantLinks,
+    brandLogos: brandLogos.count,
+    productCategoryImages: productCategoryImages.count,
+    productTypeImages: productTypeImages.count,
+    productCertificateImages: productCertificateImages.count,
+    productFinishImages: productFinishImages.count,
+    productSubcategoryImages: productSubcategoryImages.count,
+    staffAvatars: staffAvatars.count,
+    commerceInvoicePdfs: commerceInvoicePdfs.count,
+    commercePromotionBanners: commercePromotionBanners.count,
+    articleAttachments,
+    articleCovers: articleCovers.count,
+    articleOgImages: articleOgImages.count,
+    total:
+      productFamilyLinks.count +
+      productVariantLinks +
+      brandLogos.count +
+      productCategoryImages.count +
+      productTypeImages.count +
+      productCertificateImages.count +
+      productFinishImages.count +
+      productSubcategoryImages.count +
+      staffAvatars.count +
+      commerceInvoicePdfs.count +
+      commercePromotionBanners.count +
+      articleAttachments +
+      articleCovers.count +
+      articleOgImages.count,
+  };
+}
+
+export async function moveMediaRecordAndOverwriteConflict(input: {
+  mediaId: number;
+  conflictMediaId: number;
+  folderId: number | null;
+  updatedByUserId: string;
+}) {
+  const result = await prisma.$transaction(async (tx) => {
+    const replacementMediaId = BigInt(input.mediaId);
+    const overwrittenMediaId = BigInt(input.conflictMediaId);
+    const folderId = input.folderId != null ? BigInt(input.folderId) : null;
+    const detachedReferences = await replaceMediaReferences(tx, {
+      fromMediaId: overwrittenMediaId,
+      toMediaId: replacementMediaId,
+    });
+    const overwrittenMedia = await tx.media.delete({
+      where: {
+        id: overwrittenMediaId,
+      },
+      select: mediaSelect,
+    });
+    const updatedRecord = await tx.media.update({
+      where: {
+        id: replacementMediaId,
+      },
+      data: {
+        folderId,
+        updatedByUserId: input.updatedByUserId,
+      },
+      select: mediaSelect,
+    });
+
+    return {
+      media: updatedRecord,
+      overwrittenMedia,
+      detachedReferences,
+    };
+  });
+  const [media] = await attachMediaUsageCounts([result.media]);
+
+  return {
+    ...result,
+    media,
+  };
+}
+
 export async function deleteMediaRecord(mediaId: number) {
   const record = await prisma.media.delete({
     where: { id: BigInt(mediaId) },
@@ -973,12 +1425,44 @@ export async function detachMediaReferencesAndDeleteMediaRecord(mediaId: number)
         mediaImageId: null,
       },
     });
+    const productFinishImages = await tx.productFinish.updateMany({
+      where: {
+        imageMediaId: mediaIdValue,
+      },
+      data: {
+        imageMediaId: null,
+      },
+    });
+    const brandLogos = await tx.organization.updateMany({
+      where: {
+        logoMediaId: mediaIdValue,
+      },
+      data: {
+        logoMediaId: null,
+      },
+    });
     const staffAvatars = await tx.staffProfile.updateMany({
       where: {
         avatarMediaId: mediaIdValue,
       },
       data: {
         avatarMediaId: null,
+      },
+    });
+    const commerceInvoicePdfs = await tx.commerceInvoice.updateMany({
+      where: {
+        pdfMediaId: mediaIdValue,
+      },
+      data: {
+        pdfMediaId: null,
+      },
+    });
+    const commercePromotionBanners = await tx.commercePromotion.updateMany({
+      where: {
+        bannerMediaId: mediaIdValue,
+      },
+      data: {
+        bannerMediaId: null,
       },
     });
     const articleAttachments = await tx.articleMediaLink.deleteMany({
@@ -1010,22 +1494,29 @@ export async function detachMediaReferencesAndDeleteMediaRecord(mediaId: number)
     const detachedReferences: DetachedMediaReferenceCounts = {
       productFamilyLinks: productFamilyLinks.count,
       productVariantLinks: productVariantLinks.count,
-      brandLogos: 0,
+      brandLogos: brandLogos.count,
       productCategoryImages: productCategoryImages.count,
       productTypeImages: productTypeImages.count,
-      productFinishImages: 0,
+      productCertificateImages: 0,
+      productFinishImages: productFinishImages.count,
       productSubcategoryImages: productSubcategoryImages.count,
       staffAvatars: staffAvatars.count,
+      commerceInvoicePdfs: commerceInvoicePdfs.count,
+      commercePromotionBanners: commercePromotionBanners.count,
       articleAttachments: articleAttachments.count,
       articleCovers: articleCovers.count,
       articleOgImages: articleOgImages.count,
       total:
         productFamilyLinks.count +
         productVariantLinks.count +
+        brandLogos.count +
         productCategoryImages.count +
         productTypeImages.count +
+        productFinishImages.count +
         productSubcategoryImages.count +
         staffAvatars.count +
+        commerceInvoicePdfs.count +
+        commercePromotionBanners.count +
         articleAttachments.count +
         articleCovers.count +
         articleOgImages.count,

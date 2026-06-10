@@ -38,6 +38,32 @@ function parseOptionalString(value: FormDataEntryValue | string | null): string 
   return trimmed ? trimmed : null;
 }
 
+function parseOptionalBoolean(value: FormDataEntryValue | unknown): boolean | undefined {
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (["1", "true", "yes", "on"].includes(normalized)) {
+    return true;
+  }
+
+  if (["0", "false", "no", "off"].includes(normalized)) {
+    return false;
+  }
+
+  return undefined;
+}
+
 function parseMediaVisibility(value: string | null | undefined): MediaVisibility | null {
   if (value == null) {
     return null;
@@ -188,6 +214,7 @@ export function parseMediaUploadFormData(formData: FormData): MediaUploadInput {
         typeof formData.get("folderId") === "string" ? (formData.get("folderId") as string) : null,
         "folderId",
       ) ?? null,
+    overwriteExisting: parseOptionalBoolean(formData.get("overwriteExisting")) === true,
   };
 }
 
@@ -206,6 +233,10 @@ export function parseMediaUpdateInput(raw: unknown): MediaUpdateInput {
   const hasFolderId = "folderId" in rawRecord;
   const hasTitle = "title" in rawRecord;
   const hasAltText = "altText" in rawRecord;
+  const hasOverwriteExisting = "overwriteExisting" in rawRecord;
+  const overwriteExisting = hasOverwriteExisting
+    ? parseOptionalBoolean(rawRecord.overwriteExisting)
+    : undefined;
   const folderId = hasFolderId
     ? parseOptionalMediaFolderId(
         typeof rawRecord.folderId === "number" || typeof rawRecord.folderId === "string"
@@ -244,6 +275,10 @@ export function parseMediaUpdateInput(raw: unknown): MediaUpdateInput {
     throw new MediaValidationError("Metadonnees media invalides.");
   }
 
+  if (hasOverwriteExisting && overwriteExisting === undefined) {
+    throw new MediaValidationError("Option d'ecrasement invalide.");
+  }
+
   const result: MediaUpdateInput = {};
 
   if (visibility) {
@@ -260,6 +295,10 @@ export function parseMediaUpdateInput(raw: unknown): MediaUpdateInput {
 
   if (hasAltText) {
     result.altText = altText ?? null;
+  }
+
+  if (hasOverwriteExisting) {
+    result.overwriteExisting = overwriteExisting ?? false;
   }
 
   return result;

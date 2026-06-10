@@ -15,6 +15,7 @@ import {
   createMediaFolderClient,
   deleteMediaFolderClient,
   deleteMediaClient,
+  isMediaFilenameConflictError,
   listMediaClient,
   updateMediaFolderClient,
   updateMediaClient,
@@ -38,6 +39,7 @@ import type {
 } from "../types";
 import { DEFAULT_MEDIA_PAGE_SIZE } from "../types";
 import {
+  getMediaDisplayTitle,
   getMediaGroupDescriptor,
   getMediaViewForItem,
 } from "@/components/staff/media/utils";
@@ -93,35 +95,96 @@ function withDefaultFolderId(
   };
 }
 
+function confirmOverwriteConflict(
+  error: unknown,
+  input: {
+    fallbackName: string;
+    action: "upload" | "move";
+  },
+) {
+  if (!isMediaFilenameConflictError(error)) {
+    return false;
+  }
+
+  const conflictMedia = error.conflictMedia;
+  const filename = conflictMedia?.originalFilename ?? input.fallbackName;
+  const existingTitle = conflictMedia ? getMediaDisplayTitle(conflictMedia) : filename;
+  const detail =
+    input.action === "move"
+      ? "Les références du fichier remplacé pointeront vers le média déplacé."
+      : "Le fichier existant gardera le même identifiant et ses références.";
+
+  return window.confirm(
+    `Un fichier nommé "${filename}" existe déjà dans ce dossier.\n\nÉcraser "${existingTitle}" ?\n${detail}`,
+  );
+}
+
+async function uploadMediaWithOverwritePrompt(input: MediaUploadRequest) {
+  try {
+    return await uploadMediaClient(input);
+  } catch (error: unknown) {
+    if (
+      input.overwriteExisting ||
+      !confirmOverwriteConflict(error, {
+        fallbackName: input.file.name || "ce fichier",
+        action: "upload",
+      })
+    ) {
+      throw error;
+    }
+
+    return await uploadMediaClient({
+      ...input,
+      overwriteExisting: true,
+    });
+  }
+}
+
+async function updateMediaWithOverwritePrompt(
+  mediaId: number,
+  input: MediaUpdateInput,
+  fallbackName: string,
+) {
+  try {
+    return await updateMediaClient(mediaId, input);
+  } catch (error: unknown) {
+    if (
+      input.overwriteExisting ||
+      input.folderId === undefined ||
+      !confirmOverwriteConflict(error, {
+        fallbackName,
+        action: "move",
+      })
+    ) {
+      throw error;
+    }
+
+    return await updateMediaClient(mediaId, {
+      ...input,
+      overwriteExisting: true,
+    });
+  }
+}
+
 export function useMediaLibrary(
   pageSize = DEFAULT_MEDIA_PAGE_SIZE,
   options: UseMediaLibraryOptions = {},
 ) {
   const [items, setItems] = useState<MediaListItemDto[]>([]);
   const [folders, setFolders] = useState<MediaFolderListItemDto[]>([]);
-  const [currentFolder, setCurrentFolder] =
-    useState<MediaListResult["currentFolder"]>(null);
-  const [breadcrumbs, setBreadcrumbs] = useState<
-    MediaListResult["breadcrumbs"]
-  >([]);
-  const [folderOptions, setFolderOptions] = useState<
-    MediaListResult["folderOptions"]
-  >([]);
+  const [currentFolder, setCurrentFolder] = useState<MediaListResult["currentFolder"]>(null);
+  const [breadcrumbs, setBreadcrumbs] = useState<MediaListResult["breadcrumbs"]>([]);
+  const [folderOptions, setFolderOptions] = useState<MediaListResult["folderOptions"]>([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search.trim());
-  const [internalBrowseMode, setInternalBrowseMode] =
-    useState<MediaBrowseMode>("folders");
-  const [internalCurrentFolderId, setInternalCurrentFolderId] =
-    useState<number | null>(null);
+  const [internalBrowseMode, setInternalBrowseMode] = useState<MediaBrowseMode>("folders");
+  const [internalCurrentFolderId, setInternalCurrentFolderId] = useState<number | null>(null);
   const [activeView, setActiveViewState] = useState<MediaView>("all");
   const [sortBy, setSortByState] = useState<MediaSortBy>("date");
-  const [sortDirection, setSortDirection] =
-    useState<MediaSortDirection>("desc");
+  const [sortDirection, setSortDirection] = useState<MediaSortDirection>("desc");
   const [stats, setStats] = useState<MediaListResult["stats"] | null>(null);
-  const [storage, setStorage] = useState<MediaListResult["storage"] | null>(
-    null,
-  );
+  const [storage, setStorage] = useState<MediaListResult["storage"] | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
@@ -133,16 +196,13 @@ export function useMediaLibrary(
   const [error, setError] = useState<string | null>(null);
   const [selectedMediaIds, setSelectedMediaIds] = useState<number[]>([]);
   const [selectedFolderIds, setSelectedFolderIds] = useState<number[]>([]);
-  const [selectionAnchorKey, setSelectionAnchorKey] =
-    useState<MediaSelectionKey | null>(null);
+  const [selectionAnchorKey, setSelectionAnchorKey] = useState<MediaSelectionKey | null>(null);
   const [openedMediaId, setOpenedMediaId] = useState<number | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const requestIdRef = useRef(0);
   const browseMode = options.browseMode ?? internalBrowseMode;
   const currentFolderId =
-    options.currentFolderId !== undefined
-      ? options.currentFolderId
-      : internalCurrentFolderId;
+    options.currentFolderId !== undefined ? options.currentFolderId : internalCurrentFolderId;
 
   const fetchPage = useCallback(
     async ({
@@ -220,11 +280,7 @@ export function useMediaLibrary(
           return;
         }
 
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Erreur lors du chargement des médias",
-        );
+        setError(err instanceof Error ? err.message : "Erreur lors du chargement des médias");
         if (reset) {
           setFolders([]);
           setCurrentFolder(null);
@@ -245,15 +301,7 @@ export function useMediaLibrary(
         }
       }
     },
-    [
-      activeView,
-      browseMode,
-      currentFolderId,
-      deferredSearch,
-      pageSize,
-      sortBy,
-      sortDirection,
-    ],
+    [activeView, browseMode, currentFolderId, deferredSearch, pageSize, sortBy, sortDirection],
   );
 
   useEffect(() => {
@@ -320,14 +368,8 @@ export function useMediaLibrary(
     return result;
   }, [sortBy, visibleItems]);
 
-  const selectedMediaIdSet = useMemo(
-    () => new Set(selectedMediaIds),
-    [selectedMediaIds],
-  );
-  const selectedFolderIdSet = useMemo(
-    () => new Set(selectedFolderIds),
-    [selectedFolderIds],
-  );
+  const selectedMediaIdSet = useMemo(() => new Set(selectedMediaIds), [selectedMediaIds]);
+  const selectedFolderIdSet = useMemo(() => new Set(selectedFolderIds), [selectedFolderIds]);
 
   const selectedItems = useMemo(
     () => items.filter((item) => selectedMediaIdSet.has(item.id)),
@@ -352,14 +394,10 @@ export function useMediaLibrary(
   const selectedCount = selectedMediaIds.length + selectedFolderIds.length;
   const selectionRequiresForceDelete =
     selectedItems.some((item) => item.usage.total > 0) ||
-    selectedFolders.some(
-      (folder) => folder.mediaCount > 0 || folder.childFolderCount > 0,
-    );
+    selectedFolders.some((folder) => folder.mediaCount > 0 || folder.childFolderCount > 0);
   const canDeleteSelection =
     (selectedItems.length > 0 || selectedFolders.length > 0) &&
-    selectedItems.every((item) =>
-      item.usage.total > 0 ? item.canForceRemove : item.canDelete,
-    );
+    selectedItems.every((item) => (item.usage.total > 0 ? item.canForceRemove : item.canDelete));
 
   const orderedVisibleEntryKeys = useMemo(
     () => [
@@ -371,15 +409,18 @@ export function useMediaLibrary(
     [browseMode, folders, visibleItems],
   );
 
-  const setBrowseMode = useCallback((value: MediaBrowseMode) => {
-    startTransition(() => {
-      options.onBrowseModeChange?.(value);
+  const setBrowseMode = useCallback(
+    (value: MediaBrowseMode) => {
+      startTransition(() => {
+        options.onBrowseModeChange?.(value);
 
-      if (options.browseMode === undefined) {
-        setInternalBrowseMode(value);
-      }
-    });
-  }, [options]);
+        if (options.browseMode === undefined) {
+          setInternalBrowseMode(value);
+        }
+      });
+    },
+    [options],
+  );
 
   const setActiveView = useCallback((view: MediaView) => {
     startTransition(() => {
@@ -399,15 +440,18 @@ export function useMediaLibrary(
     });
   }, []);
 
-  const openFolder = useCallback((folderId: number) => {
-    startTransition(() => {
-      options.onCurrentFolderIdChange?.(folderId);
+  const openFolder = useCallback(
+    (folderId: number) => {
+      startTransition(() => {
+        options.onCurrentFolderIdChange?.(folderId);
 
-      if (options.currentFolderId === undefined) {
-        setInternalCurrentFolderId(folderId);
-      }
-    });
-  }, [options]);
+        if (options.currentFolderId === undefined) {
+          setInternalCurrentFolderId(folderId);
+        }
+      });
+    },
+    [options],
+  );
 
   const openRootFolder = useCallback(() => {
     startTransition(() => {
@@ -436,9 +480,7 @@ export function useMediaLibrary(
 
         if (startIndex !== -1 && endIndex !== -1) {
           const [from, to] =
-            startIndex <= endIndex
-              ? [startIndex, endIndex]
-              : [endIndex, startIndex];
+            startIndex <= endIndex ? [startIndex, endIndex] : [endIndex, startIndex];
 
           for (const key of orderedVisibleEntryKeys.slice(from, to + 1)) {
             const [kind, rawId] = key.split(":");
@@ -493,12 +535,7 @@ export function useMediaLibrary(
       setSelectedFolderIds(Array.from(nextFolderIds));
       setSelectionAnchorKey(selectionKey);
     },
-    [
-      orderedVisibleEntryKeys,
-      selectedFolderIds,
-      selectedMediaIds,
-      selectionAnchorKey,
-    ],
+    [orderedVisibleEntryKeys, selectedFolderIds, selectedMediaIds, selectionAnchorKey],
   );
 
   const toggleSelected = useCallback(
@@ -527,43 +564,37 @@ export function useMediaLibrary(
     [toggleSelectionKey],
   );
 
-  const toggleManySelected = useCallback(
-    (mediaIds: number[], checked: boolean) => {
-      setSelectedMediaIds((current) => {
-        const next = new Set(current);
+  const toggleManySelected = useCallback((mediaIds: number[], checked: boolean) => {
+    setSelectedMediaIds((current) => {
+      const next = new Set(current);
 
-        for (const mediaId of mediaIds) {
-          if (checked) {
-            next.add(mediaId);
-          } else {
-            next.delete(mediaId);
-          }
+      for (const mediaId of mediaIds) {
+        if (checked) {
+          next.add(mediaId);
+        } else {
+          next.delete(mediaId);
         }
+      }
 
-        return Array.from(next);
-      });
-    },
-    [],
-  );
+      return Array.from(next);
+    });
+  }, []);
 
-  const toggleManyFoldersSelected = useCallback(
-    (folderIds: number[], checked: boolean) => {
-      setSelectedFolderIds((current) => {
-        const next = new Set(current);
+  const toggleManyFoldersSelected = useCallback((folderIds: number[], checked: boolean) => {
+    setSelectedFolderIds((current) => {
+      const next = new Set(current);
 
-        for (const folderId of folderIds) {
-          if (checked) {
-            next.add(folderId);
-          } else {
-            next.delete(folderId);
-          }
+      for (const folderId of folderIds) {
+        if (checked) {
+          next.add(folderId);
+        } else {
+          next.delete(folderId);
         }
+      }
 
-        return Array.from(next);
-      });
-    },
-    [],
-  );
+      return Array.from(next);
+    });
+  }, []);
 
   const clearSelection = useCallback(() => {
     setSelectedMediaIds([]);
@@ -573,12 +604,9 @@ export function useMediaLibrary(
 
   const selectAllVisible = useCallback(() => {
     setSelectedMediaIds(visibleItems.map((item) => item.id));
-    setSelectedFolderIds(
-      browseMode === "folders" ? folders.map((folder) => folder.id) : [],
-    );
+    setSelectedFolderIds(browseMode === "folders" ? folders.map((folder) => folder.id) : []);
 
-    const lastVisibleEntryKey =
-      orderedVisibleEntryKeys[orderedVisibleEntryKeys.length - 1] ?? null;
+    const lastVisibleEntryKey = orderedVisibleEntryKeys[orderedVisibleEntryKeys.length - 1] ?? null;
     setSelectionAnchorKey(lastVisibleEntryKey);
   }, [browseMode, folders, orderedVisibleEntryKeys, visibleItems]);
 
@@ -614,7 +642,7 @@ export function useMediaLibrary(
       setError(null);
 
       try {
-        const media = await uploadMediaClient(
+        const media = await uploadMediaWithOverwritePrompt(
           withDefaultFolderId(input, browseMode, currentFolderId),
         );
         await fetchPage({ nextPage: 1, reset: true });
@@ -638,15 +666,11 @@ export function useMediaLibrary(
         const results: MediaUploadBatchResult["items"] = [];
 
         for (const [index, rawInput] of inputs.entries()) {
-          const input = withDefaultFolderId(
-            rawInput,
-            browseMode,
-            currentFolderId,
-          );
+          const input = withDefaultFolderId(rawInput, browseMode, currentFolderId);
           callbacks?.onItemStart?.({ index, input });
 
           try {
-            const media = await uploadMediaClient(input);
+            const media = await uploadMediaWithOverwritePrompt(input);
             const result = {
               ok: true as const,
               input,
@@ -660,9 +684,7 @@ export function useMediaLibrary(
               ok: false as const,
               input,
               errorMessage:
-                error instanceof Error
-                  ? error.message
-                  : "Erreur lors de l'import du média.",
+                error instanceof Error ? error.message : "Erreur lors de l'import du média.",
             };
 
             results.push(result);
@@ -697,9 +719,7 @@ export function useMediaLibrary(
 
       try {
         await deleteMediaClient(mediaId, options);
-        setSelectedMediaIds((current) =>
-          current.filter((id) => id !== mediaId),
-        );
+        setSelectedMediaIds((current) => current.filter((id) => id !== mediaId));
         setSelectionAnchorKey((current) =>
           current === getMediaSelectionKey(mediaId) ? null : current,
         );
@@ -726,9 +746,7 @@ export function useMediaLibrary(
         const parentByFolderId = new Map(
           folderOptions.map((option) => [option.id, option.parentId]),
         );
-        const selectedFolderIdSet = new Set(
-          selectedFolders.map((folder) => folder.id),
-        );
+        const selectedFolderIdSet = new Set(selectedFolders.map((folder) => folder.id));
         const topLevelSelectedFolders = selectedFolders.filter((folder) => {
           let currentParentId = parentByFolderId.get(folder.id) ?? null;
 
@@ -745,19 +763,14 @@ export function useMediaLibrary(
 
         for (const folder of topLevelSelectedFolders) {
           await deleteMediaFolderClient(folder.id, {
-            force:
-              options.force === true &&
-              (folder.mediaCount > 0 || folder.childFolderCount > 0),
+            force: options.force === true && (folder.mediaCount > 0 || folder.childFolderCount > 0),
           });
         }
 
         for (const item of selectedItems) {
           const shouldForceDelete = options.force === true && item.usage.total > 0;
 
-          await deleteMediaClient(
-            item.id,
-            shouldForceDelete ? { force: true } : {},
-          );
+          await deleteMediaClient(item.id, shouldForceDelete ? { force: true } : {});
         }
 
         const deletedCount = topLevelSelectedFolders.length + selectedItems.length;
@@ -777,9 +790,7 @@ export function useMediaLibrary(
   const moveFolderIdsToFolder = useCallback(
     async (folderIds: readonly number[], folderId: number | null) => {
       const normalizedFolderIds = [...new Set(folderIds)];
-      const parentByFolderId = new Map(
-        folderOptions.map((option) => [option.id, option.parentId]),
-      );
+      const parentByFolderId = new Map(folderOptions.map((option) => [option.id, option.parentId]));
       const topLevelFolderIds = normalizedFolderIds.filter((selectedFolderId) => {
         let currentParentId = parentByFolderId.get(selectedFolderId) ?? null;
 
@@ -794,8 +805,7 @@ export function useMediaLibrary(
         return true;
       });
       const candidates = selectedFolders.filter(
-        (folder) =>
-          topLevelFolderIds.includes(folder.id) && folder.parentId !== folderId,
+        (folder) => topLevelFolderIds.includes(folder.id) && folder.parentId !== folderId,
       );
 
       if (candidates.length === 0) {
@@ -832,9 +842,7 @@ export function useMediaLibrary(
       }
 
       const movedFolderIdSet = new Set(candidates.map((folder) => folder.id));
-      setSelectedFolderIds((current) =>
-        current.filter((id) => !movedFolderIdSet.has(id)),
-      );
+      setSelectedFolderIds((current) => current.filter((id) => !movedFolderIdSet.has(id)));
       setSelectionAnchorKey((current) =>
         current != null &&
         current.startsWith("folder:") &&
@@ -857,21 +865,25 @@ export function useMediaLibrary(
   const moveMediaIdsToFolder = useCallback(
     async (mediaIds: readonly number[], folderId: number | null) => {
       const idSet = new Set(mediaIds);
-      const candidates = items.filter(
-        (item) => idSet.has(item.id) && item.folderId !== folderId,
-      );
+      const candidates = items.filter((item) => idSet.has(item.id) && item.folderId !== folderId);
 
       if (candidates.length === 0) {
         return 0;
       }
 
       for (const item of candidates) {
-        await updateMediaClient(item.id, { folderId });
+        await updateMediaWithOverwritePrompt(
+          item.id,
+          { folderId },
+          item.originalFilename ?? getMediaDisplayTitle(item),
+        );
       }
 
       const movedOutOfCurrentFolder =
         browseMode === "folders" &&
-        candidates.some((item) => item.folderId === currentFolderId && folderId !== currentFolderId);
+        candidates.some(
+          (item) => item.folderId === currentFolderId && folderId !== currentFolderId,
+        );
 
       setSelectedMediaIds((current) => current.filter((id) => !idSet.has(id)));
       setSelectionAnchorKey((current) =>
@@ -882,11 +894,7 @@ export function useMediaLibrary(
           : current,
       );
 
-      if (
-        movedOutOfCurrentFolder &&
-        openedMediaId != null &&
-        idSet.has(openedMediaId)
-      ) {
+      if (movedOutOfCurrentFolder && openedMediaId != null && idSet.has(openedMediaId)) {
         setOpenedMediaId(null);
       }
 
@@ -937,7 +945,12 @@ export function useMediaLibrary(
 
   const updateMedia = useCallback(
     async (mediaId: number, input: MediaUpdateInput) => {
-      const updatedMedia = await updateMediaClient(mediaId, input);
+      const currentMedia = items.find((item) => item.id === mediaId) ?? null;
+      const updatedMedia = await updateMediaWithOverwritePrompt(
+        mediaId,
+        input,
+        currentMedia?.originalFilename ?? currentMedia?.resolvedTitle ?? `Media #${mediaId}`,
+      );
       const folderChanged = input.folderId !== undefined;
 
       if (folderChanged) {
@@ -958,13 +971,11 @@ export function useMediaLibrary(
         return updatedMedia;
       }
 
-      setItems((current) =>
-        current.map((item) => (item.id === mediaId ? updatedMedia : item)),
-      );
+      setItems((current) => current.map((item) => (item.id === mediaId ? updatedMedia : item)));
 
       return updatedMedia;
     },
-    [browseMode, currentFolderId, fetchPage],
+    [browseMode, currentFolderId, fetchPage, items],
   );
 
   return {

@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import {
   findMediaFolderIdByPathClient,
+  isMediaFilenameConflictError,
   listMediaClient,
   uploadMediaClient,
 } from "@/features/media/client";
@@ -392,10 +393,29 @@ export default function ImagePickerDialog({
 
     try {
       const folderId = await resolveScopedFolderId();
-      const media = await uploadMediaClient({
-        file: uploadFile,
-        folderId,
-      });
+      let media: MediaListItemDto;
+
+      try {
+        media = await uploadMediaClient({
+          file: uploadFile,
+          folderId,
+        });
+      } catch (err: unknown) {
+        if (
+          !isMediaFilenameConflictError(err) ||
+          !window.confirm(
+            `Un fichier nommé "${err.conflictMedia?.originalFilename ?? uploadFile.name}" existe déjà dans ce dossier.\n\nÉcraser le fichier existant ?`,
+          )
+        ) {
+          throw err;
+        }
+
+        media = await uploadMediaClient({
+          file: uploadFile,
+          folderId,
+          overwriteExisting: true,
+        });
+      }
 
       onSelect(media);
       handleOpenChange(false);

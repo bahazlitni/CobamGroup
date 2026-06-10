@@ -19,6 +19,7 @@ import MediaThumbnail from "@/components/staff/media/media-thumbnail";
 import { formatBytes, getMediaDisplayTitle } from "@/components/staff/media/utils";
 import {
   findMediaFolderIdByPathClient,
+  isMediaFilenameConflictError,
   listMediaClient,
   uploadMediaClient,
 } from "@/features/media/client";
@@ -344,10 +345,29 @@ export default function ProductMediaPickerDialog({
 
     try {
       const folderId = await resolveProductsFolderId();
-      const media = await uploadMediaClient({
-        file: uploadFile,
-        folderId,
-      });
+      let media: MediaListItemDto;
+
+      try {
+        media = await uploadMediaClient({
+          file: uploadFile,
+          folderId,
+        });
+      } catch (err: unknown) {
+        if (
+          !isMediaFilenameConflictError(err) ||
+          !window.confirm(
+            `Un fichier nommé "${err.conflictMedia?.originalFilename ?? uploadFile.name}" existe déjà dans ce dossier.\n\nÉcraser le fichier existant ?`,
+          )
+        ) {
+          throw err;
+        }
+
+        media = await uploadMediaClient({
+          file: uploadFile,
+          folderId,
+          overwriteExisting: true,
+        });
+      }
 
       onSelect(mapMediaListItemToProductMedia(media));
       handleClose();

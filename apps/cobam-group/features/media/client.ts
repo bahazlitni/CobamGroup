@@ -13,14 +13,21 @@ import type {
   MediaFolderSummaryDto,
   MediaListItemDto,
   MediaListResult,
-  MediaUpdateInput,
-  MediaUploadRequest,
   MediaSortBy,
   MediaSortDirection,
+  MediaUpdateInput,
+  MediaUploadRequest,
 } from "./types";
 
 type ApiOk<T> = { ok: true } & T;
-type ApiFail = { ok: false; message?: string };
+type ApiFail = {
+  ok: false;
+  message?: string;
+  code?: string;
+  conflict?: {
+    media?: MediaListItemDto;
+  };
+};
 
 type MediaListResponse = ApiOk<MediaListResult> | ApiFail;
 type MediaDetailResponse = ApiOk<{ media: MediaListItemDto }> | ApiFail;
@@ -34,11 +41,35 @@ type MediaFolderResolveResponse = ApiOk<{ folderId: number | null }> | ApiFail;
 
 export class MediaClientError extends Error {
   status: number;
+  code?: string;
+  conflictMedia?: MediaListItemDto;
 
-  constructor(message: string, status = 500) {
+  constructor(
+    message: string,
+    status = 500,
+    options: {
+      code?: string;
+      conflictMedia?: MediaListItemDto;
+    } = {},
+  ) {
     super(message);
     this.status = status;
+    this.code = options.code;
+    this.conflictMedia = options.conflictMedia;
   }
+}
+
+export const MEDIA_FILENAME_CONFLICT_CODE = "MEDIA_FILENAME_CONFLICT";
+
+export function isMediaFilenameConflictError(error: unknown): error is MediaClientError & {
+  code: typeof MEDIA_FILENAME_CONFLICT_CODE;
+  conflictMedia?: MediaListItemDto;
+} {
+  return (
+    error instanceof MediaClientError &&
+    error.status === 409 &&
+    error.code === MEDIA_FILENAME_CONFLICT_CODE
+  );
 }
 
 async function parseJsonSafe<T>(res: Response): Promise<T | null> {
@@ -51,6 +82,19 @@ async function parseJsonSafe<T>(res: Response): Promise<T | null> {
 
 function getErrorMessage(data: ApiFail | ApiOk<unknown> | null | undefined) {
   return data && "message" in data ? data.message : undefined;
+}
+
+function createMediaClientError(
+  data: ApiFail | ApiOk<unknown> | null | undefined,
+  fallbackMessage: string,
+  status: number,
+) {
+  const failData = data && "ok" in data && data.ok === false ? data : null;
+
+  return new MediaClientError(getErrorMessage(data) || fallbackMessage, status, {
+    code: failData?.code,
+    conflictMedia: failData?.conflict?.media,
+  });
 }
 
 function buildListParams(params: {
@@ -108,10 +152,7 @@ export async function listMediaClient(params: {
   const data = await parseJsonSafe<MediaListResponse>(res);
 
   if (!res.ok || !data?.ok) {
-    throw new MediaClientError(
-      getErrorMessage(data) || "Erreur lors du chargement de la médiathèque",
-      res.status,
-    );
+    throw createMediaClientError(data, "Erreur lors du chargement de la médiathèque", res.status);
   }
 
   return data;
@@ -145,8 +186,9 @@ export async function findMediaFolderIdByPathClient(path: string): Promise<numbe
     const data = await parseJsonSafe<MediaFolderResolveResponse>(res);
 
     if (!res.ok || !data?.ok) {
-      throw new MediaClientError(
-        getErrorMessage(data) || "Erreur lors de la resolution du dossier media",
+      throw createMediaClientError(
+        data,
+        "Erreur lors de la résolution du dossier média",
         res.status,
       );
     }
@@ -171,6 +213,7 @@ export async function uploadMediaClient(input: MediaUploadRequest): Promise<Medi
   if (input.altText?.trim()) formData.set("altText", input.altText.trim());
   if (input.visibility) formData.set("visibility", input.visibility);
   if (input.folderId != null) formData.set("folderId", String(input.folderId));
+  if (input.overwriteExisting) formData.set("overwriteExisting", "true");
 
   const res = await staffApiFetch("/api/staff/medias", {
     method: "POST",
@@ -180,10 +223,7 @@ export async function uploadMediaClient(input: MediaUploadRequest): Promise<Medi
   const data = await parseJsonSafe<MediaUploadResponse>(res);
 
   if (!res.ok || !data?.ok || !data.media) {
-    throw new MediaClientError(
-      getErrorMessage(data) || "Erreur lors de l'import du média",
-      res.status,
-    );
+    throw createMediaClientError(data, "Erreur lors de l'import du média", res.status);
   }
 
   return data.media;
@@ -197,10 +237,7 @@ export async function getMediaByIdClient(mediaId: number): Promise<MediaListItem
   const data = await parseJsonSafe<MediaDetailResponse>(res);
 
   if (!res.ok || !data?.ok || !data.media) {
-    throw new MediaClientError(
-      getErrorMessage(data) || "Erreur lors du chargement du média",
-      res.status,
-    );
+    throw createMediaClientError(data, "Erreur lors du chargement du média", res.status);
   }
 
   return data.media;
@@ -221,10 +258,7 @@ export async function updateMediaClient(
   const data = await parseJsonSafe<MediaUpdateResponse>(res);
 
   if (!res.ok || !data?.ok || !data.media) {
-    throw new MediaClientError(
-      getErrorMessage(data) || "Erreur lors de la mise à jour du média",
-      res.status,
-    );
+    throw createMediaClientError(data, "Erreur lors de la mise à jour du média", res.status);
   }
 
   return data.media;
@@ -244,10 +278,7 @@ export async function createMediaFolderClient(
   const data = await parseJsonSafe<MediaFolderCreateResponse>(res);
 
   if (!res.ok || !data?.ok || !data.folder) {
-    throw new MediaClientError(
-      getErrorMessage(data) || "Erreur lors de la création du dossier",
-      res.status,
-    );
+    throw createMediaClientError(data, "Erreur lors de la création du dossier", res.status);
   }
 
   return data.folder;
@@ -268,10 +299,7 @@ export async function updateMediaFolderClient(
   const data = await parseJsonSafe<MediaFolderUpdateResponse>(res);
 
   if (!res.ok || !data?.ok || !data.folder) {
-    throw new MediaClientError(
-      getErrorMessage(data) || "Erreur lors du déplacement du dossier",
-      res.status,
-    );
+    throw createMediaClientError(data, "Erreur lors du déplacement du dossier", res.status);
   }
 
   return data.folder;
@@ -297,10 +325,7 @@ export async function deleteMediaFolderClient(
   const data = await parseJsonSafe<MediaFolderDeleteResponse>(res);
 
   if (!res.ok || !data?.ok) {
-    throw new MediaClientError(
-      getErrorMessage(data) || "Erreur lors de la suppression du dossier",
-      res.status,
-    );
+    throw createMediaClientError(data, "Erreur lors de la suppression du dossier", res.status);
   }
 }
 
@@ -324,10 +349,7 @@ export async function deleteMediaClient(
   const data = await parseJsonSafe<MediaDeleteResponse>(res);
 
   if (!res.ok || !data?.ok) {
-    throw new MediaClientError(
-      getErrorMessage(data) || "Erreur lors de la suppression du média",
-      res.status,
-    );
+    throw createMediaClientError(data, "Erreur lors de la suppression du média", res.status);
   }
 }
 

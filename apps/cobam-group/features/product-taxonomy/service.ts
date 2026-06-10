@@ -816,6 +816,8 @@ const productTypeInclude = {
 } satisfies Prisma.ProductTypeInclude;
 
 function getProductTypeData(input: ProductTaxonomyTypeInput) {
+  const colorFinishFlags = normalizeColorFinishFlags(input);
+
   return {
     groupId: input.groupId == null ? null : BigInt(input.groupId),
     name: input.name,
@@ -827,12 +829,21 @@ function getProductTypeData(input: ProductTaxonomyTypeInput) {
     descriptionSeo: input.descriptionSeo,
     mediaImageId: input.mediaImageId == null ? null : BigInt(input.mediaImageId),
     sortOrder: input.sortOrder ?? 0,
-    hasColor: input.hasColor ?? false,
-    hasFinish: input.hasFinish ?? false,
+    hasColor: colorFinishFlags.hasColor,
+    hasFinish: colorFinishFlags.hasFinish,
     presetTags: input.presetTags ?? "",
     presetStockUnit: input.presetStockUnit ?? null,
     presetVatRate: input.presetVatRate ?? null,
     presetGuaranteeMonths: input.presetGuaranteeMonths ?? null,
+  };
+}
+
+function normalizeColorFinishFlags(input: Pick<ProductTaxonomyTypeInput, "hasColor" | "hasFinish">) {
+  const hasFinish = input.hasFinish ?? false;
+
+  return {
+    hasColor: hasFinish ? false : (input.hasColor ?? false),
+    hasFinish,
   };
 }
 
@@ -889,17 +900,18 @@ async function syncProductTypeSpecialAttributes(
   productTypeId: bigint,
   input: Pick<ProductTaxonomyTypeInput, "hasColor" | "hasFinish">,
 ) {
+  const colorFinishFlags = normalizeColorFinishFlags(input);
   const desiredAttributes: Array<{
     inputType: SpecialTemplateAttributeType;
     enabled: boolean;
   }> = [
     {
       inputType: ProductTypeAttributeInputType.COLOR,
-      enabled: input.hasColor ?? false,
+      enabled: colorFinishFlags.hasColor,
     },
     {
       inputType: ProductTypeAttributeInputType.FINISH,
-      enabled: input.hasFinish ?? false,
+      enabled: colorFinishFlags.hasFinish,
     },
   ];
 
@@ -911,18 +923,19 @@ async function syncProductTypeSpecialAttributes(
       })
     )._max.sortOrder ?? -1;
 
-  for (const desiredAttribute of desiredAttributes) {
+  for (const desiredAttribute of desiredAttributes.filter((attribute) => !attribute.enabled)) {
     const definition = await ensureSpecialAttributeDefinition(tx, desiredAttribute.inputType);
 
-    if (!desiredAttribute.enabled) {
-      await tx.productTypeAttribute.deleteMany({
-        where: {
-          productTypeId,
-          attributeDefinitionId: definition.id,
-        },
-      });
-      continue;
-    }
+    await tx.productTypeAttribute.deleteMany({
+      where: {
+        productTypeId,
+        attributeDefinitionId: definition.id,
+      },
+    });
+  }
+
+  for (const desiredAttribute of desiredAttributes.filter((attribute) => attribute.enabled)) {
+    const definition = await ensureSpecialAttributeDefinition(tx, desiredAttribute.inputType);
 
     await tx.productTypeAttribute.upsert({
       where: {

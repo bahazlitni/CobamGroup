@@ -1232,6 +1232,7 @@ export default function ProductTypesAdminPage() {
                         setProductTypeForm((current) => ({
                           ...current,
                           hasColor: checked === true,
+                          hasFinish: checked === true ? false : current.hasFinish,
                         }))
                       }
                     />
@@ -1243,6 +1244,7 @@ export default function ProductTypesAdminPage() {
                       onCheckedChange={(checked) =>
                         setProductTypeForm((current) => ({
                           ...current,
+                          hasColor: checked === true ? false : current.hasColor,
                           hasFinish: checked === true,
                         }))
                       }

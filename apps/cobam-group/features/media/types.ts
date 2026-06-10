@@ -17,8 +17,7 @@ export const MEDIA_VISIBILITY = {
   PUBLIC: "PUBLIC",
 } as const;
 export const MEDIA_VISIBILITY_VALUES = Object.values(MEDIA_VISIBILITY);
-export type MediaVisibility =
-  (typeof MEDIA_VISIBILITY)[keyof typeof MEDIA_VISIBILITY];
+export type MediaVisibility = (typeof MEDIA_VISIBILITY)[keyof typeof MEDIA_VISIBILITY];
 
 export type MediaFilterStatus = "all" | "active" | "inactive";
 export type MediaFilterKind = MediaKind | "ALL";
@@ -50,6 +49,7 @@ export type MediaUploadInput = {
   altText: string | null;
   visibility: MediaVisibility;
   folderId: number | null;
+  overwriteExisting?: boolean;
 };
 
 export type MediaUploadRequest = {
@@ -58,6 +58,7 @@ export type MediaUploadRequest = {
   altText?: string;
   visibility?: MediaVisibility;
   folderId?: number | null;
+  overwriteExisting?: boolean;
 };
 
 export type MediaUpdateInput = {
@@ -65,6 +66,7 @@ export type MediaUpdateInput = {
   altText?: string | null;
   visibility?: MediaVisibility;
   folderId?: number | null;
+  overwriteExisting?: boolean;
 };
 
 export type MediaFolderCreateInput = {
@@ -82,9 +84,12 @@ export type MediaUsageDto = {
   brandLogos: number;
   productCategoryImages: number;
   productTypeImages: number;
+  productCertificateImages: number;
   productFinishImages: number;
   productSubcategoryImages: number;
   staffAvatars: number;
+  commerceInvoicePdfs: number;
+  commercePromotionBanners: number;
   articleAttachments: number;
   articleCovers: number;
   articleOgImages: number;

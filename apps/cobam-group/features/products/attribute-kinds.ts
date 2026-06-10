@@ -14,6 +14,28 @@ function isRepeatableSpecialAttribute(attribute: ProductAttributeInputDto) {
   );
 }
 
+function isColorAttribute(attribute: ProductAttributeInputDto) {
+  const normalizedKind = normalizeProductAttributeKind(attribute.name ?? attribute.kind);
+  return normalizedKind === "color" || attribute.inputType === "COLOR";
+}
+
+function isFinishAttribute(attribute: ProductAttributeInputDto) {
+  const normalizedKind = normalizeProductAttributeKind(attribute.name ?? attribute.kind);
+  return normalizedKind === "finish" || attribute.inputType === "FINISH";
+}
+
+export function pruneColorAttributesOverwrittenByFinish(
+  attributes: readonly ProductAttributeInputDto[],
+) {
+  const hasFinish = attributes.some(isFinishAttribute);
+
+  if (!hasFinish) {
+    return [...attributes];
+  }
+
+  return attributes.filter((attribute) => !isColorAttribute(attribute));
+}
+
 export function findDuplicateAttributeKind(
   attributes: readonly ProductAttributeInputDto[],
 ): string | null {

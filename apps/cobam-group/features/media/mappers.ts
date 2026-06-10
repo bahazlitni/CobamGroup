@@ -52,9 +52,12 @@ type MediaWithRelations = {
     brandLogoFor: number;
     productCategoryImageFor: number;
     productTypeMediaImageFor: number;
+    productCertificateImageFor: number;
     productFinishImageFor: number;
     productSubcategoryImageFor: number;
     staffProfileAvatarFor: number;
+    commerceInvoicePdfFor: number;
+    commercePromotionBannerFor: number;
     articleMediaLinks: number;
     articleCoverFor: number;
     articleOgImageFor: number;
@@ -92,9 +95,12 @@ function buildUsage(media: MediaWithRelations): MediaUsageDto {
     media._count.brandLogoFor +
     media._count.productCategoryImageFor +
     media._count.productTypeMediaImageFor +
+    media._count.productCertificateImageFor +
     media._count.productFinishImageFor +
     media._count.productSubcategoryImageFor +
     media._count.staffProfileAvatarFor +
+    media._count.commerceInvoicePdfFor +
+    media._count.commercePromotionBannerFor +
     media._count.articleMediaLinks +
     media._count.articleCoverFor +
     media._count.articleOgImageFor;
@@ -105,9 +111,12 @@ function buildUsage(media: MediaWithRelations): MediaUsageDto {
     brandLogos: media._count.brandLogoFor,
     productCategoryImages: media._count.productCategoryImageFor,
     productTypeImages: media._count.productTypeMediaImageFor,
+    productCertificateImages: media._count.productCertificateImageFor,
     productFinishImages: media._count.productFinishImageFor,
     productSubcategoryImages: media._count.productSubcategoryImageFor,
     staffAvatars: media._count.staffProfileAvatarFor,
+    commerceInvoicePdfs: media._count.commerceInvoicePdfFor,
+    commercePromotionBanners: media._count.commercePromotionBannerFor,
     articleAttachments: media._count.articleMediaLinks,
     articleCovers: media._count.articleCoverFor,
     articleOgImages: media._count.articleOgImageFor,

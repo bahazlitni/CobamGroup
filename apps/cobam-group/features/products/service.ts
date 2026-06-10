@@ -2,7 +2,11 @@ import { Prisma } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
 import { prisma } from "@/lib/server/db/prisma";
 import { canAccessProducts, canCreateProducts, canManageProducts } from "./access";
-import { buildDuplicateAttributeKindMessage, findDuplicateAttributeKind } from "./attribute-kinds";
+import {
+  buildDuplicateAttributeKindMessage,
+  findDuplicateAttributeKind,
+  pruneColorAttributesOverwrittenByFinish,
+} from "./attribute-kinds";
 import { buildProductAttributeCreateData, mapProductAttributeRecord } from "./attribute-records";
 import { resolveProductBrandOrganizationId } from "@/features/organizations/product-brand";
 import {
@@ -497,9 +501,11 @@ async function syncVariantRelations(
     },
   });
 
-  if (variant.attributes.length > 0) {
+  const attributes = pruneColorAttributesOverwrittenByFinish(variant.attributes);
+
+  if (attributes.length > 0) {
     await tx.productAttribute.createMany({
-      data: variant.attributes.map((attribute, index) => ({
+      data: attributes.map((attribute, index) => ({
         ...buildProductAttributeCreateData(productId, attribute, index),
       })),
     });
@@ -508,7 +514,9 @@ async function syncVariantRelations(
 
 async function writeFamily(familyId: number | null, input: ProductFamilyUpsertInput) {
   for (const variant of input.variants) {
-    const duplicateAttributeKind = findDuplicateAttributeKind(variant.attributes);
+    const duplicateAttributeKind = findDuplicateAttributeKind(
+      pruneColorAttributesOverwrittenByFinish(variant.attributes),
+    );
 
     if (duplicateAttributeKind) {
       throw new ProductServiceError(

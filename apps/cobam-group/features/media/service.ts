@@ -33,13 +33,16 @@ import {
   detachMediaFolderRelationsAndDeleteFolderRecord,
   detachMediaReferencesAndDeleteMediaRecord,
   findImageMediaById,
+  findMediaByFolderAndOriginalFilename,
   findMediaFolderById,
   findMediaById,
   findPublicMediaById,
   listAllMediaFolders,
   listMediaFoldersAtLevel,
   listMedia,
+  moveMediaRecordAndOverwriteConflict,
   updateMediaFolderRecord,
+  updateMediaFileRecord,
   updateMediaRecord,
 } from "./repository";
 import {
@@ -74,6 +77,21 @@ export class MediaServiceError extends Error {
   constructor(message: string, status = 400) {
     super(message);
     this.status = status;
+  }
+}
+
+export const MEDIA_FILENAME_CONFLICT_CODE = "MEDIA_FILENAME_CONFLICT";
+
+export class MediaFilenameConflictError extends MediaServiceError {
+  code = MEDIA_FILENAME_CONFLICT_CODE;
+  conflictMedia: ReturnType<typeof mapMediaToListItemDto>;
+
+  constructor(conflictMedia: ReturnType<typeof mapMediaToListItemDto>) {
+    super(
+      `Un fichier nommé "${conflictMedia.originalFilename ?? conflictMedia.resolvedTitle}" existe déjà dans ce dossier.`,
+      409,
+    );
+    this.conflictMedia = conflictMedia;
   }
 }
 
@@ -340,6 +358,16 @@ function buildMediaStorageKey(input: {
   return `media/${input.kind.toLowerCase()}/${year}/${month}/${randomUUID()}-${baseName || "file"}.${extension}`;
 }
 
+async function deleteStoredMediaObjects(media: MediaStorageReadableRecord) {
+  const storage = getMediaStorageDriver();
+
+  await storage.deleteObject(media.storagePath);
+
+  if (media.kind === MEDIA_KIND.IMAGE) {
+    await storage.deleteObject(getMediaVariantStoragePath(media.storagePath, "thumbnail"));
+  }
+}
+
 async function convertImageToWebp(buffer: Buffer) {
   try {
     const image = sharp(buffer, { failOn: "none" }).rotate();
@@ -417,6 +445,20 @@ function assertMediaCanBeDeletedWithoutForce(
     );
   }
 
+  if (media._count.productTypeMediaImageFor > 0) {
+    throw new MediaServiceError(
+      "Impossible de supprimer un media encore utilise par un modele produit.",
+      400,
+    );
+  }
+
+  if (media._count.productCertificateImageFor > 0) {
+    throw new MediaServiceError(
+      "Impossible de supprimer un media encore utilise par un certificat produit.",
+      400,
+    );
+  }
+
   if (media._count.productFinishImageFor > 0) {
     throw new MediaServiceError(
       "Impossible de supprimer un média encore utilisé par une finition.",
@@ -434,6 +476,13 @@ function assertMediaCanBeDeletedWithoutForce(
   if (media._count.staffProfileAvatarFor > 0) {
     throw new MediaServiceError(
       "Impossible de supprimer un média encore utilisé comme avatar.",
+      400,
+    );
+  }
+
+  if (media._count.commerceInvoicePdfFor > 0 || media._count.commercePromotionBannerFor > 0) {
+    throw new MediaServiceError(
+      "Impossible de supprimer un media encore utilise par le module e-commerce.",
       400,
     );
   }
@@ -622,6 +671,21 @@ export async function uploadMediaService(session: StaffSession, input: MediaUplo
     kind === MEDIA_KIND.IMAGE ? await analyzeImageBuffer(buffer, mimeType) : null;
   const thumbnailStoragePath =
     kind === MEDIA_KIND.IMAGE ? getMediaVariantStoragePath(storagePath, "thumbnail") : null;
+  const existingMedia = await findMediaByFolderAndOriginalFilename({
+    folderId: input.folderId,
+    originalFilename: finalFilename,
+  });
+
+  if (existingMedia) {
+    if (!input.overwriteExisting) {
+      throw new MediaFilenameConflictError(mapMediaToListItemDto(existingMedia, session));
+    }
+
+    if (!canUpdateMediaRecord(session, existingMedia.uploadedByUserId)) {
+      throw new MediaServiceError("Accès refusé.", 403);
+    }
+  }
+
   let originalStored = false;
   let thumbnailStored = false;
 
@@ -654,22 +718,44 @@ export async function uploadMediaService(session: StaffSession, input: MediaUplo
   }
 
   try {
-    const media = await createMediaRecord({
-      folderId: input.folderId,
-      kind,
-      visibility: input.visibility,
-      storagePath,
-      originalFilename: finalFilename,
-      mimeType,
-      extension: finalExtension,
-      title: input.title,
-      altText: input.altText,
-      widthPx: imageArtifacts?.widthPx ?? null,
-      heightPx: imageArtifacts?.heightPx ?? null,
-      sizeBytes: BigInt(buffer.byteLength),
-      sha256Hash,
-      uploadedByUserId: session.id,
-    });
+    const media = existingMedia
+      ? await updateMediaFileRecord(Number(existingMedia.id), {
+          kind,
+          visibility: input.visibility,
+          storagePath,
+          originalFilename: finalFilename,
+          mimeType,
+          extension: finalExtension,
+          title: input.title ?? existingMedia.title,
+          altText: input.altText ?? existingMedia.altText,
+          widthPx: imageArtifacts?.widthPx ?? null,
+          heightPx: imageArtifacts?.heightPx ?? null,
+          sizeBytes: BigInt(buffer.byteLength),
+          sha256Hash,
+          updatedByUserId: session.id,
+        })
+      : await createMediaRecord({
+          folderId: input.folderId,
+          kind,
+          visibility: input.visibility,
+          storagePath,
+          originalFilename: finalFilename,
+          mimeType,
+          extension: finalExtension,
+          title: input.title,
+          altText: input.altText,
+          widthPx: imageArtifacts?.widthPx ?? null,
+          heightPx: imageArtifacts?.heightPx ?? null,
+          sizeBytes: BigInt(buffer.byteLength),
+          sha256Hash,
+          uploadedByUserId: session.id,
+        });
+
+    if (existingMedia) {
+      await deleteStoredMediaObjects(existingMedia).catch((error) => {
+        console.error("MEDIA_OVERWRITE_OLD_STORAGE_DELETE_ERROR:", error);
+      });
+    }
 
     return mapMediaToListItemDto(media, session);
   } catch (error) {
@@ -730,10 +816,10 @@ export async function updateMediaService(
     }
   }
 
+  const existingFolderId = existingMedia.folderId != null ? Number(existingMedia.folderId) : null;
   const shouldChangeVisibility =
     input.visibility != null && existingMedia.visibility !== input.visibility;
-  const shouldChangeFolder =
-    input.folderId !== undefined && existingMedia.folderId !== input.folderId;
+  const shouldChangeFolder = input.folderId !== undefined && existingFolderId !== input.folderId;
   const shouldChangeTitle = input.title !== undefined && existingMedia.title !== input.title;
   const shouldChangeAltText =
     input.altText !== undefined && existingMedia.altText !== input.altText;
@@ -745,6 +831,70 @@ export async function updateMediaService(
     !shouldChangeAltText
   ) {
     return mapMediaToListItemDto(existingMedia, session);
+  }
+
+  if (shouldChangeFolder && existingMedia.originalFilename) {
+    const conflictingMedia = await findMediaByFolderAndOriginalFilename({
+      folderId: input.folderId ?? null,
+      originalFilename: existingMedia.originalFilename,
+      excludeMediaId: mediaId,
+    });
+
+    if (conflictingMedia) {
+      const conflictDto = mapMediaToListItemDto(conflictingMedia, session);
+
+      if (!input.overwriteExisting) {
+        throw new MediaFilenameConflictError(conflictDto);
+      }
+
+      const canOverwriteConflict =
+        conflictingMedia._count.productFamilyLinks > 0 ||
+        conflictingMedia._count.productVariantLinks > 0 ||
+        conflictingMedia._count.brandLogoFor > 0 ||
+        conflictingMedia._count.productCategoryImageFor > 0 ||
+        conflictingMedia._count.productTypeMediaImageFor > 0 ||
+        conflictingMedia._count.productCertificateImageFor > 0 ||
+        conflictingMedia._count.productFinishImageFor > 0 ||
+        conflictingMedia._count.productSubcategoryImageFor > 0 ||
+        conflictingMedia._count.staffProfileAvatarFor > 0 ||
+        conflictingMedia._count.commerceInvoicePdfFor > 0 ||
+        conflictingMedia._count.commercePromotionBannerFor > 0 ||
+        conflictingMedia._count.articleMediaLinks > 0 ||
+        conflictingMedia._count.articleCoverFor > 0 ||
+        conflictingMedia._count.articleOgImageFor > 0
+          ? canForceRemoveMediaRecord(session, conflictingMedia.uploadedByUserId)
+          : canDeleteMediaRecord(session, conflictingMedia.uploadedByUserId);
+
+      if (
+        !canOverwriteConflict ||
+        !canUpdateMediaRecord(session, conflictingMedia.uploadedByUserId)
+      ) {
+        throw new MediaServiceError("Accès refusé.", 403);
+      }
+
+      const result = await moveMediaRecordAndOverwriteConflict({
+        mediaId,
+        conflictMediaId: Number(conflictingMedia.id),
+        folderId: input.folderId ?? null,
+        updatedByUserId: session.id,
+      });
+
+      await deleteStoredMediaObjects(result.overwrittenMedia).catch((error) => {
+        console.error("MEDIA_MOVE_OVERWRITE_STORAGE_DELETE_ERROR:", error);
+      });
+
+      const updatedMedia =
+        shouldChangeVisibility || shouldChangeTitle || shouldChangeAltText
+          ? await updateMediaRecord(mediaId, {
+              visibility: input.visibility,
+              title: input.title,
+              altText: input.altText,
+              updatedByUserId: session.id,
+            })
+          : result.media;
+
+      return mapMediaToListItemDto(updatedMedia, session);
+    }
   }
 
   const updatedMedia = await updateMediaRecord(mediaId, {
@@ -921,13 +1071,8 @@ export async function deleteMediaService(
     assertMediaCanBeDeletedWithoutForce(media);
   }
 
-  const storage = getMediaStorageDriver();
   try {
-    await storage.deleteObject(media.storagePath);
-
-    if (media.kind === MEDIA_KIND.IMAGE) {
-      await storage.deleteObject(getMediaVariantStoragePath(media.storagePath, "thumbnail"));
-    }
+    await deleteStoredMediaObjects(media);
   } catch (error) {
     console.error("MEDIA_STORAGE_DELETE_ERROR:", error);
     throw new MediaServiceError("Impossible de supprimer le fichier dans le stockage.", 500);
