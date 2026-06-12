@@ -5,27 +5,16 @@ import {
   PublicProductInspectorVariant,
 } from "@/features/products/types";
 import { cn } from "@/lib/utils";
-import {
-  getVariantMedia,
-  getVariantSpecialValue,
-  normalizeComparableValue,
-} from "./utils";
+import { getVariantMedia, getVariantSpecialValue, normalizeComparableValue } from "./utils";
 import MediaFrame from "./MediaFrame";
 import RailCarousel from "@/components/ui/custom/RailCarousel";
 import { useEffect, useMemo, useRef } from "react";
 
-function getVariantAttribute(
-  variant: PublicProductInspectorVariant,
-  keys: string[],
-) {
+function getVariantAttribute(variant: PublicProductInspectorVariant, keys: string[]) {
   const wanted = new Set(keys.map((key) => normalizeComparableValue(key).replace(/\s+/g, "_")));
 
   return variant.attributes.find((attribute) => {
-    const normalizedKeys = [
-      attribute.attributeId,
-      attribute.name,
-      attribute.kind,
-    ]
+    const normalizedKeys = [attribute.attributeId, attribute.name, attribute.kind]
       .filter(Boolean)
       .map((value) => normalizeComparableValue(value).replace(/\s+/g, "_"));
 
@@ -65,12 +54,7 @@ type VariantRailCardProps = {
   onClick: () => void;
 };
 
-function VariantRailCard({
-  variant,
-  coverMedia,
-  isActive,
-  onClick,
-}: VariantRailCardProps) {
+function VariantRailCard({ variant, coverMedia, isActive, onClick }: VariantRailCardProps) {
   const previewMedia = getVariantPreviewMedia(variant, coverMedia);
   const color = getVariantSpecialValue(variant, "COLOR");
   const packaging = getVariantAttribute(variant, ["packaging_weight_kg", "conditionnement"]);
@@ -80,32 +64,32 @@ function VariantRailCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "w-[78vw] max-w-[17rem] min-w-[14rem] shrink-0 snap-start overflow-hidden rounded-[1.4rem] border bg-white text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobam-water-blue/40 sm:w-64",
+        "focus-visible:ring-cobam-water-blue/40 w-[78vw] max-w-[17rem] min-w-[14rem] shrink-0 snap-start overflow-hidden rounded-[1.4rem] border bg-white text-left transition focus-visible:ring-2 focus-visible:outline-none sm:w-64",
         isActive
-          ? "border-cobam-dark-blue ring-2 ring-cobam-dark-blue/10"
+          ? "border-cobam-dark-blue ring-cobam-dark-blue/10 ring-2"
           : "border-slate-200 hover:border-slate-300",
       )}
       data-variant-id={variant.id}
       aria-pressed={isActive}
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-50">
-        <MediaFrame isThumbnail={true} media={previewMedia} />
+        <MediaFrame isThumbnail={true} media={previewMedia} productName={variant.displayName} />
       </div>
       <div className="space-y-3 p-4">
         <div className="flex flex-wrap gap-2">
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-slate-500">
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[0.65rem] font-semibold tracking-[0.12em] text-slate-500 uppercase">
             {color?.label ?? "Variante"}
           </span>
           {packaging ? (
-            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-slate-500">
+            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[0.65rem] font-semibold tracking-[0.12em] text-slate-500 uppercase">
               {formatOptionLabel(packaging.value, packaging.unit)}
             </span>
           ) : null}
         </div>
-        <p className="line-clamp-2 min-h-12 text-base font-semibold leading-6 text-cobam-dark-blue">
+        <p className="text-cobam-dark-blue line-clamp-2 min-h-12 text-base leading-6 font-semibold">
           {variant.displayName}
         </p>
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+        <p className="text-xs font-semibold tracking-[0.16em] text-slate-400 uppercase">
           SKU {variant.sku}
         </p>
       </div>
@@ -150,10 +134,8 @@ export default function VariantRail({
     requestAnimationFrame(() => {
       const viewportRect = viewport.getBoundingClientRect();
       const targetRect = target.getBoundingClientRect();
-      const targetCenterOffset =
-        targetRect.left - viewportRect.left + targetRect.width / 2;
-      const nextLeft =
-        viewport.scrollLeft + targetCenterOffset - viewport.clientWidth / 2;
+      const targetCenterOffset = targetRect.left - viewportRect.left + targetRect.width / 2;
+      const nextLeft = viewport.scrollLeft + targetCenterOffset - viewport.clientWidth / 2;
       const maxLeft = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
 
       viewport.scrollTo({
@@ -167,10 +149,10 @@ export default function VariantRail({
     <section className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+          <p className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
             Variantes disponibles
           </p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-[-0.03em] text-cobam-dark-blue">
+          <h2 className="text-cobam-dark-blue mt-1 text-2xl font-semibold tracking-[-0.03em]">
             Même gamme
           </h2>
         </div>

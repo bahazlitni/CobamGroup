@@ -2057,6 +2057,61 @@ export async function findPublicProductBySlug(
   });
 }
 
+export async function findPublicFamilySlugForVariant(productSlug: string): Promise<string | null> {
+  const record = await prisma.productFamilyMember.findFirst({
+    where: {
+      product: {
+        slug: productSlug,
+        kind: "VARIANT",
+        lifecycle: { not: "DISCONTINUED" },
+        visibleVitrine: true,
+        subcategories: {
+          some: {
+            subcategory: {
+              isActive: true,
+              visibleVitrine: true,
+              category: {
+                isActive: true,
+              },
+            },
+          },
+        },
+      },
+      family: {
+        members: {
+          some: {
+            product: {
+              kind: "VARIANT",
+              lifecycle: { not: "DISCONTINUED" },
+              visibleVitrine: true,
+              subcategories: {
+                some: {
+                  subcategory: {
+                    isActive: true,
+                    visibleVitrine: true,
+                    category: {
+                      isActive: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    select: {
+      family: {
+        select: {
+          slug: true,
+        },
+      },
+    },
+  });
+
+  return record?.family.slug ?? null;
+}
+
 export async function findProductLifecycleBySlug(productSlug: string) {
   const record = await prisma.product.findUnique({
     where: { slug: productSlug },

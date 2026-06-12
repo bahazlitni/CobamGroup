@@ -6,9 +6,7 @@ import {
   listPublicProductsIndex,
   PUBLIC_PRODUCTS_INDEX_PAGE_SIZE,
 } from "@/features/products/public";
-import {
-  findPublicPromotionSummaryBySlug,
-} from "@/features/promotions/public";
+import { findPublicPromotionSummaryBySlug } from "@/features/promotions/public";
 import {
   buildAllProductsMetadata,
   buildCollectionPageStructuredData,
@@ -35,7 +33,14 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const resolvedSearchParams = await searchParams;
   const search = resolveSearchParam(resolvedSearchParams.search)?.trim() ?? null;
-  return buildAllProductsMetadata(search);
+  const promoSlug = resolveSearchParam(resolvedSearchParams.promo)?.trim() ?? null;
+  const promotion = promoSlug ? await findPublicPromotionSummaryBySlug(promoSlug) : null;
+
+  return buildAllProductsMetadata({
+    search,
+    promoSlug,
+    promotion,
+  });
 }
 
 export default async function ProductsIndexPage({
@@ -60,11 +65,12 @@ export default async function ProductsIndexPage({
     : "Tous les produits";
 
   return (
-    <main className="min-h-screen bg-cobam-light-bg text-cobam-dark-blue">
+    <main className="bg-cobam-light-bg text-cobam-dark-blue min-h-screen">
       <StructuredData
         data={buildCollectionPageStructuredData({
           name: search ? `Recherche produits : ${search}` : pageTitle,
-          path: "/produits",
+          path:
+            promoSlug && !search ? `/produits?promo=${encodeURIComponent(promoSlug)}` : "/produits",
           description: search
             ? `Résultats de recherche pour ${search} dans le catalogue COBAM GROUP.`
             : promotion

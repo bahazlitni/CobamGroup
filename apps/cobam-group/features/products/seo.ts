@@ -30,9 +30,7 @@ function truncateText(value: string, maxLength = 160) {
   return truncateSeoText(value, maxLength);
 }
 
-export function resolveSeoDescription(
-  ...candidates: Array<string | null | undefined>
-) {
+export function resolveSeoDescription(...candidates: Array<string | null | undefined>) {
   for (const candidate of candidates) {
     const text = toPlainText(candidate);
     if (text) {
@@ -53,9 +51,7 @@ function buildMetadataBase(input: {
   return buildSeoMetadata(input);
 }
 
-function resolveInspectorImage(
-  media: PublicProductInspectorMedia | null | undefined,
-) {
+function resolveInspectorImage(media: PublicProductInspectorMedia | null | undefined) {
   if (!media || media.kind !== "IMAGE") {
     return null;
   }
@@ -107,10 +103,21 @@ export function resolveSimpleProductCanonicalPath(
   return `/produits/${primarySubcategory.categorySlug}/${primarySubcategory.slug}/${product.slug}`;
 }
 
-export function resolveFamilyCanonicalPath(
-  family: PublicProductInspector,
+export function resolveVariantFamilyCanonicalPath(
+  product: PublicSimpleProductInspector,
+  familySlug: string,
   fallbackPath?: string,
 ) {
+  const primarySubcategory = product.subcategories[0];
+
+  if (!primarySubcategory) {
+    return fallbackPath ?? `/produits/familles/${familySlug}`;
+  }
+
+  return `/produits/${primarySubcategory.categorySlug}/${primarySubcategory.slug}/famille/${familySlug}`;
+}
+
+export function resolveFamilyCanonicalPath(family: PublicProductInspector, fallbackPath?: string) {
   const primarySubcategory = family.subcategories[0];
 
   if (!primarySubcategory) {
@@ -160,18 +167,13 @@ function buildVariantSchema(input: {
   const imageUrls = input.variant.media
     .filter((media) => media.kind === "IMAGE")
     .map((media) => buildAbsoluteUrl(media.url));
-  const description = resolveSeoDescription(
-    input.variant.description,
-    input.name,
-  );
+  const description = resolveSeoDescription(input.variant.description, input.name);
 
   return {
     "@type": "Product",
     name: input.name,
     sku: input.variant.sku,
-    url: buildAbsoluteUrl(
-      `${input.path}?variant=${encodeURIComponent(input.variant.slug)}`,
-    ),
+    url: buildAbsoluteUrl(`${input.path}?variant=${encodeURIComponent(input.variant.slug)}`),
     description,
     image: imageUrls.length > 0 ? imageUrls : undefined,
     brand: input.brandName
@@ -208,25 +210,20 @@ export function buildFamilyMetadata(
 
 export function buildSimpleProductMetadata(
   product: PublicSimpleProductInspector,
-  options?: { path?: string },
+  options?: { path?: string; noIndex?: boolean },
 ) {
   const path = options?.path ?? resolveSimpleProductCanonicalPath(product);
 
   return buildMetadataBase({
     title: product.titleSeo?.trim() || product.displayName || product.name,
-    description: resolveSeoDescription(
-      product.descriptionSeo,
-      product.description,
-      product.name,
-    ),
+    description: resolveSeoDescription(product.descriptionSeo, product.description, product.name),
     path,
+    noIndex: options?.noIndex,
     imageUrl: product.media.find((media) => media.kind === "IMAGE")?.url ?? null,
   });
 }
 
-export function buildCategoryMetadata(
-  category: PublicProductCategoryPageData,
-): Metadata {
+export function buildCategoryMetadata(category: PublicProductCategoryPageData): Metadata {
   return buildMetadataBase({
     title: `${category.name} | Produits`,
     description: resolveSeoDescription(
@@ -239,24 +236,40 @@ export function buildCategoryMetadata(
   });
 }
 
-export function buildAllProductsMetadata(search: string | null): Metadata {
+type AllProductsMetadataInput =
+  | string
+  | {
+      search: string | null;
+      promoSlug?: string | null;
+      promotion?: { slug: string; displayName: string } | null;
+    };
+
+export function buildAllProductsMetadata(input: AllProductsMetadataInput): Metadata {
+  const search = typeof input === "string" ? input : input.search;
+  const promoSlug = typeof input === "string" ? null : input.promoSlug?.trim() || null;
+  const promotion = typeof input === "string" ? null : (input.promotion ?? null);
   const title = search
     ? `Recherche produits : ${search}`
-    : "Tous les produits";
+    : promotion
+      ? `Produits en promotion : ${promotion.displayName}`
+      : "Tous les produits";
 
   const description = search
-    ? resolveSeoDescription(
-        `Résultats de recherche pour ${search} dans le catalogue COBAM GROUP.`,
-      )
-    : resolveSeoDescription(
-        "Consultez l'ensemble du catalogue COBAM GROUP : produits simples et familles de produits.",
-      );
+    ? resolveSeoDescription(`Résultats de recherche pour ${search} dans le catalogue COBAM GROUP.`)
+    : promotion
+      ? resolveSeoDescription(
+          `Produits concernés par la promotion ${promotion.displayName} dans le catalogue COBAM GROUP.`,
+        )
+      : resolveSeoDescription(
+          "Consultez l'ensemble du catalogue COBAM GROUP : produits simples et familles de produits.",
+        );
+  const isFilteredView = Boolean(search || promoSlug || promotion);
 
   return buildMetadataBase({
     title,
     description,
-    path: "/produits",
-    noIndex: Boolean(search),
+    path: promoSlug && !search ? `/produits?promo=${encodeURIComponent(promoSlug)}` : "/produits",
+    noIndex: isFilteredView,
   });
 }
 
@@ -282,9 +295,7 @@ export function buildFamilyStructuredData(
   );
   const varyingAttributes = [
     ...new Set(
-      family.variants.flatMap((variant) =>
-        variant.attributes.map((attribute) => attribute.name),
-      ),
+      family.variants.flatMap((variant) => variant.attributes.map((attribute) => attribute.name)),
     ),
   ];
 
@@ -316,17 +327,15 @@ export function buildSimpleProductStructuredData(
     .filter((media) => media.kind === "IMAGE")
     .map((media) => buildAbsoluteUrl(media.url));
 
+  // The main vitrine does not display price or stock, so it must not emit
+  // Offer JSON-LD here. The e-commerce app owns Offer markup when visible.
   return {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
     sku: product.sku,
     url: buildAbsoluteUrl(path),
-    description: resolveSeoDescription(
-      product.descriptionSeo,
-      product.description,
-      product.name,
-    ),
+    description: resolveSeoDescription(product.descriptionSeo, product.description, product.name),
     image: imageUrls.length > 0 ? imageUrls : undefined,
     brand:
       product.brandNames.length > 0
@@ -340,9 +349,7 @@ export function buildSimpleProductStructuredData(
         ? product.subcategories.map((subcategory) => subcategory.name).join(", ")
         : undefined,
     additionalProperty:
-      product.attributes.length > 0
-        ? product.attributes.map(mapAttributeToProperty)
-        : undefined,
+      product.attributes.length > 0 ? product.attributes.map(mapAttributeToProperty) : undefined,
   };
 }
 

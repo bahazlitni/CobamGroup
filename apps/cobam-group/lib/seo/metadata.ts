@@ -23,6 +23,15 @@ type SeoMetadataInput = {
   authors?: string[];
 };
 
+function normalizePageTitle(title: string) {
+  const siteName = getSiteName();
+  const escapedSiteName = siteName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(`\\s*[|\\-]\\s*${escapedSiteName}\\s*$`, "i");
+  const normalized = title.replace(pattern, "").trim();
+
+  return normalized || title;
+}
+
 export function truncateSeoText(value: string, maxLength = 160) {
   const normalized = value.replace(/\s+/g, " ").trim();
 
@@ -35,6 +44,7 @@ export function truncateSeoText(value: string, maxLength = 160) {
 
 export function buildSeoMetadata(input: SeoMetadataInput): Metadata {
   const siteName = getSiteName();
+  const title = normalizePageTitle(input.title);
   const description = truncateSeoText(input.description);
   const absoluteImageUrl = toAbsoluteUrl(input.imageUrl ?? DEFAULT_OPEN_GRAPH_IMAGE);
   const shouldIndex = !input.noIndex;
@@ -43,13 +53,13 @@ export function buildSeoMetadata(input: SeoMetadataInput): Metadata {
     ? [
         {
           url: absoluteImageUrl,
-          alt: input.imageAlt ?? input.title,
+          alt: input.imageAlt ?? title,
         },
       ]
     : undefined;
 
   return {
-    title: input.title,
+    title,
     description,
     alternates: {
       canonical: input.path,
@@ -70,7 +80,7 @@ export function buildSeoMetadata(input: SeoMetadataInput): Metadata {
       locale: "fr_TN",
       siteName,
       url: buildAbsoluteUrl(input.path),
-      title: input.title,
+      title,
       description,
       images: openGraphImage,
       publishedTime: input.publishedTime ?? undefined,
@@ -79,7 +89,7 @@ export function buildSeoMetadata(input: SeoMetadataInput): Metadata {
     },
     twitter: {
       card: openGraphImage ? "summary_large_image" : "summary",
-      title: input.title,
+      title,
       description,
       images: absoluteImageUrl ? [absoluteImageUrl] : undefined,
     },
