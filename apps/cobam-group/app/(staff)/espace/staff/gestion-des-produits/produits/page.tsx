@@ -171,6 +171,8 @@ export default function AllProductsPage() {
   const listRequestIdRef = useRef(0);
   const didLoadInitialRef = useRef(listCache != null && hasCachedProductBrandOptions);
   const pageRef = useRef(page);
+  const itemsRef = useRef(items);
+  const totalRef = useRef(total);
   const searchRef = useRef(search);
   const kindFilterRef = useRef(kindFilter);
   const [bulkForm, setBulkForm] = useState({
@@ -206,6 +208,14 @@ export default function AllProductsPage() {
   useEffect(() => {
     pageRef.current = page;
   }, [page]);
+
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
+
+  useEffect(() => {
+    totalRef.current = total;
+  }, [total]);
 
   useEffect(() => {
     searchRef.current = search;
@@ -669,11 +679,27 @@ export default function AllProductsPage() {
       return;
     }
 
+    const deletedIds = [...selectedIds];
+    const deletedIdSet = new Set(deletedIds);
     setBulkEditLoading(true);
     try {
-      await deleteAllProductsBulkClient(selectedIds);
+      await deleteAllProductsBulkClient(deletedIds);
+
+      const nextItems = itemsRef.current.filter((item) => !deletedIdSet.has(item.id));
+      const nextTotal = Math.max(0, totalRef.current - deletedIds.length);
+      const nextLoadedPage = Math.floor(nextItems.length / pageSize);
+
+      setItems(nextItems);
+      setTotal(nextTotal);
+      setPage(nextLoadedPage);
+      setHasMore(nextItems.length < nextTotal);
       setSelectedIds([]);
-      setReloadToken((current) => current + 1);
+      setLastSelectedIndex(null);
+      setError(null);
+
+      if (nextItems.length === 0 && nextTotal > 0) {
+        void fetchPage({ page: 1, reset: false });
+      }
     } catch (err: unknown) {
       setError(
         err instanceof AllProductsClientError
