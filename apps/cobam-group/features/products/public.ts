@@ -85,6 +85,7 @@ const PUBLIC_PRODUCT_SELECT = {
   kind: true,
   name: true,
   displayName: true,
+  titleSeo: true,
   lifecycle: true,
   richTextDescription: true,
   descriptionSeo: true,
@@ -107,11 +108,13 @@ const PUBLIC_PRODUCT_SELECT = {
           id: true,
           name: true,
           slug: true,
+          sortOrder: true,
           category: {
             select: {
               id: true,
               name: true,
               slug: true,
+              sortOrder: true,
             },
           },
         },
@@ -477,13 +480,25 @@ function collectProductMediaIdsForPublishing(
 function mapSubcategoryLinks(
   links: PublicProductRecord["subcategories"],
 ): PublicProductSubcategoryLink[] {
-  return links.map((link) => ({
-    id: Number(link.subcategory.id),
-    name: link.subcategory.name,
-    slug: link.subcategory.slug,
-    categorySlug: link.subcategory.category.slug,
-    categoryName: link.subcategory.category.name,
-  }));
+  return [...links]
+    .sort((left, right) => {
+      if (left.subcategory.category.sortOrder !== right.subcategory.category.sortOrder) {
+        return left.subcategory.category.sortOrder - right.subcategory.category.sortOrder;
+      }
+
+      if (left.subcategory.sortOrder !== right.subcategory.sortOrder) {
+        return left.subcategory.sortOrder - right.subcategory.sortOrder;
+      }
+
+      return Number(left.subcategory.id) - Number(right.subcategory.id);
+    })
+    .map((link) => ({
+      id: Number(link.subcategory.id),
+      name: link.subcategory.name,
+      slug: link.subcategory.slug,
+      categorySlug: link.subcategory.category.slug,
+      categoryName: link.subcategory.category.name,
+    }));
 }
 
 function mapIndexCategory(record: {
@@ -809,6 +824,7 @@ async function mapSimpleInspector(
     slug: record.slug,
     name: record.name,
     displayName: record.displayName,
+    titleSeo: record.titleSeo,
     description: getProductRichDescription(record),
     descriptionSeo: record.descriptionSeo,
     brand: input.brand,
@@ -825,7 +841,13 @@ async function mapSimpleInspector(
 }
 
 function buildFamilySubcategories(publicVariants: PublicProductRecord[]) {
-  const subcategories = new Map<number, PublicProductSubcategoryLink>();
+  const subcategories = new Map<
+    number,
+    PublicProductSubcategoryLink & {
+      categorySortOrder: number;
+      subcategorySortOrder: number;
+    }
+  >();
 
   for (const variant of publicVariants) {
     for (const link of variant.subcategories) {
@@ -835,11 +857,31 @@ function buildFamilySubcategories(publicVariants: PublicProductRecord[]) {
         slug: link.subcategory.slug,
         categorySlug: link.subcategory.category.slug,
         categoryName: link.subcategory.category.name,
+        categorySortOrder: link.subcategory.category.sortOrder,
+        subcategorySortOrder: link.subcategory.sortOrder,
       });
     }
   }
 
-  return [...subcategories.values()];
+  return [...subcategories.values()]
+    .sort((left, right) => {
+      if (left.categorySortOrder !== right.categorySortOrder) {
+        return left.categorySortOrder - right.categorySortOrder;
+      }
+
+      if (left.subcategorySortOrder !== right.subcategorySortOrder) {
+        return left.subcategorySortOrder - right.subcategorySortOrder;
+      }
+
+      return left.id - right.id;
+    })
+    .map((link) => ({
+      id: link.id,
+      name: link.name,
+      slug: link.slug,
+      categorySlug: link.categorySlug,
+      categoryName: link.categoryName,
+    }));
 }
 
 export async function listPublicProductsBySubcategory(input: {

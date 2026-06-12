@@ -10,40 +10,65 @@ import "@fontsource/source-serif-4/700.css";
 import "react-phone-number-input/style.css";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { buildAbsoluteUrl, getSiteName, getSiteUrl } from "@/lib/seo/site";
-import { GoogleAnalytics } from "@next/third-parties/google"
+import {
+  DEFAULT_OPEN_GRAPH_IMAGE,
+  DEFAULT_SITE_DESCRIPTION,
+  DEFAULT_SITE_TITLE,
+} from "@/lib/seo/metadata";
 
 const siteName = getSiteName();
-const siteDescription =
-  "Depuis 1994, COBAM GROUP accompagne les projets de construction, renovation et finition avec des Matériaux, surfaces, sanitaires et solutions premium en Tunisie.";
+const googleAnalyticsId = process.env.NEXT_PUBLIC_GA_ID;
 
 export const metadata: Metadata = {
   metadataBase: getSiteUrl(),
   title: {
-    default: "COBAM GROUP | Matériaux, carrelage, sanitaires et finitions en Tunisie",
+    default: DEFAULT_SITE_TITLE,
     template: `%s | ${siteName}`,
   },
-  description: siteDescription,
+  description: DEFAULT_SITE_DESCRIPTION,
   applicationName: siteName,
+  authors: [{ name: siteName, url: buildAbsoluteUrl("/") }],
+  creator: siteName,
+  publisher: siteName,
+  category: "construction materials",
   alternates: {
     canonical: "/",
+    languages: {
+      "fr-TN": "/",
+    },
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
   openGraph: {
     type: "website",
     locale: "fr_TN",
     siteName,
     url: buildAbsoluteUrl("/"),
-    title: "COBAM GROUP | Matériaux, carrelage, sanitaires et finitions en Tunisie",
-    description: siteDescription,
+    title: DEFAULT_SITE_TITLE,
+    description: DEFAULT_SITE_DESCRIPTION,
+    images: [
+      {
+        url: buildAbsoluteUrl(DEFAULT_OPEN_GRAPH_IMAGE),
+        alt: "COBAM GROUP - matériaux, carrelage, sanitaires et finitions",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "COBAM GROUP | Matériaux, carrelage, sanitaires et finitions en Tunisie",
-    description: siteDescription,
+    title: DEFAULT_SITE_TITLE,
+    description: DEFAULT_SITE_DESCRIPTION,
+    images: [buildAbsoluteUrl(DEFAULT_OPEN_GRAPH_IMAGE)],
   },
 };
 
@@ -54,14 +79,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <head />
       <body
         className="antialiased bg-white text-cobam-dark-blue"
         style={{ fontFamily: "var(--font-montserrat), sans-serif" }}
       >
         {children}
         <Toaster richColors closeButton />
-        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} />
+        {googleAnalyticsId ? <GoogleAnalytics gaId={googleAnalyticsId} /> : null}
       </body>
     </html>
   );

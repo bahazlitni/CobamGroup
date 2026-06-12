@@ -345,6 +345,7 @@ export type PublicSimpleProductInspector = {
   slug: string;
   name: string;
   displayName: string;
+  titleSeo: string | null;
   description: string | null;
   descriptionSeo: string | null;
   brand: PublicProductBrand | null;

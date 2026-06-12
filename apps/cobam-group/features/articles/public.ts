@@ -36,6 +36,8 @@ export type PublicArticleDetail = PublicArticleSummary & {
   descriptionSeo: string | null;
   ogTitle: string | null;
   ogDescription: string | null;
+  ogImageUrl: string | null;
+  isDraft: boolean;
   suggestions: PublicArticleSummary[];
 };
 
@@ -411,6 +413,11 @@ export async function findPublicArticleBySlug(
     descriptionSeo: article.descriptionSeo,
     ogTitle: article.ogTitle,
     ogDescription: article.ogDescription,
+    ogImageUrl:
+      article.ogImageMediaId != null
+        ? buildPublicMediaUrl(article.ogImageMediaId, "original")
+        : null,
+    isDraft: article.status === ArticleStatus.DRAFT,
     suggestions,
   };
 }

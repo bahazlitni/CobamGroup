@@ -6,17 +6,18 @@ import AnnuaireDirectory from "@/components/public/annuaire/annuaire-directory";
 import { listPublicAnnuairePeople } from "@/features/annuaire/public";
 import type { AnnuairePersonDto } from "@/features/annuaire/types";
 import { getStaffSessionByRefreshToken } from "@/features/auth/server/session";
+import { buildSeoMetadata } from "@/lib/seo/metadata";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildSeoMetadata({
   title: "Annuaire Cobam",
   description:
     "Annuaire Cobam Group : contacts, postes, sites, extensions et WhatsApp.",
-  alternates: {
-    canonical: "/annuaire",
-  },
-};
+  path: "/annuaire",
+  noIndex: true,
+  follow: false,
+});
 
 export default async function AnnuairePage() {
   const cookieStore = await cookies();

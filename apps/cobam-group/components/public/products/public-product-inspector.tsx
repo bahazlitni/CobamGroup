@@ -448,11 +448,11 @@ function RelatedProductsSection({ products }: { products: PublicRelatedProductIt
   }
 
   return (
-    <section className="border-cobam-quill-grey/35 space-y-5 border-t pt-8">
+    <section className="border-cobam-quill-grey/35 space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
-            Experimental
+            Explorer
           </p>
           <h2 className="text-cobam-dark-blue mt-1 text-2xl font-semibold tracking-[-0.03em]">
             Produits proches
@@ -550,8 +550,6 @@ export default function PublicProductInspectorView({
   const brandName = normalizedProduct.brand?.name ?? normalizedProduct.brandName ?? null;
   const descriptionTextLength = getPublicRichTextPlainText(selectedVariant.description).length;
   const hasDescription = Boolean(selectedVariant.description && descriptionTextLength > 0);
-  const showHeaderDescription = hasDescription && descriptionTextLength <= 1024;
-  const showSectionDescription = hasDescription && descriptionTextLength > 1024;
   const displayTitle = buildProductTitle({
     displayName: selectedVariant.displayName,
     brandName,
@@ -732,15 +730,12 @@ export default function PublicProductInspectorView({
                 </AnimatedUIButton>
               </div>
 
-              
-              {showHeaderDescription ? (
-                <div className="mt-8 max-w-3xl text-base leading-7">
-                  <RichDescription
-                    description={selectedVariant.description}
-                    collapseAfter={null}
-                  />
-                </div>
-              ) : null}
+              <div className="mt-8 max-w-3xl text-base leading-7">
+                <RichDescription
+                  description={selectedVariant.description}
+                  collapseAfter={null}
+                />
+              </div>
             </header>
 
             <div className="space-y-5">
@@ -760,15 +755,6 @@ export default function PublicProductInspectorView({
             </div>
           </div>
         </section>
-
-        {showSectionDescription ? (
-          <section className="border-cobam-quill-grey/35 rounded-[2rem] border bg-white p-5 sm:p-7">
-            <SectionTitle title="Description"/>
-            <div className="mt-5 max-w-none">
-              <RichDescription description={selectedVariant.description} />
-            </div>
-          </section>
-        ) : null}
 
         {technicalRows.length > 0 ? (
           <section className="border-cobam-quill-grey/35 rounded-[2rem] border bg-white p-5 sm:p-7">

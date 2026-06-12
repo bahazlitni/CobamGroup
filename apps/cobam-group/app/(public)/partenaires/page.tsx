@@ -2,15 +2,14 @@ import type { Metadata } from "next";
 import PageHeader from "@/components/ui/custom/PageHeader";
 import { listPublicPartnerOrganizations } from "@/features/organizations/public";
 import BrandsViews from "@/layout/BrandsViews";
+import { buildSeoMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildSeoMetadata({
   title: "Partenaires",
   description:
-    "Decouvrez les partenaires de COBAM GROUP et les marques de reference distribuees pour vos projets.",
-  alternates: {
-    canonical: "/partenaires",
-  },
-};
+    "Découvrez les partenaires de COBAM GROUP et les marques de référence distribuées pour vos projets.",
+  path: "/partenaires",
+});
 
 export const dynamic = "force-dynamic";
 

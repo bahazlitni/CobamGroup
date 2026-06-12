@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getArticlePlainText } from "@/features/articles/document";
 import type { PublicProductCategoryPageData } from "@/features/product-categories/public-types";
+import { buildSeoMetadata, truncateSeoText } from "@/lib/seo/metadata";
 import type { PublicProductBreadcrumb } from "./public-breadcrumb";
 import type {
   PublicProductInspector,
@@ -9,13 +10,10 @@ import type {
   PublicProductInspectorVariant,
   PublicSimpleProductInspector,
 } from "./types";
-import {
-  buildAbsoluteUrl,
-  toAbsoluteUrl,
-} from "@/lib/seo/site";
+import { buildAbsoluteUrl } from "@/lib/seo/site";
 
 const DEFAULT_DESCRIPTION =
-  "Explorez les produits COBAM GROUP pour les revetements, sanitaires, Matériaux de construction et finitions en Tunisie.";
+  "Explorez les produits COBAM GROUP pour les revêtements, sanitaires, matériaux de construction et finitions en Tunisie.";
 
 type BreadcrumbJsonLdItem = {
   name: string;
@@ -29,11 +27,7 @@ function toPlainText(value: string | null | undefined) {
 }
 
 function truncateText(value: string, maxLength = 160) {
-  if (value.length <= maxLength) {
-    return value;
-  }
-
-  return `${value.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
+  return truncateSeoText(value, maxLength);
 }
 
 export function resolveSeoDescription(
@@ -56,39 +50,7 @@ function buildMetadataBase(input: {
   imageUrl?: string | null;
   noIndex?: boolean;
 }): Metadata {
-  const absoluteImageUrl = toAbsoluteUrl(input.imageUrl);
-
-  return {
-    title: input.title,
-    description: input.description,
-    alternates: {
-      canonical: input.path,
-    },
-    robots: input.noIndex
-      ? {
-          index: false,
-          follow: true,
-        }
-      : {
-          index: true,
-          follow: true,
-        },
-    openGraph: {
-      type: "website",
-      locale: "fr_TN",
-      siteName: "COBAM GROUP",
-      url: buildAbsoluteUrl(input.path),
-      title: input.title,
-      description: input.description,
-      images: absoluteImageUrl ? [{ url: absoluteImageUrl }] : undefined,
-    },
-    twitter: {
-      card: absoluteImageUrl ? "summary_large_image" : "summary",
-      title: input.title,
-      description: input.description,
-      images: absoluteImageUrl ? [absoluteImageUrl] : undefined,
-    },
-  };
+  return buildSeoMetadata(input);
 }
 
 function resolveInspectorImage(
@@ -130,6 +92,32 @@ function buildBreadcrumbItems(input: {
   });
 
   return items;
+}
+
+export function resolveSimpleProductCanonicalPath(
+  product: PublicSimpleProductInspector,
+  fallbackPath?: string,
+) {
+  const primarySubcategory = product.subcategories[0];
+
+  if (!primarySubcategory) {
+    return fallbackPath ?? `/produits/${product.slug}`;
+  }
+
+  return `/produits/${primarySubcategory.categorySlug}/${primarySubcategory.slug}/${product.slug}`;
+}
+
+export function resolveFamilyCanonicalPath(
+  family: PublicProductInspector,
+  fallbackPath?: string,
+) {
+  const primarySubcategory = family.subcategories[0];
+
+  if (!primarySubcategory) {
+    return fallbackPath ?? `/produits/familles/${family.slug}`;
+  }
+
+  return `/produits/${primarySubcategory.categorySlug}/${primarySubcategory.slug}/famille/${family.slug}`;
 }
 
 export function buildBreadcrumbStructuredData(input: {
@@ -203,6 +191,8 @@ export function buildFamilyMetadata(
   family: PublicProductInspector,
   options?: { path?: string },
 ): Metadata {
+  const path = options?.path ?? resolveFamilyCanonicalPath(family);
+
   return buildMetadataBase({
     title: family.name,
     description: resolveSeoDescription(
@@ -211,7 +201,7 @@ export function buildFamilyMetadata(
       family.variants[0]?.description,
       family.name,
     ),
-    path: options?.path ?? `/produits/familles/${family.slug}`,
+    path,
     imageUrl: resolveInspectorImage(family.coverMedia),
   });
 }
@@ -220,14 +210,16 @@ export function buildSimpleProductMetadata(
   product: PublicSimpleProductInspector,
   options?: { path?: string },
 ) {
+  const path = options?.path ?? resolveSimpleProductCanonicalPath(product);
+
   return buildMetadataBase({
-    title: product.name,
+    title: product.titleSeo?.trim() || product.displayName || product.name,
     description: resolveSeoDescription(
       product.descriptionSeo,
       product.description,
       product.name,
     ),
-    path: options?.path ?? `/produits/${product.slug}`,
+    path,
     imageUrl: product.media.find((media) => media.kind === "IMAGE")?.url ?? null,
   });
 }
@@ -254,7 +246,7 @@ export function buildAllProductsMetadata(search: string | null): Metadata {
 
   const description = search
     ? resolveSeoDescription(
-        `Resultats de recherche pour ${search} dans le catalogue COBAM GROUP.`,
+        `Résultats de recherche pour ${search} dans le catalogue COBAM GROUP.`,
       )
     : resolveSeoDescription(
         "Consultez l'ensemble du catalogue COBAM GROUP : produits simples et familles de produits.",
@@ -272,7 +264,7 @@ export function buildFamilyStructuredData(
   family: PublicProductInspector,
   options?: { path?: string },
 ) {
-  const path = options?.path ?? `/produits/familles/${family.slug}`;
+  const path = options?.path ?? resolveFamilyCanonicalPath(family);
   const description = resolveSeoDescription(
     family.descriptionSeo,
     family.description,
@@ -319,7 +311,7 @@ export function buildSimpleProductStructuredData(
   product: PublicSimpleProductInspector,
   options?: { path?: string },
 ) {
-  const path = options?.path ?? `/produits/${product.slug}`;
+  const path = options?.path ?? resolveSimpleProductCanonicalPath(product);
   const imageUrls = product.media
     .filter((media) => media.kind === "IMAGE")
     .map((media) => buildAbsoluteUrl(media.url));

@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
+import { buildSeoMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
-  title: "A propos",
+export const metadata: Metadata = buildSeoMetadata({
+  title: "À propos",
   description:
-    "Decouvrez l'histoire, la vision, les valeurs et les équipes de COBAM GROUP depuis 1994.",
-  alternates: {
-    canonical: "/a-propos",
-  },
-};
+    "Découvrez l'histoire, la vision, les valeurs et les équipes de COBAM GROUP depuis 1994.",
+  path: "/a-propos",
+});
 
 export default function AboutLayout({
   children,

@@ -11,6 +11,7 @@ import {
   buildBreadcrumbStructuredData,
   buildFamilyMetadata,
   buildFamilyStructuredData,
+  resolveFamilyCanonicalPath,
 } from "@/features/products/seo";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +34,7 @@ export async function generateMetadata({
   }
 
   return buildFamilyMetadata(family, {
-    path: `/produits/${category}/${subcategory}/famille/${slug}`,
+    path: resolveFamilyCanonicalPath(family, `/produits/${category}/${subcategory}/famille/${slug}`),
   });
 }
 
@@ -58,7 +59,8 @@ export default async function PublicFamilyPage({ params }: FamilyPageProps) {
     subcategoryName: subcategoryData.name,
     subcategorySlug: subcategory,
   };
-  const path = `/produits/${category}/${subcategory}/famille/${family.slug}`;
+  const currentPath = `/produits/${category}/${subcategory}/famille/${family.slug}`;
+  const canonicalPath = resolveFamilyCanonicalPath(family, currentPath);
 
   return (
     <main className="min-h-screen bg-white text-cobam-dark-blue">
@@ -67,9 +69,9 @@ export default async function PublicFamilyPage({ params }: FamilyPageProps) {
           buildBreadcrumbStructuredData({
             breadcrumb,
             currentLabel: family.name,
-            currentPath: path,
+            currentPath,
           }),
-          buildFamilyStructuredData(family, { path }),
+          buildFamilyStructuredData(family, { path: canonicalPath }),
         ]}
       />
       <section className="py-10 sm:py-12 lg:py-20 border-t border-cobam-quill-grey/30">

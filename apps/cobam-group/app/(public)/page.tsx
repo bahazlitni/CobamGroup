@@ -7,12 +7,14 @@ import { listLatestPublicArticles } from "@/features/articles/public";
 import { listPublicProductBrandOrganizations } from "@/features/organizations/public";
 import { listPublicMegaMenuProductCategories } from "@/features/product-categories/public";
 import type { PublicMegaMenuProductCategory } from "@/features/product-categories/public-types";
+import { buildSeoMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildSeoMetadata({
   title: "COBAM Group | L'architecture des matières",
   description:
     "Depuis 1994, COBAM Group réunit matériaux, revêtements, équipements et finitions pour accompagner chaque étape du projet.",
-};
+  path: "/",
+});
 
 export const dynamic = "force-dynamic";
 

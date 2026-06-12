@@ -7,15 +7,14 @@ import {
 } from "@/components/public/promotions/promotion-showcase";
 import PageHeader from "@/components/ui/custom/PageHeader";
 import { listPublicPromotions } from "@/features/promotions/public";
+import { buildSeoMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildSeoMetadata({
   title: "Promotions",
   description:
-    "Consultez les promotions, offres et opportunites speciales proposees par COBAM GROUP.",
-  alternates: {
-    canonical: "/promotions",
-  },
-};
+    "Consultez les promotions, offres et opportunités spéciales proposées par COBAM GROUP.",
+  path: "/promotions",
+});
 
 export default function PromotionsPage() {
   const promotionsPromise = listPublicPromotions();

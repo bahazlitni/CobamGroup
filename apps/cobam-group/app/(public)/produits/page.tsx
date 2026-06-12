@@ -66,9 +66,9 @@ export default async function ProductsIndexPage({
           name: search ? `Recherche produits : ${search}` : pageTitle,
           path: "/produits",
           description: search
-            ? `Resultats de recherche pour ${search} dans le catalogue COBAM GROUP.`
+            ? `Résultats de recherche pour ${search} dans le catalogue COBAM GROUP.`
             : promotion
-              ? `Produits concernes par la promotion ${promotion.displayName}.`
+              ? `Produits concernés par la promotion ${promotion.displayName}.`
               : "Catalogue complet des produits COBAM GROUP.",
         })}
       />
@@ -77,7 +77,7 @@ export default async function ProductsIndexPage({
         title={pageTitle}
         description={
           promotion
-            ? "Explorez les produits concernes par cette offre COBAM Group."
+            ? "Explorez les produits concernés par cette offre COBAM Group."
             : "Explorez tous nos produits."
         }
       />

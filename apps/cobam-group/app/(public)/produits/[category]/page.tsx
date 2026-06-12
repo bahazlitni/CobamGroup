@@ -8,6 +8,7 @@ import {
   listPublicProductSubcategoryCardsByCategorySlug,
 } from "@/features/product-categories/public";
 import {
+  buildBreadcrumbStructuredData,
   buildCategoryMetadata,
   buildCollectionPageStructuredData,
 } from "@/features/products/seo";
@@ -26,7 +27,7 @@ export async function generateMetadata({
 
   if (!categoryData) {
     return {
-      title: "Categorie introuvable | COBAM GROUP",
+      title: "Catégorie introuvable | COBAM GROUP",
       robots: { index: false, follow: false },
     };
   }
@@ -49,20 +50,27 @@ export default async function ProductCategoryPage({ params }: CategoryPageProps)
   return (
     <main className="min-h-screen bg-cobam-light-bg text-cobam-dark-blue">
       <StructuredData
-        data={buildCollectionPageStructuredData({
-          name: categoryData.name,
-          path,
-          description:
-            categoryData.descriptionSEO ||
-            "Decouvrez cette categorie de produits COBAM GROUP.",
-        })}
+        data={[
+          buildBreadcrumbStructuredData({
+            breadcrumb: null,
+            currentLabel: categoryData.name,
+            currentPath: path,
+          }),
+          buildCollectionPageStructuredData({
+            name: categoryData.name,
+            path,
+            description:
+              categoryData.descriptionSEO ||
+              "Découvrez cette catégorie de produits COBAM GROUP.",
+          }),
+        ]}
       />
       <PageHeader
-        subtitle="Categorie"
+        subtitle="Catégorie"
         title={categoryData.name}
         description={
           categoryData.descriptionSEO ||
-          "Decouvrez cette categorie de produits COBAM GROUP."
+          "Découvrez cette catégorie de produits COBAM GROUP."
         }
         themeColor={categoryData.themeColor}
       />

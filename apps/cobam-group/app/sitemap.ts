@@ -7,10 +7,12 @@ import { prisma } from "@/lib/server/db/prisma";
 function mapUrl(
   path: string,
   lastModified?: Date | string | null,
+  options: Pick<MetadataRoute.Sitemap[number], "changeFrequency" | "priority"> = {},
 ): MetadataRoute.Sitemap[number] {
   return {
     url: buildAbsoluteUrl(path),
     lastModified: lastModified ?? undefined,
+    ...options,
   };
 }
 
@@ -138,6 +140,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           orderBy: {
             subcategoryId: "asc",
           },
+          take: 1,
           select: {
             subcategory: {
               select: {
@@ -187,6 +190,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                   orderBy: {
                     subcategoryId: "asc",
                   },
+                  take: 1,
                   select: {
                     subcategory: {
                       select: {
@@ -210,48 +214,67 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
 
   const entries: MetadataRoute.Sitemap = [
-    mapUrl("/"),
-    mapUrl("/contact"),
-    mapUrl("/a-propos"),
-    mapUrl("/partenaires"),
-    mapUrl("/promotions"),
-    mapUrl("/references"),
-    mapUrl("/actualites"),
-    mapUrl("/annuaire"),
-    mapUrl("/produits"),
-    mapUrl("/politique-de-confidentialite"),
-    mapUrl("/conditions-generales"),
-    mapUrl("/mentions-legales"),
+    mapUrl("/", null, { changeFrequency: "weekly", priority: 1 }),
+    mapUrl("/contact", null, { changeFrequency: "yearly", priority: 0.7 }),
+    mapUrl("/a-propos", null, { changeFrequency: "monthly", priority: 0.7 }),
+    mapUrl("/partenaires", null, { changeFrequency: "monthly", priority: 0.6 }),
+    mapUrl("/promotions", null, { changeFrequency: "daily", priority: 0.8 }),
+    mapUrl("/references", null, { changeFrequency: "monthly", priority: 0.6 }),
+    mapUrl("/actualites", null, { changeFrequency: "weekly", priority: 0.7 }),
+    mapUrl("/produits", null, { changeFrequency: "weekly", priority: 0.9 }),
+    mapUrl("/politique-de-confidentialite", null, {
+      changeFrequency: "yearly",
+      priority: 0.2,
+    }),
+    mapUrl("/conditions-generales", null, { changeFrequency: "yearly", priority: 0.2 }),
+    mapUrl("/mentions-legales", null, { changeFrequency: "yearly", priority: 0.2 }),
     
     ...categories.map((category) =>
-      mapUrl(`/produits/${category.slug}`, category.updatedAt),
+      mapUrl(`/produits/${category.slug}`, category.updatedAt, {
+        changeFrequency: "weekly",
+        priority: 0.8,
+      }),
     ),
     ...subcategories.map((subcategory) =>
       mapUrl(
         `/produits/${subcategory.category.slug}/${subcategory.slug}`,
         subcategory.updatedAt,
+        { changeFrequency: "weekly", priority: 0.75 },
       ),
     ),
-    ...products.flatMap((product) =>
-      product.subcategories.map((link) =>
-        mapUrl(
-          `/produits/${link.subcategory.category.slug}/${link.subcategory.slug}/${product.slug}`,
-          product.updatedAt,
-        ),
-      ),
-    ),
-    ...families.flatMap((family) =>
-      family.members.flatMap((member) =>
-        member.product.subcategories.map((link) =>
-          mapUrl(
-            `/produits/${link.subcategory.category.slug}/${link.subcategory.slug}/famille/${family.slug}`,
-            family.updatedAt,
-          ),
-        ),
-      ),
-    ),
+    ...products.flatMap((product) => {
+      const link = product.subcategories[0];
+
+      return link
+        ? [
+            mapUrl(
+              `/produits/${link.subcategory.category.slug}/${link.subcategory.slug}/${product.slug}`,
+              product.updatedAt,
+              { changeFrequency: "weekly", priority: 0.65 },
+            ),
+          ]
+        : [];
+    }),
+    ...families.flatMap((family) => {
+      const link = family.members
+        .flatMap((member) => member.product.subcategories)
+        .at(0);
+
+      return link
+        ? [
+            mapUrl(
+              `/produits/${link.subcategory.category.slug}/${link.subcategory.slug}/famille/${family.slug}`,
+              family.updatedAt,
+              { changeFrequency: "weekly", priority: 0.7 },
+            ),
+          ]
+        : [];
+    }),
     ...articles.map((article) =>
-      mapUrl(`/actualites/${article.slug}`, article.updatedAt),
+      mapUrl(`/actualites/${article.slug}`, article.updatedAt, {
+        changeFrequency: "monthly",
+        priority: 0.55,
+      }),
     ),
   ];
 

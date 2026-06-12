@@ -2,11 +2,17 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import StructuredData from "@/components/seo/StructuredData";
 import ArticleDocumentReader from "@/components/staff/articles/article-document-reader";
 import PublicArticleMeta from "@/components/public/articles/public-article-meta";
 import PublicArticleSuggestions from "@/components/public/articles/public-article-suggestions";
 import { findPublicArticleBySlug } from "@/features/articles/public";
 import { getStaffSessionByRefreshToken } from "@/features/auth/server/session";
+import { buildSeoMetadata } from "@/lib/seo/metadata";
+import {
+  buildArticleStructuredData,
+  buildBreadcrumbListStructuredData,
+} from "@/lib/seo/structured-data";
 
 export const dynamic = "force-dynamic";
 
@@ -30,16 +36,22 @@ export async function generateMetadata({
   if (!article) {
     return {
       title: "Article introuvable",
+      robots: { index: false, follow: false },
     };
   }
 
-  return {
-    title: article.title,
-    description: article.descriptionSeo ?? article.excerpt,
-    alternates: {
-      canonical: `/actualites/${slug}`,
-    },
-  };
+  return buildSeoMetadata({
+    title: article.ogTitle?.trim() || article.title,
+    description: article.ogDescription?.trim() || article.descriptionSeo || article.excerpt,
+    path: `/actualites/${slug}`,
+    imageUrl: article.ogImageUrl ?? article.coverImageUrl,
+    imageAlt: article.coverImageAlt ?? article.title,
+    noIndex: article.isDraft,
+    type: "article",
+    publishedTime: article.publishedAt,
+    modifiedTime: article.updatedAt,
+    authors: article.authors,
+  });
 }
 
 export default async function PublicArticleDetailPage({
@@ -53,8 +65,32 @@ export default async function PublicArticleDetailPage({
     notFound();
   }
 
+  const path = `/actualites/${article.slug}`;
+  const articleDescription =
+    article.ogDescription?.trim() || article.descriptionSeo || article.excerpt;
+
   return (
     <main className="min-h-screen bg-white text-cobam-dark-blue">
+      <StructuredData
+        data={[
+          buildBreadcrumbListStructuredData([
+            { name: "Accueil", path: "/" },
+            { name: "Actualités", path: "/actualites" },
+            { name: article.title, path },
+          ]),
+          article.isDraft
+            ? null
+            : buildArticleStructuredData({
+                title: article.ogTitle?.trim() || article.title,
+                description: articleDescription,
+                path,
+                imageUrl: article.ogImageUrl ?? article.coverImageUrl,
+                publishedAt: article.publishedAt,
+                updatedAt: article.updatedAt,
+                authors: article.authors,
+              }),
+        ]}
+      />
       <section className="border-b border-slate-300 bg-cobam-light-bg/80">
         <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
 

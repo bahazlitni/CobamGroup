@@ -1,18 +1,13 @@
 import type { Metadata } from "next";
 import CobamSignature from "@/components/ui/custom/CobamSignature";
+import { buildSeoMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildSeoMetadata({
   title: "Conditions générales",
   description:
     "Consultez les conditions générales de Cobam Group relatives aux demandes, devis, commandes et services.",
-  alternates: {
-    canonical: "/conditions-generales",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+  path: "/conditions-generales",
+});
 
 export default function TermsPage() {
   return (

@@ -1,19 +1,14 @@
 import type { Metadata } from "next";
 import CobamSignature from "@/components/ui/custom/CobamSignature";
 import Link from "next/link";
+import { buildSeoMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildSeoMetadata({
   title: "Mentions légales",
   description:
     "Consultez les mentions légales de Cobam Group : informations sur l’éditeur du site, l’hébergement et les responsabilités.",
-  alternates: {
-    canonical: "/mentions-legales",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+  path: "/mentions-legales",
+});
 
 export default function LegalNoticePage() {
   return (

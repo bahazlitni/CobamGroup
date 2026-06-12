@@ -31,7 +31,7 @@ export async function generateMetadata({
 
   if (!subcategoryData) {
     return {
-      title: "Sous-categorie introuvable | COBAM GROUP",
+      title: "Sous-catégorie introuvable | COBAM GROUP",
       robots: { index: false, follow: false },
     };
   }
@@ -81,7 +81,7 @@ export default async function ProductSubcategoryPage({
             path,
             description:
               subcategoryData.descriptionSEO ||
-              "Decouvrez cette sous-categorie de produits COBAM GROUP.",
+              "Découvrez cette sous-catégorie de produits COBAM GROUP.",
           }),
         ]}
       />
@@ -90,7 +90,7 @@ export default async function ProductSubcategoryPage({
         title={subcategoryData.name}
         description={
           subcategoryData.descriptionSEO ||
-          "Decouvrez cette sous-categorie de produits COBAM GROUP."
+          "Découvrez cette sous-catégorie de produits COBAM GROUP."
         }
         themeColor={subcategoryData.themeColor}
       />

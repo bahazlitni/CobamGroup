@@ -1,18 +1,13 @@
 import CobamSignature from "@/components/ui/custom/CobamSignature";
 import type { Metadata } from "next";
+import { buildSeoMetadata } from "@/lib/seo/metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildSeoMetadata({
   title: "Politique de confidentialité",
   description:
     "Consultez la politique de confidentialité de Cobam Group et découvrez comment vos données personnelles sont collectées, utilisées et protégées.",
-  alternates: {
-    canonical: "/politique-de-confidentialite",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+  path: "/politique-de-confidentialite",
+});
 
 export default function PrivacyPolicyPage() {
   return (
@@ -91,7 +86,7 @@ export default function PrivacyPolicyPage() {
             4. Cookies
           </h2>
           <p className="leading-7 text-cobam-carbon-grey">
-            Le site peut utiliser des cookies afin d'améliorer votre expérience,
+            Le site peut utiliser des cookies afin d&apos;améliorer votre expérience,
             analyser le trafic et proposer des contenus adaptés. Vous pouvez
             configurer votre navigateur pour refuser les cookies.
           </p>

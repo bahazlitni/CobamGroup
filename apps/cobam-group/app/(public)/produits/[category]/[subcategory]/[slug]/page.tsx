@@ -13,6 +13,7 @@ import {
   buildBreadcrumbStructuredData,
   buildSimpleProductMetadata,
   buildSimpleProductStructuredData,
+  resolveSimpleProductCanonicalPath,
 } from "@/features/products/seo";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +36,7 @@ export async function generateMetadata({
   }
 
   return buildSimpleProductMetadata(product, {
-    path: `/produits/${category}/${subcategory}/${slug}`,
+    path: resolveSimpleProductCanonicalPath(product, `/produits/${category}/${subcategory}/${slug}`),
   });
 }
 
@@ -69,7 +70,8 @@ export default async function PublicProductPage({ params }: ProductPageProps) {
     subcategoryName: subcategoryData.name,
     subcategorySlug: subcategory,
   };
-  const path = `/produits/${category}/${subcategory}/${product.slug}`;
+  const currentPath = `/produits/${category}/${subcategory}/${product.slug}`;
+  const canonicalPath = resolveSimpleProductCanonicalPath(product, currentPath);
 
   return (
     <main className="relative min-h-screen bg-white text-cobam-dark-blue">
@@ -78,9 +80,9 @@ export default async function PublicProductPage({ params }: ProductPageProps) {
           buildBreadcrumbStructuredData({
             breadcrumb,
             currentLabel: product.name,
-            currentPath: path,
+            currentPath,
           }),
-          buildSimpleProductStructuredData(product, { path }),
+          buildSimpleProductStructuredData(product, { path: canonicalPath }),
         ]}
       />
       <StaticHighway direction="left" />
