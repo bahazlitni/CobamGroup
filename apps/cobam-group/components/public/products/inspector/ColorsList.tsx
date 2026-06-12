@@ -77,19 +77,8 @@ export default function ColorsList({
   const hasHiddenColors = colors.length > COMPACT_COLOR_LIMIT;
 
   return (
-    <section className="rounded-[1.35rem] border border-cobam-quill-grey/35 bg-white p-4 shadow-sm sm:p-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-            Palette
-          </p>
-        </div>
-        <p className="text-xs font-medium text-slate-500">
-          {colors.length} teinte{colors.length > 1 ? "s" : ""}
-        </p>
-      </div>
-
-      <div className="mt-4 flex max-h-56 flex-wrap gap-2 overflow-y-auto pr-1">
+    <section className="mt-6">
+      <div className="flex max-h-56 flex-wrap gap-2 overflow-y-auto pr-1">
         {visibleColors.map((color) => (
           <ColorBlob
             key={color.key}

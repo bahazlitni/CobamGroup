@@ -2,14 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import {
   CheckCircle2,
   ChevronRight,
-  FileText,
-  Info,
-  MessageSquareText,
-  Ruler,
   XCircle,
 } from "lucide-react";
 import AnimatedUICopyButton from "@/components/ui/custom/CopyButton";
@@ -20,6 +16,8 @@ import {
   buildColorOptions,
   buildFinishOptions,
   buildNormalAttributeGroups,
+  type DerivedColorOption,
+  type DerivedFinishOption,
   findVariantByNormalAttribute,
   findVariantBySpecialValues,
   getVariantAttributeValue,
@@ -34,10 +32,8 @@ import {
 import RichDescription from "./inspector/RichDescription";
 import ColorsList from "./inspector/ColorsList";
 import FinishesList from "./inspector/FinishesList";
-import DatasheetLink from "./inspector/DatasheetLink";
 import ProductDevisDialog from "./inspector/ProductDevisDialog";
 import BrandTooltip from "./inspector/BrandTooltip";
-import BreadCrumb from "./inspector/BreadCrumb";
 import VariantRail from "./inspector/VariantsRail";
 import PublicProductCard from "./public-product-card";
 import RailCarousel from "@/components/ui/custom/RailCarousel";
@@ -48,25 +44,18 @@ import type {
   PublicProductSubcategoryLink,
   PublicProductInspectorVariant,
 } from "@/features/products/types";
+import DownloadsSectionBody from "./inspector/DownloadsSectionBody";
+import SectionTitle from "./inspector/SectionTitle";
+import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
+import { resolveColorHex } from "@/lib/color-values";
+import { getPublicRichTextPlainText } from "@cobam/shared/ui/PublicRichText";
 
 type DetailRow = {
   label: string;
-  value: string;
+  value: ReactNode;
+  valueKey?: string;
   tone?: "default" | "positive" | "muted";
 };
-
-function getDocumentLabel(
-  document: { title: string | null },
-  fallback: string,
-  index: number,
-  total: number,
-) {
-  if (document.title) {
-    return document.title;
-  }
-
-  return total > 1 ? `${fallback} ${index + 1}` : fallback;
-}
 
 function ProductCertificatesGrid({ certificates }: { certificates: PublicProductCertificate[] }) {
   if (certificates.length === 0) {
@@ -222,6 +211,55 @@ function formatOptionLabel(label: string, unit: string | null) {
   return normalized.endsWith(normalizedUnit) ? label : `${label} ${unit}`;
 }
 
+function InlineColorValue({
+  option,
+  code,
+}: {
+  option: DerivedColorOption;
+  code?: string | null;
+}) {
+  const resolvedHex =
+    option.reference?.hexValue ?? resolveColorHex(option.label) ?? resolveColorHex(option.key);
+  const label = `${option.label}${code ? ` - Code ${code}` : ""}`;
+
+  return (
+    <span className="text-cobam-dark-blue inline-flex items-center gap-2 font-semibold">
+      <span
+        className="block size-4 shrink-0 rounded-full border border-slate-300 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.55)]"
+        style={{ backgroundColor: resolvedHex ?? "#0f172a" }}
+        aria-hidden="true"
+      />
+      <span>{label}</span>
+    </span>
+  );
+}
+
+function InlineFinishValue({ option }: { option: DerivedFinishOption }) {
+  return (
+    <span className="text-cobam-dark-blue inline-flex items-center gap-2 font-semibold">
+      <span className="relative block size-5 shrink-0 overflow-hidden rounded-full border border-slate-300 bg-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.55)]">
+        {option.imageUrl ? (
+          <Image
+            src={option.imageUrl}
+            alt=""
+            fill
+            sizes="20px"
+            className="object-cover"
+            aria-hidden="true"
+          />
+        ) : (
+          <span
+            className="block size-full"
+            style={{ backgroundColor: option.colorHex ?? "#0f172a" }}
+            aria-hidden="true"
+          />
+        )}
+      </span>
+      <span>{option.label}</span>
+    </span>
+  );
+}
+
 function stripBrandPrefix(name: string, brandName: string | null) {
   if (!brandName) {
     return name;
@@ -279,13 +317,13 @@ function TechnicalRows({ rows }: { rows: DetailRow[] }) {
   }
 
   return (
-    <dl className="divide-cobam-quill-grey/30 border-cobam-quill-grey/35 divide-y rounded-[1.35rem] border bg-white">
+    <dl className="divide-cobam-quill-grey/30 divide-y">
       {rows.map((row, index) => (
         <div
-          key={`${row.label}-${row.value}-${index}`}
-          className="grid gap-2 px-4 py-4 sm:grid-cols-[15rem_1fr] sm:px-5"
+          key={row.valueKey ?? `${row.label}-${index}`}
+          className="grid gap-2 py-3 sm:grid-cols-[15rem_1fr] sm:px-5"
         >
-          <dt className="text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
+          <dt className="text-sm font-semibold text-slate-400">
             {row.label}
           </dt>
           <dd className="text-sm">
@@ -352,48 +390,46 @@ function CatalogBreadcrumbs({ subcategories }: { subcategories: PublicProductSub
   }
 
   return (
-    <section className="border-cobam-quill-grey/35 rounded-[1.35rem] border bg-white p-4">
-      <div className="space-y-2">
-        {subcategories.map((subcategory) => (
-          <nav
-            key={`${subcategory.categorySlug}-${subcategory.slug}`}
-            aria-label={`Catalogue ${subcategory.categoryName} ${subcategory.name}`}
-          >
-            <ol className="flex flex-wrap items-center gap-2 text-sm">
-              <li>
-                <Link
-                  href="/produits"
-                  className="hover:text-cobam-water-blue font-semibold text-slate-500 transition"
-                >
-                  Produits
-                </Link>
-              </li>
-              <li>
-                <ChevronRight className="size-4 text-slate-300" aria-hidden="true" />
-              </li>
-              <li>
-                <Link
-                  href={`/produits/${subcategory.categorySlug}`}
-                  className="text-cobam-dark-blue hover:text-cobam-water-blue font-semibold transition"
-                >
-                  {subcategory.categoryName}
-                </Link>
-              </li>
-              <li>
-                <ChevronRight className="size-4 text-slate-300" aria-hidden="true" />
-              </li>
-              <li>
-                <Link
-                  href={`/produits/${subcategory.categorySlug}/${subcategory.slug}`}
-                  className="text-cobam-water-blue hover:text-cobam-dark-blue font-semibold transition"
-                >
-                  {subcategory.name}
-                </Link>
-              </li>
-            </ol>
-          </nav>
-        ))}
-      </div>
+    <section className="space-y-2">
+      {subcategories.map((subcategory) => (
+        <nav
+          key={`${subcategory.categorySlug}-${subcategory.slug}`}
+          aria-label={`Catalogue ${subcategory.categoryName} ${subcategory.name}`}
+        >
+          <ol className="flex flex-wrap items-center gap-2 text-sm">
+            <li>
+              <Link
+                href="/produits"
+                className="hover:text-cobam-water-blue font-semibold text-slate-500 transition"
+              >
+                Produits
+              </Link>
+            </li>
+            <li>
+              <ChevronRight className="size-4 text-slate-300" aria-hidden="true" />
+            </li>
+            <li>
+              <Link
+                href={`/produits/${subcategory.categorySlug}`}
+                className="text-cobam-dark-blue hover:text-cobam-water-blue font-semibold transition"
+              >
+                {subcategory.categoryName}
+              </Link>
+            </li>
+            <li>
+              <ChevronRight className="size-4 text-slate-300" aria-hidden="true" />
+            </li>
+            <li>
+              <Link
+                href={`/produits/${subcategory.categorySlug}/${subcategory.slug}`}
+                className="text-cobam-water-blue hover:text-cobam-dark-blue font-semibold transition"
+              >
+                {subcategory.name}
+              </Link>
+            </li>
+          </ol>
+        </nav>
+      ))}
     </section>
   );
 }
@@ -456,7 +492,6 @@ function RelatedProductsSection({ products }: { products: PublicRelatedProductIt
 
 export default function PublicProductInspectorView({
   product,
-  breadcrumb,
   relatedProducts = [],
 }: PublicProductInspectorViewProps) {
   const normalizedProduct = normalizeInspectorProduct(product);
@@ -472,6 +507,8 @@ export default function PublicProductInspectorView({
   const normalAttributeGroups = buildNormalAttributeGroups(normalizedProduct);
   const colorOptions = buildColorOptions(normalizedProduct);
   const finishOptions = buildFinishOptions(normalizedProduct);
+  const singleColorOption = colorOptions.length === 1 ? colorOptions[0] : null;
+  const singleFinishOption = finishOptions.length === 1 ? finishOptions[0] : null;
   const selectedColor = getVariantSpecialValue(selectedVariant, "COLOR");
   const selectedFinishKey = getVariantFinishKey(
     selectedVariant,
@@ -511,38 +548,35 @@ export default function PublicProductInspectorView({
   const preparationText = formatPreparation(readyAttr);
   const waterResistanceText = formatWaterResistance(waterproofAttr);
   const brandName = normalizedProduct.brand?.name ?? normalizedProduct.brandName ?? null;
+  const descriptionTextLength = getPublicRichTextPlainText(selectedVariant.description).length;
+  const hasDescription = Boolean(selectedVariant.description && descriptionTextLength > 0);
+  const showHeaderDescription = hasDescription && descriptionTextLength <= 1024;
+  const showSectionDescription = hasDescription && descriptionTextLength > 1024;
   const displayTitle = buildProductTitle({
     displayName: selectedVariant.displayName,
     brandName,
     colorLabel: selectedColor?.label ?? null,
     productUse,
   });
-  const fallbackSubcategory = normalizedProduct.subcategories[0] ?? null;
-  const resolvedBreadcrumb =
-    breadcrumb ??
-    (fallbackSubcategory
-      ? {
-          categoryName: fallbackSubcategory.categoryName,
-          categorySlug: fallbackSubcategory.categorySlug,
-          subcategoryName: fallbackSubcategory.name,
-          subcategorySlug: fallbackSubcategory.slug,
-        }
-      : null);
-  const variantSummary = [
-    selectedColor?.label
-      ? `${selectedColor.label}${colorCodeAttr?.value ? ` ${colorCodeAttr.value}` : ""}`
-      : null,
-    rangeAttr?.value,
-    waterResistanceText,
-    packagingText,
-  ].filter(Boolean);
-
-  const summaryRows: DetailRow[] = [
+  const summaryRowCandidates: Array<DetailRow | null> = [
     productUse ? { label: "Type de produit", value: productUse } : null,
-    selectedColor?.label
+    singleColorOption
+      ? {
+          label: "Couleur",
+          value: <InlineColorValue option={singleColorOption} code={colorCodeAttr?.value} />,
+          valueKey: `single-color-${singleColorOption.key}`,
+        }
+      : selectedColor?.label
       ? {
           label: "Couleur",
           value: `${selectedColor.label}${colorCodeAttr?.value ? ` - Code ${colorCodeAttr.value}` : ""}`,
+        }
+      : null,
+    singleFinishOption
+      ? {
+          label: "Finition",
+          value: <InlineFinishValue option={singleFinishOption} />,
+          valueKey: `single-finish-${singleFinishOption.key}`,
         }
       : null,
     packagingText ? { label: "Conditionnement", value: packagingText } : null,
@@ -555,9 +589,10 @@ export default function PublicProductInspectorView({
           tone: parseBooleanValue(waterproofAttr?.value) ? "positive" : "muted",
         }
       : null,
-  ].filter((row): row is DetailRow => row != null);
+  ];
+  const summaryRows = summaryRowCandidates.filter((row): row is DetailRow => row != null);
 
-  const technicalRows: DetailRow[] = [
+  const technicalRowCandidates: Array<DetailRow | null> = [
     ...summaryRows,
     jointWidthAttr
       ? { label: "Largeur de joint", value: formatAttributeValue(jointWidthAttr) }
@@ -574,7 +609,8 @@ export default function PublicProductInspectorView({
               : ("muted" as const)
             : ("default" as const),
       })),
-  ].filter((row): row is DetailRow => row != null);
+  ];
+  const technicalRows = technicalRowCandidates.filter((row): row is DetailRow => row != null);
 
   const selectorGroups = normalAttributeGroups.filter((group) =>
     ["packaging_weight_kg", "product_range"].includes(
@@ -627,10 +663,6 @@ export default function PublicProductInspectorView({
   return (
     <TooltipProvider>
       <article className="space-y-12">
-        {resolvedBreadcrumb ? (
-          <BreadCrumb {...resolvedBreadcrumb} currentName={displayTitle} />
-        ) : null}
-
         <section className="grid gap-10 lg:grid-cols-[minmax(22rem,0.92fr)_minmax(0,1.08fr)] lg:items-start">
           <Carousel
             key={`${selectedVariant.id}-${selectedMedia.map((media) => media.id).join("-")}`}
@@ -639,8 +671,10 @@ export default function PublicProductInspectorView({
           />
 
           <div className="space-y-7">
-            <header className="border-cobam-quill-grey/35 rounded-[2rem] border bg-white p-5 sm:p-7">
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <header>
+              <CatalogBreadcrumbs subcategories={normalizedProduct.subcategories} />
+              
+              <div className="mt-1 flex flex-wrap items-center gap-x-6 gap-y-3">
                 <BrandTooltip brand={normalizedProduct.brand} />
                 <div className="inline-flex items-center gap-3">
                   <span className="text-xs font-semibold tracking-[0.22em] text-slate-400 uppercase">
@@ -659,37 +693,11 @@ export default function PublicProductInspectorView({
                 </div>
               </div>
 
-              <div className="mt-6 space-y-3">
-                <h1 className="text-cobam-dark-blue max-w-4xl text-4xl font-semibold tracking-[-0.055em] sm:text-5xl lg:text-[4rem] lg:leading-[0.95]">
-                  {displayTitle}
-                </h1>
-                {productUse ? (
-                  <p className="text-xl font-medium text-slate-500">{productUse}</p>
-                ) : null}
-                {variantSummary.length > 0 ? (
-                  <p className="text-cobam-dark-blue/75 text-base font-semibold">
-                    {variantSummary.join(" - ")}
-                  </p>
-                ) : null}
-              </div>
 
-              <div className="mt-7 flex flex-wrap items-center gap-3 rounded-[1.35rem] border border-slate-200 bg-slate-50 p-4">
-                <ProductDevisDialog
-                  productName={selectedVariant.displayName}
-                  sku={selectedVariant.sku}
-                  triggerLabel="Demander un devis"
-                />
-                <Link
-                  href="/contact"
-                  className="border-cobam-quill-grey/40 text-cobam-dark-blue hover:border-cobam-water-blue hover:text-cobam-water-blue inline-flex min-h-11 items-center rounded-full border bg-white px-5 text-sm font-semibold transition"
-                >
-                  Contacter un conseiller
-                </Link>
-              </div>
-            </header>
-
-            <div className="space-y-5">
-              {colorOptions.length > 0 ? (
+              <h1 className="mt-5 text-cobam-dark-blue max-w-4xl text-4xl font-semibold tracking-[-0.055em] sm:text-5xl lg:text-[4rem] lg:leading-[0.95]">
+                {displayTitle}
+              </h1>
+              {colorOptions.length > 1 ? (
                 <ColorsList
                   activeKey={selectedColor?.key}
                   colors={colorOptions}
@@ -698,14 +706,44 @@ export default function PublicProductInspectorView({
                 />
               ) : null}
 
-              {finishOptions.length > 0 ? (
+              {finishOptions.length > 1 ? (
                 <FinishesList
                   activeKey={selectedFinishKey ?? undefined}
                   finishes={finishOptions}
                   onSelect={handleFinishSelect}
-                />
+                /> 
               ) : null}
 
+
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <ProductDevisDialog
+                  productName={selectedVariant.displayName}
+                  sku={selectedVariant.sku}
+                  triggerLabel="Demander un devis"
+                />
+                <AnimatedUIButton
+                  size="lg"
+                  variant="outline"
+                  type="button"
+                  href="/contact"
+                  icon="phone"
+                >
+                  Contacter un conseiller
+                </AnimatedUIButton>
+              </div>
+
+              
+              {showHeaderDescription ? (
+                <div className="mt-8 max-w-3xl text-base leading-7">
+                  <RichDescription
+                    description={selectedVariant.description}
+                    collapseAfter={null}
+                  />
+                </div>
+              ) : null}
+            </header>
+
+            <div className="space-y-5">
               {selectorGroups.map((group) => (
                 <VariantOptionSelector
                   key={group.attributeId}
@@ -720,115 +758,35 @@ export default function PublicProductInspectorView({
                 />
               ))}
             </div>
-
-            <CatalogBreadcrumbs subcategories={normalizedProduct.subcategories} />
           </div>
         </section>
 
-        <section className="border-cobam-quill-grey/35 rounded-[2rem] border bg-white p-5 sm:p-7">
-          <div className="flex items-center gap-3">
-            <Info className="text-cobam-water-blue size-5" aria-hidden="true" />
-            <h2 className="text-cobam-dark-blue text-2xl font-semibold tracking-[-0.04em]">
-              Description
-            </h2>
-          </div>
-          <div className="mt-5 max-w-none">
-            <RichDescription description={selectedVariant.description} />
-          </div>
-        </section>
-
-        <section className="border-cobam-quill-grey/35 rounded-[2rem] border bg-white p-5 sm:p-7">
-          <div className="flex items-center gap-3">
-            <Ruler className="text-cobam-water-blue size-5" aria-hidden="true" />
-            <h2 className="text-cobam-dark-blue text-2xl font-semibold tracking-[-0.04em]">
-              Caractéristiques techniques
-            </h2>
-          </div>
-          <div className="mt-5">
-            <TechnicalRows rows={technicalRows} />
-          </div>
-        </section>
-
-        <section className="border-cobam-quill-grey/35 bg-cobam-dark-blue rounded-[2rem] border p-5 text-white sm:p-7">
-          <div className="grid gap-6 lg:grid-cols-[0.85fr_1fr] lg:items-center">
-            <div>
-              <p className="text-cobam-water-blue text-xs font-semibold tracking-[0.24em] uppercase">
-                Documents & accompagnement
-              </p>
-              <h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em]">
-                Vérifier, comparer, confirmer.
-              </h2>
-              <p className="mt-4 max-w-xl text-sm leading-7 text-white/68">
-                Consultez les documents techniques disponibles ou contactez COBAM Group pour une
-                validation produit, une disponibilité ou un conseil de mise en oeuvre.
-              </p>
+        {showSectionDescription ? (
+          <section className="border-cobam-quill-grey/35 rounded-[2rem] border bg-white p-5 sm:p-7">
+            <SectionTitle title="Description"/>
+            <div className="mt-5 max-w-none">
+              <RichDescription description={selectedVariant.description} />
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-[1.35rem] border border-white/10 bg-white/6 p-4">
-                <FileText className="text-cobam-water-blue size-5" aria-hidden="true" />
-                <h3 className="mt-3 font-semibold">Documents techniques</h3>
-                <p className="mt-2 text-sm leading-6 text-white/60">
-                  Fiches et informations disponibles selon le produit.
-                </p>
-                {selectedVariant.datasheets.length > 0 ? (
-                  <div className="mt-4 space-y-2">
-                    <h4 className="text-xs font-semibold tracking-[0.18em] text-white/45 uppercase">
-                      {selectedVariant.datasheets.length > 1
-                        ? "Fiches techniques"
-                        : "Fiche technique"}
-                    </h4>
-                    {selectedVariant.datasheets.map((datasheet, index) => (
-                      <DatasheetLink
-                        key={`datasheet-${datasheet.id}`}
-                        url={datasheet.url}
-                        label={getDocumentLabel(
-                          datasheet,
-                          "Fiche technique",
-                          index,
-                          selectedVariant.datasheets.length,
-                        )}
-                      />
-                    ))}
-                  </div>
-                ) : null}
-                {selectedVariant.certificates.length > 0 ? (
-                  <div className="mt-4 space-y-2">
-                    <h4 className="text-xs font-semibold tracking-[0.18em] text-white/45 uppercase">
-                      {selectedVariant.certificates.length > 1 ? "Certificats" : "Certificat"}
-                    </h4>
-                    {selectedVariant.certificates.map((certificate, index) => (
-                      <DatasheetLink
-                        key={`certificate-${certificate.id}`}
-                        url={certificate.url}
-                        label={getDocumentLabel(
-                          certificate,
-                          "Certificat",
-                          index,
-                          selectedVariant.certificates.length,
-                        )}
-                      />
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-              <div className="rounded-[1.35rem] border border-white/10 bg-white/6 p-4">
-                <MessageSquareText className="text-cobam-water-blue size-5" aria-hidden="true" />
-                <h3 className="mt-3 font-semibold">Accompagnement COBAM</h3>
-                <p className="mt-2 text-sm leading-6 text-white/60">
-                  Disponibilité, showroom et recommandations techniques a confirmer avec nos
-                  équipes.
-                </p>
-                <div className="mt-4">
-                  <ProductDevisDialog
-                    productName={selectedVariant.displayName}
-                    sku={selectedVariant.sku}
-                    triggerLabel="Demander un devis"
-                  />
-                </div>
-              </div>
+          </section>
+        ) : null}
+
+        {technicalRows.length > 0 ? (
+          <section className="border-cobam-quill-grey/35 rounded-[2rem] border bg-white p-5 sm:p-7">
+            <SectionTitle title="Caractéristiques techniques"/>
+            <div className="mt-5">
+              <TechnicalRows rows={technicalRows} />
             </div>
-          </div>
-        </section>
+          </section>
+        ) : null}
+
+        {selectedVariant.datasheets.length > 0 || selectedVariant.certificates.length > 0 ? (
+          <section className="border-cobam-quill-grey/35 rounded-[2rem] border bg-white p-5 sm:p-7">
+            <SectionTitle title="Téléchargements"/>
+            <div className="mt-5 max-w-none">
+              <DownloadsSectionBody datasheets={selectedVariant.datasheets} certificates={selectedVariant.certificates} />
+            </div>
+          </section>
+        ) : null}
 
         <ProductCertificatesGrid certificates={selectedVariant.productCertificates} />
 

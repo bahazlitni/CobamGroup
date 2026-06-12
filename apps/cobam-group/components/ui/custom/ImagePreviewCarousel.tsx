@@ -291,7 +291,7 @@ export default function ImagePreviewCarousel({
       <aside className={cn("space-y-3", className)}>
         <div
           className={cn(
-            "overflow-hidden border border-slate-200 bg-white shadow-sm",
+            "overflow-hidden border border-slate-200 bg-white",
             styles.frameRadius,
             frameClassName,
           )}

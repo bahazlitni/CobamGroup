@@ -4,10 +4,16 @@ import { useState } from "react"
 import { PublicRichText, getPublicRichTextPlainText } from "@cobam/shared/ui/PublicRichText"
 import { cn } from "@/lib/utils"
 
-export default function RichDescription({description}: {description?: null | string}){
+export default function RichDescription({
+    description,
+    collapseAfter = 420,
+}: {
+    description?: null | string;
+    collapseAfter?: number | null;
+}){
     const [isExpanded, setIsExpanded] = useState<boolean>(false)
     const plainTextLength = getPublicRichTextPlainText(description).length;
-    const isLong = plainTextLength > 420;
+    const isLong = collapseAfter != null && plainTextLength > collapseAfter;
 
     if(!description) return null;
 

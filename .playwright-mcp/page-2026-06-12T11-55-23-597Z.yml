@@ -1,0 +1,448 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e5]
+      - generic [ref=e7]: "Service Client :"
+      - link "+216 75731731" [ref=e8] [cursor=pointer]:
+        - /url: tel:+21675731731
+    - generic [ref=e9]:
+      - link "Annuaire" [ref=e10] [cursor=pointer]:
+        - /url: /annuaire
+        - img [ref=e11]
+        - text: Annuaire
+      - link "Espace Team" [ref=e15] [cursor=pointer]:
+        - /url: /login/staff
+        - img [ref=e16]
+        - text: Espace Team
+  - banner [ref=e20]:
+    - generic [ref=e21]:
+      - link "COBAM GROUP" [ref=e22] [cursor=pointer]:
+        - /url: /
+        - img "COBAM GROUP" [ref=e23]
+      - navigation [ref=e24]:
+        - link "À PROPOS" [ref=e25] [cursor=pointer]:
+          - /url: /a-propos
+        - button "PRODUITS" [ref=e27] [cursor=pointer]:
+          - generic: PRODUITS
+          - img
+        - button "MARQUES" [ref=e29] [cursor=pointer]:
+          - text: MARQUES
+          - img [ref=e30]
+        - link "ACTUALITÉS" [ref=e32] [cursor=pointer]:
+          - /url: /actualites
+        - link "CONTACT" [ref=e33] [cursor=pointer]:
+          - /url: /contact
+      - button "Rechercher" [ref=e36] [cursor=pointer]:
+        - img [ref=e37]
+  - main [ref=e40]:
+    - generic [ref=e44]:
+      - paragraph [ref=e45]: Catalogue
+      - heading "Tous les produits" [level=1] [ref=e46]
+      - paragraph [ref=e47]: Explorez tous nos produits.
+    - generic [ref=e50]:
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - paragraph [ref=e54]: 654 produits
+          - generic [ref=e55]:
+            - generic [ref=e56]:
+              - img
+              - searchbox "Rechercher par nom, SKU, marque..." [ref=e57]
+            - button "Avancée" [ref=e58] [cursor=pointer]:
+              - generic [ref=e59]: Avancée
+              - img [ref=e61]
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - generic [ref=e65]: Marque
+            - combobox [ref=e66] [cursor=pointer]:
+              - generic: Commence par
+              - img
+            - 'textbox "Ex : Sika" [ref=e69]'
+          - combobox [ref=e70] [cursor=pointer]:
+            - generic: ET (&)
+            - img
+          - generic [ref=e72]:
+            - generic [ref=e73]: Nom
+            - combobox [ref=e74] [cursor=pointer]:
+              - generic: Commence par
+              - img
+            - 'textbox "Ex : Ciment Colle" [ref=e77]'
+          - combobox [ref=e78] [cursor=pointer]:
+            - generic: ET (&)
+            - img
+          - generic [ref=e80]:
+            - generic [ref=e81]: SKU
+            - combobox [ref=e82] [cursor=pointer]:
+              - generic: Commence par
+              - img
+            - textbox "..." [ref=e85]
+          - button "Réinitialiser" [ref=e87] [cursor=pointer]
+      - generic [ref=e89]:
+        - generic [ref=e90]:
+          - paragraph [ref=e91]: Sols, murs et finitions
+          - heading "Revêtements de sols et murs" [level=2] [ref=e92]
+        - generic [ref=e94]:
+          - generic [ref=e95]:
+            - generic [ref=e97]:
+              - heading "Carrelage intérieur" [level=3] [ref=e98]
+              - generic [ref=e99]: Confort et design intérieur
+            - generic [ref=e101]:
+              - link "Voir le produit Carrelage33 314 Royal Bg 1C Coupe 4F Gencar" [ref=e102] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/carrelage-interieur/carrelage33-314-royal-bg-1c-coupe-4f-gencar
+                - article [ref=e103]:
+                  - generic [ref=e105]: Image à venir
+                  - heading "Carrelage33 314 Royal Bg 1C Coupe 4F Gencar" [level=4] [ref=e107]
+              - link "Voir le produit FAI.25/75 Foro Gris 1C Emigres" [ref=e109] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/carrelage-interieur/fai-25-75-foro-gris-1c-emigres
+                - article [ref=e110]:
+                  - generic [ref=e112]: Image à venir
+                  - heading "FAI.25/75 Foro Gris 1C Emigres" [level=4] [ref=e114]
+              - link "Voir le produit Grès.120 Poli Fame Grey Cicogres" [ref=e116] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/carrelage-interieur/gres-120-poli-fame-grey-cicogres
+                - article [ref=e117]:
+                  - generic [ref=e119]: Image à venir
+                  - heading "Grès.120 Poli Fame Grey Cicogres" [level=4] [ref=e121]
+              - link "Voir le produit Sofcasud - Carrelage25 25090 Marbre Gris Italie" [ref=e123] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/carrelage-interieur/sofcasud-carrelage25-25090-marbre-gris-italie
+                - article [ref=e124]:
+                  - generic [ref=e125]:
+                    - img "Carrelage25 25090 Marbre Gris Italie Sofcasud" [ref=e126]
+                    - generic [ref=e128]: Sofcasud
+                  - heading "Sofcasud - Carrelage25 25090 Marbre Gris Italie" [level=4] [ref=e130]
+              - link "Voir le produit Sofcasud - Carrelage25 25092 Marbre Gris/noir Mouchte" [ref=e132] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/carrelage-interieur/sofcasud-carrelage25-25092-marbre-gris-noir-mouchte
+                - article [ref=e133]:
+                  - generic [ref=e134]:
+                    - generic [ref=e135]: Image à venir
+                    - generic [ref=e137]: Sofcasud
+                  - heading "Sofcasud - Carrelage25 25092 Marbre Gris/noir Mouchte" [level=4] [ref=e139]
+              - link "Voir le produit Sofcasud - Carrelage25 25093 Marbre Gris Grec" [ref=e141] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/carrelage-interieur/sofcasud-carrelage25-25093-marbre-gris-grec
+                - article [ref=e142]:
+                  - generic [ref=e143]:
+                    - img "Carrelage25 25093 Marbre Gris Grec Sofcasud" [ref=e144]
+                    - generic [ref=e146]: Sofcasud
+                  - heading "Sofcasud - Carrelage25 25093 Marbre Gris Grec" [level=4] [ref=e148]
+              - link "Voir le produit Sofcasud - Carrelage25 25094 Marbre Blanc Sofca Sud" [ref=e150] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/carrelage-interieur/sofcasud-carrelage25-25094-marbre-blanc-sofca-sud
+                - article [ref=e151]:
+                  - generic [ref=e152]:
+                    - img "Carrelage25 25094 Marbre Blanc Sofca Sud" [ref=e153]
+                    - generic [ref=e155]: Sofcasud
+                  - heading "Sofcasud - Carrelage25 25094 Marbre Blanc Sofca Sud" [level=4] [ref=e157]
+          - generic [ref=e159]:
+            - generic [ref=e161]:
+              - heading "Faïence murale" [level=3] [ref=e162]
+              - generic [ref=e163]: Habillage mural décoratif
+            - link "Voir le produit Dechet Faience+parterre+carrelage" [ref=e166] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/faience-murale/dechet-faience-parterre-carrelage
+              - article [ref=e167]:
+                - generic [ref=e169]: Image à venir
+                - heading "Dechet Faience+parterre+carrelage" [level=4] [ref=e171]
+          - generic [ref=e173]:
+            - generic [ref=e175]:
+              - heading "Plinthes et accessoires" [level=3] [ref=e176]
+              - generic [ref=e177]: Finitions et détails essentiels
+            - link "Voir le produit Plinthe 7.8/39.5 6001 Caldera Pgc" [ref=e180] [cursor=pointer]:
+              - /url: /produits/revetements-de-sols-et-murs/plinthes-et-accessoires/plinthe-7-8-39-5-6001-caldera-pgc
+              - article [ref=e181]:
+                - generic [ref=e183]: Image à venir
+                - heading "Plinthe 7.8/39.5 6001 Caldera Pgc" [level=4] [ref=e185]
+          - generic [ref=e187]:
+            - generic [ref=e189]:
+              - heading "Produits de pose & finition" [level=3] [ref=e190]
+              - generic [ref=e191]: Solutions techniques essentielles
+            - generic [ref=e193]:
+              - link "Voir le produit AATIK BLANC" [ref=e194] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/aatik-blanc-00244312
+                - article [ref=e195]:
+                  - generic [ref=e196]:
+                    - img "AATIK Blanc - enduit monocouche" [ref=e197]
+                    - generic [ref=e199]: Derbigum
+                  - heading "AATIK BLANC" [level=4] [ref=e201]
+              - link "Voir le produit Admix ciment 1KG par sachet Deutsch Color" [ref=e203] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/admix-ciment-1kg-par-sachet-deutsch
+                - article [ref=e204]:
+                  - generic [ref=e205]:
+                    - img "Admix ciment 1KG par sachet Deutsch Color" [ref=e206]
+                    - generic [ref=e208]: Deutsch Color
+                  - heading "Admix ciment 1KG par sachet Deutsch Color" [level=4] [ref=e210]
+              - link "Voir le produit Admix S2 bidon 1KG" [ref=e212] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/admix-s2-bidon-1kg
+                - article [ref=e213]:
+                  - generic [ref=e215]: Image à venir
+                  - heading "Admix S2 bidon 1KG" [level=4] [ref=e217]
+              - link "Voir le produit Ciment colle FM-ECO blanc Deutsch Color" [ref=e219] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/ciment-colle-fm-eco-blanc-deutsch-color
+                - article [ref=e220]:
+                  - generic [ref=e221]:
+                    - img "Ciment colle FM-ECO blanc Deutsch Color" [ref=e222]
+                    - generic [ref=e224]: Deutsch Color
+                  - heading "Ciment colle FM-ECO blanc Deutsch Color" [level=4] [ref=e226]
+              - link "Voir le produit Ciment colle FM1000 blanc Deutsch Color" [ref=e228] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/ciment-colle-fm1000-blanc-deutsch-color
+                - article [ref=e229]:
+                  - generic [ref=e230]:
+                    - img "Ciment colle FM1000 blanc Deutsch Color" [ref=e231]
+                    - generic [ref=e233]: Deutsch Color
+                  - heading "Ciment colle FM1000 blanc Deutsch Color" [level=4] [ref=e235]
+              - link "Voir le produit Ciment colle FM2000 blanc Deutsch Color" [ref=e237] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/ciment-colle-fm2000-blanc-deutsch-color
+                - article [ref=e238]:
+                  - generic [ref=e239]:
+                    - img "Ciment colle FM2000 blanc Deutsch Color" [ref=e240]
+                    - generic [ref=e242]: Deutsch Color
+                  - heading "Ciment colle FM2000 blanc Deutsch Color" [level=4] [ref=e244]
+              - link "Voir le produit Ciment colle FM3000 piscine Deutsch Color" [ref=e246] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/ciment-colle-fm3000-piscine-deutsch-color
+                - article [ref=e247]:
+                  - generic [ref=e248]:
+                    - img "Ciment colle FM3000 piscine Deutsch Color" [ref=e249]
+                    - generic [ref=e251]: Deutsch Color
+                  - heading "Ciment colle FM3000 piscine Deutsch Color" [level=4] [ref=e253]
+              - link "Voir le produit Ciment colle Sika Ceram 103 blanc sac 25KG" [ref=e255] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/ciment-colle-sika-ceram-103-blanc-sac-25kg
+                - article [ref=e256]:
+                  - generic [ref=e257]:
+                    - img "Ciment colle Sika Ceram 103 blanc sac 25KG" [ref=e258]
+                    - generic [ref=e260]: Sika
+                  - heading "Ciment colle Sika Ceram 103 blanc sac 25KG" [level=4] [ref=e262]
+              - link "Voir le produit Ciment colle Sika Ceram 106 blanc sac 25KG" [ref=e264] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/ciment-colle-sika-ceram-106-blanc-sac-25kg
+                - article [ref=e265]:
+                  - generic [ref=e266]:
+                    - img "Ciment colle Sika Ceram 106 blanc sac 25KG" [ref=e267]
+                    - generic [ref=e269]: Sika
+                  - heading "Ciment colle Sika Ceram 106 blanc sac 25KG" [level=4] [ref=e271]
+              - link "Voir le produit Ciment colle Sika Ceram 206 blanc sac 25KG" [ref=e273] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/ciment-colle-sika-ceram-206-blanc-sac-25kg
+                - article [ref=e274]:
+                  - generic [ref=e275]:
+                    - img "Ciment colle Sika Ceram 206 blanc sac 25KG" [ref=e276]
+                    - generic [ref=e278]: Sika
+                  - heading "Ciment colle Sika Ceram 206 blanc sac 25KG" [level=4] [ref=e280]
+              - link "Voir le produit Derbigum - Carrojoint Blanc 6kg" [ref=e282] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/derbigum-carrojoint-blanc-6kg-00193733
+                - article [ref=e283]:
+                  - generic [ref=e284]:
+                    - img "Derbigum - Carrojoint Blanc 6kg" [ref=e285]
+                    - generic [ref=e287]: Derbigum
+                  - heading "Derbigum - Carrojoint Blanc 6kg" [level=4] [ref=e289]
+              - link "Voir le produit Derbigum - Carrojoint Gris Moyen 6kg" [ref=e291] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/derbigum-carrojoint-gris-moyen-6kg-00195041
+                - article [ref=e292]:
+                  - generic [ref=e293]:
+                    - img "Derbigum - Carrojoint Gris Moyen 6kg" [ref=e294]
+                    - generic [ref=e296]: Derbigum
+                  - heading "Derbigum - Carrojoint Gris Moyen 6kg" [level=4] [ref=e298]
+              - link "Voir le produit Derbigum - Carrojoint Noir 6kg" [ref=e300] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/derbigum-carrojoint-noir-6kg-00199261
+                - article [ref=e301]:
+                  - generic [ref=e302]:
+                    - img "Derbigum - Carrojoint Noir 6kg" [ref=e303]
+                    - generic [ref=e305]: Derbigum
+                  - heading "Derbigum - Carrojoint Noir 6kg" [level=4] [ref=e307]
+              - link "Voir le produit Deutsch Color - Acrylex 20kg" [ref=e309] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-acrylex-20kg-00233132
+                - article [ref=e310]:
+                  - generic [ref=e311]:
+                    - img "Deutsch Color - Acrylex 20kg" [ref=e312]
+                    - generic [ref=e314]: Deutsch Color
+                  - heading "Deutsch Color - Acrylex 20kg" [level=4] [ref=e316]
+              - link "Voir le produit Deutsch Color - Acrylex 5kg" [ref=e318] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-acrylex-5kg-00219648
+                - article [ref=e319]:
+                  - generic [ref=e320]:
+                    - img "Deutsch Color - Acrylex 5kg" [ref=e321]
+                    - generic [ref=e323]: Deutsch Color
+                  - heading "Deutsch Color - Acrylex 5kg" [level=4] [ref=e325]
+              - link "Voir le produit Deutsch Color - Carrojoint Almond Ivoir (44) 3kg" [ref=e327] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-almond-ivoir-44-3kg-00221566
+                - article [ref=e328]:
+                  - generic [ref=e329]:
+                    - img "Deutsch Color - Carrojoint Almond Ivoir (44) 3kg" [ref=e330]
+                    - generic [ref=e332]: Deutsch Color
+                  - heading "Deutsch Color - Carrojoint Almond Ivoir (44) 3kg" [level=4] [ref=e334]
+              - link "Voir le produit Deutsch Color - Carrojoint Antracite 37 Intense 5kg" [ref=e336] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-antracite-37-intense-5kg-00242332
+                - article [ref=e337]:
+                  - generic [ref=e338]:
+                    - img "Deutsch Color - Carrojoint Antracite 37 Intense 5kg" [ref=e339]
+                    - generic [ref=e341]: Deutsch Color
+                  - heading "Deutsch Color - Carrojoint Antracite 37 Intense 5kg" [level=4] [ref=e343]
+              - link "Voir le produit Deutsch Color - Carrojoint Beige (18) 6kg" [ref=e345] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-beige-18-6kg-00202503
+                - article [ref=e346]:
+                  - generic [ref=e347]:
+                    - img "Deutsch Color - Carrojoint Beige (18) 6kg" [ref=e348]
+                    - generic [ref=e350]: Deutsch Color
+                  - heading "Deutsch Color - Carrojoint Beige (18) 6kg" [level=4] [ref=e352]
+              - link "Voir le produit Deutsch Color - Carrojoint Beige 18 Intense(Etanche) 5kg" [ref=e354] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-beige-18-intense-etanche-5kg-00224796
+                - article [ref=e355]:
+                  - generic [ref=e356]:
+                    - img "Deutsch Color - Carrojoint Beige 18 Intense(Etanche) 5kg" [ref=e357]
+                    - generic [ref=e359]: Deutsch Color
+                  - heading "Deutsch Color - Carrojoint Beige 18 Intense(Etanche) 5kg" [level=4] [ref=e361]
+              - link "Voir le produit Deutsch Color - Carrojoint Beige 18 Intense(Etanche) 5kg" [ref=e363] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-beige-18-intense-etanche-5kg-00249058
+                - article [ref=e364]:
+                  - generic [ref=e365]:
+                    - img "Deutsch Color - Carrojoint Beige 18 Intense(Etanche) 5kg" [ref=e366]
+                    - generic [ref=e368]: Deutsch Color
+                  - heading "Deutsch Color - Carrojoint Beige 18 Intense(Etanche) 5kg" [level=4] [ref=e370]
+              - link "Voir le produit Deutsch Color - Carrojoint Beige (32) / (18) 3kg" [ref=e372] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-beige-32-18-3kg-00201551
+                - article [ref=e373]:
+                  - generic [ref=e374]:
+                    - img "Deutsch Color - Carrojoint Beige (32) / (18) 3kg" [ref=e375]
+                    - generic [ref=e377]: Deutsch Color
+                  - heading "Deutsch Color - Carrojoint Beige (32) / (18) 3kg" [level=4] [ref=e379]
+              - link "Voir le produit Deutsch Color - Carrojoint Black 02 Intense(Etanche) 5kg" [ref=e381] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-black-02-intense-étanche-5kg-00246699
+                - article [ref=e382]:
+                  - generic [ref=e383]:
+                    - img "Deutsch Color - Carrojoint Black 02 Intense(Etanche) 5kg" [ref=e384]
+                    - generic [ref=e386]: Deutsch Color
+                  - heading "Deutsch Color - Carrojoint Black 02 Intense(Etanche) 5kg" [level=4] [ref=e388]
+              - link "Voir le produit Deutsch Color - Carrojoint Blanc (01) 12kg" [ref=e390] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-blanc-01-12kg-00209977
+                - article [ref=e391]:
+                  - generic [ref=e392]:
+                    - img "Deutsch Color - Carrojoint Blanc (01) 12kg" [ref=e393]
+                    - generic [ref=e395]: Deutsch Color
+                  - heading "Deutsch Color - Carrojoint Blanc (01) 12kg" [level=4] [ref=e397]
+              - link "Voir le produit Deutsch Color - Carrojoint Blanc (01) 3kg" [ref=e399] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-blanc-01-3kg-00205528
+                - article [ref=e400]:
+                  - generic [ref=e401]:
+                    - img "Deutsch Color - Carrojoint Blanc (01) 3kg" [ref=e402]
+                    - generic [ref=e404]: Deutsch Color
+                  - heading "Deutsch Color - Carrojoint Blanc (01) 3kg" [level=4] [ref=e406]
+              - link "Voir le produit Deutsch Color - Carrojoint Blanc (01) 6kg" [ref=e408] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-blanc-01-6kg-00202510
+                - article [ref=e409]:
+                  - generic [ref=e410]:
+                    - img "Deutsch Color - Carrojoint Blanc (01) 6kg" [ref=e411]
+                    - generic [ref=e413]: Deutsch Color
+                  - heading "Deutsch Color - Carrojoint Blanc (01) 6kg" [level=4] [ref=e415]
+              - link "Voir le produit Deutsch Color - Carrojoint Blanc Intense(Etanche) 5kg" [ref=e417] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-blanc-intense-étanche-5kg-00221993
+                - article [ref=e418]:
+                  - generic [ref=e419]:
+                    - img "Deutsch Color - Carrojoint Blanc Intense(Etanche) 5kg" [ref=e420]
+                    - generic [ref=e422]: Deutsch Color
+                  - heading "Deutsch Color - Carrojoint Blanc Intense(Etanche) 5kg" [level=4] [ref=e424]
+              - link "Voir le produit Deutsch Color - Carrojoint Brown (08) 6kg" [ref=e426] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-brown-08-6kg-00212502
+                - article [ref=e427]:
+                  - generic [ref=e428]:
+                    - img "Deutsch Color - Carrojoint Brown (08) 6kg" [ref=e429]
+                    - generic [ref=e431]: Deutsch Color
+                  - heading "Deutsch Color - Carrojoint Brown (08) 6kg" [level=4] [ref=e433]
+      - generic [ref=e436]:
+        - img [ref=e437]
+        - text: Chargement automatique
+  - contentinfo [ref=e439]:
+    - generic [ref=e440]:
+      - generic [ref=e441]:
+        - generic [ref=e442]:
+          - link "Cobam Group - Accueil" [ref=e443] [cursor=pointer]:
+            - /url: /
+            - img "COBAM GROUP" [ref=e444]
+          - paragraph [ref=e446]: Depuis 1994
+          - paragraph [ref=e447]: Matériaux de construction haut de gamme alliant innovation, qualité et durabilité.
+          - generic [ref=e448]:
+            - link "Facebook" [ref=e449] [cursor=pointer]:
+              - /url: https://www.facebook.com/cobamgrp
+              - img [ref=e450]
+            - link "Instagram" [ref=e452] [cursor=pointer]:
+              - /url: https://www.instagram.com/cobamgroup/
+              - img [ref=e453]
+            - link "Youtube" [ref=e455] [cursor=pointer]:
+              - /url: https://www.youtube.com/@cobamgroup
+              - img [ref=e456]
+            - link "LinkedIn" [ref=e458] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/cobam-group/
+              - img [ref=e459]
+            - link "TikTok" [ref=e461] [cursor=pointer]:
+              - /url: https://www.tiktok.com/@cobam.group
+              - img [ref=e462]
+            - link "Pinterest" [ref=e464] [cursor=pointer]:
+              - /url: https://www.pinterest.com/cobamgroup/
+              - img [ref=e465]
+        - generic [ref=e467]:
+          - heading "Catalogue" [level=4] [ref=e468]
+          - list [ref=e469]:
+            - listitem [ref=e470]:
+              - link "Revêtements de sols et murs" [ref=e471] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs
+            - listitem [ref=e472]:
+              - link "Matériaux de construction" [ref=e473] [cursor=pointer]:
+                - /url: /produits/materiaux-de-construction
+            - listitem [ref=e474]:
+              - link "Isolation et étanchéité" [ref=e475] [cursor=pointer]:
+                - /url: /produits/isolation-et-etancheite
+            - listitem [ref=e476]:
+              - link "Salle de bain et cuisine" [ref=e477] [cursor=pointer]:
+                - /url: /produits/salle-de-bain-et-cuisine
+            - listitem [ref=e478]:
+              - link "Peintures et décoration" [ref=e479] [cursor=pointer]:
+                - /url: /produits/peintures-et-decoration
+            - listitem [ref=e480]:
+              - link "Piscine" [ref=e481] [cursor=pointer]:
+                - /url: /produits/piscine
+            - listitem [ref=e482]:
+              - link "Portes et menuiserie" [ref=e483] [cursor=pointer]:
+                - /url: /produits/portes-et-menuiserie
+        - generic [ref=e484]:
+          - heading "Decouvrir" [level=4] [ref=e485]
+          - list [ref=e486]:
+            - listitem [ref=e487]:
+              - link "À propos de nous" [ref=e488] [cursor=pointer]:
+                - /url: /a-propos
+            - listitem [ref=e489]:
+              - link "Nos agences" [ref=e490] [cursor=pointer]:
+                - /url: /#nos-agences
+            - listitem [ref=e491]:
+              - link "Partenaires" [ref=e492] [cursor=pointer]:
+                - /url: /partenaires
+            - listitem [ref=e493]:
+              - link "Références" [ref=e494] [cursor=pointer]:
+                - /url: /references
+            - listitem [ref=e495]:
+              - link "Actualités" [ref=e496] [cursor=pointer]:
+                - /url: /actualites
+            - listitem [ref=e497]:
+              - link "Annuaire" [ref=e498] [cursor=pointer]:
+                - /url: /annuaire
+        - generic [ref=e499]:
+          - heading "Contact" [level=4] [ref=e500]
+          - list [ref=e501]:
+            - listitem [ref=e502]:
+              - img [ref=e503]
+              - generic [ref=e506]: Siège social, Houmt Souk, Djerba, Tunisie
+            - listitem [ref=e507]:
+              - 'link "Tel : +216 75731731" [ref=e508] [cursor=pointer]':
+                - /url: tel:+21675731731
+                - img [ref=e509]
+                - text: "Tel : +216 75731731"
+            - listitem [ref=e511]:
+              - link "contact@cobamgroup.com" [ref=e512] [cursor=pointer]:
+                - /url: mailto:contact@cobamgroup.com
+                - img [ref=e513]
+                - text: contact@cobamgroup.com
+      - generic [ref=e516]:
+        - paragraph [ref=e517]: © 2026 Cobam Group. Tous droits réservés.
+        - generic [ref=e518]:
+          - link "Politique de confidentialité" [ref=e519] [cursor=pointer]:
+            - /url: /politique-de-confidentialite
+          - link "Mentions légales" [ref=e520] [cursor=pointer]:
+            - /url: /mentions-legales
+          - link "Conditions générales" [ref=e521] [cursor=pointer]:
+            - /url: /conditions-generales
+  - button "Ouvrir WhatsApp" [ref=e523] [cursor=pointer]:
+    - img [ref=e525]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e532] [cursor=pointer]:
+    - img [ref=e533]
+  - alert [ref=e536]

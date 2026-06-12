@@ -1,0 +1,519 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e5]
+      - generic [ref=e7]: "Service Client :"
+      - link "+216 75731731" [ref=e8] [cursor=pointer]:
+        - /url: tel:+21675731731
+    - generic [ref=e9]:
+      - link "Annuaire" [ref=e10] [cursor=pointer]:
+        - /url: /annuaire
+        - img [ref=e11]
+        - text: Annuaire
+      - link "Espace Team" [ref=e15] [cursor=pointer]:
+        - /url: /login/staff
+        - img [ref=e16]
+        - text: Espace Team
+  - banner [ref=e20]:
+    - generic [ref=e21]:
+      - link "COBAM GROUP" [ref=e22] [cursor=pointer]:
+        - /url: /
+        - img "COBAM GROUP" [ref=e23]
+      - navigation [ref=e24]:
+        - link "À PROPOS" [ref=e25] [cursor=pointer]:
+          - /url: /a-propos
+        - button "PRODUITS" [ref=e27] [cursor=pointer]:
+          - generic: PRODUITS
+          - img
+        - button "MARQUES" [ref=e29] [cursor=pointer]:
+          - text: MARQUES
+          - img [ref=e30]
+        - link "ACTUALITÉS" [ref=e32] [cursor=pointer]:
+          - /url: /actualites
+        - link "CONTACT" [ref=e33] [cursor=pointer]:
+          - /url: /contact
+      - button "Rechercher" [ref=e36] [cursor=pointer]:
+        - img [ref=e37]
+  - main [ref=e40]:
+    - article [ref=e43]:
+      - generic [ref=e44]:
+        - complementary [ref=e45]:
+          - button "Agrandir Mitigeur de douche encastré Eurosmart chrome Grohe" [ref=e47]:
+            - img "Mitigeur de douche encastré Eurosmart chrome Grohe - vue 1" [ref=e48]
+            - img [ref=e50]
+          - generic [ref=e55]:
+            - button "Afficher le media 1" [pressed] [ref=e56] [cursor=pointer]:
+              - img "Mitigeur de douche encastré Eurosmart chrome Grohe - vue 1" [ref=e57]
+            - button "Afficher le media 2" [ref=e58] [cursor=pointer]:
+              - img "Mitigeur de douche encastré Eurosmart chrome Grohe - vue 2" [ref=e59]
+            - button "Afficher le media 3" [ref=e60] [cursor=pointer]:
+              - img "Mitigeur de douche encastré Eurosmart chrome Grohe - vue 3" [ref=e61]
+        - generic [ref=e63]:
+          - navigation "Catalogue Salle de bain et cuisine Robinetterie" [ref=e65]:
+            - list [ref=e66]:
+              - listitem [ref=e67]:
+                - link "Produits" [ref=e68] [cursor=pointer]:
+                  - /url: /produits
+              - listitem [ref=e69]:
+                - img [ref=e70]
+              - listitem [ref=e72]:
+                - link "Salle de bain et cuisine" [ref=e73] [cursor=pointer]:
+                  - /url: /produits/salle-de-bain-et-cuisine
+              - listitem [ref=e74]:
+                - img [ref=e75]
+              - listitem [ref=e77]:
+                - link "Robinetterie" [ref=e78] [cursor=pointer]:
+                  - /url: /produits/salle-de-bain-et-cuisine/robinetterie
+          - generic [ref=e79]:
+            - generic [ref=e80]:
+              - generic [ref=e81]: Marque
+              - generic [ref=e82]: Grohe
+            - generic [ref=e83]:
+              - generic [ref=e84]: SKU
+              - generic [ref=e85]: "00219266"
+              - button "Copier" [ref=e86] [cursor=pointer]:
+                - img [ref=e88]
+          - heading "Mitigeur de douche encastré Eurosmart chrome Grohe" [level=1] [ref=e91]
+          - generic [ref=e92]:
+            - button "Demander un devis" [ref=e93] [cursor=pointer]:
+              - generic [ref=e94]: Demander un devis
+            - link "Contacter un conseiller" [ref=e95] [cursor=pointer]:
+              - /url: /contact
+              - generic [ref=e96]: Contacter un conseiller
+              - img [ref=e98]
+          - generic [ref=e104]:
+            - paragraph [ref=e105]: Ce mitigeur de douche Eurosmart offre une robinetterie claire et fiable pour équiper une salle de bain avec une finition chrome.
+            - paragraph [ref=e106]: La pose encastrée permet une intégration discrète dans le mur et demande de vérifier les réservations, les raccordements et l'accès de maintenance avant installation.
+            - paragraph [ref=e107]: Les documents joints permettent de contrôler les dimensions, les notices de pose et les informations techniques avant validation du projet.
+      - generic [ref=e108]:
+        - heading "Caractéristiques techniques" [level=2] [ref=e109]
+        - generic [ref=e111]:
+          - generic [ref=e112]:
+            - term [ref=e113]: Type de produit
+            - definition [ref=e114]: Robinetterie
+          - generic [ref=e115]:
+            - term [ref=e116]: Finition
+            - definition [ref=e117]:
+              - generic [ref=e119]:
+                - img [ref=e121]
+                - generic [ref=e122]: Chrome
+          - generic [ref=e123]:
+            - term [ref=e124]: Gamme
+            - definition [ref=e125]: Eurosmart
+          - generic [ref=e126]:
+            - term [ref=e127]: Thermostatique
+            - definition [ref=e128]:
+              - generic [ref=e129]:
+                - img [ref=e130]
+                - text: Non
+          - generic [ref=e134]:
+            - term [ref=e135]: Inverseur
+            - definition [ref=e136]:
+              - generic [ref=e137]:
+                - img [ref=e138]
+                - text: Non
+          - generic [ref=e142]:
+            - term [ref=e143]: Pose
+            - definition [ref=e144]: À encastrer
+          - generic [ref=e145]:
+            - term [ref=e146]: Commande robinet
+            - definition [ref=e147]: Mitigeur mono-commande
+          - generic [ref=e148]:
+            - term [ref=e149]: Kit douche inclus
+            - definition [ref=e150]:
+              - generic [ref=e151]:
+                - img [ref=e152]
+                - text: Non
+          - generic [ref=e156]:
+            - term [ref=e157]: Usage
+            - definition [ref=e158]: Douche
+      - generic [ref=e159]:
+        - heading "Téléchargements" [level=2] [ref=e160]
+        - list [ref=e162]:
+          - listitem [ref=e163]:
+            - link "Télécharger Fiche technique" [ref=e164] [cursor=pointer]:
+              - /url: /api/media/1268/file
+              - img [ref=e166]
+              - generic [ref=e169]:
+                - heading "Fiche technique" [level=3] [ref=e170]
+                - generic [ref=e171]:
+                  - generic [ref=e172]: PDF
+                  - generic [ref=e173]: 424,6 Ko
+              - generic [ref=e174]:
+                - generic [ref=e175]: Télécharger
+                - img [ref=e176]
+          - listitem [ref=e178]:
+            - link "Télécharger Notice d'installation [1]" [ref=e179] [cursor=pointer]:
+              - /url: /api/media/1269/file
+              - img [ref=e181]
+              - generic [ref=e184]:
+                - heading "Notice d'installation [1]" [level=3] [ref=e185]
+                - generic [ref=e186]:
+                  - generic [ref=e187]: PDF
+                  - generic [ref=e188]: 1,9 Mo
+              - generic [ref=e189]:
+                - generic [ref=e190]: Télécharger
+                - img [ref=e191]
+          - listitem [ref=e193]:
+            - link "Télécharger Notice d'installation [2]" [ref=e194] [cursor=pointer]:
+              - /url: /api/media/1270/file
+              - img [ref=e196]
+              - generic [ref=e199]:
+                - heading "Notice d'installation [2]" [level=3] [ref=e200]
+                - generic [ref=e201]:
+                  - generic [ref=e202]: PDF
+                  - generic [ref=e203]: 1,1 Mo
+              - generic [ref=e204]:
+                - generic [ref=e205]: Télécharger
+                - img [ref=e206]
+          - listitem [ref=e208]:
+            - link "Télécharger Notice d'installation [3]" [ref=e209] [cursor=pointer]:
+              - /url: /api/media/1271/file
+              - img [ref=e211]
+              - generic [ref=e214]:
+                - heading "Notice d'installation [3]" [level=3] [ref=e215]
+                - generic [ref=e216]:
+                  - generic [ref=e217]: PDF
+                  - generic [ref=e218]: 1,4 Mo
+              - generic [ref=e219]:
+                - generic [ref=e220]: Télécharger
+                - img [ref=e221]
+      - generic [ref=e223]:
+        - generic [ref=e225]:
+          - paragraph [ref=e226]: Experimental
+          - heading "Produits proches" [level=2] [ref=e227]
+        - generic [ref=e228]:
+          - button "Produits proches precedents":
+            - generic:
+              - img
+          - button "Produits proches suivants" [ref=e229] [cursor=pointer]:
+            - img [ref=e231]
+          - generic [ref=e234]:
+            - link "Voir le produit Mitigeur bain-douche encastré Eurocube 24062000 chrome Grohe" [ref=e237] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/grohe-mitigeur-bain-douche-encastre-eurocube-24062000-00219204
+              - article [ref=e238]:
+                - generic [ref=e239]:
+                  - img "Mitigeur bain-douche encastré Eurocube 24062000 chrome Grohe - vue 1" [ref=e240]
+                  - generic [ref=e242]: Grohe
+                - heading "Mitigeur bain-douche encastré Eurocube 24062000 chrome Grohe" [level=4] [ref=e244]
+            - link "Voir le produit Mitigeur de douche mural Essence 33636001 chrome Grohe" [ref=e248] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/grohe-mitigeur-douche-mural-essence-33636001-00219235
+              - article [ref=e249]:
+                - generic [ref=e250]:
+                  - img "Mitigeur de douche mural Essence 33636001 chrome Grohe - vue 1" [ref=e251]
+                  - generic [ref=e253]: Grohe
+                - heading "Mitigeur de douche mural Essence 33636001 chrome Grohe" [level=4] [ref=e255]
+            - link "Voir le produit Mitigeur lavabo Eurosmart NV2 chromé Grohe" [ref=e259] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/mitigeur-lavabo-eurosmart-nv2-grohe-00219143
+              - article [ref=e260]:
+                - generic [ref=e261]:
+                  - img "Mitigeur lavabo Eurosmart NV2 chromé Grohe - visuel 1" [ref=e262]
+                  - generic [ref=e264]: Grohe
+                - heading "Mitigeur lavabo Eurosmart NV2 chromé Grohe" [level=4] [ref=e266]
+            - link "Voir le produit Mitigeur évier Minta 32917000 chrome Grohe" [ref=e270] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/grohe-mitigeur-evier-minta-32917000-00219174
+              - article [ref=e271]:
+                - generic [ref=e272]:
+                  - img "Mitigeur évier Minta 32917000 chrome Grohe - vue 1" [ref=e273]
+                  - generic [ref=e275]: Grohe
+                - heading "Mitigeur évier Minta 32917000 chrome Grohe" [level=4] [ref=e277]
+            - link "Voir le produit Mitigeur lavabo Essence 23462001 chromé Grohe" [ref=e281] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/mitigeur-lavabo-essence-23462001-grohe-00219150
+              - article [ref=e282]:
+                - generic [ref=e283]:
+                  - img "Mitigeur lavabo Essence 23462001 chromé Grohe - visuel 1" [ref=e284]
+                  - generic [ref=e286]: Grohe
+                - heading "Mitigeur lavabo Essence 23462001 chromé Grohe" [level=4] [ref=e288]
+            - link "Voir le produit Mitigeur lavabo Eurocube 23127000 chromé Grohe" [ref=e292] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/mitigeur-lavabo-eurocube-23127000-grohe-00219167
+              - article [ref=e293]:
+                - generic [ref=e294]:
+                  - img "Mitigeur lavabo Eurocube 23127000 chromé Grohe - visuel 1" [ref=e295]
+                  - generic [ref=e297]: Grohe
+                - heading "Mitigeur lavabo Eurocube 23127000 chromé Grohe" [level=4] [ref=e299]
+            - link "Voir le produit Mitigeur de douche encastré avec inverseur Lyric 38065 chrome Jaquar" [ref=e303] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/jaquar-mitigeur-douche-encastre-lyric-38065-00206921
+              - article [ref=e304]:
+                - generic [ref=e305]:
+                  - img "Mitigeur de douche encastré avec inverseur Lyric 38065 chrome Jaquar - vue 1" [ref=e306]
+                  - generic [ref=e308]: Jaquar
+                - heading "Mitigeur de douche encastré avec inverseur Lyric 38065 chrome Jaquar" [level=4] [ref=e310]
+            - link "Voir le produit Mitigeur de douche 388700575 chrome Kludi" [ref=e314] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/kludi-mitigeur-douche-388700575-00212724
+              - article [ref=e315]:
+                - generic [ref=e316]:
+                  - img "Mitigeur de douche 388700575 chrome Kludi - vue 1" [ref=e317]
+                  - generic [ref=e319]: Kludi
+                - heading "Mitigeur de douche 388700575 chrome Kludi" [level=4] [ref=e321]
+            - link "Voir le produit Mitigeur de douche Kapadokya 5010822 chrome Venisia" [ref=e325] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/venisia-mitigeur-douche-kapadokya-5010822-00214896
+              - article [ref=e326]:
+                - generic [ref=e327]:
+                  - img "Mitigeur de douche Kapadokya 5010822 chrome Venisia - vue 1" [ref=e328]
+                  - generic [ref=e330]: Venisia
+                - heading "Mitigeur de douche Kapadokya 5010822 chrome Venisia" [level=4] [ref=e332]
+            - link "Voir le produit Mitigeur lavabo Eurostyle chromé Grohe" [ref=e336] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/mitigeur-lavabo-eurostyle-chrome-grohe-ancien-stock-00002495
+              - article [ref=e337]:
+                - generic [ref=e338]:
+                  - img "Mitigeur lavabo Eurostyle chromé Grohe - visuel 1" [ref=e339]
+                  - generic [ref=e341]: Grohe
+                - heading "Mitigeur lavabo Eurostyle chromé Grohe" [level=4] [ref=e343]
+            - link "Voir le produit Mitigeur de douche encastré avec inverseur Douz chrome Sopal" [ref=e347] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/sopal-mitigeur-douche-encastre-avec-inverseur-douz-sop19mitdeinvdouz
+              - article [ref=e348]:
+                - generic [ref=e349]:
+                  - img "Mitigeur de douche encastré avec inverseur Douz chrome Sopal - vue 1" [ref=e350]
+                  - generic [ref=e352]: Sopal
+                - heading "Mitigeur de douche encastré avec inverseur Douz chrome Sopal" [level=4] [ref=e354]
+            - link "Voir le produit Mitigeur de douche encastré Bizerte chrome Sopal" [ref=e358] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/sopal-mitigeur-douche-encastre-bizerte-00006502
+              - article [ref=e359]:
+                - generic [ref=e360]:
+                  - img "Mitigeur de douche encastré Bizerte chrome Sopal - vue 1" [ref=e361]
+                  - generic [ref=e363]: Sopal
+                - heading "Mitigeur de douche encastré Bizerte chrome Sopal" [level=4] [ref=e365]
+            - link "Voir le produit Mitigeur de douche encastré Zarzis 06BMA04-1 chrome Sopal" [ref=e369] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/sopal-mitigeur-douche-encastre-zarzis-06bma04-1-nouveau-00183703
+              - article [ref=e370]:
+                - generic [ref=e371]:
+                  - img "Mitigeur de douche encastré Zarzis 06BMA04-1 chrome Sopal - vue 1" [ref=e372]
+                  - generic [ref=e374]: Sopal
+                - heading "Mitigeur de douche encastré Zarzis 06BMA04-1 chrome Sopal" [level=4] [ref=e376]
+            - link "Voir le produit Mitigeur de douche encastré avec inverseur ALI-CHR-85065MK chrome Jaquar" [ref=e380] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/jaquar-mitigeur-douche-encastre-ali-chr-85065mk-00206938
+              - article [ref=e381]:
+                - generic [ref=e382]:
+                  - img "Mitigeur de douche encastré avec inverseur ALI-CHR-85065MK chrome Jaquar - vue 1" [ref=e383]
+                  - generic [ref=e385]: Jaquar
+                - heading "Mitigeur de douche encastré avec inverseur ALI-CHR-85065MK chrome Jaquar" [level=4] [ref=e387]
+            - link "Voir le produit Mitigeur de douche encastré avec inverseur Ornamix ORP-CHR-10065MKPM chrome Jaquar" [ref=e391] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/jaquar-mitigeur-douche-encastre-ornamix-orp-chr-10065mkpm-00252485
+              - article [ref=e392]:
+                - generic [ref=e393]:
+                  - img "Mitigeur de douche encastré avec inverseur Ornamix ORP-CHR-10065MKPM chrome Jaquar - vue 1" [ref=e394]
+                  - generic [ref=e396]: Jaquar
+                - heading "Mitigeur de douche encastré avec inverseur Ornamix ORP-CHR-10065MKPM chrome Jaquar" [level=4] [ref=e398]
+            - link "Voir le produit Mitigeur bain-douche encastré Zarzis 06BJA04-1 chrome Sopal" [ref=e402] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/sopal-mitigeur-bain-douche-encastre-zarzis-06bja04-1-00006458
+              - article [ref=e403]:
+                - generic [ref=e404]:
+                  - img "Mitigeur bain-douche encastré Zarzis 06BJA04-1 chrome Sopal - vue 1" [ref=e405]
+                  - generic [ref=e407]: Sopal
+                - heading "Mitigeur bain-douche encastré Zarzis 06BJA04-1 chrome Sopal" [level=4] [ref=e409]
+            - link "Voir le produit Mitigeur de douche Bizerte chrome Sopal" [ref=e413] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/sopal-mitigeur-douche-bizerte-sop19mitdbiz
+              - article [ref=e414]:
+                - generic [ref=e415]:
+                  - img "Mitigeur de douche Bizerte chrome Sopal - vue 1" [ref=e416]
+                  - generic [ref=e418]: Sopal
+                - heading "Mitigeur de douche Bizerte chrome Sopal" [level=4] [ref=e420]
+            - link "Voir le produit Mitigeur de douche Djerba chrome Sopal" [ref=e424] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/sopal-mitigeur-douche-djerba-sop19midjer
+              - article [ref=e425]:
+                - generic [ref=e426]:
+                  - img "Mitigeur de douche Djerba chrome Sopal - vue 1" [ref=e427]
+                  - generic [ref=e429]: Sopal
+                - heading "Mitigeur de douche Djerba chrome Sopal" [level=4] [ref=e431]
+            - link "Voir le produit Mitigeur de douche Douz chrome Sopal" [ref=e435] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/sopal-mitigeur-douche-douz-00002473
+              - article [ref=e436]:
+                - generic [ref=e437]:
+                  - img "Mitigeur de douche Douz chrome Sopal - vue 1" [ref=e438]
+                  - generic [ref=e440]: Sopal
+                - heading "Mitigeur de douche Douz chrome Sopal" [level=4] [ref=e442]
+            - link "Voir le produit Mitigeur de douche encastré avec inverseur Zarzis 06BLA04-1 chrome Sopal" [ref=e446] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/sopal-mitigeur-douche-encastre-zarzis-06bla04-1-00006506
+              - article [ref=e447]:
+                - generic [ref=e448]:
+                  - img "Mitigeur de douche encastré avec inverseur Zarzis 06BLA04-1 chrome Sopal - vue 1" [ref=e449]
+                  - generic [ref=e451]: Sopal
+                - heading "Mitigeur de douche encastré avec inverseur Zarzis 06BLA04-1 chrome Sopal" [level=4] [ref=e453]
+            - link "Voir le produit Mitigeur de douche Kerkennah chrome Sopal" [ref=e457] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/sopal-mitigeur-douche-kerkennah-00002475
+              - article [ref=e458]:
+                - generic [ref=e459]:
+                  - img "Mitigeur de douche Kerkennah chrome Sopal - vue 1" [ref=e460]
+                  - generic [ref=e462]: Sopal
+                - heading "Mitigeur de douche Kerkennah chrome Sopal" [level=4] [ref=e464]
+            - link "Voir le produit Mitigeur de douche Nabeul chrome Sopal" [ref=e468] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/sopal-mitigeur-douche-nabeul-00192736
+              - article [ref=e469]:
+                - generic [ref=e470]:
+                  - img "Mitigeur de douche Nabeul chrome Sopal - vue 1" [ref=e471]
+                  - generic [ref=e473]: Sopal
+                - heading "Mitigeur de douche Nabeul chrome Sopal" [level=4] [ref=e475]
+            - link "Voir le produit Mitigeur de douche Sfax chrome Sopal" [ref=e479] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/sopal-mitigeur-douche-sfax-sop19mitdsfy
+              - article [ref=e480]:
+                - generic [ref=e481]:
+                  - img "Mitigeur de douche Sfax chrome Sopal - vue 1" [ref=e482]
+                  - generic [ref=e484]: Sopal
+                - heading "Mitigeur de douche Sfax chrome Sopal" [level=4] [ref=e486]
+            - link "Voir le produit Mitigeur de douche Sousse chrome Sopal" [ref=e490] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/sopal-mitigeur-douche-sousse-00002477
+              - article [ref=e491]:
+                - generic [ref=e492]:
+                  - img "Mitigeur de douche Sousse chrome Sopal - vue 1" [ref=e493]
+                  - generic [ref=e495]: Sopal
+                - heading "Mitigeur de douche Sousse chrome Sopal" [level=4] [ref=e497]
+            - link "Voir le produit Mitigeur de douche Metris 31680000 chrome Hansgrohe" [ref=e501] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/hansgrohe-mitigeur-douche-metris-31680000-chrome-00006512
+              - article [ref=e502]:
+                - generic [ref=e503]:
+                  - img "Mitigeur de douche Metris 31680000 chrome Hansgrohe - vue 1" [ref=e504]
+                  - generic [ref=e506]: Hansgrohe
+                - heading "Mitigeur de douche Metris 31680000 chrome Hansgrohe" [level=4] [ref=e508]
+            - link "Voir le produit Mitigeur de douche Metris S 31660000 chrome Hansgrohe" [ref=e512] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/hansgrohe-mitigeur-douche-metris-s-31660000-chrome-00006513
+              - article [ref=e513]:
+                - generic [ref=e514]:
+                  - img "Mitigeur de douche Metris S 31660000 chrome Hansgrohe - vue 1" [ref=e515]
+                  - generic [ref=e517]: Hansgrohe
+                - heading "Mitigeur de douche Metris S 31660000 chrome Hansgrohe" [level=4] [ref=e519]
+            - link "Voir le produit Mitigeur de douche Talis E2 chrome Hansgrohe" [ref=e523] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/hansgrohe-mitigeur-douche-talis-e2-chrome-00006515
+              - article [ref=e524]:
+                - generic [ref=e525]:
+                  - img "Mitigeur de douche Talis E2 chrome Hansgrohe - vue 1" [ref=e526]
+                  - generic [ref=e528]: Hansgrohe
+                - heading "Mitigeur de douche Talis E2 chrome Hansgrohe" [level=4] [ref=e530]
+            - link "Voir le produit Mitigeur de douche Lyric 38149 chrome Jaquar" [ref=e534] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/jaquar-mitigeur-douche-lyric-38149-00206846
+              - article [ref=e535]:
+                - generic [ref=e536]:
+                  - img "Mitigeur de douche Lyric 38149 chrome Jaquar - vue 1" [ref=e537]
+                  - generic [ref=e539]: Jaquar
+                - heading "Mitigeur de douche Lyric 38149 chrome Jaquar" [level=4] [ref=e541]
+            - link "Voir le produit Mitigeur de douche 2 fonctions ARI-CHR-39145 chrome Jaquar" [ref=e545] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/jaquar-mitigeur-douche-2-fonctions-ari-chr-39145-00232708
+              - article [ref=e546]:
+                - generic [ref=e547]:
+                  - img "Mitigeur de douche 2 fonctions ARI-CHR-39145 chrome Jaquar - vue 1" [ref=e548]
+                  - generic [ref=e550]: Jaquar
+                - heading "Mitigeur de douche 2 fonctions ARI-CHR-39145 chrome Jaquar" [level=4] [ref=e552]
+            - link "Voir le produit Mitigeur de douche Zarzis bras latéral 0641A04 chrome Sopal" [ref=e556] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/sopal-mitigeur-douche-zarzis-bras-lateral-0641a04-00002478
+              - article [ref=e557]:
+                - generic [ref=e558]:
+                  - img "Mitigeur de douche Zarzis bras latéral 0641A04 chrome Sopal - vue 1" [ref=e559]
+                  - generic [ref=e561]: Sopal
+                - heading "Mitigeur de douche Zarzis bras latéral 0641A04 chrome Sopal" [level=4] [ref=e563]
+            - link "Voir le produit Mitigeur de douche mural apparent 21826701 AL1020 chrome TRES" [ref=e567] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/tres-mitigeur-douche-mural-apparent-21826701-al1020-00221832
+              - article [ref=e568]:
+                - generic [ref=e569]:
+                  - img "Mitigeur de douche mural apparent 21826701 AL1020 chrome TRES - vue 1" [ref=e570]
+                  - generic [ref=e572]: TRES
+                - heading "Mitigeur de douche mural apparent 21826701 AL1020 chrome TRES" [level=4] [ref=e574]
+            - link "Voir le produit Mitigeur bain-douche Alpin 5011401 chrome Venisia" [ref=e578] [cursor=pointer]:
+              - /url: /produits/salle-de-bain-et-cuisine/robinetterie/venisia-mitigeur-bain-douche-alpin-5011401-00214803
+              - article [ref=e579]:
+                - generic [ref=e580]:
+                  - img "Mitigeur bain-douche Alpin 5011401 chrome Venisia - vue 1" [ref=e581]
+                  - generic [ref=e583]: Venisia
+                - heading "Mitigeur bain-douche Alpin 5011401 chrome Venisia" [level=4] [ref=e585]
+  - contentinfo [ref=e587]:
+    - generic [ref=e588]:
+      - generic [ref=e589]:
+        - generic [ref=e590]:
+          - link "Cobam Group - Accueil" [ref=e591] [cursor=pointer]:
+            - /url: /
+            - img "COBAM GROUP" [ref=e592]
+          - paragraph [ref=e594]: Depuis 1994
+          - paragraph [ref=e595]: Matériaux de construction haut de gamme alliant innovation, qualité et durabilité.
+          - generic [ref=e596]:
+            - link "Facebook" [ref=e597] [cursor=pointer]:
+              - /url: https://www.facebook.com/cobamgrp
+              - img [ref=e598]
+            - link "Instagram" [ref=e600] [cursor=pointer]:
+              - /url: https://www.instagram.com/cobamgroup/
+              - img [ref=e601]
+            - link "Youtube" [ref=e603] [cursor=pointer]:
+              - /url: https://www.youtube.com/@cobamgroup
+              - img [ref=e604]
+            - link "LinkedIn" [ref=e606] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/cobam-group/
+              - img [ref=e607]
+            - link "TikTok" [ref=e609] [cursor=pointer]:
+              - /url: https://www.tiktok.com/@cobam.group
+              - img [ref=e610]
+            - link "Pinterest" [ref=e612] [cursor=pointer]:
+              - /url: https://www.pinterest.com/cobamgroup/
+              - img [ref=e613]
+        - generic [ref=e615]:
+          - heading "Catalogue" [level=4] [ref=e616]
+          - list [ref=e617]:
+            - listitem [ref=e618]:
+              - link "Revêtements de sols et murs" [ref=e619] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs
+            - listitem [ref=e620]:
+              - link "Matériaux de construction" [ref=e621] [cursor=pointer]:
+                - /url: /produits/materiaux-de-construction
+            - listitem [ref=e622]:
+              - link "Isolation et étanchéité" [ref=e623] [cursor=pointer]:
+                - /url: /produits/isolation-et-etancheite
+            - listitem [ref=e624]:
+              - link "Salle de bain et cuisine" [ref=e625] [cursor=pointer]:
+                - /url: /produits/salle-de-bain-et-cuisine
+            - listitem [ref=e626]:
+              - link "Peintures et décoration" [ref=e627] [cursor=pointer]:
+                - /url: /produits/peintures-et-decoration
+            - listitem [ref=e628]:
+              - link "Piscine" [ref=e629] [cursor=pointer]:
+                - /url: /produits/piscine
+            - listitem [ref=e630]:
+              - link "Portes et menuiserie" [ref=e631] [cursor=pointer]:
+                - /url: /produits/portes-et-menuiserie
+        - generic [ref=e632]:
+          - heading "Decouvrir" [level=4] [ref=e633]
+          - list [ref=e634]:
+            - listitem [ref=e635]:
+              - link "À propos de nous" [ref=e636] [cursor=pointer]:
+                - /url: /a-propos
+            - listitem [ref=e637]:
+              - link "Nos agences" [ref=e638] [cursor=pointer]:
+                - /url: /#nos-agences
+            - listitem [ref=e639]:
+              - link "Partenaires" [ref=e640] [cursor=pointer]:
+                - /url: /partenaires
+            - listitem [ref=e641]:
+              - link "Références" [ref=e642] [cursor=pointer]:
+                - /url: /references
+            - listitem [ref=e643]:
+              - link "Actualités" [ref=e644] [cursor=pointer]:
+                - /url: /actualites
+            - listitem [ref=e645]:
+              - link "Annuaire" [ref=e646] [cursor=pointer]:
+                - /url: /annuaire
+        - generic [ref=e647]:
+          - heading "Contact" [level=4] [ref=e648]
+          - list [ref=e649]:
+            - listitem [ref=e650]:
+              - img [ref=e651]
+              - generic [ref=e654]: Siège social, Houmt Souk, Djerba, Tunisie
+            - listitem [ref=e655]:
+              - 'link "Tel : +216 75731731" [ref=e656] [cursor=pointer]':
+                - /url: tel:+21675731731
+                - img [ref=e657]
+                - text: "Tel : +216 75731731"
+            - listitem [ref=e659]:
+              - link "contact@cobamgroup.com" [ref=e660] [cursor=pointer]:
+                - /url: mailto:contact@cobamgroup.com
+                - img [ref=e661]
+                - text: contact@cobamgroup.com
+      - generic [ref=e664]:
+        - paragraph [ref=e665]: © 2026 Cobam Group. Tous droits réservés.
+        - generic [ref=e666]:
+          - link "Politique de confidentialité" [ref=e667] [cursor=pointer]:
+            - /url: /politique-de-confidentialite
+          - link "Mentions légales" [ref=e668] [cursor=pointer]:
+            - /url: /mentions-legales
+          - link "Conditions générales" [ref=e669] [cursor=pointer]:
+            - /url: /conditions-generales
+  - button "Ouvrir WhatsApp" [ref=e671] [cursor=pointer]:
+    - img [ref=e673]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e680] [cursor=pointer]:
+    - img [ref=e681]
+  - alert [ref=e684]

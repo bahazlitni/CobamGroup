@@ -1,0 +1,191 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e5]
+      - generic [ref=e7]: "Service Client :"
+      - link "+216 75731731" [ref=e8] [cursor=pointer]:
+        - /url: tel:+21675731731
+    - generic [ref=e9]:
+      - link "Annuaire" [ref=e10] [cursor=pointer]:
+        - /url: /annuaire
+        - img [ref=e11]
+        - text: Annuaire
+      - link "Espace Team" [ref=e15] [cursor=pointer]:
+        - /url: /login/staff
+        - img [ref=e16]
+        - text: Espace Team
+  - banner [ref=e20]:
+    - generic [ref=e21]:
+      - link "COBAM GROUP" [ref=e22] [cursor=pointer]:
+        - /url: /
+        - img "COBAM GROUP" [ref=e23]
+      - navigation [ref=e24]:
+        - link "À PROPOS" [ref=e25] [cursor=pointer]:
+          - /url: /a-propos
+        - button "PRODUITS" [ref=e27] [cursor=pointer]:
+          - generic: PRODUITS
+          - img
+        - button "MARQUES" [ref=e29] [cursor=pointer]:
+          - text: MARQUES
+          - img [ref=e30]
+        - link "ACTUALITÉS" [ref=e32] [cursor=pointer]:
+          - /url: /actualites
+        - link "CONTACT" [ref=e33] [cursor=pointer]:
+          - /url: /contact
+      - button "Rechercher" [ref=e36] [cursor=pointer]:
+        - img [ref=e37]
+  - main [ref=e40]:
+    - article [ref=e43]:
+      - generic [ref=e44]:
+        - complementary [ref=e45]:
+          - button "Aucun media disponible." [disabled] [ref=e47] [cursor=pointer]:
+            - generic [ref=e48]: Aucun media disponible.
+        - generic [ref=e50]:
+          - navigation "Catalogue Revêtements de sols et murs Faïence murale" [ref=e52]:
+            - list [ref=e53]:
+              - listitem [ref=e54]:
+                - link "Produits" [ref=e55] [cursor=pointer]:
+                  - /url: /produits
+              - listitem [ref=e56]:
+                - img [ref=e57]
+              - listitem [ref=e59]:
+                - link "Revêtements de sols et murs" [ref=e60] [cursor=pointer]:
+                  - /url: /produits/revetements-de-sols-et-murs
+              - listitem [ref=e61]:
+                - img [ref=e62]
+              - listitem [ref=e64]:
+                - link "Faïence murale" [ref=e65] [cursor=pointer]:
+                  - /url: /produits/revetements-de-sols-et-murs/faience-murale
+          - generic [ref=e67]:
+            - generic [ref=e68]: SKU
+            - generic [ref=e69]: "00004499"
+            - button "Copier" [ref=e70] [cursor=pointer]:
+              - img [ref=e72]
+          - heading "Dechet Faience+parterre+carrelage" [level=1] [ref=e75]
+          - generic [ref=e76]:
+            - button "Demander un devis" [ref=e77] [cursor=pointer]:
+              - generic [ref=e78]: Demander un devis
+            - link "Contacter un conseiller" [ref=e79] [cursor=pointer]:
+              - /url: /contact
+              - generic [ref=e80]: Contacter un conseiller
+              - img [ref=e82]
+          - generic [ref=e88]:
+            - heading "Dechet Faience+parterre+carrelage" [level=2] [ref=e89]
+            - paragraph [ref=e90]: Dechet Faience+parterre+carrelage est un carrelage sol/mur sélectionné pour le catalogue COBAM GROUP.
+            - list [ref=e91]:
+              - listitem [ref=e92]:
+                - paragraph [ref=e93]: "SKU : 00004499"
+              - listitem [ref=e94]:
+                - paragraph [ref=e95]: "Type : Carrelage sol/mur"
+              - listitem [ref=e96]:
+                - paragraph [ref=e97]: "Stock importé : 3"
+            - paragraph [ref=e98]: Cette fiche a été générée depuis les feuilles article et doit rester vérifiable dans l'espace staff avant enrichissement commercial.
+      - generic [ref=e99]:
+        - heading "Caractéristiques techniques" [level=2] [ref=e100]
+        - generic [ref=e103]:
+          - term [ref=e104]: Type de produit
+          - definition [ref=e105]: Faïence murale
+  - contentinfo [ref=e106]:
+    - generic [ref=e107]:
+      - generic [ref=e108]:
+        - generic [ref=e109]:
+          - link "Cobam Group - Accueil" [ref=e110] [cursor=pointer]:
+            - /url: /
+            - img "COBAM GROUP" [ref=e111]
+          - paragraph [ref=e113]: Depuis 1994
+          - paragraph [ref=e114]: Matériaux de construction haut de gamme alliant innovation, qualité et durabilité.
+          - generic [ref=e115]:
+            - link "Facebook" [ref=e116] [cursor=pointer]:
+              - /url: https://www.facebook.com/cobamgrp
+              - img [ref=e117]
+            - link "Instagram" [ref=e119] [cursor=pointer]:
+              - /url: https://www.instagram.com/cobamgroup/
+              - img [ref=e120]
+            - link "Youtube" [ref=e122] [cursor=pointer]:
+              - /url: https://www.youtube.com/@cobamgroup
+              - img [ref=e123]
+            - link "LinkedIn" [ref=e125] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/cobam-group/
+              - img [ref=e126]
+            - link "TikTok" [ref=e128] [cursor=pointer]:
+              - /url: https://www.tiktok.com/@cobam.group
+              - img [ref=e129]
+            - link "Pinterest" [ref=e131] [cursor=pointer]:
+              - /url: https://www.pinterest.com/cobamgroup/
+              - img [ref=e132]
+        - generic [ref=e134]:
+          - heading "Catalogue" [level=4] [ref=e135]
+          - list [ref=e136]:
+            - listitem [ref=e137]:
+              - link "Revêtements de sols et murs" [ref=e138] [cursor=pointer]:
+                - /url: /produits/revetements-de-sols-et-murs
+            - listitem [ref=e139]:
+              - link "Matériaux de construction" [ref=e140] [cursor=pointer]:
+                - /url: /produits/materiaux-de-construction
+            - listitem [ref=e141]:
+              - link "Isolation et étanchéité" [ref=e142] [cursor=pointer]:
+                - /url: /produits/isolation-et-etancheite
+            - listitem [ref=e143]:
+              - link "Salle de bain et cuisine" [ref=e144] [cursor=pointer]:
+                - /url: /produits/salle-de-bain-et-cuisine
+            - listitem [ref=e145]:
+              - link "Peintures et décoration" [ref=e146] [cursor=pointer]:
+                - /url: /produits/peintures-et-decoration
+            - listitem [ref=e147]:
+              - link "Piscine" [ref=e148] [cursor=pointer]:
+                - /url: /produits/piscine
+            - listitem [ref=e149]:
+              - link "Portes et menuiserie" [ref=e150] [cursor=pointer]:
+                - /url: /produits/portes-et-menuiserie
+        - generic [ref=e151]:
+          - heading "Decouvrir" [level=4] [ref=e152]
+          - list [ref=e153]:
+            - listitem [ref=e154]:
+              - link "À propos de nous" [ref=e155] [cursor=pointer]:
+                - /url: /a-propos
+            - listitem [ref=e156]:
+              - link "Nos agences" [ref=e157] [cursor=pointer]:
+                - /url: /#nos-agences
+            - listitem [ref=e158]:
+              - link "Partenaires" [ref=e159] [cursor=pointer]:
+                - /url: /partenaires
+            - listitem [ref=e160]:
+              - link "Références" [ref=e161] [cursor=pointer]:
+                - /url: /references
+            - listitem [ref=e162]:
+              - link "Actualités" [ref=e163] [cursor=pointer]:
+                - /url: /actualites
+            - listitem [ref=e164]:
+              - link "Annuaire" [ref=e165] [cursor=pointer]:
+                - /url: /annuaire
+        - generic [ref=e166]:
+          - heading "Contact" [level=4] [ref=e167]
+          - list [ref=e168]:
+            - listitem [ref=e169]:
+              - img [ref=e170]
+              - generic [ref=e173]: Siège social, Houmt Souk, Djerba, Tunisie
+            - listitem [ref=e174]:
+              - 'link "Tel : +216 75731731" [ref=e175] [cursor=pointer]':
+                - /url: tel:+21675731731
+                - img [ref=e176]
+                - text: "Tel : +216 75731731"
+            - listitem [ref=e178]:
+              - link "contact@cobamgroup.com" [ref=e179] [cursor=pointer]:
+                - /url: mailto:contact@cobamgroup.com
+                - img [ref=e180]
+                - text: contact@cobamgroup.com
+      - generic [ref=e183]:
+        - paragraph [ref=e184]: © 2026 Cobam Group. Tous droits réservés.
+        - generic [ref=e185]:
+          - link "Politique de confidentialité" [ref=e186] [cursor=pointer]:
+            - /url: /politique-de-confidentialite
+          - link "Mentions légales" [ref=e187] [cursor=pointer]:
+            - /url: /mentions-legales
+          - link "Conditions générales" [ref=e188] [cursor=pointer]:
+            - /url: /conditions-generales
+  - button "Ouvrir WhatsApp" [ref=e190] [cursor=pointer]:
+    - img [ref=e192]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e199] [cursor=pointer]:
+    - img [ref=e200]
+  - alert [ref=e203]

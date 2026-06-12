@@ -69,8 +69,11 @@ const MEDIA_SELECT = {
   id: true,
   kind: true,
   title: true,
+  originalFilename: true,
   altText: true,
   mimeType: true,
+  extension: true,
+  sizeBytes: true,
   isActive: true,
   deletedAt: true,
 } satisfies Prisma.MediaSelect;
@@ -320,8 +323,11 @@ function mapMediaRecord(
     id: bigint;
     kind: "IMAGE" | "VIDEO" | "DOCUMENT";
     title: string | null;
+    originalFilename: string | null;
     altText: string | null;
     mimeType: string | null;
+    extension: string | null;
+    sizeBytes: bigint | null;
     isActive: boolean;
     deletedAt: Date | null;
   } | null,
@@ -342,7 +348,10 @@ function mapMediaRecord(
     thumbnailUrl: media.kind === "IMAGE" ? buildPublicMediaUrl(media.id, "thumbnail") : null,
     altText: link?.altText ?? media.altText,
     title: link?.name ?? media.title,
+    originalFilename: media.originalFilename,
     mimeType: media.mimeType,
+    extension: media.extension,
+    sizeBytes: media.sizeBytes?.toString() ?? null,
     sortOrder: link?.sortOrder ?? 0,
   };
 }

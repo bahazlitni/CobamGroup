@@ -23,7 +23,7 @@ export default function Carousel({ media, title }: CarouselProps) {
       title={title}
       size="2xl"
       className="lg:sticky lg:top-28"
-      frameClassName="border-cobam-quill-grey/35 shadow-[0_28px_90px_rgba(20,32,46,0.08)]"
+      frameClassName="border-cobam-quill-grey/35"
       thumbnailClassName="focus-visible:ring-cobam-water-blue/45"
       activeThumbnailClassName="border-cobam-dark-blue ring-cobam-dark-blue/10"
       inactiveThumbnailClassName="border-cobam-quill-grey/35 hover:border-cobam-water-blue/40"

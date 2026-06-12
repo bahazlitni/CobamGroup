@@ -258,7 +258,10 @@ export type PublicProductInspectorMedia = {
   thumbnailUrl: string | null;
   altText: string | null;
   title: string | null;
+  originalFilename: string | null;
   mimeType: string | null;
+  extension: string | null;
+  sizeBytes: string | null;
   sortOrder: number;
 };
 

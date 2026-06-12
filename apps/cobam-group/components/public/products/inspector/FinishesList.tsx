@@ -68,7 +68,7 @@ interface FinishesListProps {
 export default function FinishesList({onSelect, activeKey, finishes}: FinishesListProps){
     if(!finishes.length) return null;
     const label = `Finition${finishes.length === 1 ? "" : "s"}`
-    return <div className="space-y-3">
+    return <div className="mt-6space-y-3">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">{label}</p>
         <div className="flex flex-wrap gap-4">
         {finishes.map((finish: DerivedFinishOption) => (
