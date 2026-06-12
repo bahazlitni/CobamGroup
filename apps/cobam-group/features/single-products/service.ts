@@ -17,6 +17,11 @@ import {
 import { getProductFormOptionsService } from "@/features/products/service";
 import type { ProductMediaDto } from "@/features/products/types";
 import {
+  buildProductDeleteBlockedMessage,
+  countProductDeleteBlockers,
+  hasProductDeleteBlockers,
+} from "@/features/products/delete-constraints";
+import {
   productBrandLabel,
   productLifecycleFromVisibility,
   richTextDescriptionToEditorValue,
@@ -489,9 +494,16 @@ export async function deleteSingleProductService(session: StaffSession, productI
     throw new SingleProductsServiceError("Accès refusé.", 403);
   }
 
+  const productBigIntId = BigInt(productId);
+  const blockers = await countProductDeleteBlockers(prisma, [productBigIntId]);
+
+  if (hasProductDeleteBlockers(blockers)) {
+    throw new SingleProductsServiceError(buildProductDeleteBlockedMessage(blockers), 409);
+  }
+
   await prisma.product.delete({
     where: {
-      id: BigInt(productId),
+      id: productBigIntId,
     },
   });
 }

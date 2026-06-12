@@ -10,6 +10,11 @@ import {
 import { buildProductAttributeCreateData, mapProductAttributeRecord } from "./attribute-records";
 import { resolveProductBrandOrganizationId } from "@/features/organizations/product-brand";
 import {
+  buildProductDeleteBlockedMessage,
+  countProductDeleteBlockers,
+  hasProductDeleteBlockers,
+} from "@/features/products/delete-constraints";
+import {
   productBrandLabel,
   productLifecycleFromVisibility,
   richTextDescriptionToEditorValue,
@@ -1026,9 +1031,15 @@ export async function deleteProductService(session: StaffSession, familyId: numb
     throw new ProductServiceError("Famille introuvable.", 404);
   }
 
-  const productIds = family.members.map((member) => Number(member.productId));
+  const productIds = family.members.map((member) => member.productId);
 
   await prisma.$transaction(async (tx) => {
+    const blockers = await countProductDeleteBlockers(tx, productIds);
+
+    if (hasProductDeleteBlockers(blockers)) {
+      throw new ProductServiceError(buildProductDeleteBlockedMessage(blockers), 409);
+    }
+
     await tx.productFamilyMember.deleteMany({
       where: {
         familyId: family.id,
@@ -1039,7 +1050,7 @@ export async function deleteProductService(session: StaffSession, familyId: numb
       await tx.product.deleteMany({
         where: {
           id: {
-            in: productIds.map((id) => BigInt(id)),
+            in: productIds,
           },
         },
       });

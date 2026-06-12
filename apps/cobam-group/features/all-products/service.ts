@@ -2,6 +2,11 @@ import { Prisma, type ProductLifecycle } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
 import { resolveProductBrandOrganizationId } from "@/features/organizations/product-brand";
 import { canAccessProducts, canToggleProductLifecycle } from "@/features/products/access";
+import {
+  buildProductDeleteBlockedMessage,
+  countProductDeleteBlockers,
+  hasProductDeleteBlockers,
+} from "@/features/products/delete-constraints";
 import formatEnumLabel from "@/lib/formatEnumLabel";
 import { prisma } from "@/lib/server/db/prisma";
 import {
@@ -847,9 +852,16 @@ export async function deleteAllProductsBulkService(session: StaffSession, produc
     throw new AllProductsServiceError("Aucun produit sélectionné.", 400);
   }
 
+  const productBigIntIds = productIds.map((id) => BigInt(id));
+  const blockers = await countProductDeleteBlockers(prisma, productBigIntIds);
+
+  if (hasProductDeleteBlockers(blockers)) {
+    throw new AllProductsServiceError(buildProductDeleteBlockedMessage(blockers), 409);
+  }
+
   await prisma.product.deleteMany({
     where: {
-      id: { in: productIds.map((id) => BigInt(id)) },
+      id: { in: productBigIntIds },
     },
   });
 }
