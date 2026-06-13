@@ -227,7 +227,8 @@ function InlineColorValue({
       <span
         className="block size-4 shrink-0 rounded-full border border-slate-300 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.55)]"
         style={{ backgroundColor: resolvedHex ?? "#0f172a" }}
-        aria-hidden="true"
+        role="img"
+        aria-label={option.label}
       />
       <span>{label}</span>
     </span>
@@ -241,17 +242,17 @@ function InlineFinishValue({ option }: { option: DerivedFinishOption }) {
         {option.imageUrl ? (
           <Image
             src={option.imageUrl}
-            alt=""
+            alt={option.label}
             fill
             sizes="20px"
             className="object-cover"
-            aria-hidden="true"
           />
         ) : (
           <span
             className="block size-full"
             style={{ backgroundColor: option.colorHex ?? "#0f172a" }}
-            aria-hidden="true"
+            role="img"
+            aria-label={option.label}
           />
         )}
       </span>
