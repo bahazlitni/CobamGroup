@@ -584,10 +584,6 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
               <h2 id="categories-title" className="cobam-display mt-5 text-5xl font-semibold leading-none sm:text-7xl">
                 Les familles produits, comme une visite guidée.
               </h2>
-              <p className="mt-6 max-w-xl text-lg leading-8 text-[#fafaf9]/68">
-                Chaque univers garde son image, ses usages et ses entrées rapides. Le visiteur
-                parcourt le catalogue sans perdre le fil du projet.
-              </p>
 
               {focusedCategory ? (
                 <div className="cobam-category-preview mt-9 overflow-hidden border border-[#fafaf9]/14 bg-[#fafaf9]/7">
@@ -696,10 +692,6 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
               <h2 id="showrooms-title" className="cobam-display mt-5 text-5xl font-semibold leading-none sm:text-7xl">
                 Le digital mène à la matière réelle.
               </h2>
-              <p className="mt-6 max-w-xl text-lg leading-8 text-[#5e5e5e]">
-                Les points de vente deviennent une suite logique de la page: voir une famille,
-                comprendre son usage, puis savoir où la confirmer.
-              </p>
               <div className="mt-8 grid gap-2">
                 {showrooms.map((showroom) => {
                   const active = showroom.name === activeShowroom?.name;
@@ -886,9 +878,6 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
             <h2 id="social-title" className="cobam-display mt-5 text-5xl font-semibold leading-none sm:text-7xl">
               Suivez nous
             </h2>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-[#fafaf9]/68">
-              Suivez les matières, les projets et les nouveautés.
-            </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -934,10 +923,6 @@ export function RedesignedHome({ categories, brands, articles, showrooms }: Rede
             <h2 id="final-cta-title" className="cobam-display mt-5 max-w-4xl text-5xl font-semibold leading-none sm:text-7xl">
               Construire le bon choix commence ici.
             </h2>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-[#fafaf9]/66">
-              Ouvrez le catalogue, préparez votre visite ou contactez l&apos;équipe pour donner un cadre
-              clair à votre projet.
-            </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row lg:justify-end" data-landing-reveal>
             <Link href="/produits" className="cobam-cinematic-action bg-[#0a8dc1] text-[#fafaf9]" data-magnetic>
