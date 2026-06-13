@@ -67,18 +67,14 @@ interface FinishesListProps {
 
 export default function FinishesList({onSelect, activeKey, finishes}: FinishesListProps){
     if(!finishes.length) return null;
-    const label = `Finition${finishes.length === 1 ? "" : "s"}`
-    return <div className="mt-6space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">{label}</p>
-        <div className="flex flex-wrap gap-4">
-        {finishes.map((finish: DerivedFinishOption) => (
-            <FinishBlob
-              key={finish.key}
-              option={finish}
-              active={activeKey !== undefined && activeKey === finish.key}
-              onClick={() => onSelect?.(finish.key)}
-            />
-        ))}
-        </div>
+    return <div className="mt-6 flex flex-wrap gap-4">
+      {finishes.map((finish: DerivedFinishOption) => (
+          <FinishBlob
+            key={finish.key}
+            option={finish}
+            active={activeKey !== undefined && activeKey === finish.key}
+            onClick={() => onSelect?.(finish.key)}
+          />
+      ))}
     </div>
 }

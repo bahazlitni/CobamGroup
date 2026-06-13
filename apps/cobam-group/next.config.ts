@@ -382,6 +382,15 @@ const nextConfig: NextConfig = {
           "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-silver-grey-16-intense-etanche-5kg-00249065",
         permanent: true,
       },
+      {
+        source:
+          "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-blanc-intense-%C3%A9tanche-5kg-00221993",
+        destination:
+          "/produits/revetements-de-sols-et-murs/produits-de-pose-finition/deutsch-color-carrojoint-silver-grey-16-intense-etanche-5kg-00249065",
+        permanent: true,
+      },
+
+
     ];
   },
 };
