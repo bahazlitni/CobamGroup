@@ -1580,6 +1580,8 @@ model Article {
   tags           String        @default("") @db.Text
   status         ArticleStatus
   publishedAt    DateTime?     @map("published_at")
+  scheduledPublishAt DateTime? @map("scheduled_publish_at")
+  scheduledByUserId  String?   @map("scheduled_by_user_id") @db.VarChar(191)
   coverMediaId   BigInt?       @map("cover_media_id")
   ogTitle        String?       @map("og_title") @db.VarChar(255)
   ogDescription  String?       @map("og_description") @db.Text
@@ -1602,6 +1604,8 @@ model Article {
   @@index([coverMediaId])
   @@index([ogImageMediaId])
   @@index([status])
+  @@index([status, scheduledPublishAt])
+  @@index([scheduledByUserId])
   @@map("articles")
 }
 

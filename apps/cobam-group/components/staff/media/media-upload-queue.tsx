@@ -53,7 +53,7 @@ function getStatusBadge(status: MediaUploadQueueStatus) {
       };
     case "success":
       return {
-        label: "Importe",
+        label: "Importé",
         color: "green" as const,
         icon: "check-circle" as const,
       };

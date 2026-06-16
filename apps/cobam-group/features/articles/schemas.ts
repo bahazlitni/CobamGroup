@@ -263,6 +263,26 @@ export function parseArticleUpdateInput(raw: unknown): ArticleUpdateInput {
   return parseArticleInputBase(raw);
 }
 
+export function parseArticleScheduleInput(raw: unknown): {
+  scheduledPublishAt: Date;
+} {
+  if (!isRecord(raw)) {
+    throw new ArticleValidationError("Invalid request body");
+  }
+
+  if (typeof raw.scheduledPublishAt !== "string" || !raw.scheduledPublishAt.trim()) {
+    throw new ArticleValidationError('Missing or invalid field "scheduledPublishAt"');
+  }
+
+  const scheduledPublishAt = new Date(raw.scheduledPublishAt);
+
+  if (Number.isNaN(scheduledPublishAt.getTime())) {
+    throw new ArticleValidationError('Invalid field "scheduledPublishAt"');
+  }
+
+  return { scheduledPublishAt };
+}
+
 export function parseArticleAuthorOptionsQuery(searchParams: URLSearchParams) {
   const articleIdRaw = searchParams.get("articleId");
   const qRaw = searchParams.get("q");

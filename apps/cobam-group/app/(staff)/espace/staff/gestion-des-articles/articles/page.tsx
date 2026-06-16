@@ -8,7 +8,10 @@ import { useArticlesList } from "@/features/articles/hooks/use-articles-list";
 import type { ArticleListItemDto, ArticleStatus } from "@/features/articles/types";
 import { usePathname } from "next/navigation";
 
-function getArticleStatusBadge(status: ArticleStatus) {
+function getArticleStatusBadge(
+  status: ArticleStatus,
+  scheduledPublishAt?: string | null,
+) {
   switch (status) {
     case "PUBLISHED":
       return {
@@ -24,6 +27,14 @@ function getArticleStatusBadge(status: ArticleStatus) {
       };
     case "DRAFT":
     default:
+      if (scheduledPublishAt) {
+        return {
+          label: "Planifié",
+          color: "info" as const,
+          icon: "calendar" as const,
+        };
+      }
+
       return {
         label: "Brouillon",
         color: "default" as const,
@@ -37,7 +48,7 @@ const columns = [
   "Auteur",
   "Catégories",
   "Statut",
-  "Publié le",
+  "Publication",
   "Mis à jour",
   "Actions",
 ];
@@ -114,7 +125,16 @@ export default function ArticlesListPage() {
         }}
       >
         {items.map((article: ArticleListItemDto) => {
-          const statusBadge = getArticleStatusBadge(article.status);
+          const statusBadge = getArticleStatusBadge(
+            article.status,
+            article.scheduledPublishAt,
+          );
+          const scheduledDateLabel = article.scheduledPublishAt
+            ? new Date(article.scheduledPublishAt).toLocaleString("fr-FR", {
+                dateStyle: "short",
+                timeStyle: "short",
+              })
+            : null;
 
           return (
             <tr key={article.id} className="hover:bg-slate-50/60">
@@ -145,9 +165,15 @@ export default function ArticlesListPage() {
               </td>
 
               <td className="px-4 py-3 align-top text-xs text-slate-600">
-                {article.publishedAt
-                  ? new Date(article.publishedAt).toLocaleDateString("fr-FR")
-                  : "-"}
+                {article.publishedAt ? (
+                  new Date(article.publishedAt).toLocaleDateString("fr-FR")
+                ) : scheduledDateLabel ? (
+                  <span className="font-medium text-cobam-water-blue">
+                    {scheduledDateLabel}
+                  </span>
+                ) : (
+                  "-"
+                )}
               </td>
 
               <td className="px-4 py-3 align-top text-xs text-slate-600">

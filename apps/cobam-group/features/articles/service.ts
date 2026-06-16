@@ -18,6 +18,7 @@ import {
   serializeOwnedTagNames,
 } from "@/features/tags/owned";
 import { resolveOrCreateTagsByNames } from "@/features/tags/repository";
+import { isScheduledPublishAtAligned } from "./scheduling";
 import type {
   ArticleAuthorOptionsQuery,
   ArticleAuthorOptionsResult,
@@ -33,9 +34,12 @@ import {
   findArticleAuthorCandidatesByIds,
   findExistingArticleCategoryIds,
   findArticleById,
+  listDueScheduledArticles,
   listArticleAuthorOptions,
   listArticles,
+  markScheduledArticlePublished,
   updateArticle,
+  updateArticleSchedule,
   updateArticleStatus,
 } from "./repository";
 
@@ -330,6 +334,26 @@ async function ensureArticleMediaIsPublic(input: {
   await makeMediaPublicMany(mediaIds);
 }
 
+function assertValidScheduledPublishAt(scheduledPublishAt: Date) {
+  if (Number.isNaN(scheduledPublishAt.getTime())) {
+    throw new ArticleServiceError("Date de publication planifiée invalide.", 400);
+  }
+
+  if (!isScheduledPublishAtAligned(scheduledPublishAt)) {
+    throw new ArticleServiceError(
+      "La date de publication planifiée doit être alignée sur un multiple de 5 minutes.",
+      400,
+    );
+  }
+
+  if (scheduledPublishAt.getTime() <= Date.now()) {
+    throw new ArticleServiceError(
+      "La date de publication planifiée doit être dans le futur.",
+      400,
+    );
+  }
+}
+
 export async function listArticlesService(
   session: StaffSession,
   query: ArticleListQuery,
@@ -505,6 +529,11 @@ export async function publishArticleService(
     articleId,
     ArticleStatus.PUBLISHED,
     before.publishedAt ?? new Date(),
+    {
+      publishedByUserId: session.id,
+      scheduledPublishAt: null,
+      scheduledByUserId: null,
+    },
   );
 
   await ensureArticleMediaIsPublic({
@@ -534,9 +563,111 @@ export async function unpublishArticleService(
   const article = await updateArticleStatus(
     articleId,
     ArticleStatus.DRAFT,
+    undefined,
+    {
+      scheduledPublishAt: null,
+      scheduledByUserId: null,
+    },
   );
 
   return mapArticleToDetailDto(article, getArticleAbilities(session, article));
+}
+
+export async function scheduleArticlePublicationService(
+  session: StaffSession,
+  articleId: number,
+  scheduledPublishAt: Date,
+) {
+  const before = await findArticleById(articleId);
+
+  if (!before) {
+    throw new ArticleServiceError("Article not found", 404);
+  }
+
+  if (before.status !== ArticleStatus.DRAFT) {
+    throw new ArticleServiceError(
+      "Seuls les articles en brouillon peuvent être planifiés.",
+      400,
+    );
+  }
+
+  if (!canActOnArticle(session, before, PUBLISH_PERMISSIONS)) {
+    throw new ArticleServiceError("Forbidden", 403);
+  }
+
+  assertValidScheduledPublishAt(scheduledPublishAt);
+
+  const article = await updateArticleSchedule(
+    articleId,
+    scheduledPublishAt,
+    session.id,
+  );
+
+  return mapArticleToDetailDto(article, getArticleAbilities(session, article));
+}
+
+export async function cancelArticlePublicationScheduleService(
+  session: StaffSession,
+  articleId: number,
+) {
+  const before = await findArticleById(articleId);
+
+  if (!before) {
+    throw new ArticleServiceError("Article not found", 404);
+  }
+
+  if (!canActOnArticle(session, before, PUBLISH_PERMISSIONS)) {
+    throw new ArticleServiceError("Forbidden", 403);
+  }
+
+  const article = await updateArticleSchedule(articleId, null, null);
+
+  return mapArticleToDetailDto(article, getArticleAbilities(session, article));
+}
+
+export async function publishDueScheduledArticlesService(now = new Date()) {
+  const dueArticles = await listDueScheduledArticles(now);
+  const publishedArticles: Array<{
+    id: number;
+    title: string;
+    slug: string;
+    scheduledPublishAt: string | null;
+  }> = [];
+
+  for (const article of dueArticles) {
+    const wasPublished = await markScheduledArticlePublished(
+      article.id,
+      article.scheduledPublishAt,
+      article.scheduledByUserId,
+      now,
+    );
+
+    if (!wasPublished) {
+      continue;
+    }
+
+    await ensureArticleMediaIsPublic({
+      coverMediaId:
+        article.coverMediaId != null ? Number(article.coverMediaId) : null,
+      ogImageMediaId:
+        article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
+      content: article.content,
+    });
+
+    publishedArticles.push({
+      id: Number(article.id),
+      title: article.title,
+      slug: article.slug,
+      scheduledPublishAt: article.scheduledPublishAt?.toISOString() ?? null,
+    });
+  }
+
+  return {
+    checked: dueArticles.length,
+    published: publishedArticles.length,
+    skipped: dueArticles.length - publishedArticles.length,
+    articles: publishedArticles,
+  };
 }
 
 export async function deleteArticleService(
@@ -553,5 +684,5 @@ export async function deleteArticleService(
     throw new ArticleServiceError("Forbidden", 403);
   }
 
-  const article = await deleteArticle(articleId);
+  await deleteArticle(articleId);
 }

@@ -90,6 +90,8 @@ export type ArticleListItemDto = {
   slug: string;
   status: ArticleStatus;
   publishedAt: string | null;
+  scheduledPublishAt: string | null;
+  scheduledByUserId: string | null;
   updatedAt: string;
   author: {
     id: string;
@@ -114,6 +116,8 @@ export type ArticleDetailDto = {
   descriptionSeo: string | null;
   status: ArticleStatus;
   publishedAt: string | null;
+  scheduledPublishAt: string | null;
+  scheduledByUserId: string | null;
   coverMediaId: number | null;
   createdAt: string;
   updatedAt: string;

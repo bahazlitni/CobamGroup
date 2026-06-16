@@ -6,13 +6,20 @@ import { normalizeOwnedTagNames } from "@/features/tags/owned";
 import { slugify } from "@/lib/slugify";
 import { normalizeArticleContent } from "../document";
 import {
+  cancelArticlePublicationScheduleClient,
   createArticleClient,
   deleteArticleClient,
   getArticleByIdClient,
   publishArticleClient,
+  scheduleArticlePublicationClient,
   unpublishArticleClient,
   updateArticleClient,
 } from "../client";
+import {
+  datetimeLocalValueToIso,
+  isDatetimeLocalValueFiveMinuteAligned,
+  toDatetimeLocalInputValue,
+} from "../scheduling";
 import type { ArticleDetailDto } from "../types";
 
 export type ArticleEditorCategoryAssignment = {
@@ -39,6 +46,7 @@ export type ArticleEditorState = {
   noIndex: boolean;
   noFollow: boolean;
   schemaType: string;
+  scheduledPublishAt: string;
   status: "draft" | "published";
 };
 
@@ -222,6 +230,7 @@ function getEmptyEditorState(): ArticleEditorState {
     noIndex: false,
     noFollow: false,
     schemaType: "Article",
+    scheduledPublishAt: "",
     status: "draft",
   };
 }
@@ -255,6 +264,7 @@ function mapArticleToEditorState(article: ArticleDetailDto): ArticleEditorState 
     noIndex: article.noIndex,
     noFollow: article.noFollow,
     schemaType: article.schemaType ?? "Article",
+    scheduledPublishAt: toDatetimeLocalInputValue(article.scheduledPublishAt),
     status: article.status === "PUBLISHED" ? "published" : "draft",
   };
 }
@@ -337,6 +347,8 @@ export function useArticleEditor(articleId: number | null) {
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isUnpublishing, setIsUnpublishing] = useState(false);
+  const [isScheduling, setIsScheduling] = useState(false);
+  const [isCancelingSchedule, setIsCancelingSchedule] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
@@ -556,6 +568,76 @@ export function useArticleEditor(articleId: number | null) {
     }
   }, [persistWithDesiredStatus]);
 
+  const schedulePublication = useCallback(async () => {
+    const scheduledPublishAtIso = datetimeLocalValueToIso(
+      state.scheduledPublishAt,
+    );
+
+    if (
+      !scheduledPublishAtIso ||
+      !isDatetimeLocalValueFiveMinuteAligned(state.scheduledPublishAt)
+    ) {
+      setError(
+        "Choisissez une date de publication alignée sur un multiple de 5 minutes.",
+      );
+      return null;
+    }
+
+    setIsScheduling(true);
+    setError(null);
+    setNotice(null);
+
+    try {
+      const savedDraft = await persistWithDesiredStatus("draft");
+
+      const scheduledArticle = await scheduleArticlePublicationClient(
+        savedDraft.id,
+        scheduledPublishAtIso,
+      );
+      const nextState = mapArticleToEditorState(scheduledArticle);
+
+      setArticle(scheduledArticle);
+      setState(nextState);
+      setLoadedState(nextState);
+      setLastSavedAt(new Date());
+      setNotice("Publication planifiée.");
+
+      return scheduledArticle;
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to schedule publication"));
+      return null;
+    } finally {
+      setIsScheduling(false);
+    }
+  }, [persistWithDesiredStatus, state.scheduledPublishAt]);
+
+  const cancelSchedule = useCallback(async () => {
+    if (!article?.id) {
+      setError("Sauvegardez d'abord l'article avant de modifier sa planification.");
+      return null;
+    }
+
+    setIsCancelingSchedule(true);
+    setError(null);
+    setNotice(null);
+
+    try {
+      const nextArticle = await cancelArticlePublicationScheduleClient(article.id);
+
+      setArticle(nextArticle);
+      setState((prev) => ({ ...prev, scheduledPublishAt: "" }));
+      setLoadedState((prev) => ({ ...prev, scheduledPublishAt: "" }));
+      setNotice("Planification annulée.");
+
+      return nextArticle;
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to cancel schedule"));
+      return null;
+    } finally {
+      setIsCancelingSchedule(false);
+    }
+  }, [article?.id]);
+
   const resetToLoaded = useCallback(() => {
     setState(loadedState);
     setError(null);
@@ -597,6 +679,8 @@ export function useArticleEditor(articleId: number | null) {
     isSaving,
     isPublishing,
     isUnpublishing,
+    isScheduling,
+    isCancelingSchedule,
     isDeleting,
     categoryAssignmentsTotal,
     categoryAssignmentsWillNormalize,
@@ -610,6 +694,8 @@ export function useArticleEditor(articleId: number | null) {
     save,
     publish,
     unpublish,
+    schedulePublication,
+    cancelSchedule,
     deleteArticle,
     resetToLoaded,
     generateSlugFromTitle,

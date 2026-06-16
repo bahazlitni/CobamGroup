@@ -197,6 +197,51 @@ export async function unpublishArticleClient(articleId: number): Promise<void> {
   }
 }
 
+export async function scheduleArticlePublicationClient(
+  articleId: number,
+  scheduledPublishAt: string,
+): Promise<ArticleDetailDto> {
+  const res = await staffApiFetch(`/api/staff/articles/${articleId}/schedule`, {
+    method: "POST",
+    auth: true,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ scheduledPublishAt }),
+  });
+
+  const data = await parseJsonSafe<ArticleDetailResponse>(res);
+
+  if (!res.ok || !data?.ok || !data.article) {
+    throw new ArticleClientError(
+      getErrorMessage(data) || "Erreur lors de la planification de l'article",
+      res.status,
+    );
+  }
+
+  return data.article;
+}
+
+export async function cancelArticlePublicationScheduleClient(
+  articleId: number,
+): Promise<ArticleDetailDto> {
+  const res = await staffApiFetch(`/api/staff/articles/${articleId}/schedule`, {
+    method: "DELETE",
+    auth: true,
+  });
+
+  const data = await parseJsonSafe<ArticleDetailResponse>(res);
+
+  if (!res.ok || !data?.ok || !data.article) {
+    throw new ArticleClientError(
+      getErrorMessage(data) || "Erreur lors de l'annulation de la planification",
+      res.status,
+    );
+  }
+
+  return data.article;
+}
+
 export async function deleteArticleClient(articleId: number): Promise<void> {
   const res = await staffApiFetch(`/api/staff/articles/${articleId}`, {
     method: "DELETE",

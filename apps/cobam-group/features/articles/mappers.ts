@@ -160,6 +160,8 @@ export function mapArticleToDetailDto(
     tags: string;
     status: Article["status"];
     publishedAt: Date | null;
+    scheduledPublishAt: Date | null;
+    scheduledByUserId: string | null;
     coverMediaId: bigint | null;
     createdAt: Date;
     updatedAt: Date;
@@ -200,6 +202,8 @@ export function mapArticleToDetailDto(
     descriptionSeo: article.descriptionSeo,
     status: article.status,
     publishedAt: toIsoString(article.publishedAt),
+    scheduledPublishAt: toIsoString(article.scheduledPublishAt),
+    scheduledByUserId: article.scheduledByUserId,
     coverMediaId: article.coverMediaId != null ? Number(article.coverMediaId) : null,
     createdAt: article.createdAt.toISOString(),
     updatedAt: article.updatedAt.toISOString(),
@@ -220,6 +224,8 @@ export function mapArticleToListItemDto(article: {
   slug: string;
   status: Article["status"];
   publishedAt: Date | null;
+  scheduledPublishAt: Date | null;
+  scheduledByUserId: string | null;
   updatedAt: Date;
   author: ArticleAuthorRecord;
   authorLinks: Array<{
@@ -246,6 +252,8 @@ export function mapArticleToListItemDto(article: {
     slug: article.slug,
     status: article.status,
     publishedAt: toIsoString(article.publishedAt),
+    scheduledPublishAt: toIsoString(article.scheduledPublishAt),
+    scheduledByUserId: article.scheduledByUserId,
     updatedAt: article.updatedAt.toISOString(),
     author: {
       id: primaryAuthor?.id ?? article.author.id,

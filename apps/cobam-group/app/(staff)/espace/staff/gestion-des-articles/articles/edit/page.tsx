@@ -2,7 +2,7 @@
 
 import { Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { CalendarClock, Loader2, XCircle } from "lucide-react";
 import ArticleAuthorsPanel from "@/components/staff/articles/article-authors-panel";
 import ArticleRichTextEditor from "@/components/staff/articles/article-rich-text-editor";
 import AutosaveIndicator from "@/components/staff/articles/AutosaveIndicator";
@@ -25,9 +25,15 @@ import {
   UnsavedChangesGuard,
 } from "@/components/staff/ui";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useArticleCategoryOptions } from "@/features/article-categories/hooks/use-article-category-options";
 import { useArticleEditor } from "@/features/articles/hooks/use-article-editor";
+import {
+  getNextFiveMinuteLocalInputValue,
+  isDatetimeLocalValueFiveMinuteAligned,
+} from "@/features/articles/scheduling";
 
 function LoadingState() {
   return (
@@ -72,6 +78,17 @@ function ArticleEditPageContent() {
   }
 
   const isPublished = editor.state.status === "published";
+  const isScheduled = !isPublished && Boolean(editor.article?.scheduledPublishAt);
+  const scheduleInputIsAligned =
+    !editor.state.scheduledPublishAt ||
+    isDatetimeLocalValueFiveMinuteAligned(editor.state.scheduledPublishAt);
+  const scheduleMinValue = getNextFiveMinuteLocalInputValue();
+  const scheduledAtLabel = editor.article?.scheduledPublishAt
+    ? new Date(editor.article.scheduledPublishAt).toLocaleString("fr-FR", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })
+    : null;
   const articleAbilities = editor.article?.abilities ?? null;
   const canEditArticle =
     editor.mode === "create" ? true : Boolean(articleAbilities?.canEdit);
@@ -81,6 +98,12 @@ function ArticleEditPageContent() {
     editor.mode === "edit" && Boolean(articleAbilities?.canDelete);
   const canPublishArticle =
     editor.mode === "create" ? true : Boolean(articleAbilities?.canPublish);
+  const isArticleActionBusy =
+    editor.isSaving ||
+    editor.isPublishing ||
+    editor.isUnpublishing ||
+    editor.isScheduling ||
+    editor.isCancelingSchedule;
 
   const handleDeleteArticle = () => {
     if (!canDeleteArticle || editor.isDeleting) {
@@ -149,10 +172,10 @@ function ArticleEditPageContent() {
                 <div className="flex flex-wrap items-center gap-2">
                   <StaffBadge
                     size="sm"
-                    color={isPublished ? "green" : "default"}
-                    icon={isPublished ? "badge-check" : "file-text"}
+                    color={isPublished ? "green" : isScheduled ? "info" : "default"}
+                    icon={isPublished ? "badge-check" : isScheduled ? "calendar" : "file-text"}
                   >
-                    {isPublished ? "Publié" : "Brouillon"}
+                    {isPublished ? "Publié" : isScheduled ? "Planifié" : "Brouillon"}
                   </StaffBadge>
                   {canEditArticle ? (
                     <StaffBadge size="sm" color="info" icon="none">
@@ -191,6 +214,77 @@ function ArticleEditPageContent() {
                   >
                     Repasser en brouillon
                   </AnimatedUIButton>
+                ) : null}
+
+                {!isPublished && canPublishArticle ? (
+                  <div className="grid gap-3 rounded-lg border border-slate-200 bg-white p-3">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                      <CalendarClock className="h-4 w-4 text-cobam-water-blue" />
+                      <span>Planification</span>
+                    </div>
+
+                    <Input
+                      type="datetime-local"
+                      step={300}
+                      min={scheduleMinValue}
+                      value={editor.state.scheduledPublishAt}
+                      onChange={(event) =>
+                        editor.setField("scheduledPublishAt", event.target.value)
+                      }
+                      aria-invalid={!scheduleInputIsAligned}
+                      className="h-10 border-slate-300 bg-white"
+                    />
+
+                    {editor.state.scheduledPublishAt && !scheduleInputIsAligned ? (
+                      <p className="text-xs leading-5 text-amber-700">
+                        Choisissez une heure alignée sur un multiple de 5 minutes.
+                      </p>
+                    ) : null}
+
+                    {scheduledAtLabel ? (
+                      <p className="text-xs leading-5 text-slate-500">
+                        Publication prévue le {scheduledAtLabel}.
+                      </p>
+                    ) : null}
+
+                    <div className="grid gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="h-10 w-full"
+                        onClick={() => void editor.schedulePublication()}
+                        disabled={
+                          isArticleActionBusy ||
+                          !editor.state.scheduledPublishAt ||
+                          !scheduleInputIsAligned
+                        }
+                      >
+                        {editor.isScheduling ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <CalendarClock className="h-4 w-4" />
+                        )}
+                        Planifier
+                      </Button>
+
+                      {editor.article?.scheduledPublishAt ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-10 w-full"
+                          onClick={() => void editor.cancelSchedule()}
+                          disabled={isArticleActionBusy}
+                        >
+                          {editor.isCancelingSchedule ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <XCircle className="h-4 w-4" />
+                          )}
+                          Annuler
+                        </Button>
+                      ) : null}
+                    </div>
+                  </div>
                 ) : null}
               </div>
 
@@ -242,6 +336,17 @@ function ArticleEditPageContent() {
                       {new Date(editor.article.updatedAt).toLocaleDateString("fr-FR")}
                     </p>
                   </div>
+
+                  {scheduledAtLabel ? (
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                        Publication planifiée
+                      </p>
+                      <p className="mt-1 text-sm text-slate-600">
+                        {scheduledAtLabel}
+                      </p>
+                    </div>
+                  ) : null}
                 </>
               ) : null}
             </StaffEditorInfoPanel>

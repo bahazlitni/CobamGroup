@@ -90,7 +90,10 @@ const ARTICLE_SELECT = Prisma.validator<Prisma.ArticleSelect>()({
   descriptionSeo: true,
   tags: true,
   status: true,
+  publishedByUserId: true,
   publishedAt: true,
+  scheduledPublishAt: true,
+  scheduledByUserId: true,
   coverMediaId: true,
   createdAt: true,
   updatedAt: true,
@@ -354,15 +357,94 @@ export async function updateArticleStatus(
   articleId: number,
   status: ArticleStatus,
   publishedAt?: Date | null,
+  extraData: {
+    publishedByUserId?: string | null;
+    scheduledPublishAt?: Date | null;
+    scheduledByUserId?: string | null;
+  } = {},
 ) {
   return prisma.article.update({
     where: { id: BigInt(articleId) },
     data: {
       status,
       ...(publishedAt !== undefined ? { publishedAt } : {}),
+      ...(extraData.publishedByUserId !== undefined
+        ? { publishedByUserId: extraData.publishedByUserId }
+        : {}),
+      ...(extraData.scheduledPublishAt !== undefined
+        ? { scheduledPublishAt: extraData.scheduledPublishAt }
+        : {}),
+      ...(extraData.scheduledByUserId !== undefined
+        ? { scheduledByUserId: extraData.scheduledByUserId }
+        : {}),
     },
     select: ARTICLE_SELECT,
   });
+}
+
+export async function updateArticleSchedule(
+  articleId: number,
+  scheduledPublishAt: Date | null,
+  scheduledByUserId: string | null,
+) {
+  return prisma.article.update({
+    where: { id: BigInt(articleId) },
+    data: {
+      scheduledPublishAt,
+      scheduledByUserId,
+    },
+    select: ARTICLE_SELECT,
+  });
+}
+
+export async function listDueScheduledArticles(now: Date) {
+  return prisma.article.findMany({
+    where: {
+      deletedAt: null,
+      status: ArticleStatus.DRAFT,
+      scheduledPublishAt: {
+        lte: now,
+      },
+    },
+    orderBy: [{ scheduledPublishAt: "asc" }, { id: "asc" }],
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      scheduledPublishAt: true,
+      scheduledByUserId: true,
+      coverMediaId: true,
+      ogImageMediaId: true,
+      content: true,
+    },
+  });
+}
+
+export async function markScheduledArticlePublished(
+  articleId: bigint,
+  scheduledPublishAt: Date | null,
+  scheduledByUserId: string | null,
+  now: Date,
+) {
+  const result = await prisma.article.updateMany({
+    where: {
+      id: articleId,
+      deletedAt: null,
+      status: ArticleStatus.DRAFT,
+      scheduledPublishAt: {
+        lte: now,
+      },
+    },
+    data: {
+      status: ArticleStatus.PUBLISHED,
+      publishedAt: scheduledPublishAt ?? now,
+      publishedByUserId: scheduledByUserId,
+      scheduledPublishAt: null,
+      scheduledByUserId: null,
+    },
+  });
+
+  return result.count === 1;
 }
 
 export async function deleteArticle(articleId: number) {
