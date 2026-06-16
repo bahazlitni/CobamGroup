@@ -92,6 +92,7 @@ type PublicArticleRecord = {
     imageId: bigint | null;
     backgroundColor: string;
     horizontalAspectRatio: ArticleCTABannerDto["horizontalAspectRatio"];
+    anchor: ArticleCTABannerDto["anchor"];
     approxPositionPercentage: number;
     href: string | null;
     image: {
@@ -230,6 +231,7 @@ function mapPublicArticleCtaBanners(article: PublicArticleRecord): ArticleCTABan
       imageHeight: banner.image?.heightPx ?? null,
       backgroundColor: banner.backgroundColor,
       horizontalAspectRatio: banner.horizontalAspectRatio,
+      anchor: banner.anchor,
       approxPositionPercentage: banner.approxPositionPercentage,
       href: banner.href,
       buttons: banner.buttons.map((button) => ({
@@ -455,6 +457,7 @@ export async function findPublicArticleBySlug(
           imageId: true,
           backgroundColor: true,
           horizontalAspectRatio: true,
+          anchor: true,
           approxPositionPercentage: true,
           href: true,
           image: {

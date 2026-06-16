@@ -151,6 +151,7 @@ function ArticleEditPageContent() {
     editor.isUnpublishing ||
     editor.isScheduling ||
     editor.isCancelingSchedule;
+  const articlePublicHref = editor.article?.slug ? `/actualites/${editor.article.slug}` : null;
 
   const handleDeleteArticle = () => {
     if (!canDeleteArticle || editor.isDeleting) {
@@ -253,6 +254,19 @@ function ArticleEditPageContent() {
               }
             >
               <div className="grid gap-3">
+                {articlePublicHref ? (
+                  <AnimatedUIButton
+                    href={articlePublicHref}
+                    target="_blank"
+                    variant="outline"
+                    icon="external-link"
+                    iconPosition="left"
+                    className="w-full"
+                  >
+                    Voir l&apos;article
+                  </AnimatedUIButton>
+                ) : null}
+
                 {!isPublished && canPublishArticle ? (
                   <AnimatedUIButton
                     type="button"
@@ -684,9 +698,9 @@ function ArticleEditPageContent() {
         </Panel>
 
         <Panel
-          pretitle="Conversion"
+          pretitle=""
           title="Bannières CTA"
-          description="Ajoutez des appels à l'action directement dans le fil de lecture de l'article."
+          description=""
           allowOverflow
         >
           <ArticleCTABannersEditor

@@ -6,17 +6,24 @@ import ArticleCTABannerRenderer from "@/components/public/articles/article-cta-b
 import MediaImageField from "@/components/staff/media/importers/media-image-field";
 import PanelField from "@/components/staff/ui/PanelField";
 import PanelInput from "@/components/staff/ui/PanelInput";
+import StaffSelect from "@/components/staff/ui/PanelSelect";
+import AnchorPicker from "@/components/ui/custom/AnchorPicker";
+import AnimatedIconPicker from "@/components/ui/custom/AnimatedIconPicker";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   ARTICLE_CTA_BANNER_ASPECT_RATIOS,
+  getArticleCtaBannerAspectRatioCss,
 } from "@/features/articles/cta-banners";
 import type {
   ArticleEditorCTABanner,
   ArticleEditorCTABannerButton,
 } from "@/features/articles/hooks/use-article-editor";
-import type { ArticleCTABannerHorizontalAspectRatio } from "@/features/articles/types";
+import type {
+  ArticleCTABannerAnchor,
+  ArticleCTABannerHorizontalAspectRatio,
+} from "@/features/articles/types";
 import { cn } from "@/lib/utils";
 
 type ArticleCTABannersEditorProps = {
@@ -24,6 +31,11 @@ type ArticleCTABannersEditorProps = {
   onChange: (value: ArticleEditorCTABanner[]) => void;
   disabled?: boolean;
 };
+
+const ASPECT_RATIO_OPTIONS = ARTICLE_CTA_BANNER_ASPECT_RATIOS.map((ratio) => ({
+  value: ratio.value,
+  label: ratio.label,
+}));
 
 function createRowId(prefix: string) {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -53,6 +65,7 @@ function createDefaultBanner(index: number): ArticleEditorCTABanner {
     imageId: "",
     backgroundColor: "#14202e",
     horizontalAspectRatio: "RATIO_21_10" as ArticleCTABannerHorizontalAspectRatio,
+    anchor: "CENTER_CENTER" as ArticleCTABannerAnchor,
     approxPositionPercentage: 50,
     href: "",
     buttons: [createDefaultButton(0)],
@@ -75,6 +88,7 @@ function toPreviewBanner(banner: ArticleEditorCTABanner, index: number) {
     imageHeight: null,
     backgroundColor: banner.backgroundColor || "#14202e",
     horizontalAspectRatio: banner.horizontalAspectRatio,
+    anchor: banner.anchor,
     approxPositionPercentage: banner.approxPositionPercentage,
     href: banner.href.trim() || null,
     buttons: banner.buttons.map((button, buttonIndex) => ({
@@ -105,6 +119,11 @@ export default function ArticleCTABannersEditor({
   disabled = false,
 }: ArticleCTABannersEditorProps) {
   const [previewRows, setPreviewRows] = useState<Set<string>>(() => new Set());
+  const [draggedButton, setDraggedButton] = useState<{
+    bannerRowId: string;
+    buttonRowId: string;
+  } | null>(null);
+  const [dragOverButtonRowId, setDragOverButtonRowId] = useState<string | null>(null);
   const sortedBanners = useMemo(() => sortBannersForDisplay(value), [value]);
 
   const updateBanner = (
@@ -176,18 +195,22 @@ export default function ArticleCTABannersEditor({
     }));
   };
 
-  const moveButton = (bannerRowId: string, buttonRowId: string, direction: -1 | 1) => {
-    updateBanner(bannerRowId, (banner) => {
-      const index = banner.buttons.findIndex((button) => button.rowId === buttonRowId);
-      const nextIndex = index + direction;
+  const reorderButton = (bannerRowId: string, fromButtonRowId: string, toButtonRowId: string) => {
+    if (fromButtonRowId === toButtonRowId) {
+      return;
+    }
 
-      if (index < 0 || nextIndex < 0 || nextIndex >= banner.buttons.length) {
+    updateBanner(bannerRowId, (banner) => {
+      const fromIndex = banner.buttons.findIndex((button) => button.rowId === fromButtonRowId);
+      const toIndex = banner.buttons.findIndex((button) => button.rowId === toButtonRowId);
+
+      if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) {
         return banner;
       }
 
       const nextButtons = [...banner.buttons];
-      const [moved] = nextButtons.splice(index, 1);
-      nextButtons.splice(nextIndex, 0, moved);
+      const [moved] = nextButtons.splice(fromIndex, 1);
+      nextButtons.splice(toIndex, 0, moved);
 
       return {
         ...banner,
@@ -213,25 +236,16 @@ export default function ArticleCTABannersEditor({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold text-cobam-dark-blue">Bannières CTA</p>
-          <p className="text-sm leading-6 text-slate-500">
-            Elles seront insérées entre les blocs de contenu selon leur position.
-          </p>
-        </div>
-
-        <AnimatedUIButton
-          type="button"
-          variant="primary"
-          icon="plus"
-          iconPosition="left"
-          onClick={() => onChange([...value, createDefaultBanner(value.length)])}
-          disabled={disabled}
-        >
-          Ajouter
-        </AnimatedUIButton>
-      </div>
+      <AnimatedUIButton
+        type="button"
+        variant="primary"
+        icon="plus"
+        iconPosition="left"
+        onClick={() => onChange([...value, createDefaultBanner(value.length)])}
+        disabled={disabled}
+      >
+        Ajouter
+      </AnimatedUIButton>
 
       {sortedBanners.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/75 p-5 text-sm leading-6 text-slate-500">
@@ -303,7 +317,7 @@ export default function ArticleCTABannersEditor({
                     <ArticleCTABannerRenderer banner={toPreviewBanner(banner, index)} />
                   ) : (
                     <div className="grid gap-5">
-                      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
+                      <div className="grid gap-5">
                         <div className="grid gap-4">
                           <PanelField id={`cta-title-${banner.rowId}`} label="Titre">
                             <PanelInput
@@ -365,7 +379,11 @@ export default function ArticleCTABannersEditor({
                               imageId: mediaId != null ? String(mediaId) : "",
                             }))
                           }
-                          aspectRatio="21:10"
+                          aspectRatio={getArticleCtaBannerAspectRatioCss(
+                            banner.horizontalAspectRatio,
+                          )}
+                          warnOnAspectRatioMismatch
+                          aspectMismatchMessage="Cette image ne correspond pas au format sélectionné. Elle pourra être recadrée dans la bannière."
                           disabled={disabled}
                           previewClassName="w-full rounded-2xl"
                         />
@@ -396,25 +414,22 @@ export default function ArticleCTABannersEditor({
                         </PanelField>
 
                         <PanelField id={`cta-ratio-${banner.rowId}`} label="Format">
-                          <select
+                          <StaffSelect
                             id={`cta-ratio-${banner.rowId}`}
                             value={banner.horizontalAspectRatio}
-                            onChange={(event) =>
+                            onValueChange={(nextValue) =>
                               updateBanner(banner.rowId, (current) => ({
                                 ...current,
-                                horizontalAspectRatio: event.target
-                                  .value as ArticleCTABannerHorizontalAspectRatio,
+                                horizontalAspectRatio:
+                                  nextValue as ArticleCTABannerHorizontalAspectRatio,
                               }))
                             }
+                            options={ASPECT_RATIO_OPTIONS}
+                            placeholder="Choisir un format"
                             disabled={disabled}
-                            className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-cobam-dark-blue"
-                          >
-                            {ARTICLE_CTA_BANNER_ASPECT_RATIOS.map((ratio) => (
-                              <option key={ratio.value} value={ratio.value}>
-                                {ratio.label}
-                              </option>
-                            ))}
-                          </select>
+                            fullWidth
+                            triggerClassName="!h-11 rounded-xl text-sm font-medium text-cobam-dark-blue"
+                          />
                         </PanelField>
 
                         <PanelField id={`cta-bg-${banner.rowId}`} label="Couleur">
@@ -447,6 +462,23 @@ export default function ArticleCTABannersEditor({
                         </PanelField>
                       </div>
 
+                      <PanelField id={`cta-anchor-${banner.rowId}`} label="Ancrage du contenu">
+                        <AnchorPicker
+                          value={banner.anchor}
+                          onValueChange={(nextAnchor) =>
+                            updateBanner(banner.rowId, (current) => ({
+                              ...current,
+                              anchor: nextAnchor,
+                            }))
+                          }
+                          aspectRatio={getArticleCtaBannerAspectRatioCss(
+                            banner.horizontalAspectRatio,
+                          )}
+                          disabled={disabled}
+                          className="w-full"
+                        />
+                      </PanelField>
+
                       <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                           <div>
@@ -477,11 +509,75 @@ export default function ArticleCTABannersEditor({
                             {banner.buttons.map((button, buttonIndex) => (
                               <div
                                 key={button.rowId}
+                                onDragOver={(event) => {
+                                  if (
+                                    disabled ||
+                                    draggedButton?.bannerRowId !== banner.rowId
+                                  ) {
+                                    return;
+                                  }
+
+                                  event.preventDefault();
+                                  setDragOverButtonRowId(button.rowId);
+                                }}
+                                onDrop={(event) => {
+                                  event.preventDefault();
+
+                                  if (
+                                    disabled ||
+                                    draggedButton?.bannerRowId !== banner.rowId
+                                  ) {
+                                    return;
+                                  }
+
+                                  reorderButton(
+                                    banner.rowId,
+                                    draggedButton.buttonRowId,
+                                    button.rowId,
+                                  );
+                                  setDraggedButton(null);
+                                  setDragOverButtonRowId(null);
+                                }}
                                 className={cn(
-                                  "grid gap-3 rounded-xl border border-slate-200 bg-white p-3",
-                                  "lg:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,1.2fr)_auto]",
+                                  "grid gap-3 rounded-xl border border-slate-200 bg-white p-3 transition",
+                                  "xl:grid-cols-[auto_minmax(0,1fr)_minmax(0,0.85fr)_minmax(0,1.2fr)_auto]",
+                                  draggedButton?.buttonRowId === button.rowId &&
+                                    "scale-[0.99] opacity-70",
+                                  dragOverButtonRowId === button.rowId &&
+                                    draggedButton?.buttonRowId !== button.rowId &&
+                                    "border-cobam-water-blue ring-2 ring-cobam-water-blue/15",
                                 )}
                               >
+                                <button
+                                  type="button"
+                                  draggable={!disabled}
+                                  onDragStart={(event) => {
+                                    if (disabled) {
+                                      return;
+                                    }
+
+                                    event.dataTransfer.effectAllowed = "move";
+                                    setDraggedButton({
+                                      bannerRowId: banner.rowId,
+                                      buttonRowId: button.rowId,
+                                    });
+                                    setDragOverButtonRowId(button.rowId);
+                                  }}
+                                  onDragEnd={() => {
+                                    setDraggedButton(null);
+                                    setDragOverButtonRowId(null);
+                                  }}
+                                  disabled={disabled}
+                                  className={cn(
+                                    "flex h-10 min-w-28 items-center justify-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-500 transition",
+                                    "hover:border-cobam-water-blue/30 hover:bg-cobam-water-blue/5 hover:text-cobam-water-blue",
+                                    disabled && "cursor-not-allowed opacity-60 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-500",
+                                  )}
+                                  aria-label={`Glisser le bouton ${buttonIndex + 1}`}
+                                >
+                                  <GripVertical className="h-4 w-4" />
+                                  #{buttonIndex + 1}
+                                </button>
                                 <PanelInput
                                   value={button.text}
                                   onChange={(event) =>
@@ -494,17 +590,15 @@ export default function ArticleCTABannersEditor({
                                   disabled={disabled}
                                   fullWidth
                                 />
-                                <PanelInput
+                                <AnimatedIconPicker
                                   value={button.iconCode}
-                                  onChange={(event) =>
+                                  onValueChange={(nextIcon) =>
                                     updateButton(banner.rowId, button.rowId, (current) => ({
                                       ...current,
-                                      iconCode: event.target.value,
+                                      iconCode: nextIcon,
                                     }))
                                   }
-                                  placeholder="arrow-right"
                                   disabled={disabled}
-                                  fullWidth
                                 />
                                 <PanelInput
                                   value={button.href}
@@ -518,23 +612,7 @@ export default function ArticleCTABannersEditor({
                                   disabled={disabled}
                                   fullWidth
                                 />
-                                <div className="flex items-center gap-2">
-                                  <AnimatedUIButton
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    icon="arrow-up"
-                                    onClick={() => moveButton(banner.rowId, button.rowId, -1)}
-                                    disabled={disabled || buttonIndex === 0}
-                                  />
-                                  <AnimatedUIButton
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    icon="arrow-down"
-                                    onClick={() => moveButton(banner.rowId, button.rowId, 1)}
-                                    disabled={disabled || buttonIndex === banner.buttons.length - 1}
-                                  />
+                                <div className="flex items-center justify-end gap-2">
                                   <AnimatedUIButton
                                     type="button"
                                     variant="ghost"

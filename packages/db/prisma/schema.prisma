@@ -26,6 +26,9 @@ enum ArticleStatus {
 enum ArticleCTABannerHorizontalAspectRatio {
   SQUARE
   RATIO_21_10
+  RATIO_21_9
+  RATIO_24_9
+  RATIO_32_9
   RATIO_16_9
   RATIO_16_10
   RATIO_5_4
@@ -33,6 +36,20 @@ enum ArticleCTABannerHorizontalAspectRatio {
   RATIO_3_2
   RATIO_7_5
   RATIO_2_1
+  RATIO_3_1
+  RATIO_4_1
+}
+
+enum ArticleCTABannerAnchor {
+  TOP_LEFT
+  TOP_CENTER
+  TOP_RIGHT
+  CENTER_LEFT
+  CENTER_CENTER
+  CENTER_RIGHT
+  BOTTOM_LEFT
+  BOTTOM_CENTER
+  BOTTOM_RIGHT
 }
 
 enum MediaLinkRole {
@@ -1671,6 +1688,7 @@ model ArticleCTABanner {
   imageId                  BigInt?                             @map("image_id")
   backgroundColor          String                              @default("#14202e") @map("background_color") @db.VarChar(30)
   horizontalAspectRatio    ArticleCTABannerHorizontalAspectRatio @default(RATIO_21_10) @map("horizontal_aspect_ratio")
+  anchor                   ArticleCTABannerAnchor              @default(CENTER_CENTER)
   approxPositionPercentage Int                                 @default(50) @map("approx_position_percentage")
   href                     String?                             @db.VarChar(500)
   createdAt                DateTime                            @default(now()) @map("created_at")

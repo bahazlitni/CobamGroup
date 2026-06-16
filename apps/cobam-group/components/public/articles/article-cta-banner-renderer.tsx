@@ -2,79 +2,20 @@
 
 import Image from "next/image";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
-import type { AnimatedIconName } from "@/components/ui/custom/AnimatedIcon";
+import { ANIMATED_ICON_NAMES, type AnimatedIconName } from "@/components/ui/custom/AnimatedIcon";
 import {
+  getArticleCtaBannerAnchorOption,
   getArticleCtaBannerAspectRatioCss,
 } from "@/features/articles/cta-banners";
 import type { ArticleCTABannerDto } from "@/features/articles/types";
 import { cn } from "@/lib/utils";
 
-const ANIMATED_ICON_NAMES = new Set<AnimatedIconName>([
-  "none",
-  "loader",
-  "arrow-right",
-  "arrow-left",
-  "arrow-up",
-  "arrow-down",
-  "chevron-right",
-  "chevron-left",
-  "chevron-up",
-  "chevron-down",
-  "external-link",
-  "plus",
-  "paper-plane",
-  "restart",
-  "pause",
-  "play",
-  "save",
-  "delete",
-  "trash",
-  "modify",
-  "check",
-  "check-circle",
-  "close",
-  "search",
-  "filter",
-  "upload",
-  "download",
-  "user",
-  "users",
-  "shield",
-  "tag",
-  "tags",
-  "package",
-  "image",
-  "image-stack",
-  "video",
-  "audio",
-  "file",
-  "file-text",
-  "warning",
-  "info",
-  "mail",
-  "phone",
-  "calendar",
-  "clock",
-  "globe",
-  "home",
-  "settings",
-  "folder",
-  "folder-open",
-  "star",
-  "heart",
-  "lock",
-  "unlock",
-  "eye",
-  "eye-off",
-  "badge-check",
-  "copy",
-  "ellipsis",
-]);
+const ANIMATED_ICON_NAME_SET = new Set<string>(ANIMATED_ICON_NAMES);
 
 function normalizeIconCode(iconCode: string | null | undefined): AnimatedIconName {
   const normalized = iconCode?.trim() as AnimatedIconName | undefined;
 
-  return normalized && ANIMATED_ICON_NAMES.has(normalized) ? normalized : "arrow-right";
+  return normalized && ANIMATED_ICON_NAME_SET.has(normalized) ? normalized : "arrow-right";
 }
 
 function getSafePublicHref(href: string | null | undefined): string | null {
@@ -103,6 +44,29 @@ function isExternalHref(href: string) {
   return /^https?:\/\//i.test(href);
 }
 
+function getAnchorLayoutClasses(anchor: ArticleCTABannerDto["anchor"]) {
+  const option = getArticleCtaBannerAnchorOption(anchor);
+  const justifyClass =
+    option.row === 0 ? "justify-start" : option.row === 1 ? "justify-center" : "justify-end";
+  const itemsClass =
+    option.col === 0 ? "items-start" : option.col === 1 ? "items-center" : "items-end";
+  const textClass =
+    option.col === 0 ? "text-left" : option.col === 1 ? "text-center" : "text-right";
+  const overlayClass =
+    option.col === 0
+      ? "bg-gradient-to-r from-[#14202e]/94 via-[#14202e]/62 to-[#14202e]/18"
+      : option.col === 2
+        ? "bg-gradient-to-l from-[#14202e]/94 via-[#14202e]/62 to-[#14202e]/18"
+        : "bg-[#14202e]/54";
+
+  return {
+    justifyClass,
+    itemsClass,
+    textClass,
+    overlayClass,
+  };
+}
+
 type ArticleCTABannerRendererProps = {
   banner: ArticleCTABannerDto;
   className?: string;
@@ -113,6 +77,7 @@ export default function ArticleCTABannerRenderer({
   className,
 }: ArticleCTABannerRendererProps) {
   const ratio = getArticleCtaBannerAspectRatioCss(banner.horizontalAspectRatio);
+  const anchorClasses = getAnchorLayoutClasses(banner.anchor);
   const validButtons = banner.buttons
     .slice()
     .sort((left, right) => left.sortOrder - right.sortOrder)
@@ -141,15 +106,22 @@ export default function ArticleCTABannerRenderer({
           alt={banner.imageAlt ?? banner.title}
           fill
           sizes="(max-width: 768px) 92vw, 768px"
+          unoptimized
           className="object-cover transition-transform duration-700 group-hover/article-cta:scale-[1.03]"
         />
       ) : null}
 
-      <div className="absolute inset-0 bg-gradient-to-r from-[#14202e]/92 via-[#14202e]/64 to-[#14202e]/22" />
+      <div className={cn("absolute inset-0", anchorClasses.overlayClass)} />
       <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-white/8" />
 
-      <div className="relative z-10 flex h-full min-h-64 flex-col justify-end p-6 text-white sm:p-8 lg:p-10">
-        <div className="max-w-2xl">
+      <div
+        className={cn(
+          "relative z-10 flex h-full min-h-64 flex-col p-6 text-white sm:p-8 lg:p-10",
+          anchorClasses.justifyClass,
+          anchorClasses.itemsClass,
+        )}
+      >
+        <div className={cn("max-w-2xl", anchorClasses.textClass)}>
           <h2
             className="text-2xl font-bold leading-tight sm:text-3xl lg:text-4xl"
             style={{ fontFamily: "var(--font-playfair), serif" }}
@@ -164,7 +136,7 @@ export default function ArticleCTABannerRenderer({
           ) : null}
 
           {validButtons.length > 0 ? (
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
               {validButtons.map((button, index) => (
                 <AnimatedUIButton
                   key={`${button.sortOrder}-${button.href}`}

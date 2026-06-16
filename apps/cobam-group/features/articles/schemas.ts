@@ -1,4 +1,8 @@
-import { ArticleCTABannerHorizontalAspectRatio, ArticleStatus } from "@prisma/client";
+import {
+  ArticleCTABannerAnchor,
+  ArticleCTABannerHorizontalAspectRatio,
+  ArticleStatus,
+} from "@prisma/client";
 import {
   ARTICLE_PAGE_SIZE_OPTIONS,
   type ArticleCreateInput,
@@ -128,6 +132,21 @@ function parseArticleCtaAspectRatio(value: unknown) {
   return value as ArticleCTABannerHorizontalAspectRatio;
 }
 
+function parseArticleCtaAnchor(value: unknown) {
+  if (value == null || value === "") {
+    return ArticleCTABannerAnchor.CENTER_CENTER;
+  }
+
+  if (
+    typeof value !== "string" ||
+    !(Object.values(ArticleCTABannerAnchor) as string[]).includes(value)
+  ) {
+    throw new ArticleValidationError('Invalid "ctaBanners.anchor"');
+  }
+
+  return value as ArticleCTABannerAnchor;
+}
+
 function parseArticleCtaPosition(value: unknown): number {
   const position = parseOptionalNullableInteger(value, "ctaBanners.approxPositionPercentage") ?? 50;
 
@@ -198,6 +217,7 @@ function parseArticleCtaBanners(value: unknown): ArticleCreateInput["ctaBanners"
       ),
       backgroundColor: parseArticleCtaBackgroundColor(banner.backgroundColor),
       horizontalAspectRatio: parseArticleCtaAspectRatio(banner.horizontalAspectRatio),
+      anchor: parseArticleCtaAnchor(banner.anchor),
       approxPositionPercentage: parseArticleCtaPosition(banner.approxPositionPercentage),
       href: parseOptionalNullableHref(banner.href),
       buttons: normalizedButtons,

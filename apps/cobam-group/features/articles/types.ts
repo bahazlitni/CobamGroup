@@ -1,8 +1,10 @@
 export type {
+  ArticleCTABannerAnchor,
   ArticleCTABannerHorizontalAspectRatio,
   ArticleStatus,
 } from "@prisma/client";
 import type {
+  ArticleCTABannerAnchor,
   ArticleCTABannerHorizontalAspectRatio,
   ArticleStatus,
 } from "@prisma/client";
@@ -54,6 +56,7 @@ export type ArticleCTABannerInput = {
   imageId: number | null;
   backgroundColor: string;
   horizontalAspectRatio: ArticleCTABannerHorizontalAspectRatio;
+  anchor: ArticleCTABannerAnchor;
   approxPositionPercentage: number;
   href: string | null;
   buttons: ArticleCTABannerButtonInput[];

@@ -22,6 +22,7 @@ import {
   toDatetimeLocalInputValue,
 } from "../scheduling";
 import type {
+  ArticleCTABannerAnchor,
   ArticleCTABannerDto,
   ArticleCTABannerHorizontalAspectRatio,
   ArticleDetailDto,
@@ -52,6 +53,7 @@ export type ArticleEditorCTABanner = {
   imageId: string;
   backgroundColor: string;
   horizontalAspectRatio: ArticleCTABannerHorizontalAspectRatio;
+  anchor: ArticleCTABannerAnchor;
   approxPositionPercentage: number;
   href: string;
   buttons: ArticleEditorCTABannerButton[];
@@ -128,6 +130,7 @@ function mapCtaBannerToEditorState(
     imageId: banner.imageId != null ? String(banner.imageId) : "",
     backgroundColor: banner.backgroundColor,
     horizontalAspectRatio: banner.horizontalAspectRatio,
+    anchor: banner.anchor,
     approxPositionPercentage: banner.approxPositionPercentage,
     href: banner.href ?? "",
     buttons: banner.buttons.map(mapCtaButtonToEditorState),
@@ -375,6 +378,7 @@ function mapEditorStateToPayload(state: ArticleEditorState) {
     imageId: banner.imageId.trim() ? Number(banner.imageId) : null,
     backgroundColor: banner.backgroundColor.trim() || "#14202e",
     horizontalAspectRatio: banner.horizontalAspectRatio,
+    anchor: banner.anchor,
     approxPositionPercentage: Math.min(
       100,
       Math.max(0, Math.round(banner.approxPositionPercentage)),

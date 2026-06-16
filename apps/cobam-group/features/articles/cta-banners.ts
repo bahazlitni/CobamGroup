@@ -9,6 +9,9 @@ import {
 export const ARTICLE_CTA_BANNER_ASPECT_RATIOS = [
   { value: "SQUARE", label: "Carré", css: "1 / 1" },
   { value: "RATIO_21_10", label: "21:10", css: "21 / 10" },
+  { value: "RATIO_21_9", label: "21:9", css: "21 / 9" },
+  { value: "RATIO_24_9", label: "24:9", css: "24 / 9" },
+  { value: "RATIO_32_9", label: "32:9", css: "32 / 9" },
   { value: "RATIO_16_9", label: "16:9", css: "16 / 9" },
   { value: "RATIO_16_10", label: "16:10", css: "16 / 10" },
   { value: "RATIO_5_4", label: "5:4", css: "5 / 4" },
@@ -16,6 +19,20 @@ export const ARTICLE_CTA_BANNER_ASPECT_RATIOS = [
   { value: "RATIO_3_2", label: "3:2", css: "3 / 2" },
   { value: "RATIO_7_5", label: "7:5", css: "7 / 5" },
   { value: "RATIO_2_1", label: "2:1", css: "2 / 1" },
+  { value: "RATIO_3_1", label: "3:1", css: "3 / 1" },
+  { value: "RATIO_4_1", label: "4:1", css: "4 / 1" },
+] as const;
+
+export const ARTICLE_CTA_BANNER_ANCHORS = [
+  { value: "TOP_LEFT", label: "Haut gauche", row: 0, col: 0 },
+  { value: "TOP_CENTER", label: "Haut centre", row: 0, col: 1 },
+  { value: "TOP_RIGHT", label: "Haut droite", row: 0, col: 2 },
+  { value: "CENTER_LEFT", label: "Centre gauche", row: 1, col: 0 },
+  { value: "CENTER_CENTER", label: "Centre", row: 1, col: 1 },
+  { value: "CENTER_RIGHT", label: "Centre droite", row: 1, col: 2 },
+  { value: "BOTTOM_LEFT", label: "Bas gauche", row: 2, col: 0 },
+  { value: "BOTTOM_CENTER", label: "Bas centre", row: 2, col: 1 },
+  { value: "BOTTOM_RIGHT", label: "Bas droite", row: 2, col: 2 },
 ] as const;
 
 export type ArticleContentWithCTABannerChunk =
@@ -43,6 +60,21 @@ export function getArticleCtaBannerAspectRatioCss(
 ) {
   return (
     ARTICLE_CTA_BANNER_ASPECT_RATIOS.find((option) => option.value === ratio)?.css ?? "21 / 10"
+  );
+}
+
+export function getArticleCtaBannerAspectRatioLabel(
+  ratio: ArticleCTABannerDto["horizontalAspectRatio"],
+) {
+  return (
+    ARTICLE_CTA_BANNER_ASPECT_RATIOS.find((option) => option.value === ratio)?.label ?? "21:10"
+  );
+}
+
+export function getArticleCtaBannerAnchorOption(anchor: ArticleCTABannerDto["anchor"]) {
+  return (
+    ARTICLE_CTA_BANNER_ANCHORS.find((option) => option.value === anchor) ??
+    ARTICLE_CTA_BANNER_ANCHORS[4]
   );
 }
 

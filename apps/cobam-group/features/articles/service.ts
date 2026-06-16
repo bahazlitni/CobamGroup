@@ -194,6 +194,7 @@ function mapArticleCtaBannersForComparison(article: ArticleRecord) {
     imageId: banner.imageId != null ? Number(banner.imageId) : null,
     backgroundColor: banner.backgroundColor,
     horizontalAspectRatio: banner.horizontalAspectRatio,
+    anchor: banner.anchor,
     approxPositionPercentage: banner.approxPositionPercentage,
     href: banner.href,
     buttons: banner.buttons.map((button) => ({

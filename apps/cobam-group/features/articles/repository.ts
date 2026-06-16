@@ -145,6 +145,7 @@ const ARTICLE_SELECT = Prisma.validator<Prisma.ArticleSelect>()({
       imageId: true,
       backgroundColor: true,
       horizontalAspectRatio: true,
+      anchor: true,
       approxPositionPercentage: true,
       href: true,
       buttons: {
@@ -197,6 +198,7 @@ function mapCtaBannersForCreate(input: ArticleCTABannerInput[]) {
     imageId: banner.imageId != null ? BigInt(banner.imageId) : null,
     backgroundColor: banner.backgroundColor,
     horizontalAspectRatio: banner.horizontalAspectRatio,
+    anchor: banner.anchor,
     approxPositionPercentage: banner.approxPositionPercentage,
     href: banner.href,
     buttons: banner.buttons.length

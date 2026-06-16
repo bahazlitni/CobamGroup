@@ -156,6 +156,7 @@ function mapArticleCtaBanners(article: {
     imageId: bigint | null;
     backgroundColor: string;
     horizontalAspectRatio: ArticleCTABannerDto["horizontalAspectRatio"];
+    anchor: ArticleCTABannerDto["anchor"];
     approxPositionPercentage: number;
     href: string | null;
     buttons: Array<{
@@ -174,6 +175,7 @@ function mapArticleCtaBanners(article: {
     imageId: banner.imageId != null ? Number(banner.imageId) : null,
     backgroundColor: banner.backgroundColor,
     horizontalAspectRatio: banner.horizontalAspectRatio,
+    anchor: banner.anchor,
     approxPositionPercentage: banner.approxPositionPercentage,
     href: banner.href,
     buttons: banner.buttons.map((button) => ({
@@ -231,6 +233,7 @@ export function mapArticleToDetailDto(
       imageId: bigint | null;
       backgroundColor: string;
       horizontalAspectRatio: ArticleCTABannerDto["horizontalAspectRatio"];
+      anchor: ArticleCTABannerDto["anchor"];
       approxPositionPercentage: number;
       href: string | null;
       buttons: Array<{

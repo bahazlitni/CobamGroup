@@ -21,6 +21,8 @@ import {
 type MediaImageFieldProps = {
   requireAspectRatio?: boolean;
   aspectRatio?: string;
+  warnOnAspectRatioMismatch?: boolean;
+  aspectMismatchMessage?: string;
   folderPath?: string;
   disabled?: boolean;
   label: string;
@@ -39,6 +41,8 @@ type MediaImageFieldProps = {
 export default function MediaImageField({
   requireAspectRatio = false,
   aspectRatio,
+  warnOnAspectRatioMismatch = false,
+  aspectMismatchMessage,
   folderPath,
   disabled = false,
   label,
@@ -105,7 +109,7 @@ export default function MediaImageField({
   const useWideLayout = isWideAspectRatio(mediaAspectRatio ?? requiredAspectRatio?.value ?? null);
   const previewAspectRatio = getAspectRatioCssValue(requiredAspectRatio, media);
   const selectedImageAspectMismatch =
-    Boolean(requireAspectRatio && requiredAspectRatio && media) &&
+    Boolean((requireAspectRatio || warnOnAspectRatioMismatch) && requiredAspectRatio && media) &&
     !matchesAspectRatio(media, requiredAspectRatio);
 
   return (
@@ -154,9 +158,10 @@ export default function MediaImageField({
                     ) : null}
                   </div>
                   {selectedImageAspectMismatch && requiredAspectRatio ? (
-                    <p className="text-xs font-medium text-amber-700">
-                      Cette image ne respecte pas le format requis {requiredAspectRatio.label}.
-                    </p>
+                    <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium leading-5 text-amber-800">
+                      {aspectMismatchMessage ??
+                        `Cette image ne respecte pas le format ${requiredAspectRatio.label}.`}
+                    </div>
                   ) : null}
                 </div>
               ) : (
