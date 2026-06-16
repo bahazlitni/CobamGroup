@@ -52,8 +52,6 @@ function getAnchorLayoutClasses(anchor: ArticleCTABannerDto["anchor"]) {
     option.col === 0 ? "items-start" : option.col === 1 ? "items-center" : "items-end";
   const textClass =
     option.col === 0 ? "text-left" : option.col === 1 ? "text-center" : "text-right";
-  const buttonJustifyClass =
-    option.col === 0 ? "justify-start" : option.col === 1 ? "justify-center" : "justify-end";
   const overlayClass =
     option.col === 0
       ? "bg-gradient-to-r from-[#14202e]/94 via-[#14202e]/62 to-[#14202e]/18"
@@ -65,7 +63,6 @@ function getAnchorLayoutClasses(anchor: ArticleCTABannerDto["anchor"]) {
     justifyClass,
     itemsClass,
     textClass,
-    buttonJustifyClass,
     overlayClass,
   };
 }
@@ -124,22 +121,28 @@ export default function ArticleCTABannerRenderer({
           anchorClasses.itemsClass,
         )}
       >
-        <div className={cn("max-w-2xl", anchorClasses.textClass)}>
+        <div
+          className={cn(
+            "flex w-full max-w-2xl flex-col",
+            anchorClasses.itemsClass,
+            anchorClasses.textClass,
+          )}
+        >
           <h2
-            className="text-2xl font-bold leading-tight sm:text-3xl lg:text-4xl"
+            className="w-full text-2xl font-bold leading-tight sm:text-3xl lg:text-4xl"
             style={{ fontFamily: "var(--font-playfair), serif" }}
           >
             {banner.title}
           </h2>
 
           {banner.description ? (
-            <p className="mt-3 max-w-xl text-sm leading-6 text-white/82 sm:text-base">
+            <p className="mt-3 w-full max-w-xl text-sm leading-6 text-white/82 sm:text-base">
               {banner.description}
             </p>
           ) : null}
 
           {validButtons.length > 0 ? (
-            <div className={cn("mt-6 flex flex-wrap gap-3", anchorClasses.buttonJustifyClass)}>
+            <div className="mt-6 flex max-w-full flex-wrap gap-3">
               {validButtons.map((button, index) => (
                 <AnimatedUIButton
                   key={`${button.sortOrder}-${button.href}`}
@@ -148,7 +151,7 @@ export default function ArticleCTABannerRenderer({
                   variant={index === 0 ? "light" : "outline-dark"}
                   icon={normalizeIconCode(button.iconCode)}
                   iconPosition="right"
-                  size="md"
+                  size="xl"
                   className={index === 0 ? "border-white bg-white" : "border-white/35"}
                 >
                   {button.text?.trim() || "Découvrir"}
