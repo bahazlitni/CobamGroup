@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { clearStaffInfiniteListCache } from "@/lib/client/use-staff-infinite-scroll";
 import { normalizeOwnedTagNames } from "@/features/tags/owned";
 import { slugify } from "@/lib/slugify";
 import { normalizeArticleContent } from "../document";
@@ -21,6 +22,8 @@ import {
   toDatetimeLocalInputValue,
 } from "../scheduling";
 import type { ArticleDetailDto } from "../types";
+
+const ARTICLE_LIST_CACHE_KEY = "articles";
 
 export type ArticleEditorCategoryAssignment = {
   rowId: string;
@@ -66,11 +69,7 @@ function createAssignmentRowId() {
   return `article-category-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function distributeScores(
-  weights: readonly number[],
-  total: number,
-  minimumEach: number,
-) {
+function distributeScores(weights: readonly number[], total: number, minimumEach: number) {
   const count = weights.length;
 
   if (count === 0) {
@@ -86,9 +85,7 @@ function distributeScores(
   const reserved = safeMinimum * count;
 
   if (roundedTotal < reserved) {
-    return Array.from({ length: count }, (_, index) =>
-      index < roundedTotal ? 1 : 0,
-    );
+    return Array.from({ length: count }, (_, index) => (index < roundedTotal ? 1 : 0));
   }
 
   const distributable = roundedTotal - reserved;
@@ -103,17 +100,15 @@ function distributeScores(
     const baseShare = Math.floor(distributable / count);
     const remainder = distributable % count;
 
-    return Array.from({ length: count }, (_, index) =>
-      safeMinimum + baseShare + (index < remainder ? 1 : 0),
+    return Array.from(
+      { length: count },
+      (_, index) => safeMinimum + baseShare + (index < remainder ? 1 : 0),
     );
   }
 
-  const rawShares = safeWeights.map(
-    (weight) => (weight / totalWeight) * distributable,
-  );
+  const rawShares = safeWeights.map((weight) => (weight / totalWeight) * distributable);
   const flooredShares = rawShares.map((share) => Math.floor(share));
-  let remainder =
-    distributable - flooredShares.reduce((sum, share) => sum + share, 0);
+  let remainder = distributable - flooredShares.reduce((sum, share) => sum + share, 0);
 
   const byFraction = rawShares
     .map((share, index) => ({
@@ -131,9 +126,7 @@ function distributeScores(
     cursor += 1;
   }
 
-  return flooredShares.map(
-    (share, index) => safeMinimum + share + extraShares[index],
-  );
+  return flooredShares.map((share, index) => safeMinimum + share + extraShares[index]);
 }
 
 function normalizeCategoryAssignments(
@@ -147,9 +140,7 @@ function normalizeCategoryAssignments(
     return [{ ...assignments[0], score: 100 }];
   }
 
-  const weights = assignments.map((assignment) =>
-    Math.max(Math.round(assignment.score) - 1, 0),
-  );
+  const weights = assignments.map((assignment) => Math.max(Math.round(assignment.score) - 1, 0));
   const distributedScores = distributeScores(weights, 100, 1);
 
   return assignments.map((assignment, index) => ({
@@ -158,9 +149,7 @@ function normalizeCategoryAssignments(
   }));
 }
 
-function addCategoryAssignmentRow(
-  assignments: readonly ArticleEditorCategoryAssignment[],
-) {
+function addCategoryAssignmentRow(assignments: readonly ArticleEditorCategoryAssignment[]) {
   return [
     ...assignments,
     {
@@ -175,9 +164,7 @@ function removeCategoryAssignmentRow(
   assignments: readonly ArticleEditorCategoryAssignment[],
   indexToRemove: number,
 ) {
-  const nextAssignments = assignments.filter(
-    (_, index) => index !== indexToRemove,
-  );
+  const nextAssignments = assignments.filter((_, index) => index !== indexToRemove);
 
   return nextAssignments;
 }
@@ -205,9 +192,7 @@ function rebalanceCategoryAssignmentScore(
   });
 }
 
-function getCategoryAssignmentsTotal(
-  assignments: readonly ArticleEditorCategoryAssignment[],
-) {
+function getCategoryAssignmentsTotal(assignments: readonly ArticleEditorCategoryAssignment[]) {
   return assignments.reduce((sum, assignment) => sum + assignment.score, 0);
 }
 
@@ -255,12 +240,10 @@ function mapArticleToEditorState(article: ArticleDetailDto): ArticleEditorState 
     content: normalizeArticleContent(article.content),
     descriptionSeo: article.descriptionSeo ?? "",
     focusKeyword: deriveFocusKeyword(article.title ?? ""),
-    coverMediaId:
-      article.coverMediaId != null ? String(article.coverMediaId) : "",
+    coverMediaId: article.coverMediaId != null ? String(article.coverMediaId) : "",
     ogTitle: article.ogTitle ?? "",
     ogDescription: article.ogDescription ?? "",
-    ogImageMediaId:
-      article.ogImageMediaId != null ? String(article.ogImageMediaId) : "",
+    ogImageMediaId: article.ogImageMediaId != null ? String(article.ogImageMediaId) : "",
     noIndex: article.noIndex,
     noFollow: article.noFollow,
     schemaType: article.schemaType ?? "Article",
@@ -275,25 +258,17 @@ function validateCategoryAssignmentsForSave(state: ArticleEditorState) {
   );
 
   if (emptyCategoryRow) {
-    throw new Error(
-      "Sélectionnez une catégorie pour chaque ligne ou supprimez la ligne vide.",
-    );
+    throw new Error("Sélectionnez une catégorie pour chaque ligne ou supprimez la ligne vide.");
   }
 
-  const categoryIds = state.categoryAssignments.map((assignment) =>
-    assignment.categoryId.trim(),
-  );
+  const categoryIds = state.categoryAssignments.map((assignment) => assignment.categoryId.trim());
 
   if (new Set(categoryIds).size !== categoryIds.length) {
-    throw new Error(
-      "Une catégorie d'articles ne peut être sélectionnée qu'une seule fois.",
-    );
+    throw new Error("Une catégorie d'articles ne peut être sélectionnée qu'une seule fois.");
   }
 
   if (state.categoryAssignments.some((assignment) => assignment.score <= 0)) {
-    throw new Error(
-      "Chaque catégorie d'articles doit avoir un score supérieur à 0.",
-    );
+    throw new Error("Chaque catégorie d'articles doit avoir un score supérieur à 0.");
   }
 }
 
@@ -324,9 +299,7 @@ function mapEditorStateToPayload(state: ArticleEditorState) {
     coverMediaId: state.coverMediaId.trim() ? Number(state.coverMediaId) : null,
     ogTitle: state.ogTitle.trim() || null,
     ogDescription: state.ogDescription.trim() || null,
-    ogImageMediaId: state.ogImageMediaId.trim()
-      ? Number(state.ogImageMediaId)
-      : null,
+    ogImageMediaId: state.ogImageMediaId.trim() ? Number(state.ogImageMediaId) : null,
     noIndex: state.noIndex,
     noFollow: state.noFollow,
     schemaType: state.schemaType.trim() || null,
@@ -338,9 +311,7 @@ export function useArticleEditor(articleId: number | null) {
   const mode = useMemo(() => (articleId ? "edit" : "create"), [articleId]);
 
   const [state, setState] = useState<ArticleEditorState>(getEmptyEditorState());
-  const [loadedState, setLoadedState] = useState<ArticleEditorState>(
-    getEmptyEditorState(),
-  );
+  const [loadedState, setLoadedState] = useState<ArticleEditorState>(getEmptyEditorState());
   const [article, setArticle] = useState<ArticleDetailDto | null>(null);
 
   const [isLoadingInitial, setIsLoadingInitial] = useState(Boolean(articleId));
@@ -365,8 +336,7 @@ export function useArticleEditor(articleId: number | null) {
     [state.categoryAssignments],
   );
   const categoryAssignmentsWillNormalize = useMemo(
-    () =>
-      state.categoryAssignments.length > 0 && categoryAssignmentsTotal !== 100,
+    () => state.categoryAssignments.length > 0 && categoryAssignmentsTotal !== 100,
     [categoryAssignmentsTotal, state.categoryAssignments.length],
   );
 
@@ -407,58 +377,45 @@ export function useArticleEditor(articleId: number | null) {
     [],
   );
 
-  const setCategoryAssignmentCategory = useCallback(
-    (index: number, categoryId: string) => {
-      setState((prev) => ({
-        ...prev,
-        categoryAssignments: prev.categoryAssignments.map((assignment, rowIndex) =>
-          rowIndex === index
-            ? {
-                ...assignment,
-                categoryId,
-              }
-            : assignment,
-        ),
-      }));
-    },
-    [],
-  );
+  const setCategoryAssignmentCategory = useCallback((index: number, categoryId: string) => {
+    setState((prev) => ({
+      ...prev,
+      categoryAssignments: prev.categoryAssignments.map((assignment, rowIndex) =>
+        rowIndex === index
+          ? {
+              ...assignment,
+              categoryId,
+            }
+          : assignment,
+      ),
+    }));
+  }, []);
 
-  const setCategoryAssignmentScore = useCallback(
-    (index: number, score: number) => {
-      setState((prev) => ({
+  const setCategoryAssignmentScore = useCallback((index: number, score: number) => {
+    setState((prev) => ({
+      ...prev,
+      categoryAssignments: rebalanceCategoryAssignmentScore(prev.categoryAssignments, index, score),
+    }));
+  }, []);
+
+  const changeCategoryAssignmentScoreBy = useCallback((index: number, delta: number) => {
+    setState((prev) => {
+      const current = prev.categoryAssignments[index];
+
+      if (!current) {
+        return prev;
+      }
+
+      return {
         ...prev,
         categoryAssignments: rebalanceCategoryAssignmentScore(
           prev.categoryAssignments,
           index,
-          score,
+          current.score + delta,
         ),
-      }));
-    },
-    [],
-  );
-
-  const changeCategoryAssignmentScoreBy = useCallback(
-    (index: number, delta: number) => {
-      setState((prev) => {
-        const current = prev.categoryAssignments[index];
-
-        if (!current) {
-          return prev;
-        }
-
-        return {
-          ...prev,
-          categoryAssignments: rebalanceCategoryAssignmentScore(
-            prev.categoryAssignments,
-            index,
-            current.score + delta,
-          ),
-        };
-      });
-    },
-    [],
-  );
+      };
+    });
+  }, []);
 
   const addCategoryAssignment = useCallback(() => {
     setState((prev) => ({
@@ -470,10 +427,7 @@ export function useArticleEditor(articleId: number | null) {
   const removeCategoryAssignment = useCallback((index: number) => {
     setState((prev) => ({
       ...prev,
-      categoryAssignments: removeCategoryAssignmentRow(
-        prev.categoryAssignments,
-        index,
-      ),
+      categoryAssignments: removeCategoryAssignmentRow(prev.categoryAssignments, index),
     }));
   }, []);
 
@@ -516,6 +470,7 @@ export function useArticleEditor(articleId: number | null) {
       setState(nextState);
       setLoadedState(nextState);
       setLastSavedAt(new Date());
+      clearStaffInfiniteListCache(ARTICLE_LIST_CACHE_KEY);
 
       if (articleId == null) {
         router.replace(`/espace/staff/gestion-des-articles/articles/edit?id=${saved.id}`);
@@ -569,17 +524,13 @@ export function useArticleEditor(articleId: number | null) {
   }, [persistWithDesiredStatus]);
 
   const schedulePublication = useCallback(async () => {
-    const scheduledPublishAtIso = datetimeLocalValueToIso(
-      state.scheduledPublishAt,
-    );
+    const scheduledPublishAtIso = datetimeLocalValueToIso(state.scheduledPublishAt);
 
     if (
       !scheduledPublishAtIso ||
       !isDatetimeLocalValueFiveMinuteAligned(state.scheduledPublishAt)
     ) {
-      setError(
-        "Choisissez une date de publication alignée sur un multiple de 5 minutes.",
-      );
+      setError("Choisissez une date de publication alignée sur un multiple de 5 minutes.");
       return null;
     }
 
@@ -600,6 +551,7 @@ export function useArticleEditor(articleId: number | null) {
       setState(nextState);
       setLoadedState(nextState);
       setLastSavedAt(new Date());
+      clearStaffInfiniteListCache(ARTICLE_LIST_CACHE_KEY);
       setNotice("Publication planifiée.");
 
       return scheduledArticle;
@@ -627,6 +579,7 @@ export function useArticleEditor(articleId: number | null) {
       setArticle(nextArticle);
       setState((prev) => ({ ...prev, scheduledPublishAt: "" }));
       setLoadedState((prev) => ({ ...prev, scheduledPublishAt: "" }));
+      clearStaffInfiniteListCache(ARTICLE_LIST_CACHE_KEY);
       setNotice("Planification annulée.");
 
       return nextArticle;
@@ -656,6 +609,7 @@ export function useArticleEditor(articleId: number | null) {
 
     try {
       await deleteArticleClient(articleId);
+      clearStaffInfiniteListCache(ARTICLE_LIST_CACHE_KEY);
       router.push("/espace/staff/gestion-des-aritcles/articles");
       router.refresh();
       return true;

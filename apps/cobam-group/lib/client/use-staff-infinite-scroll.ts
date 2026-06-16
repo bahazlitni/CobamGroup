@@ -81,6 +81,18 @@ export function writeStaffInfiniteListCache<TItem, TExtra = unknown>(
   }
 }
 
+export function clearStaffInfiniteListCache(key: string) {
+  if (!canUseSessionStorage()) {
+    return;
+  }
+
+  try {
+    window.sessionStorage.removeItem(getListCacheKey(key));
+  } catch {
+    // Ignore storage failures; the next list load will fetch fresh data.
+  }
+}
+
 export function mergeUniqueById<TItem extends { id: number | string }>(
   current: TItem[],
   incoming: TItem[],
@@ -156,10 +168,7 @@ export function useStaffScrollRestoration(key: string, ready = true) {
 
     const save = () => {
       try {
-        window.sessionStorage.setItem(
-          storageKey,
-          String(Math.max(0, Math.round(window.scrollY))),
-        );
+        window.sessionStorage.setItem(storageKey, String(Math.max(0, Math.round(window.scrollY))));
       } catch {
         // Ignore storage failures; scroll restoration is a convenience.
       }

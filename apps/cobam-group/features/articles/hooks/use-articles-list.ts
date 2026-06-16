@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  clearStaffInfiniteListCache,
   mergeUniqueById,
   readStaffInfiniteListCache,
   useStaffInfiniteScroll,
@@ -12,8 +13,10 @@ import { listArticlesClient } from "../client";
 import type { ArticleListItemDto } from "../types";
 
 const LIST_CACHE_KEY = "articles";
+const LIST_CACHE_VERSION = 2;
 
 type ArticlesListCacheExtra = {
+  cacheVersion?: number;
   search: string;
   activeSearch: string;
   status: string;
@@ -36,14 +39,22 @@ export type UseArticlesListState = {
 };
 
 export function useArticlesList(initialPageSize = 12) {
-  const [cache] = useState(() =>
-    readStaffInfiniteListCache<ArticleListItemDto, ArticlesListCacheExtra>(
+  const [cache] = useState(() => {
+    const candidate = readStaffInfiniteListCache<ArticleListItemDto, ArticlesListCacheExtra>(
       LIST_CACHE_KEY,
-    ),
-  );
-  const [items, setItems] = useState<ArticleListItemDto[]>(
-    () => cache?.items ?? [],
-  );
+    );
+
+    if (
+      candidate?.extra?.cacheVersion === LIST_CACHE_VERSION &&
+      candidate.items.every((item) => "scheduledPublishAt" in item)
+    ) {
+      return candidate;
+    }
+
+    clearStaffInfiniteListCache(LIST_CACHE_KEY);
+    return null;
+  });
+  const [items, setItems] = useState<ArticleListItemDto[]>(() => cache?.items ?? []);
   const [total, setTotal] = useState(() => cache?.total ?? 0);
   const [page, setPage] = useState(() => cache?.page ?? 1);
   const [pageSize] = useState(() => cache?.pageSize ?? initialPageSize);
@@ -54,9 +65,7 @@ export function useArticlesList(initialPageSize = 12) {
   const [status, setStatus] = useState(() => cache?.extra?.status ?? "");
   const [isLoadingInitial, setIsLoadingInitial] = useState(cache == null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(() =>
-    cache ? cache.items.length < cache.total : true,
-  );
+  const [hasMore, setHasMore] = useState(() => (cache ? cache.items.length < cache.total : true));
   const [error, setError] = useState<string | null>(null);
   const requestIdRef = useRef(0);
   const didLoadInitialRef = useRef(cache != null);
@@ -76,18 +85,10 @@ export function useArticlesList(initialPageSize = 12) {
     statusRef.current = status;
   }, [status]);
 
-  const totalPages = useMemo(
-    () => Math.max(1, Math.ceil(total / pageSize)),
-    [total, pageSize],
-  );
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total, pageSize]);
 
   const fetchArticles = useCallback(
-    async (opts?: {
-      page?: number;
-      search?: string;
-      status?: string;
-      reset?: boolean;
-    }) => {
+    async (opts?: { page?: number; search?: string; status?: string; reset?: boolean }) => {
       const nextPage = opts?.page ?? pageRef.current;
       const reset = opts?.reset ?? nextPage === 1;
       const nextSearch = opts?.search ?? activeSearchRef.current;
@@ -117,9 +118,7 @@ export function useArticlesList(initialPageSize = 12) {
           return;
         }
 
-        setItems((current) =>
-          reset ? result.items : mergeUniqueById(current, result.items),
-        );
+        setItems((current) => (reset ? result.items : mergeUniqueById(current, result.items)));
         setTotal(result.total);
         setPage(result.page);
         setHasMore(result.page * result.pageSize < result.total);
@@ -191,20 +190,18 @@ export function useArticlesList(initialPageSize = 12) {
       return;
     }
 
-    writeStaffInfiniteListCache<ArticleListItemDto, ArticlesListCacheExtra>(
-      LIST_CACHE_KEY,
-      {
-        items,
-        total,
-        page,
-        pageSize,
-        extra: {
-          search,
-          activeSearch,
-          status,
-        },
+    writeStaffInfiniteListCache<ArticleListItemDto, ArticlesListCacheExtra>(LIST_CACHE_KEY, {
+      items,
+      total,
+      page,
+      pageSize,
+      extra: {
+        cacheVersion: LIST_CACHE_VERSION,
+        search,
+        activeSearch,
+        status,
       },
-    );
+    });
   }, [activeSearch, isLoadingInitial, items, page, pageSize, search, status, total]);
 
   return {

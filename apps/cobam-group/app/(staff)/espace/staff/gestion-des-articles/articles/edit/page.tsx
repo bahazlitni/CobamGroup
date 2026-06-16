@@ -26,7 +26,9 @@ import {
 } from "@/components/staff/ui";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { useArticleCategoryOptions } from "@/features/article-categories/hooks/use-article-category-options";
 import { useArticleEditor } from "@/features/articles/hooks/use-article-editor";
@@ -41,6 +43,43 @@ function LoadingState() {
       <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
     </div>
   );
+}
+
+function padDatePart(value: number) {
+  return String(value).padStart(2, "0");
+}
+
+function parseLocalDateTime(value: string) {
+  if (!value.trim()) {
+    return null;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatDateTimeLocalValue(date: Date, time: string) {
+  const [hours = "00", minutes = "00"] = time.split(":");
+
+  return [
+    date.getFullYear(),
+    "-",
+    padDatePart(date.getMonth() + 1),
+    "-",
+    padDatePart(date.getDate()),
+    "T",
+    hours.padStart(2, "0"),
+    ":",
+    minutes.padStart(2, "0"),
+  ].join("");
+}
+
+function getTimeValueFromDate(date: Date | null) {
+  if (!date) {
+    return "";
+  }
+
+  return `${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}`;
 }
 
 function ArticleEditPageContent() {
@@ -83,6 +122,17 @@ function ArticleEditPageContent() {
     !editor.state.scheduledPublishAt ||
     isDatetimeLocalValueFiveMinuteAligned(editor.state.scheduledPublishAt);
   const scheduleMinValue = getNextFiveMinuteLocalInputValue();
+  const scheduleMinDateTime = parseLocalDateTime(scheduleMinValue);
+  const scheduleDateTime = parseLocalDateTime(editor.state.scheduledPublishAt);
+  const selectedScheduleDate = scheduleDateTime ?? undefined;
+  const scheduleTimeValue =
+    getTimeValueFromDate(scheduleDateTime) || getTimeValueFromDate(scheduleMinDateTime) || "09:00";
+  const earliestScheduleDay = scheduleMinDateTime ? new Date(scheduleMinDateTime) : new Date();
+  earliestScheduleDay.setHours(0, 0, 0, 0);
+  const scheduleTimeMin =
+    selectedScheduleDate?.toDateString() === earliestScheduleDay.toDateString()
+      ? getTimeValueFromDate(scheduleMinDateTime)
+      : undefined;
   const scheduledAtLabel = editor.article?.scheduledPublishAt
     ? new Date(editor.article.scheduledPublishAt).toLocaleString("fr-FR", {
         dateStyle: "medium",
@@ -90,14 +140,10 @@ function ArticleEditPageContent() {
       })
     : null;
   const articleAbilities = editor.article?.abilities ?? null;
-  const canEditArticle =
-    editor.mode === "create" ? true : Boolean(articleAbilities?.canEdit);
-  const canManageAuthors =
-    editor.mode === "edit" && Boolean(articleAbilities?.canManageAuthors);
-  const canDeleteArticle =
-    editor.mode === "edit" && Boolean(articleAbilities?.canDelete);
-  const canPublishArticle =
-    editor.mode === "create" ? true : Boolean(articleAbilities?.canPublish);
+  const canEditArticle = editor.mode === "create" ? true : Boolean(articleAbilities?.canEdit);
+  const canManageAuthors = editor.mode === "edit" && Boolean(articleAbilities?.canManageAuthors);
+  const canDeleteArticle = editor.mode === "edit" && Boolean(articleAbilities?.canDelete);
+  const canPublishArticle = editor.mode === "create" ? true : Boolean(articleAbilities?.canPublish);
   const isArticleActionBusy =
     editor.isSaving ||
     editor.isPublishing ||
@@ -117,6 +163,26 @@ function ArticleEditPageContent() {
     if (confirmed) {
       void editor.deleteArticle();
     }
+  };
+
+  const handleScheduleDateSelect = (date: Date | undefined) => {
+    if (!date) {
+      return;
+    }
+
+    editor.setField("scheduledPublishAt", formatDateTimeLocalValue(date, scheduleTimeValue));
+  };
+
+  const handleScheduleTimeChange = (value: string) => {
+    if (!value) {
+      editor.setField("scheduledPublishAt", "");
+      return;
+    }
+
+    editor.setField(
+      "scheduledPublishAt",
+      formatDateTimeLocalValue(selectedScheduleDate ?? scheduleMinDateTime ?? new Date(), value),
+    );
   };
 
   return (
@@ -152,8 +218,8 @@ function ArticleEditPageContent() {
 
       {editor.mode === "edit" && !canEditArticle && canManageAuthors ? (
         <StaffNotice variant="warning" title="Édition limitée">
-          Vous pouvez gérer les auteurs de cet article, mais le contenu et la
-          publication restent en lecture seule pour votre compte.
+          Vous pouvez gérer les auteurs de cet article, mais le contenu et la publication restent en
+          lecture seule pour votre compte.
         </StaffNotice>
       ) : null}
 
@@ -219,21 +285,48 @@ function ArticleEditPageContent() {
                 {!isPublished && canPublishArticle ? (
                   <div className="grid gap-3 rounded-lg border border-slate-200 bg-white p-3">
                     <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                      <CalendarClock className="h-4 w-4 text-cobam-water-blue" />
+                      <CalendarClock className="text-cobam-water-blue h-4 w-4" />
                       <span>Planification</span>
                     </div>
 
-                    <Input
-                      type="datetime-local"
-                      step={300}
-                      min={scheduleMinValue}
-                      value={editor.state.scheduledPublishAt}
-                      onChange={(event) =>
-                        editor.setField("scheduledPublishAt", event.target.value)
-                      }
-                      aria-invalid={!scheduleInputIsAligned}
-                      className="h-10 border-slate-300 bg-white"
-                    />
+                    <div className="grid gap-2">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="h-10 w-full justify-start border-slate-300 bg-white text-left font-medium"
+                            aria-invalid={!scheduleInputIsAligned}
+                          >
+                            <CalendarClock className="text-cobam-water-blue h-4 w-4" />
+                            {selectedScheduleDate
+                              ? selectedScheduleDate.toLocaleDateString("fr-FR", {
+                                  dateStyle: "medium",
+                                })
+                              : "Choisir une date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent align="start" className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={selectedScheduleDate}
+                            onSelect={handleScheduleDateSelect}
+                            disabled={(date) => date < earliestScheduleDay}
+                            captionLayout="dropdown"
+                          />
+                        </PopoverContent>
+                      </Popover>
+
+                      <Input
+                        type="time"
+                        step={300}
+                        min={scheduleTimeMin}
+                        value={scheduleTimeValue}
+                        onChange={(event) => handleScheduleTimeChange(event.target.value)}
+                        aria-invalid={!scheduleInputIsAligned}
+                        className="h-10 border-slate-300 bg-white"
+                      />
+                    </div>
 
                     {editor.state.scheduledPublishAt && !scheduleInputIsAligned ? (
                       <p className="text-xs leading-5 text-amber-700">
@@ -287,7 +380,6 @@ function ArticleEditPageContent() {
                   </div>
                 ) : null}
               </div>
-
             </StaffEditorActionsPanel>
 
             <StaffEditorInfoPanel description="Repères rapides sur cet article et son état actuel.">
@@ -309,7 +401,7 @@ function ArticleEditPageContent() {
               </div>
 
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
                   Slug
                 </p>
                 <p className="mt-1 text-sm text-slate-600">
@@ -320,7 +412,7 @@ function ArticleEditPageContent() {
               {editor.article ? (
                 <>
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                    <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
                       Créé le
                     </p>
                     <p className="mt-1 text-sm text-slate-600">
@@ -329,7 +421,7 @@ function ArticleEditPageContent() {
                   </div>
 
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                    <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
                       Dernière mise à jour
                     </p>
                     <p className="mt-1 text-sm text-slate-600">
@@ -339,12 +431,10 @@ function ArticleEditPageContent() {
 
                   {scheduledAtLabel ? (
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                      <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
                         Publication planifiée
                       </p>
-                      <p className="mt-1 text-sm text-slate-600">
-                        {scheduledAtLabel}
-                      </p>
+                      <p className="mt-1 text-sm text-slate-600">{scheduledAtLabel}</p>
                     </div>
                   ) : null}
                 </>
@@ -375,9 +465,7 @@ function ArticleEditPageContent() {
                 <PanelInput
                   id="article-display-title"
                   value={editor.state.displayTitle}
-                  onChange={(event) =>
-                    editor.setField("displayTitle", event.target.value)
-                  }
+                  onChange={(event) => editor.setField("displayTitle", event.target.value)}
                   placeholder="Titre visible"
                   disabled={!canEditArticle}
                   fullWidth
@@ -417,9 +505,7 @@ function ArticleEditPageContent() {
                 {editor.state.categoryAssignments.length > 0 ? (
                   editor.state.categoryAssignments.map((assignment, index) => {
                     const selectedIds = editor.state.categoryAssignments
-                      .map((item, itemIndex) =>
-                        itemIndex === index ? null : item.categoryId,
-                      )
+                      .map((item, itemIndex) => (itemIndex === index ? null : item.categoryId))
                       .filter(Boolean);
 
                     const options = articleCategories.map((category) => ({
@@ -430,9 +516,7 @@ function ArticleEditPageContent() {
 
                     if (
                       assignment.categoryId &&
-                      !options.some(
-                        (option) => option.value === assignment.categoryId,
-                      )
+                      !options.some((option) => option.value === assignment.categoryId)
                     ) {
                       options.unshift({
                         value: assignment.categoryId,
@@ -488,9 +572,7 @@ function ArticleEditPageContent() {
                               }}
                               disabled={!canEditArticle}
                             />
-                            <span className="text-sm font-semibold text-slate-500">
-                              %
-                            </span>
+                            <span className="text-sm font-semibold text-slate-500">%</span>
                           </div>
                         </div>
 
@@ -526,9 +608,7 @@ function ArticleEditPageContent() {
                 </AnimatedUIButton>
 
                 {articleCategoryOptionsError ? (
-                  <p className="text-sm leading-6 text-amber-700">
-                    {articleCategoryOptionsError}
-                  </p>
+                  <p className="text-sm leading-6 text-amber-700">{articleCategoryOptionsError}</p>
                 ) : null}
               </div>
             </PanelField>
@@ -539,12 +619,8 @@ function ArticleEditPageContent() {
                 description="Cette image sert de couverture d'article et de repère éditorial."
                 dialogTitle="Choisir l'image principale"
                 dialogDescription="Sélectionnez une image 16:9 depuis la médiathèque ou importez-en une nouvelle."
-                mediaId={
-                  editor.state.coverMediaId ? Number(editor.state.coverMediaId) : null
-                }
-                onChange={(value) =>
-                  editor.setField("coverMediaId", value ? String(value) : "")
-                }
+                mediaId={editor.state.coverMediaId ? Number(editor.state.coverMediaId) : null}
+                onChange={(value) => editor.setField("coverMediaId", value ? String(value) : "")}
                 aspectRatio="16:9"
                 disabled={!canEditArticle}
               />
@@ -568,8 +644,7 @@ function ArticleEditPageContent() {
             />
           ) : (
             <div className="rounded-[24px] border border-dashed border-slate-300 bg-slate-50/70 p-4 text-sm leading-6 text-slate-500">
-              Sauvegardez d&apos;abord l&apos;article pour gérer ensuite les
-              co-auteurs.
+              Sauvegardez d&apos;abord l&apos;article pour gérer ensuite les co-auteurs.
             </div>
           )}
         </Panel>
@@ -618,9 +693,7 @@ function ArticleEditPageContent() {
               <PanelInput
                 id="article-focus-keyword"
                 value={editor.state.focusKeyword}
-                onChange={(event) =>
-                  editor.setField("focusKeyword", event.target.value)
-                }
+                onChange={(event) => editor.setField("focusKeyword", event.target.value)}
                 placeholder="mot-clé-principal"
                 disabled={!canEditArticle}
                 fullWidth
