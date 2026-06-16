@@ -87,17 +87,12 @@ export default function SeoChecks({
   return (
     <section className="rounded-3xl border border-slate-300 bg-white p-5 shadow-sm sm:p-6">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Analyse SEO
-          </p>
-          <p className="text-xs text-slate-400">
-            Verification rapide dans l&apos;esprit de WordPress/Rank Math.
-          </p>
-        </div>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+          Analyse SEO
+        </p>
 
         <StaffBadge size="lg" color={scoreBadge.color} icon={scoreBadge.icon}>
-          Score estime : {normalizedScore}/100
+          Score estimé : {normalizedScore}/100
         </StaffBadge>
       </div>
 

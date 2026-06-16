@@ -5,6 +5,7 @@ import { slugify } from "@/lib/slugify";
 import type {
   ArticleAbilitiesDto,
   ArticleCategoryAssignmentDto,
+  ArticleCTABannerDto,
   ArticleAssignableAuthorDto,
   ArticleAuthorDto,
   ArticleDetailDto,
@@ -147,6 +148,44 @@ function mapArticleTags(article: {
   }));
 }
 
+function mapArticleCtaBanners(article: {
+  ctaBanners?: Array<{
+    id: bigint;
+    title: string;
+    description: string | null;
+    imageId: bigint | null;
+    backgroundColor: string;
+    horizontalAspectRatio: ArticleCTABannerDto["horizontalAspectRatio"];
+    approxPositionPercentage: number;
+    href: string | null;
+    buttons: Array<{
+      id: bigint;
+      text: string | null;
+      iconCode: string | null;
+      sortOrder: number;
+      href: string | null;
+    }>;
+  }>;
+}): ArticleCTABannerDto[] {
+  return (article.ctaBanners ?? []).map((banner) => ({
+    id: Number(banner.id),
+    title: banner.title,
+    description: banner.description,
+    imageId: banner.imageId != null ? Number(banner.imageId) : null,
+    backgroundColor: banner.backgroundColor,
+    horizontalAspectRatio: banner.horizontalAspectRatio,
+    approxPositionPercentage: banner.approxPositionPercentage,
+    href: banner.href,
+    buttons: banner.buttons.map((button) => ({
+      id: Number(button.id),
+      text: button.text,
+      iconCode: button.iconCode,
+      sortOrder: button.sortOrder,
+      href: button.href,
+    })),
+  }));
+}
+
 export function mapArticleToDetailDto(
   article: {
     id: bigint;
@@ -185,6 +224,23 @@ export function mapArticleToDetailDto(
         color: string;
       };
     }>;
+    ctaBanners?: Array<{
+      id: bigint;
+      title: string;
+      description: string | null;
+      imageId: bigint | null;
+      backgroundColor: string;
+      horizontalAspectRatio: ArticleCTABannerDto["horizontalAspectRatio"];
+      approxPositionPercentage: number;
+      href: string | null;
+      buttons: Array<{
+        id: bigint;
+        text: string | null;
+        iconCode: string | null;
+        sortOrder: number;
+        href: string | null;
+      }>;
+    }>;
   },
   abilities: ArticleAbilitiesDto,
 ): ArticleDetailDto {
@@ -214,6 +270,7 @@ export function mapArticleToDetailDto(
     noIndex: article.noIndex,
     noFollow: article.noFollow,
     schemaType: article.schemaType,
+    ctaBanners: mapArticleCtaBanners(article),
     abilities,
   };
 }

@@ -1,4 +1,4 @@
-import { ArticleStatus } from "@prisma/client";
+import { ArticleCTABannerHorizontalAspectRatio, ArticleStatus } from "@prisma/client";
 import {
   ARTICLE_PAGE_SIZE_OPTIONS,
   type ArticleCreateInput,
@@ -41,6 +41,20 @@ function parseOptionalNullableString(
   }
   const trimmed = value.trim();
   return trimmed === "" ? null : trimmed;
+}
+
+function parseOptionalNullableHref(value: unknown): string | null {
+  const href = parseOptionalNullableString(value);
+
+  if (!href) {
+    return null;
+  }
+
+  if (href.length > 500 || /^\s*javascript:/i.test(href)) {
+    throw new ArticleValidationError("Invalid link field");
+  }
+
+  return href;
 }
 
 function parseOptionalDescriptionSeo(value: unknown) {
@@ -87,6 +101,108 @@ function parseOptionalNullableInteger(
   }
 
   throw new ArticleValidationError(`Invalid "${fieldName}"`);
+}
+
+function parseArticleCtaBackgroundColor(value: unknown): string {
+  const color = parseOptionalNullableString(value) ?? "#14202e";
+
+  if (!/^#[0-9A-Fa-f]{6}$/.test(color)) {
+    throw new ArticleValidationError('Invalid "ctaBanners.backgroundColor"');
+  }
+
+  return color;
+}
+
+function parseArticleCtaAspectRatio(value: unknown) {
+  if (value == null || value === "") {
+    return ArticleCTABannerHorizontalAspectRatio.RATIO_21_10;
+  }
+
+  if (
+    typeof value !== "string" ||
+    !(Object.values(ArticleCTABannerHorizontalAspectRatio) as string[]).includes(value)
+  ) {
+    throw new ArticleValidationError('Invalid "ctaBanners.horizontalAspectRatio"');
+  }
+
+  return value as ArticleCTABannerHorizontalAspectRatio;
+}
+
+function parseArticleCtaPosition(value: unknown): number {
+  const position = parseOptionalNullableInteger(value, "ctaBanners.approxPositionPercentage") ?? 50;
+
+  if (position < 0 || position > 100) {
+    throw new ArticleValidationError(
+      '"ctaBanners.approxPositionPercentage" must be between 0 and 100',
+    );
+  }
+
+  return position;
+}
+
+function parseArticleCtaBanners(value: unknown): ArticleCreateInput["ctaBanners"] {
+  if (value == null) {
+    return [];
+  }
+
+  if (!Array.isArray(value)) {
+    throw new ArticleValidationError('Invalid "ctaBanners"');
+  }
+
+  return value.map((banner, bannerIndex) => {
+    if (!isRecord(banner)) {
+      throw new ArticleValidationError('Invalid "ctaBanners"');
+    }
+
+    const rawButtons = banner.buttons;
+    const buttons = rawButtons == null ? [] : rawButtons;
+
+    if (!Array.isArray(buttons)) {
+      throw new ArticleValidationError('Invalid "ctaBanners.buttons"');
+    }
+
+    if (buttons.length > 2) {
+      throw new ArticleValidationError("Une bannière CTA ne peut pas avoir plus de deux boutons.");
+    }
+
+    const normalizedButtons = buttons
+      .map((button, buttonIndex) => {
+        if (!isRecord(button)) {
+          throw new ArticleValidationError('Invalid "ctaBanners.buttons"');
+        }
+
+        const rawSortOrder = parseOptionalNullableInteger(
+          button.sortOrder,
+          `ctaBanners[${bannerIndex}].buttons[${buttonIndex}].sortOrder`,
+        );
+
+        return {
+          text: parseOptionalNullableString(button.text),
+          iconCode: parseOptionalNullableString(button.iconCode),
+          sortOrder: rawSortOrder ?? buttonIndex,
+          href: parseOptionalNullableHref(button.href),
+        };
+      })
+      .sort((left, right) => left.sortOrder - right.sortOrder)
+      .map((button, buttonIndex) => ({
+        ...button,
+        sortOrder: buttonIndex,
+      }));
+
+    return {
+      title: parseRequiredString(banner.title, `ctaBanners[${bannerIndex}].title`),
+      description: parseOptionalNullableString(banner.description),
+      imageId: parseOptionalNullableInteger(
+        banner.imageId,
+        `ctaBanners[${bannerIndex}].imageId`,
+      ),
+      backgroundColor: parseArticleCtaBackgroundColor(banner.backgroundColor),
+      horizontalAspectRatio: parseArticleCtaAspectRatio(banner.horizontalAspectRatio),
+      approxPositionPercentage: parseArticleCtaPosition(banner.approxPositionPercentage),
+      href: parseOptionalNullableHref(banner.href),
+      buttons: normalizedButtons,
+    };
+  });
 }
 
 function parseCategoryAssignments(
@@ -252,6 +368,7 @@ function parseArticleInputBase(raw: unknown): ArticleCreateInput {
     noFollow: parseOptionalNullableBoolean(raw.noFollow),
     schemaType: parseOptionalNullableString(raw.schemaType),
     authorIds: parseAuthorIds(raw.authorIds),
+    ctaBanners: parseArticleCtaBanners(raw.ctaBanners),
   };
 }
 

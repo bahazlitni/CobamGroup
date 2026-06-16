@@ -21,7 +21,11 @@ import {
   isDatetimeLocalValueFiveMinuteAligned,
   toDatetimeLocalInputValue,
 } from "../scheduling";
-import type { ArticleDetailDto } from "../types";
+import type {
+  ArticleCTABannerDto,
+  ArticleCTABannerHorizontalAspectRatio,
+  ArticleDetailDto,
+} from "../types";
 
 const ARTICLE_LIST_CACHE_KEY = "articles";
 
@@ -29,6 +33,28 @@ export type ArticleEditorCategoryAssignment = {
   rowId: string;
   categoryId: string;
   score: number;
+};
+
+export type ArticleEditorCTABannerButton = {
+  rowId: string;
+  id: number | null;
+  text: string;
+  iconCode: string;
+  sortOrder: number;
+  href: string;
+};
+
+export type ArticleEditorCTABanner = {
+  rowId: string;
+  id: number | null;
+  title: string;
+  description: string;
+  imageId: string;
+  backgroundColor: string;
+  horizontalAspectRatio: ArticleCTABannerHorizontalAspectRatio;
+  approxPositionPercentage: number;
+  href: string;
+  buttons: ArticleEditorCTABannerButton[];
 };
 
 export type ArticleEditorState = {
@@ -49,6 +75,7 @@ export type ArticleEditorState = {
   noIndex: boolean;
   noFollow: boolean;
   schemaType: string;
+  ctaBanners: ArticleEditorCTABanner[];
   scheduledPublishAt: string;
   status: "draft" | "published";
 };
@@ -67,6 +94,44 @@ function createAssignmentRowId() {
   }
 
   return `article-category-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function createCtaBannerRowId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return `article-cta-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function mapCtaButtonToEditorState(
+  button: ArticleCTABannerDto["buttons"][number],
+): ArticleEditorCTABannerButton {
+  return {
+    rowId: createCtaBannerRowId(),
+    id: button.id,
+    text: button.text ?? "",
+    iconCode: button.iconCode ?? "arrow-right",
+    sortOrder: button.sortOrder,
+    href: button.href ?? "",
+  };
+}
+
+function mapCtaBannerToEditorState(
+  banner: ArticleCTABannerDto,
+): ArticleEditorCTABanner {
+  return {
+    rowId: createCtaBannerRowId(),
+    id: banner.id,
+    title: banner.title,
+    description: banner.description ?? "",
+    imageId: banner.imageId != null ? String(banner.imageId) : "",
+    backgroundColor: banner.backgroundColor,
+    horizontalAspectRatio: banner.horizontalAspectRatio,
+    approxPositionPercentage: banner.approxPositionPercentage,
+    href: banner.href ?? "",
+    buttons: banner.buttons.map(mapCtaButtonToEditorState),
+  };
 }
 
 function distributeScores(weights: readonly number[], total: number, minimumEach: number) {
@@ -215,6 +280,7 @@ function getEmptyEditorState(): ArticleEditorState {
     noIndex: false,
     noFollow: false,
     schemaType: "Article",
+    ctaBanners: [],
     scheduledPublishAt: "",
     status: "draft",
   };
@@ -247,6 +313,7 @@ function mapArticleToEditorState(article: ArticleDetailDto): ArticleEditorState 
     noIndex: article.noIndex,
     noFollow: article.noFollow,
     schemaType: article.schemaType ?? "Article",
+    ctaBanners: article.ctaBanners.map(mapCtaBannerToEditorState),
     scheduledPublishAt: toDatetimeLocalInputValue(article.scheduledPublishAt),
     status: article.status === "PUBLISHED" ? "published" : "draft",
   };
@@ -272,8 +339,25 @@ function validateCategoryAssignmentsForSave(state: ArticleEditorState) {
   }
 }
 
+function validateCtaBannersForSave(state: ArticleEditorState) {
+  state.ctaBanners.forEach((banner, index) => {
+    if (!banner.title.trim()) {
+      throw new Error(`La bannière CTA #${index + 1} doit avoir un titre.`);
+    }
+
+    if (!/^#[0-9A-Fa-f]{6}$/.test(banner.backgroundColor.trim())) {
+      throw new Error(`La bannière CTA #${index + 1} doit utiliser une couleur hexadécimale.`);
+    }
+
+    if (banner.buttons.length > 2) {
+      throw new Error("Une bannière CTA ne peut pas avoir plus de deux boutons.");
+    }
+  });
+}
+
 function mapEditorStateToPayload(state: ArticleEditorState) {
   validateCategoryAssignmentsForSave(state);
+  validateCtaBannersForSave(state);
   const normalizedCategoryAssignments =
     state.categoryAssignments.length === 0
       ? []
@@ -285,6 +369,24 @@ function mapEditorStateToPayload(state: ArticleEditorState) {
           categoryId: Number(state.categoryAssignments[index].categoryId),
           score,
         }));
+  const ctaBanners = state.ctaBanners.map((banner) => ({
+    title: banner.title.trim(),
+    description: banner.description.trim() || null,
+    imageId: banner.imageId.trim() ? Number(banner.imageId) : null,
+    backgroundColor: banner.backgroundColor.trim() || "#14202e",
+    horizontalAspectRatio: banner.horizontalAspectRatio,
+    approxPositionPercentage: Math.min(
+      100,
+      Math.max(0, Math.round(banner.approxPositionPercentage)),
+    ),
+    href: banner.href.trim() || null,
+    buttons: banner.buttons.slice(0, 2).map((button, index) => ({
+      text: button.text.trim() || null,
+      iconCode: button.iconCode.trim() || null,
+      sortOrder: index,
+      href: button.href.trim() || null,
+    })),
+  }));
 
   return {
     title: state.title.trim(),
@@ -303,6 +405,7 @@ function mapEditorStateToPayload(state: ArticleEditorState) {
     noIndex: state.noIndex,
     noFollow: state.noFollow,
     schemaType: state.schemaType.trim() || null,
+    ctaBanners,
   };
 }
 

@@ -4,6 +4,7 @@ import { Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { CalendarClock, Loader2, XCircle } from "lucide-react";
 import ArticleAuthorsPanel from "@/components/staff/articles/article-authors-panel";
+import ArticleCTABannersEditor from "@/components/staff/articles/article-cta-banners-editor";
 import ArticleRichTextEditor from "@/components/staff/articles/article-rich-text-editor";
 import AutosaveIndicator from "@/components/staff/articles/AutosaveIndicator";
 import SeoChecks from "@/components/staff/articles/SeoChecks";
@@ -499,7 +500,6 @@ function ArticleEditPageContent() {
             <PanelField
               id="article-categories"
               label="Catégories d'articles"
-              hint="Ajoutez une ou plusieurs catégories. Les scores restent libres pendant l'édition puis sont normalisés à 100% à l'enregistrement."
             >
               <div className="space-y-4">
                 {editor.state.categoryAssignments.length > 0 ? (
@@ -681,6 +681,19 @@ function ArticleEditPageContent() {
               />
             </PanelField>
           </div>
+        </Panel>
+
+        <Panel
+          pretitle="Conversion"
+          title="Bannières CTA"
+          description="Ajoutez des appels à l'action directement dans le fil de lecture de l'article."
+          allowOverflow
+        >
+          <ArticleCTABannersEditor
+            value={editor.state.ctaBanners}
+            onChange={(nextBanners) => editor.setField("ctaBanners", nextBanners)}
+            disabled={!canEditArticle}
+          />
         </Panel>
 
         <Panel

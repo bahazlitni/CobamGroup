@@ -1,5 +1,11 @@
-export type { ArticleStatus } from "@prisma/client";
-import type { ArticleStatus } from "@prisma/client";
+export type {
+  ArticleCTABannerHorizontalAspectRatio,
+  ArticleStatus,
+} from "@prisma/client";
+import type {
+  ArticleCTABannerHorizontalAspectRatio,
+  ArticleStatus,
+} from "@prisma/client";
 
 export const ARTICLE_PAGE_SIZE_OPTIONS = [8, 12, 16, 20] as const;
 export type ArticlePageSize = (typeof ARTICLE_PAGE_SIZE_OPTIONS)[number];
@@ -30,9 +36,28 @@ export type ArticleCreateInput = {
   noFollow: boolean;
   schemaType: string | null;
   authorIds: string[];
+  ctaBanners: ArticleCTABannerInput[];
 };
 
 export type ArticleUpdateInput = ArticleCreateInput;
+
+export type ArticleCTABannerButtonInput = {
+  text: string | null;
+  iconCode: string | null;
+  sortOrder: number;
+  href: string | null;
+};
+
+export type ArticleCTABannerInput = {
+  title: string;
+  description: string | null;
+  imageId: number | null;
+  backgroundColor: string;
+  horizontalAspectRatio: ArticleCTABannerHorizontalAspectRatio;
+  approxPositionPercentage: number;
+  href: string | null;
+  buttons: ArticleCTABannerButtonInput[];
+};
 
 export type ArticleCategoryAssignmentInput = {
   categoryId: number;
@@ -77,6 +102,20 @@ export type ArticleAbilitiesDto = {
   canManageAuthors: boolean;
   canPublish: boolean;
   canDelete: boolean;
+};
+
+export type ArticleCTABannerButtonDto = ArticleCTABannerButtonInput & {
+  id: number;
+};
+
+export type ArticleCTABannerDto = Omit<ArticleCTABannerInput, "buttons"> & {
+  id: number;
+  imageUrl?: string | null;
+  imageThumbnailUrl?: string | null;
+  imageAlt?: string | null;
+  imageWidth?: number | null;
+  imageHeight?: number | null;
+  buttons: ArticleCTABannerButtonDto[];
 };
 
 export type ArticleAuthorOptionsQuery = {
@@ -127,6 +166,7 @@ export type ArticleDetailDto = {
   noIndex: boolean;
   noFollow: boolean;
   schemaType: string | null;
+  ctaBanners: ArticleCTABannerDto[];
   abilities: ArticleAbilitiesDto;
 };
 

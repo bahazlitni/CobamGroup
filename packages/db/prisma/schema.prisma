@@ -23,6 +23,18 @@ enum ArticleStatus {
   ARCHIVED
 }
 
+enum ArticleCTABannerHorizontalAspectRatio {
+  SQUARE
+  RATIO_21_10
+  RATIO_16_9
+  RATIO_16_10
+  RATIO_5_4
+  RATIO_4_3
+  RATIO_3_2
+  RATIO_7_5
+  RATIO_2_1
+}
+
 enum MediaLinkRole {
   COVER
   GALLERY
@@ -1599,6 +1611,7 @@ model Article {
   categoryLinks ArticleCategoryLink[]
   authorLinks   ArticleAuthorLink[]
   mediaLinks    ArticleMediaLink[]
+  ctaBanners    ArticleCTABanner[]
 
   @@index([authorId])
   @@index([coverMediaId])
@@ -1648,6 +1661,46 @@ model ArticleMediaLink {
   @@id([articleId, mediaId])
   @@index([mediaId])
   @@map("article_media_links")
+}
+
+model ArticleCTABanner {
+  id                       BigInt                              @id @default(autoincrement())
+  articleId                BigInt                              @map("article_id")
+  title                    String                              @db.VarChar(255)
+  description              String?                             @db.Text
+  imageId                  BigInt?                             @map("image_id")
+  backgroundColor          String                              @default("#14202e") @map("background_color") @db.VarChar(30)
+  horizontalAspectRatio    ArticleCTABannerHorizontalAspectRatio @default(RATIO_21_10) @map("horizontal_aspect_ratio")
+  approxPositionPercentage Int                                 @default(50) @map("approx_position_percentage")
+  href                     String?                             @db.VarChar(500)
+  createdAt                DateTime                            @default(now()) @map("created_at")
+  updatedAt                DateTime                            @updatedAt @map("updated_at")
+
+  article Article                  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  image   Media?                   @relation("ArticleCTABannerImageMedia", fields: [imageId], references: [id], onDelete: SetNull)
+  buttons ArticleCTABannerButton[]
+
+  @@index([articleId])
+  @@index([imageId])
+  @@index([articleId, approxPositionPercentage])
+  @@map("article_cta_banners")
+}
+
+model ArticleCTABannerButton {
+  id        BigInt   @id @default(autoincrement())
+  bannerId  BigInt   @map("banner_id")
+  text      String?  @db.VarChar(120)
+  iconCode  String?  @map("icon_code") @db.VarChar(80)
+  sortOrder Int      @default(0) @map("sort_order")
+  href      String?  @db.VarChar(500)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  banner ArticleCTABanner @relation(fields: [bannerId], references: [id], onDelete: Cascade)
+
+  @@index([bannerId])
+  @@index([bannerId, sortOrder])
+  @@map("article_cta_banner_buttons")
 }
 
 model MediaFolder {
@@ -1708,6 +1761,7 @@ model Media {
   articleCoverFor            Article[]            @relation("ArticleCoverMedia")
   articleOgImageFor          Article[]            @relation("ArticleOgImageMedia")
   articleMediaLinks          ArticleMediaLink[]
+  articleCtaBannerImages     ArticleCTABanner[]   @relation("ArticleCTABannerImageMedia")
 
   @@index([folderId])
   @@index([uploadedByUserId])

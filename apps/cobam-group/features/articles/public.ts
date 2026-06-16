@@ -8,6 +8,7 @@ import { canPreviewDraftArticleOnPublicPage } from "@/features/articles/access";
 import type { StaffSession } from "@/features/auth/types";
 import { makeMediaPublicMany } from "@/features/media/repository";
 import { prisma } from "@/lib/server/db/prisma";
+import type { ArticleCTABannerDto } from "./types";
 
 export type PublicArticleSummary = {
   id: number;
@@ -33,6 +34,7 @@ export type PublicArticleSummary = {
 
 export type PublicArticleDetail = PublicArticleSummary & {
   content: string;
+  ctaBanners: ArticleCTABannerDto[];
   descriptionSeo: string | null;
   ogTitle: string | null;
   ogDescription: string | null;
@@ -83,6 +85,32 @@ type PublicArticleRecord = {
       color: string;
     };
   }>;
+  ctaBanners?: Array<{
+    id: bigint;
+    title: string;
+    description: string | null;
+    imageId: bigint | null;
+    backgroundColor: string;
+    horizontalAspectRatio: ArticleCTABannerDto["horizontalAspectRatio"];
+    approxPositionPercentage: number;
+    href: string | null;
+    image: {
+      id: bigint;
+      altText: string | null;
+      title: string | null;
+      widthPx: number | null;
+      heightPx: number | null;
+      isActive: boolean;
+      deletedAt: Date | null;
+    } | null;
+    buttons: Array<{
+      id: bigint;
+      text: string | null;
+      iconCode: string | null;
+      sortOrder: number;
+      href: string | null;
+    }>;
+  }>;
 };
 
 const AUTHOR_LINK_ORDER_BY = [
@@ -132,11 +160,13 @@ async function ensurePublishedArticleMediaPublic(input: {
   coverMediaId: bigint | null;
   ogImageMediaId: bigint | null;
   content: string;
+  ctaImageIds?: readonly bigint[];
 }) {
   const mediaIds = [
     ...(input.coverMediaId != null ? [Number(input.coverMediaId)] : []),
     ...(input.ogImageMediaId != null ? [Number(input.ogImageMediaId)] : []),
     ...extractArticleMediaIds(input.content),
+    ...(input.ctaImageIds ?? []).map((mediaId) => Number(mediaId)),
   ];
 
   await makeMediaPublicMany(mediaIds);
@@ -176,6 +206,41 @@ function mapPublicArticleSummary(article: PublicArticleRecord): PublicArticleSum
     coverImageHeight: article.coverMedia?.heightPx ?? null,
     categories: getPublicArticleCategories(article),
   };
+}
+
+function mapPublicArticleCtaBanners(article: PublicArticleRecord): ArticleCTABannerDto[] {
+  return (article.ctaBanners ?? []).map((banner) => {
+    const imageId = banner.imageId;
+    const hasImage =
+      banner.image != null &&
+      banner.image.isActive &&
+      banner.image.deletedAt == null &&
+      imageId != null;
+
+    return {
+      id: Number(banner.id),
+      title: banner.title,
+      description: banner.description,
+      imageId: imageId != null ? Number(imageId) : null,
+      imageUrl: hasImage && imageId != null ? buildPublicMediaUrl(imageId, "original") : null,
+      imageThumbnailUrl:
+        hasImage && imageId != null ? buildPublicMediaUrl(imageId, "thumbnail") : null,
+      imageAlt: banner.image?.altText ?? banner.image?.title ?? banner.title,
+      imageWidth: banner.image?.widthPx ?? null,
+      imageHeight: banner.image?.heightPx ?? null,
+      backgroundColor: banner.backgroundColor,
+      horizontalAspectRatio: banner.horizontalAspectRatio,
+      approxPositionPercentage: banner.approxPositionPercentage,
+      href: banner.href,
+      buttons: banner.buttons.map((button) => ({
+        id: Number(button.id),
+        text: button.text,
+        iconCode: button.iconCode,
+        sortOrder: button.sortOrder,
+        href: button.href,
+      })),
+    };
+  });
 }
 
 function getPublicArticleSelect() {
@@ -377,6 +442,44 @@ export async function findPublicArticleBySlug(
       ogTitle: true,
       ogDescription: true,
       ogImageMediaId: true,
+      ctaBanners: {
+        orderBy: [
+          { approxPositionPercentage: "asc" },
+          { title: "asc" },
+          { id: "asc" },
+        ],
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          imageId: true,
+          backgroundColor: true,
+          horizontalAspectRatio: true,
+          approxPositionPercentage: true,
+          href: true,
+          image: {
+            select: {
+              id: true,
+              altText: true,
+              title: true,
+              widthPx: true,
+              heightPx: true,
+              isActive: true,
+              deletedAt: true,
+            },
+          },
+          buttons: {
+            orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+            select: {
+              id: true,
+              text: true,
+              iconCode: true,
+              sortOrder: true,
+              href: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -389,6 +492,9 @@ export async function findPublicArticleBySlug(
       coverMediaId: article.coverMediaId,
       ogImageMediaId: article.ogImageMediaId,
       content: article.content,
+      ctaImageIds: article.ctaBanners
+        .map((banner) => banner.imageId)
+        .filter((imageId): imageId is bigint => imageId != null),
     });
   } else if (
     article.status !== ArticleStatus.DRAFT ||
@@ -410,6 +516,7 @@ export async function findPublicArticleBySlug(
     content: replaceArticleImageSources(article.content, (mediaId) =>
       buildPublicMediaUrl(mediaId, "original"),
     ),
+    ctaBanners: mapPublicArticleCtaBanners(article),
     descriptionSeo: article.descriptionSeo,
     ogTitle: article.ogTitle,
     ogDescription: article.ogDescription,

@@ -3,7 +3,7 @@ import Image from "next/image";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import StructuredData from "@/components/seo/StructuredData";
-import ArticleDocumentReader from "@/components/staff/articles/article-document-reader";
+import ArticleContentWithCTABanners from "@/components/public/articles/article-content-with-cta-banners";
 import PublicArticleMeta from "@/components/public/articles/public-article-meta";
 import PublicArticleSuggestions from "@/components/public/articles/public-article-suggestions";
 import { findPublicArticleBySlug } from "@/features/articles/public";
@@ -144,7 +144,10 @@ export default async function PublicArticleDetailPage({
 
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <ArticleDocumentReader content={article.content} />
+          <ArticleContentWithCTABanners
+            content={article.content}
+            ctaBanners={article.ctaBanners}
+          />
         </div>
       </section>
 

@@ -2,6 +2,7 @@ import { ArticleStatus, Prisma, UserStatus } from "@prisma/client";
 import { prisma } from "@/lib/server/db/prisma";
 import type {
   ArticleAuthorOptionsQuery,
+  ArticleCTABannerInput,
   ArticleListQuery,
 } from "./types";
 
@@ -35,6 +36,7 @@ type ResolvedArticleInput = {
   noFollow: boolean;
   schemaType: string | null;
   authorIds: string[];
+  ctaBanners: ArticleCTABannerInput[];
 };
 
 const ARTICLE_AUTHOR_ROLE_SELECT = Prisma.validator<Prisma.UserRoleAssignmentSelect>()({
@@ -130,6 +132,33 @@ const ARTICLE_SELECT = Prisma.validator<Prisma.ArticleSelect>()({
       },
     },
   },
+  ctaBanners: {
+    orderBy: [
+      { approxPositionPercentage: "asc" },
+      { title: "asc" },
+      { id: "asc" },
+    ],
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      imageId: true,
+      backgroundColor: true,
+      horizontalAspectRatio: true,
+      approxPositionPercentage: true,
+      href: true,
+      buttons: {
+        orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+        select: {
+          id: true,
+          text: true,
+          iconCode: true,
+          sortOrder: true,
+          href: true,
+        },
+      },
+    },
+  },
 });
 
 function buildArticleWhere(query: ArticleListQuery): Prisma.ArticleWhereInput {
@@ -159,6 +188,28 @@ function normalizeAdditionalAuthorIds(
   return [...new Set(authorIds.map((authorId) => authorId.trim()).filter(Boolean))].filter(
     (authorId) => authorId !== originalAuthorId,
   );
+}
+
+function mapCtaBannersForCreate(input: ArticleCTABannerInput[]) {
+  return input.map((banner) => ({
+    title: banner.title,
+    description: banner.description,
+    imageId: banner.imageId != null ? BigInt(banner.imageId) : null,
+    backgroundColor: banner.backgroundColor,
+    horizontalAspectRatio: banner.horizontalAspectRatio,
+    approxPositionPercentage: banner.approxPositionPercentage,
+    href: banner.href,
+    buttons: banner.buttons.length
+      ? {
+          create: banner.buttons.map((button) => ({
+            text: button.text,
+            iconCode: button.iconCode,
+            sortOrder: button.sortOrder,
+            href: button.href,
+          })),
+        }
+      : undefined,
+  }));
 }
 
 function buildAuthorSearchWhere(q?: string): Prisma.UserWhereInput | undefined {
@@ -298,6 +349,11 @@ export async function createArticle(
             })),
           }
         : undefined,
+      ctaBanners: input.ctaBanners.length
+        ? {
+            create: mapCtaBannersForCreate(input.ctaBanners),
+          }
+        : undefined,
     },
     select: ARTICLE_SELECT,
   });
@@ -345,6 +401,14 @@ export async function updateArticle(
                 categoryId: BigInt(assignment.categoryId),
                 score: assignment.score,
               })),
+            }
+          : {}),
+      },
+      ctaBanners: {
+        deleteMany: {},
+        ...(input.ctaBanners.length
+          ? {
+              create: mapCtaBannersForCreate(input.ctaBanners),
             }
           : {}),
       },
@@ -416,6 +480,11 @@ export async function listDueScheduledArticles(now: Date) {
       coverMediaId: true,
       ogImageMediaId: true,
       content: true,
+      ctaBanners: {
+        select: {
+          imageId: true,
+        },
+      },
     },
   });
 }

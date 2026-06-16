@@ -187,6 +187,24 @@ function haveSameStringSets(left: readonly string[], right: readonly string[]) {
   return right.every((value) => leftSet.has(value));
 }
 
+function mapArticleCtaBannersForComparison(article: ArticleRecord) {
+  return article.ctaBanners.map((banner) => ({
+    title: banner.title,
+    description: banner.description,
+    imageId: banner.imageId != null ? Number(banner.imageId) : null,
+    backgroundColor: banner.backgroundColor,
+    horizontalAspectRatio: banner.horizontalAspectRatio,
+    approxPositionPercentage: banner.approxPositionPercentage,
+    href: banner.href,
+    buttons: banner.buttons.map((button) => ({
+      text: button.text,
+      iconCode: button.iconCode,
+      sortOrder: button.sortOrder,
+      href: button.href,
+    })),
+  }));
+}
+
 function hasArticleContentChanges(article: ArticleRecord, input: ArticleUpdateInput) {
   const currentCategoryAssignments = article.categoryLinks.map((link) => ({
     categoryId: Number(link.categoryId),
@@ -200,6 +218,7 @@ function hasArticleContentChanges(article: ArticleRecord, input: ArticleUpdateIn
 
   const currentTagNames = parseOwnedTagString(article.tags);
   const nextTagNames = normalizeOwnedTagNames(input.tagNames);
+  const currentCtaBanners = mapArticleCtaBannersForComparison(article);
 
   return !(
     article.title === input.title &&
@@ -218,7 +237,8 @@ function hasArticleContentChanges(article: ArticleRecord, input: ArticleUpdateIn
       input.ogImageMediaId &&
     article.noIndex === input.noIndex &&
     article.noFollow === input.noFollow &&
-    article.schemaType === input.schemaType
+    article.schemaType === input.schemaType &&
+    JSON.stringify(currentCtaBanners) === JSON.stringify(input.ctaBanners)
   );
 }
 
@@ -226,6 +246,7 @@ async function assertValidRelations(input: {
   categoryAssignments: ArticleCreateInput["categoryAssignments"];
   coverMediaId: number | null;
   ogImageMediaId: number | null;
+  ctaBanners: ArticleCreateInput["ctaBanners"];
 }) {
   if (input.categoryAssignments.length > 0) {
     const normalizedAssignments = input.categoryAssignments.map((assignment) => ({
@@ -293,6 +314,23 @@ async function assertValidRelations(input: {
       throw new ArticleServiceError("Invalid ogImageMediaId", 400);
     }
   }
+
+  const bannerImageIds = [
+    ...new Set(
+      input.ctaBanners
+        .map((banner) => banner.imageId)
+        .filter((imageId): imageId is number => imageId != null),
+    ),
+  ];
+
+  await Promise.all(
+    bannerImageIds.map(async (imageId) => {
+      const exists = await findImageMediaById(imageId);
+      if (!exists) {
+        throw new ArticleServiceError(`Invalid CTA banner imageId ${imageId}`, 400);
+      }
+    }),
+  );
 }
 
 async function assertValidAuthorIds(authorIds: readonly string[]) {
@@ -324,11 +362,13 @@ async function ensureArticleMediaIsPublic(input: {
   coverMediaId: number | null;
   ogImageMediaId: number | null;
   content: string;
+  ctaImageIds?: readonly number[];
 }) {
   const mediaIds = [
     ...(input.coverMediaId != null ? [input.coverMediaId] : []),
     ...(input.ogImageMediaId != null ? [input.ogImageMediaId] : []),
     ...extractArticleMediaIds(input.content),
+    ...(input.ctaImageIds ?? []),
   ];
 
   await makeMediaPublicMany(mediaIds);
@@ -442,6 +482,7 @@ export async function createArticleService(
       categoryAssignments: input.categoryAssignments,
       coverMediaId: input.coverMediaId,
       ogImageMediaId: input.ogImageMediaId,
+      ctaBanners: input.ctaBanners,
     }),
     assertValidAuthorIds(normalizeArticleAuthorIds(session.id, input.authorIds)),
   ]);
@@ -489,6 +530,7 @@ export async function updateArticleService(
       categoryAssignments: input.categoryAssignments,
       coverMediaId: input.coverMediaId,
       ogImageMediaId: input.ogImageMediaId,
+      ctaBanners: input.ctaBanners,
     }),
     hasAuthorChanges ? assertValidAuthorIds(nextAuthorIds) : Promise.resolve(),
   ]);
@@ -505,6 +547,9 @@ export async function updateArticleService(
       ogImageMediaId:
         article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
       content: article.content,
+      ctaImageIds: article.ctaBanners
+        .map((banner) => (banner.imageId != null ? Number(banner.imageId) : null))
+        .filter((imageId): imageId is number => imageId != null),
     });
   }
 
@@ -541,6 +586,9 @@ export async function publishArticleService(
     ogImageMediaId:
       article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
     content: article.content,
+    ctaImageIds: article.ctaBanners
+      .map((banner) => (banner.imageId != null ? Number(banner.imageId) : null))
+      .filter((imageId): imageId is number => imageId != null),
   });
 
   return mapArticleToDetailDto(article, getArticleAbilities(session, article));
@@ -652,6 +700,9 @@ export async function publishDueScheduledArticlesService(now = new Date()) {
       ogImageMediaId:
         article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
       content: article.content,
+      ctaImageIds: article.ctaBanners
+        .map((banner) => (banner.imageId != null ? Number(banner.imageId) : null))
+        .filter((imageId): imageId is number => imageId != null),
     });
 
     publishedArticles.push({
