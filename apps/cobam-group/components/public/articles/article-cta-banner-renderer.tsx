@@ -52,6 +52,8 @@ function getAnchorLayoutClasses(anchor: ArticleCTABannerDto["anchor"]) {
     option.col === 0 ? "items-start" : option.col === 1 ? "items-center" : "items-end";
   const textClass =
     option.col === 0 ? "text-left" : option.col === 1 ? "text-center" : "text-right";
+  const buttonJustifyClass =
+    option.col === 0 ? "justify-start" : option.col === 1 ? "justify-center" : "justify-end";
   const overlayClass =
     option.col === 0
       ? "bg-gradient-to-r from-[#14202e]/94 via-[#14202e]/62 to-[#14202e]/18"
@@ -63,6 +65,7 @@ function getAnchorLayoutClasses(anchor: ArticleCTABannerDto["anchor"]) {
     justifyClass,
     itemsClass,
     textClass,
+    buttonJustifyClass,
     overlayClass,
   };
 }
@@ -136,7 +139,7 @@ export default function ArticleCTABannerRenderer({
           ) : null}
 
           {validButtons.length > 0 ? (
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <div className={cn("mt-6 flex flex-wrap gap-3", anchorClasses.buttonJustifyClass)}>
               {validButtons.map((button, index) => (
                 <AnimatedUIButton
                   key={`${button.sortOrder}-${button.href}`}

@@ -7,19 +7,14 @@ import {
 } from "./document";
 
 export const ARTICLE_CTA_BANNER_ASPECT_RATIOS = [
-  { value: "SQUARE", label: "Carré", css: "1 / 1" },
+  { value: "RATIO_16_10", label: "16:10", css: "16 / 10" },
+  { value: "RATIO_16_9", label: "16:9", css: "16 / 9" },
+  { value: "RATIO_2_1", label: "2:1", css: "2 / 1" },
   { value: "RATIO_21_10", label: "21:10", css: "21 / 10" },
   { value: "RATIO_21_9", label: "21:9", css: "21 / 9" },
   { value: "RATIO_24_9", label: "24:9", css: "24 / 9" },
-  { value: "RATIO_32_9", label: "32:9", css: "32 / 9" },
-  { value: "RATIO_16_9", label: "16:9", css: "16 / 9" },
-  { value: "RATIO_16_10", label: "16:10", css: "16 / 10" },
-  { value: "RATIO_5_4", label: "5:4", css: "5 / 4" },
-  { value: "RATIO_4_3", label: "4:3", css: "4 / 3" },
-  { value: "RATIO_3_2", label: "3:2", css: "3 / 2" },
-  { value: "RATIO_7_5", label: "7:5", css: "7 / 5" },
-  { value: "RATIO_2_1", label: "2:1", css: "2 / 1" },
   { value: "RATIO_3_1", label: "3:1", css: "3 / 1" },
+  { value: "RATIO_32_9", label: "32:9", css: "32 / 9" },
   { value: "RATIO_4_1", label: "4:1", css: "4 / 1" },
 ] as const;
 
@@ -69,6 +64,10 @@ export function getArticleCtaBannerAspectRatioLabel(
   return (
     ARTICLE_CTA_BANNER_ASPECT_RATIOS.find((option) => option.value === ratio)?.label ?? "21:10"
   );
+}
+
+export function isArticleCtaBannerAspectRatioAllowed(value: string) {
+  return ARTICLE_CTA_BANNER_ASPECT_RATIOS.some((option) => option.value === value);
 }
 
 export function getArticleCtaBannerAnchorOption(anchor: ArticleCTABannerDto["anchor"]) {

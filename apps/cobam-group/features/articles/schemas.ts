@@ -10,6 +10,7 @@ import {
   type ArticlePageSize,
   type ArticleUpdateInput,
 } from "./types";
+import { isArticleCtaBannerAspectRatioAllowed } from "./cta-banners";
 import { DESCRIPTION_SEO_MAX_LENGTH } from "@/lib/seo-description";
 
 export class ArticleValidationError extends Error {
@@ -124,7 +125,8 @@ function parseArticleCtaAspectRatio(value: unknown) {
 
   if (
     typeof value !== "string" ||
-    !(Object.values(ArticleCTABannerHorizontalAspectRatio) as string[]).includes(value)
+    !(Object.values(ArticleCTABannerHorizontalAspectRatio) as string[]).includes(value) ||
+    !isArticleCtaBannerAspectRatioAllowed(value)
   ) {
     throw new ArticleValidationError('Invalid "ctaBanners.horizontalAspectRatio"');
   }
