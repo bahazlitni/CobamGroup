@@ -13,6 +13,7 @@ import { StaffNotice, StaffPageHeader } from "@/components/staff/ui";
 import TwoColumnsLayout from "@/components/staff/ui/TwoColumnsLayout";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
+import { MEDIA_FOLDER_SCOPE_IDS, MEDIA_FOLDER_SCOPE_LABELS } from "@/features/media/folder-scopes";
 import { ProductCertificatesClientError } from "@/features/product-certificates/client";
 import {
   createProductCertificateClient,
@@ -215,6 +216,10 @@ export default function ProductCertificatesAdminPage() {
                   dialogTitle="Choisir une image de certificat"
                   dialogDescription="Selectionnez ou importez une image depuis la mediatheque."
                   mediaId={form.imageMediaId ? Number(form.imageMediaId) : null}
+                  folderId={MEDIA_FOLDER_SCOPE_IDS.PRODUCT_CERTIFICATE_IMAGES}
+                  folderLabel={
+                    MEDIA_FOLDER_SCOPE_LABELS[MEDIA_FOLDER_SCOPE_IDS.PRODUCT_CERTIFICATE_IMAGES]
+                  }
                   onChange={(mediaId) =>
                     setForm((current) => ({
                       ...current,

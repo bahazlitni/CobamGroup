@@ -37,6 +37,7 @@ import {
   getNextFiveMinuteLocalInputValue,
   isDatetimeLocalValueFiveMinuteAligned,
 } from "@/features/articles/scheduling";
+import { MEDIA_FOLDER_SCOPE_IDS, MEDIA_FOLDER_SCOPE_LABELS } from "@/features/media/folder-scopes";
 
 function LoadingState() {
   return (
@@ -259,6 +260,17 @@ function ArticleEditPageContent() {
                   </AnimatedUIButton>
                 ) : null}
 
+                <AnimatedUIButton
+                  type="button"
+                  variant="outline"
+                  icon="copy"
+                  iconPosition="left"
+                  onClick={() => void editor.copyPlainText()}
+                  className="w-full"
+                >
+                  Copier le texte
+                </AnimatedUIButton>
+
                 {!isPublished && canPublishArticle ? (
                   <AnimatedUIButton
                     type="button"
@@ -448,23 +460,20 @@ function ArticleEditPageContent() {
           </>
         }
       >
-        <Panel
-          pretitle="Article"
-          title="Identité éditoriale"
-          description="Regroupez ici le titre, les catégories et le visuel."
-        >
+        <Panel pretitle="" title="Rédaction de l'article" allowOverflow>
           <div className="grid gap-6">
             <PanelField id="article-title" label="Titre">
-              <PanelInput
+              <Textarea
                 id="article-title"
                 value={editor.state.title}
                 onChange={(event) => editor.setField("title", event.target.value)}
                 placeholder="Titre de l'article"
                 disabled={!canEditArticle}
-                fullWidth
+                aria-label="Titre de l'article"
+                rows={1}
+                className="text-cobam-dark-blue [field-sizing:content] min-h-14 w-full resize-none overflow-hidden !rounded-none border-0 bg-transparent p-0 text-3xl leading-tight font-bold shadow-none outline-none placeholder:text-slate-300 focus-visible:ring-0 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-60 md:text-4xl"
               />
             </PanelField>
-
             <PanelField id="article-slug" label="Slug">
               <div className="flex flex-col gap-3 sm:flex-row">
                 <PanelInput
@@ -504,7 +513,9 @@ function ArticleEditPageContent() {
               />
 
               {articleCategoryOptionsError ? (
-                <p className="mt-2 text-sm leading-6 text-amber-700">{articleCategoryOptionsError}</p>
+                <p className="mt-2 text-sm leading-6 text-amber-700">
+                  {articleCategoryOptionsError}
+                </p>
               ) : null}
             </PanelField>
 
@@ -517,13 +528,13 @@ function ArticleEditPageContent() {
                 mediaId={editor.state.coverMediaId ? Number(editor.state.coverMediaId) : null}
                 onChange={(value) => editor.setField("coverMediaId", value ? String(value) : "")}
                 aspectRatio="16:9"
+                folderId={MEDIA_FOLDER_SCOPE_IDS.ARTICLES}
+                folderLabel={MEDIA_FOLDER_SCOPE_LABELS[MEDIA_FOLDER_SCOPE_IDS.ARTICLES]}
                 disabled={!canEditArticle}
               />
             </div>
           </div>
-        </Panel>
 
-        <Panel pretitle="Contenu" title="Rédaction de l'article" allowOverflow>
           <div className="grid gap-6">
             <PanelField id="article-excerpt" label="Extrait">
               <Textarea
@@ -533,40 +544,44 @@ function ArticleEditPageContent() {
                 rows={4}
                 placeholder="Résumé court de l'article..."
                 disabled={!canEditArticle}
-                className="min-h-32 !rounded-none !rounded-t-2xl border-slate-300 px-4 py-3 text-base"
+                className="min-h-32 border-slate-300 px-4 py-3 text-base"
               />
             </PanelField>
 
-            <ArticleRichTextEditor
-              editorId="article-introduction-content"
-              value={editor.state.introductionContent}
-              onChange={(value) => editor.setField("introductionContent", value)}
-              placeholder="Introduction de l'article..."
-              editable={canEditArticle}
-            />
-
-            <ArticleRichTextEditor
-              editorId="article-body-content"
-              value={editor.state.bodyContent}
-              onChange={(value) => editor.setField("bodyContent", value)}
-              placeholder="Corps principal de l'article..."
-              editable={canEditArticle}
-            />
-
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-              <ArticleCTABannersEditor
-                value={editor.state.ctaBanners}
-                onChange={(nextBanners) => editor.setField("ctaBanners", nextBanners)}
-                disabled={!canEditArticle}
+            <PanelField id="article-introduction" label="Introduction">
+              <ArticleRichTextEditor
+                editorId="article-introduction-content"
+                value={editor.state.introductionContent}
+                onChange={(value) => editor.setField("introductionContent", value)}
+                placeholder="Introduction de l'article..."
+                editable={canEditArticle}
               />
-            </div>
+            </PanelField>
 
-            <ArticleRichTextEditor
-              editorId="article-conclusion-content"
-              value={editor.state.conclusionContent}
-              onChange={(value) => editor.setField("conclusionContent", value)}
-              placeholder="Conclusion..."
-              editable={canEditArticle}
+            <PanelField id="article-body" label="Suite de l'article">
+              <ArticleRichTextEditor
+                editorId="article-body-content"
+                value={editor.state.bodyContent}
+                onChange={(value) => editor.setField("bodyContent", value)}
+                placeholder="Corps principal de l'article..."
+                editable={canEditArticle}
+              />
+            </PanelField>
+
+            <PanelField id="article-conclusion" label="Conclusion">
+              <ArticleRichTextEditor
+                editorId="article-conclusion-content"
+                value={editor.state.conclusionContent}
+                onChange={(value) => editor.setField("conclusionContent", value)}
+                placeholder="Conclusion..."
+                editable={canEditArticle}
+              />
+            </PanelField>
+
+            <ArticleCTABannersEditor
+              value={editor.state.ctaBanners}
+              onChange={(nextBanners) => editor.setField("ctaBanners", nextBanners)}
+              disabled={!canEditArticle}
             />
 
             <ArticleFaqEditor
@@ -574,24 +589,10 @@ function ArticleEditPageContent() {
               onChange={(nextQuestions) => editor.setField("faqQuestions", nextQuestions)}
               disabled={!canEditArticle}
             />
-
-            <PanelField id="article-tags" label="Tags">
-              <StaffTagInput
-                value={editor.state.tagNames}
-                onChange={(nextTags) => editor.setField("tagNames", nextTags)}
-                placeholder="Ex. robinetterie premium"
-                disabled={!canEditArticle}
-                className="!rounded-none !rounded-b-2xl p-6"
-              />
-            </PanelField>
           </div>
         </Panel>
 
-        <Panel
-          pretitle="SEO et classement"
-          title="Référencement et tags"
-          description="Gardez le référencement et les mots-clés dans un seul bloc compact."
-        >
+        <Panel pretitle="" title="Référencement et tags" description="">
           <div className="grid gap-5">
             <PanelField id="article-focus-keyword" label="Mot-clé principal">
               <PanelInput
@@ -627,8 +628,17 @@ function ArticleEditPageContent() {
               />
             </PanelField>
 
+            <PanelField id="article-tags" label="Tags">
+              <StaffTagInput
+                value={editor.state.tagNames}
+                onChange={(nextTags) => editor.setField("tagNames", nextTags)}
+                placeholder="Ex. robinetterie premium"
+                disabled={!canEditArticle}
+              />
+            </PanelField>
+
             <div className="rounded-[24px] border border-slate-300 bg-slate-50/70 p-4">
-              <SeoChecks analysis={editor.seoAnalysis} />
+              <SeoChecks articlePublicHref={articlePublicHref} analysis={editor.seoAnalysis} />
             </div>
           </div>
         </Panel>

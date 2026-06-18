@@ -13,6 +13,7 @@ import PanelInput from "@/components/staff/ui/PanelInput";
 import { StaffNotice, StaffPageHeader } from "@/components/staff/ui";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
+import { MEDIA_FOLDER_SCOPE_IDS, MEDIA_FOLDER_SCOPE_LABELS } from "@/features/media/folder-scopes";
 import { canManageProductFinishes } from "@/features/product-taxonomy/access";
 import {
   createProductFinishClient,
@@ -160,85 +161,87 @@ export default function ProductFinishesAdminPage() {
       {!isLoading && !error ? (
         <TwoColumnsLayout>
           {canManageFinishes ? (
-              <Panel
-                className="max-w-none"
-                pretitle={editingId == null ? "Nouvelle finition" : "Modification"}
-                title="Détails"
-              >
-                <form onSubmit={saveItem} className="grid gap-4">
-                  <PanelField id="product-finish-label" label="">
-                    <PanelInput
-                      id="product-finish-label"
-                      fullWidth
-                      value={form.label}
-                      onChange={(event) => {
-                        const label = event.target.value;
-                        setForm((current) => ({
-                          ...current,
-                          label,
-                          key:
-                            current.key === "" || current.key === slugify(current.label)
-                              ? slugify(label)
-                              : current.key,
-                        }));
-                      }}
-                    />
-                  </PanelField>
-                  <PanelField id="product-finish-key" label="Clé">
-                    <PanelInput
-                      id="product-finish-key"
-                      fullWidth
-                      value={form.key}
-                      onChange={(event) =>
-                        setForm((current) => ({ ...current, key: event.target.value }))
-                      }
-                    />
-                  </PanelField>
-                  <PanelField id="product-finish-color" label="Couleur">
-                    <ColorHexField
-                      id="product-finish-color"
-                      value={form.color}
-                      allowEmpty
-                      onChange={(color) =>
-                        setForm((current) => ({
-                          ...current,
-                          color,
-                        }))
-                      }
-                    />
-                  </PanelField>
-                  <MediaImageField
-                    label="Image de finition"
-                    description="Choisissez l'image qui représente cette finition dans la médiathèque."
-                    dialogTitle="Choisir une image de finition"
-                    dialogDescription="Sélectionnez ou importez une image depuis la médiathèque."
-                    mediaId={form.imageMediaId ? Number(form.imageMediaId) : null}
-                    onChange={(mediaId) =>
+            <Panel
+              className="max-w-none"
+              pretitle={editingId == null ? "Nouvelle finition" : "Modification"}
+              title="Détails"
+            >
+              <form onSubmit={saveItem} className="grid gap-4">
+                <PanelField id="product-finish-label" label="">
+                  <PanelInput
+                    id="product-finish-label"
+                    fullWidth
+                    value={form.label}
+                    onChange={(event) => {
+                      const label = event.target.value;
                       setForm((current) => ({
                         ...current,
-                        imageMediaId: mediaId == null ? "" : String(mediaId),
+                        label,
+                        key:
+                          current.key === "" || current.key === slugify(current.label)
+                            ? slugify(label)
+                            : current.key,
+                      }));
+                    }}
+                  />
+                </PanelField>
+                <PanelField id="product-finish-key" label="Clé">
+                  <PanelInput
+                    id="product-finish-key"
+                    fullWidth
+                    value={form.key}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, key: event.target.value }))
+                    }
+                  />
+                </PanelField>
+                <PanelField id="product-finish-color" label="Couleur">
+                  <ColorHexField
+                    id="product-finish-color"
+                    value={form.color}
+                    allowEmpty
+                    onChange={(color) =>
+                      setForm((current) => ({
+                        ...current,
+                        color,
                       }))
                     }
-                    emptyLabel="Aucune image de finition sélectionnée."
-                    previewClassName="h-24 w-24 rounded-lg"
                   />
-                  <div className="flex flex-wrap gap-2">
-                    <AnimatedUIButton type="submit" icon="save" loading={isSaving}>
-                      {editingId == null ? "Ajouter" : "Enregistrer"}
+                </PanelField>
+                <MediaImageField
+                  label="Image de finition"
+                  description="Choisissez l'image qui représente cette finition dans la médiathèque."
+                  dialogTitle="Choisir une image de finition"
+                  dialogDescription="Sélectionnez ou importez une image depuis la médiathèque."
+                  mediaId={form.imageMediaId ? Number(form.imageMediaId) : null}
+                  folderId={MEDIA_FOLDER_SCOPE_IDS.FINISHES}
+                  folderLabel={MEDIA_FOLDER_SCOPE_LABELS[MEDIA_FOLDER_SCOPE_IDS.FINISHES]}
+                  onChange={(mediaId) =>
+                    setForm((current) => ({
+                      ...current,
+                      imageMediaId: mediaId == null ? "" : String(mediaId),
+                    }))
+                  }
+                  emptyLabel="Aucune image de finition sélectionnée."
+                  previewClassName="h-24 w-24 rounded-lg"
+                />
+                <div className="flex flex-wrap gap-2">
+                  <AnimatedUIButton type="submit" icon="save" loading={isSaving}>
+                    {editingId == null ? "Ajouter" : "Enregistrer"}
+                  </AnimatedUIButton>
+                  {editingId != null ? (
+                    <AnimatedUIButton
+                      type="button"
+                      variant="ghost"
+                      icon="close"
+                      onClick={resetForm}
+                    >
+                      Annuler
                     </AnimatedUIButton>
-                    {editingId != null ? (
-                      <AnimatedUIButton
-                        type="button"
-                        variant="ghost"
-                        icon="close"
-                        onClick={resetForm}
-                      >
-                        Annuler
-                      </AnimatedUIButton>
-                    ) : null}
-                  </div>
-                </form>
-              </Panel>
+                  ) : null}
+                </div>
+              </form>
+            </Panel>
           ) : null}
 
           <Panel

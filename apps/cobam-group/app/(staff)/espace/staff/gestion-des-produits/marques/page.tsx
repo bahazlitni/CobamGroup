@@ -13,6 +13,7 @@ import { StaffNotice, StaffPageHeader } from "@/components/staff/ui";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
+import { MEDIA_FOLDER_SCOPE_IDS, MEDIA_FOLDER_SCOPE_LABELS } from "@/features/media/folder-scopes";
 import {
   createOrganizationClient,
   deleteOrganizationClient,
@@ -204,7 +205,7 @@ export default function ProductBrandsAdminPage() {
       ) : null}
 
       {!isLoading && !error ? (
-      <TwoColumnsLayout reversed>
+        <TwoColumnsLayout reversed>
           <Panel pretitle={editingId == null ? "Nouvelle marque" : "Modification"} title="Details">
             <form onSubmit={saveItem} className="grid gap-4">
               <PanelField id="organization-name" label="Nom">
@@ -259,6 +260,8 @@ export default function ProductBrandsAdminPage() {
                 dialogTitle="Choisir un logo"
                 dialogDescription="Selectionnez ou importez une image de logo."
                 mediaId={form.logoMediaId ? Number(form.logoMediaId) : null}
+                folderId={MEDIA_FOLDER_SCOPE_IDS.BRANDS}
+                folderLabel={MEDIA_FOLDER_SCOPE_LABELS[MEDIA_FOLDER_SCOPE_IDS.BRANDS]}
                 disabled={isSaving}
                 onChange={(mediaId) =>
                   setForm((current) => ({
@@ -326,7 +329,11 @@ export default function ProductBrandsAdminPage() {
             </form>
           </Panel>
 
-          <Panel className="max-w-none min-w-0" pretitle={`${items.length} entrees`} title="Marques disponibles">
+          <Panel
+            className="max-w-none min-w-0"
+            pretitle={`${items.length} entrees`}
+            title="Marques disponibles"
+          >
             <div className="grid gap-2">
               {items.map((item) => (
                 <div
@@ -378,7 +385,7 @@ export default function ProductBrandsAdminPage() {
               ))}
             </div>
           </Panel>
-      </TwoColumnsLayout>
+        </TwoColumnsLayout>
       ) : null}
     </div>
   );

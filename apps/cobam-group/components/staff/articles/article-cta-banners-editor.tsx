@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Copy, GripVertical, Trash2 } from "lucide-react";
+import { GripVertical, Plus } from "lucide-react";
 import ArticleCTABannerRenderer from "@/components/public/articles/article-cta-banner-renderer";
 import MediaImageField from "@/components/staff/media/importers/media-image-field";
 import PanelField from "@/components/staff/ui/PanelField";
@@ -16,6 +16,7 @@ import {
   ARTICLE_CTA_BANNER_ASPECT_RATIOS,
   getArticleCtaBannerAspectRatioCss,
 } from "@/features/articles/cta-banners";
+import { MEDIA_FOLDER_SCOPE_IDS, MEDIA_FOLDER_SCOPE_LABELS } from "@/features/media/folder-scopes";
 import type {
   ArticleEditorCTABanner,
   ArticleEditorCTABannerButton,
@@ -25,6 +26,7 @@ import type {
   ArticleCTABannerHorizontalAspectRatio,
 } from "@/features/articles/types";
 import { cn } from "@/lib/utils";
+import ArticleEditorCardHeader from "./article-editor-card-header";
 
 type ArticleCTABannersEditorProps = {
   value: ArticleEditorCTABanner[];
@@ -234,23 +236,38 @@ export default function ArticleCTABannersEditor({
     });
   };
 
+  const addCTABanner = () => onChange([...value, createDefaultBanner(value.length)]);
+
   return (
     <div className="space-y-5">
-      <AnimatedUIButton
-        type="button"
-        variant="primary"
-        icon="plus"
-        iconPosition="left"
-        onClick={() => onChange([...value, createDefaultBanner(value.length)])}
-        disabled={disabled}
-      >
-        Ajouter
-      </AnimatedUIButton>
-
-      {sortedBanners.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/75 p-5 text-sm leading-6 text-slate-500">
-          Aucune bannière CTA pour le moment.
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-slate-900">Bannières CTA</p>
+          <p className="mt-1 text-sm leading-6 text-slate-500">
+            Elles seront affichées dans le contenu de l&apos;article.
+          </p>
         </div>
+        <AnimatedUIButton
+          type="button"
+          variant="outline"
+          icon="plus"
+          iconPosition="left"
+          onClick={addCTABanner}
+          disabled={disabled}
+        >
+          Ajouter une bannière
+        </AnimatedUIButton>
+      </div>
+      {sortedBanners.length === 0 ? (
+        <button
+          type="button"
+          onClick={addCTABanner}
+          disabled={disabled}
+          className="flex min-h-32 w-full items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 text-sm font-medium text-slate-500 transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <Plus className="mr-2 size-4" />
+          Ajouter la première bannière
+        </button>
       ) : (
         <div className="space-y-5">
           {sortedBanners.map((banner, index) => {
@@ -261,56 +278,42 @@ export default function ArticleCTABannersEditor({
                 key={banner.rowId}
                 className="overflow-hidden rounded-2xl border border-slate-200 bg-white"
               >
-                <div className="flex flex-col gap-3 border-b border-slate-100 bg-slate-50/75 p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <GripVertical className="h-5 w-5 shrink-0 text-slate-300" />
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-cobam-dark-blue">
-                        {banner.title || "Bannière CTA"}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        Position {Math.round(banner.approxPositionPercentage)}%
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <AnimatedUIButton
-                      type="button"
-                      variant={isPreview ? "primary" : "outline"}
-                      size="sm"
-                      icon={isPreview ? "modify" : "eye"}
-                      iconPosition="left"
-                      onClick={() => togglePreview(banner.rowId)}
-                    >
-                      {isPreview ? "Éditer" : "Aperçu"}
-                    </AnimatedUIButton>
-                    <AnimatedUIButton
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => duplicateBanner(banner)}
-                      disabled={disabled}
-                    >
-                      <span className="inline-flex items-center gap-2">
-                        <Copy className="h-4 w-4" />
-                        Dupliquer
-                      </span>
-                    </AnimatedUIButton>
-                    <AnimatedUIButton
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeBanner(banner.rowId)}
-                      disabled={disabled}
-                    >
-                      <span className="inline-flex items-center gap-2 text-red-600">
-                        <Trash2 className="h-4 w-4" />
-                        Retirer
-                      </span>
-                    </AnimatedUIButton>
-                  </div>
-                </div>
+                <ArticleEditorCardHeader
+                  value={banner.title}
+                  onChange={(title) =>
+                    updateBanner(banner.rowId, (current) => ({
+                      ...current,
+                      title,
+                    }))
+                  }
+                  placeholder="Titre de la bannière"
+                  disabled={disabled}
+                  dragHandleLabel={`Bannière CTA ${index + 1}`}
+                  actions={[
+                    {
+                      key: "duplicate",
+                      label: "Dupliquer",
+                      icon: "copy",
+                      onClick: () => duplicateBanner(banner),
+                      disabled,
+                    },
+                    {
+                      key: "preview",
+                      label: isPreview ? "Éditer" : "Aperçu",
+                      icon: isPreview ? "modify" : "eye",
+                      variant: isPreview ? "primary" : "outline",
+                      onClick: () => togglePreview(banner.rowId),
+                    },
+                    {
+                      key: "remove",
+                      label: "Retirer",
+                      icon: "trash",
+                      tone: "danger",
+                      onClick: () => removeBanner(banner.rowId),
+                      disabled,
+                    },
+                  ]}
+                />
 
                 <div className="p-4 sm:p-5">
                   {isPreview ? (
@@ -319,21 +322,6 @@ export default function ArticleCTABannersEditor({
                     <div className="grid gap-5">
                       <div className="grid gap-5">
                         <div className="grid gap-4">
-                          <PanelField id={`cta-title-${banner.rowId}`} label="Titre">
-                            <PanelInput
-                              id={`cta-title-${banner.rowId}`}
-                              value={banner.title}
-                              onChange={(event) =>
-                                updateBanner(banner.rowId, (current) => ({
-                                  ...current,
-                                  title: event.target.value,
-                                }))
-                              }
-                              disabled={disabled}
-                              fullWidth
-                            />
-                          </PanelField>
-
                           <PanelField id={`cta-description-${banner.rowId}`} label="Description">
                             <Textarea
                               id={`cta-description-${banner.rowId}`}
@@ -373,6 +361,8 @@ export default function ArticleCTABannersEditor({
                           dialogTitle="Choisir l'image de bannière"
                           dialogDescription="Sélectionnez une image depuis la médiathèque ou importez-en une nouvelle."
                           mediaId={banner.imageId ? Number(banner.imageId) : null}
+                          folderId={MEDIA_FOLDER_SCOPE_IDS.ARTICLES}
+                          folderLabel={MEDIA_FOLDER_SCOPE_LABELS[MEDIA_FOLDER_SCOPE_IDS.ARTICLES]}
                           onChange={(mediaId) =>
                             updateBanner(banner.rowId, (current) => ({
                               ...current,
@@ -482,7 +472,7 @@ export default function ArticleCTABannersEditor({
                       <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                           <div>
-                            <p className="text-sm font-semibold text-cobam-dark-blue">Boutons</p>
+                            <p className="text-cobam-dark-blue text-sm font-semibold">Boutons</p>
                             <p className="text-xs text-slate-500">
                               Le premier bouton est principal, le second est secondaire.
                             </p>
@@ -510,10 +500,7 @@ export default function ArticleCTABannersEditor({
                               <div
                                 key={button.rowId}
                                 onDragOver={(event) => {
-                                  if (
-                                    disabled ||
-                                    draggedButton?.bannerRowId !== banner.rowId
-                                  ) {
+                                  if (disabled || draggedButton?.bannerRowId !== banner.rowId) {
                                     return;
                                   }
 
@@ -523,10 +510,7 @@ export default function ArticleCTABannersEditor({
                                 onDrop={(event) => {
                                   event.preventDefault();
 
-                                  if (
-                                    disabled ||
-                                    draggedButton?.bannerRowId !== banner.rowId
-                                  ) {
+                                  if (disabled || draggedButton?.bannerRowId !== banner.rowId) {
                                     return;
                                   }
 
@@ -545,7 +529,7 @@ export default function ArticleCTABannersEditor({
                                     "scale-[0.99] opacity-70",
                                   dragOverButtonRowId === button.rowId &&
                                     draggedButton?.buttonRowId !== button.rowId &&
-                                    "border-cobam-water-blue ring-2 ring-cobam-water-blue/15",
+                                    "border-cobam-water-blue ring-cobam-water-blue/15 ring-2",
                                 )}
                               >
                                 <button
@@ -571,12 +555,12 @@ export default function ArticleCTABannersEditor({
                                   className={cn(
                                     "flex h-10 min-w-28 items-center justify-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-500 transition",
                                     "hover:border-cobam-water-blue/30 hover:bg-cobam-water-blue/5 hover:text-cobam-water-blue",
-                                    disabled && "cursor-not-allowed opacity-60 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-500",
+                                    disabled &&
+                                      "cursor-not-allowed opacity-60 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-500",
                                   )}
                                   aria-label={`Glisser le bouton ${buttonIndex + 1}`}
                                 >
-                                  <GripVertical className="h-4 w-4" />
-                                  #{buttonIndex + 1}
+                                  <GripVertical className="h-4 w-4" />#{buttonIndex + 1}
                                 </button>
                                 <PanelInput
                                   value={button.text}

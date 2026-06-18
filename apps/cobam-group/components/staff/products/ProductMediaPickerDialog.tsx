@@ -18,7 +18,7 @@ import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import MediaThumbnail from "@/components/staff/media/media-thumbnail";
 import { formatBytes, getMediaDisplayTitle } from "@/components/staff/media/utils";
 import {
-  findMediaFolderIdByPathClient,
+  findMediaFolderScopeIdClient,
   isMediaFilenameConflictError,
   listMediaClient,
   uploadMediaClient,
@@ -30,7 +30,6 @@ import { mapMediaListItemToProductMedia } from "./product-media-utils";
 
 type PickerTab = "library" | "upload";
 const PAGE_SIZE = 18;
-const PRODUCTS_MEDIA_FOLDER_PATH = "/produits";
 const EMPTY_DOCUMENT_EXTENSIONS: string[] = [];
 const EMPTY_EXCLUDED_MEDIA_IDS: number[] = [];
 
@@ -124,6 +123,9 @@ export default function ProductMediaPickerDialog({
   mediaKind = "ALL",
   documentExtensions = EMPTY_DOCUMENT_EXTENSIONS,
   excludedMediaIds = EMPTY_EXCLUDED_MEDIA_IDS,
+  folderId,
+  folderLabel,
+  includeDescendantFolders = false,
   onSelect,
 }: {
   open: boolean;
@@ -133,6 +135,9 @@ export default function ProductMediaPickerDialog({
   mediaKind?: ProductMediaDto["kind"] | "ALL";
   documentExtensions?: string[];
   excludedMediaIds?: number[];
+  folderId?: number | null;
+  folderLabel?: string;
+  includeDescendantFolders?: boolean;
   onSelect: (media: ProductMediaDto) => void;
 }) {
   const [activeTab, setActiveTab] = useState<PickerTab>("library");
@@ -148,6 +153,7 @@ export default function ProductMediaPickerDialog({
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadPreviewUrl, setUploadPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [scopeWasMissing, setScopeWasMissing] = useState(false);
   const loadRequestIdRef = useRef(0);
   const isClosingRef = useRef(false);
   const normalizedDocumentExtensions = useMemo(
@@ -168,7 +174,12 @@ export default function ProductMediaPickerDialog({
         : mediaKind === "IMAGE"
           ? "images"
           : "medias";
-  const scopedLibraryDescription = `Cette bibliotheque affiche uniquement les medias du dossier ${PRODUCTS_MEDIA_FOLDER_PATH} et de ses sous-dossiers.`;
+  const requestedScopeLabel = folderId != null ? (folderLabel ?? `#${folderId}`) : null;
+  const scopedLibraryDescription = requestedScopeLabel
+    ? scopeWasMissing
+      ? `Dossier ${requestedScopeLabel} introuvable; affichage de tous les medias.`
+      : `Cette bibliotheque affiche uniquement les medias du dossier ${requestedScopeLabel}.`
+    : "Cette bibliotheque affiche les medias de tous les dossiers.";
   const uploadAccept =
     mediaKind === "DOCUMENT"
       ? normalizedDocumentExtensions.length > 0
@@ -180,17 +191,16 @@ export default function ProductMediaPickerDialog({
           ? "image/*"
           : undefined;
 
-  const resolveProductsFolderId = useCallback(async () => {
-    const folderId = await findMediaFolderIdByPathClient(PRODUCTS_MEDIA_FOLDER_PATH);
-
+  const resolveScopedFolderId = useCallback(async () => {
     if (folderId == null) {
-      throw new Error(
-        `Le dossier ${PRODUCTS_MEDIA_FOLDER_PATH} est introuvable dans la mediatheque.`,
-      );
+      setScopeWasMissing(false);
+      return null;
     }
 
-    return folderId;
-  }, []);
+    const resolvedFolderId = await findMediaFolderScopeIdClient(folderId);
+    setScopeWasMissing(resolvedFolderId == null);
+    return resolvedFolderId;
+  }, [folderId]);
 
   const resetDialogState = useCallback(() => {
     setActiveTab("library");
@@ -204,6 +214,7 @@ export default function ProductMediaPickerDialog({
     setUploadPreviewUrl(null);
     setSelectedMedia(null);
     setError(null);
+    setScopeWasMissing(false);
   }, []);
 
   useEffect(() => {
@@ -241,7 +252,7 @@ export default function ProductMediaPickerDialog({
       }
 
       try {
-        const folderId = await resolveProductsFolderId();
+        const scopedFolderId = await resolveScopedFolderId();
         const result = await listMediaClient({
           browseMode: "library",
           page: nextPage,
@@ -250,8 +261,8 @@ export default function ProductMediaPickerDialog({
           kind: mediaKind,
           sortBy: "date",
           sortDirection: "desc",
-          folderId,
-          includeDescendantFolders: true,
+          folderId: scopedFolderId,
+          includeDescendantFolders: scopedFolderId != null && includeDescendantFolders,
         });
         const filteredItems =
           mediaKind === "DOCUMENT" && normalizedDocumentExtensions.length > 0
@@ -286,7 +297,14 @@ export default function ProductMediaPickerDialog({
         }
       }
     },
-    [deferredSearch, mediaKind, normalizedDocumentExtensions, open, resolveProductsFolderId],
+    [
+      deferredSearch,
+      includeDescendantFolders,
+      mediaKind,
+      normalizedDocumentExtensions,
+      open,
+      resolveScopedFolderId,
+    ],
   );
 
   useEffect(() => {
@@ -344,13 +362,13 @@ export default function ProductMediaPickerDialog({
     setError(null);
 
     try {
-      const folderId = await resolveProductsFolderId();
+      const scopedFolderId = await resolveScopedFolderId();
       let media: MediaListItemDto;
 
       try {
         media = await uploadMediaClient({
           file: uploadFile,
-          folderId,
+          folderId: scopedFolderId,
         });
       } catch (err: unknown) {
         if (
@@ -364,7 +382,7 @@ export default function ProductMediaPickerDialog({
 
         media = await uploadMediaClient({
           file: uploadFile,
-          folderId,
+          folderId: scopedFolderId,
           overwriteExisting: true,
         });
       }
@@ -449,7 +467,9 @@ export default function ProductMediaPickerDialog({
               </div>
             ) : items.length === 0 ? (
               <div className="flex min-h-56 items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500">
-                Aucun {mediaKindLabel} disponible dans {PRODUCTS_MEDIA_FOLDER_PATH} pour le moment.
+                Aucun {mediaKindLabel} disponible
+                {requestedScopeLabel && !scopeWasMissing ? ` dans ${requestedScopeLabel}` : ""}
+                pour le moment.
               </div>
             ) : (
               <div className="space-y-4">

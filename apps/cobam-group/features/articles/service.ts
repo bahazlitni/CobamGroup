@@ -224,14 +224,8 @@ function getArticleDocumentContents(article: {
   introductionContent: string;
   bodyContent: string;
   conclusionContent: string;
-  faqQuestions?: Array<{ content: string }>;
 }) {
-  return [
-    article.introductionContent,
-    article.bodyContent,
-    article.conclusionContent,
-    ...(article.faqQuestions ?? []).map((item) => item.content),
-  ];
+  return [article.introductionContent, article.bodyContent, article.conclusionContent];
 }
 
 function hasArticleContentChanges(article: ArticleRecord, input: ArticleUpdateInput) {

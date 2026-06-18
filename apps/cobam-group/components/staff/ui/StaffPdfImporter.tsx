@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { formatBytes } from "@/components/staff/media/utils";
 import ProductMediaPickerDialog from "@/components/staff/products/ProductMediaPickerDialog";
+import { getMediaFolderScopeLabel, MEDIA_FOLDER_SCOPE_IDS } from "@/features/media/folder-scopes";
 import type { ProductMediaDto } from "@/features/products/types";
 
 type StaffPdfImporterProps = {
@@ -17,6 +18,8 @@ type StaffPdfImporterProps = {
   onChange: (value: ProductMediaDto | null) => void;
   emptyLabel?: string;
   role?: ProductMediaDto["role"];
+  folderId?: number | null;
+  folderLabel?: string;
 };
 
 function isPdfMedia(media: ProductMediaDto | null) {
@@ -35,6 +38,12 @@ function getPdfLabel(media: ProductMediaDto) {
   return media.title?.trim() || media.originalFilename || `Media #${media.id}`;
 }
 
+function getDefaultPdfFolderId(role: ProductMediaDto["role"]) {
+  return role === "CERTIFICATE"
+    ? MEDIA_FOLDER_SCOPE_IDS.CERTIFICATE_PDFS
+    : MEDIA_FOLDER_SCOPE_IDS.PRODUCT_DATASHEETS;
+}
+
 export default function StaffPdfImporter({
   label,
   description,
@@ -44,10 +53,15 @@ export default function StaffPdfImporter({
   onChange,
   emptyLabel = "Aucun PDF sélectionné.",
   role = "TECHNICAL",
+  folderId,
+  folderLabel,
 }: StaffPdfImporterProps) {
   const [open, setOpen] = useState(false);
   const media = isPdfMedia(value) ? value : null;
-  const error = value != null && !isPdfMedia(value) ? "Le media sélectionné n'est pas un PDF." : null;
+  const error =
+    value != null && !isPdfMedia(value) ? "Le media sélectionné n'est pas un PDF." : null;
+  const pickerFolderId = folderId !== undefined ? folderId : getDefaultPdfFolderId(role);
+  const pickerFolderLabel = folderLabel ?? getMediaFolderScopeLabel(pickerFolderId);
 
   return (
     <>
@@ -60,18 +74,20 @@ export default function StaffPdfImporter({
 
             <div className="min-w-0 flex-1 space-y-2">
               <div className="space-y-1">
-                <p className="text-sm font-semibold text-cobam-dark-blue">{label}</p>
+                <p className="text-cobam-dark-blue text-sm font-semibold">{label}</p>
                 <p className="text-sm leading-6 text-slate-500">{description}</p>
               </div>
 
               {media ? (
                 <div className="space-y-1 rounded-lg border border-slate-300 bg-slate-50 px-4 py-3">
-                  <p className="truncate text-sm font-medium text-cobam-dark-blue">
+                  <p className="text-cobam-dark-blue truncate text-sm font-medium">
                     {getPdfLabel(media)}
                   </p>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
                     <span>ID #{media.id}</span>
-                    <span>{formatBytes(media.sizeBytes == null ? null : Number(media.sizeBytes))}</span>
+                    <span>
+                      {formatBytes(media.sizeBytes == null ? null : Number(media.sizeBytes))}
+                    </span>
                     {media.originalFilename ? (
                       <span className="truncate">{media.originalFilename}</span>
                     ) : null}
@@ -130,6 +146,8 @@ export default function StaffPdfImporter({
           description={dialogDescription}
           mediaKind="DOCUMENT"
           documentExtensions={["pdf"]}
+          folderId={pickerFolderId}
+          folderLabel={pickerFolderLabel}
           onSelect={(selectedMedia) => {
             onChange({ ...selectedMedia, role });
             setOpen(false);

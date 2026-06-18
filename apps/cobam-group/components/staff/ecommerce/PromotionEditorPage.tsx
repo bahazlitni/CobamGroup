@@ -18,6 +18,7 @@ import {
   updateEcommerceCouponAdminClient,
   updateEcommercePromotionAdminClient,
 } from "@/features/ecommerce-admin/client";
+import { MEDIA_FOLDER_SCOPE_IDS, MEDIA_FOLDER_SCOPE_LABELS } from "@/features/media/folder-scopes";
 import type { ProductMediaDto } from "@/features/products/types";
 import type {
   EcommerceCouponAdminItem,
@@ -407,8 +408,7 @@ export default function PromotionEditorPage({ promotionId }: { promotionId?: str
       const shouldSyncDisplayName =
         current.displayName === "" || current.displayName === current.name;
       const previousSlugBase = current.displayName || current.name;
-      const shouldSyncSlug =
-        current.slug === "" || current.slug === slugify(previousSlugBase);
+      const shouldSyncSlug = current.slug === "" || current.slug === slugify(previousSlugBase);
       const displayName = shouldSyncDisplayName ? name : current.displayName;
 
       return {
@@ -423,8 +423,7 @@ export default function PromotionEditorPage({ promotionId }: { promotionId?: str
   const updatePromotionDisplayName = (displayName: string) => {
     setPromotionForm((current) => {
       const previousSlugBase = current.displayName || current.name;
-      const shouldSyncSlug =
-        current.slug === "" || current.slug === slugify(previousSlugBase);
+      const shouldSyncSlug = current.slug === "" || current.slug === slugify(previousSlugBase);
 
       return {
         ...current,
@@ -673,7 +672,7 @@ export default function PromotionEditorPage({ promotionId }: { promotionId?: str
                 }))
               }
               rows={4}
-              className="focus:border-cobam-water-blue focus:ring-cobam-water-blue/20 min-h-28 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition focus:ring-4"
+              className="focus:border-cobam-water-blue focus:ring-cobam-water-blue/20 min-h-28 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 transition outline-none focus:ring-4"
               placeholder="Texte court pour la page promotions et les bannieres publiques."
             />
           </PanelField>
@@ -687,6 +686,8 @@ export default function PromotionEditorPage({ promotionId }: { promotionId?: str
             addButtonHint="Image uniquement"
             mediaKind="IMAGE"
             maxItems={1}
+            folderId={MEDIA_FOLDER_SCOPE_IDS.PROMOTIONS}
+            folderLabel={MEDIA_FOLDER_SCOPE_LABELS[MEDIA_FOLDER_SCOPE_IDS.PROMOTIONS]}
             items={promotionForm.bannerMedia ? [promotionForm.bannerMedia] : []}
             onChange={(items) =>
               setPromotionForm((current) => ({ ...current, bannerMedia: items[0] ?? null }))

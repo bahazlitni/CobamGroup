@@ -7,16 +7,36 @@ import {
 } from "@/features/media/schemas";
 import {
   deleteMediaFolderService,
+  getMediaFolderByIdService,
   MediaServiceError,
   updateMediaFolderService,
 } from "@/features/media/service";
 
 export const runtime = "nodejs";
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await requireStaffSession(req);
+    const { id: idParam } = await params;
+    const folderId = parseMediaIdParam(idParam);
+    const folder = await getMediaFolderByIdService(session, folderId);
+
+    return NextResponse.json({ ok: true, folder }, { status: 200 });
+  } catch (error: unknown) {
+    if (
+      error instanceof AuthError ||
+      error instanceof MediaValidationError ||
+      error instanceof MediaServiceError
+    ) {
+      return NextResponse.json({ ok: false, message: error.message }, { status: error.status });
+    }
+
+    console.error("MEDIA_FOLDER_GET_ERROR:", error);
+    return NextResponse.json({ ok: false, message: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireStaffSession(req);
     const { id: idParam } = await params;
@@ -32,24 +52,15 @@ export async function PATCH(
       error instanceof MediaValidationError ||
       error instanceof MediaServiceError
     ) {
-      return NextResponse.json(
-        { ok: false, message: error.message },
-        { status: error.status },
-      );
+      return NextResponse.json({ ok: false, message: error.message }, { status: error.status });
     }
 
     console.error("MEDIA_FOLDER_PATCH_ERROR:", error);
-    return NextResponse.json(
-      { ok: false, message: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ ok: false, message: "Internal server error" }, { status: 500 });
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireStaffSession(req);
     const { id: idParam } = await params;
@@ -68,16 +79,10 @@ export async function DELETE(
       error instanceof MediaValidationError ||
       error instanceof MediaServiceError
     ) {
-      return NextResponse.json(
-        { ok: false, message: error.message },
-        { status: error.status },
-      );
+      return NextResponse.json({ ok: false, message: error.message }, { status: error.status });
     }
 
     console.error("MEDIA_FOLDER_DELETE_ERROR:", error);
-    return NextResponse.json(
-      { ok: false, message: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ ok: false, message: "Internal server error" }, { status: 500 });
   }
 }

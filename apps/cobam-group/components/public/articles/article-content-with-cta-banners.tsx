@@ -57,7 +57,9 @@ export default function ArticleContentWithCTABanners({
                   {item.question}
                 </AccordionTrigger>
                 <AccordionContent className="pb-5">
-                  <ArticleDocumentReader content={item.content} emptyLabel="" />
+                  <p className="text-base leading-7 whitespace-pre-line text-slate-600">
+                    {item.content}
+                  </p>
                 </AccordionContent>
               </AccordionItem>
             ))}

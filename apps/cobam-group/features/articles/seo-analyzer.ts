@@ -76,6 +76,8 @@ type DocumentStats = {
   paragraphTexts: string[];
 };
 
+const INTERNAL_LINK_HOSTS = new Set(["cobamgroup.com", "www.cobamgroup.com"]);
+
 function normalizeText(value: string | null | undefined) {
   return (value ?? "").replace(/\s+/g, " ").trim();
 }
@@ -90,6 +92,102 @@ function countWords(value: string) {
 
 function isSlugValid(slug: string) {
   return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function getHrefFromAttrs(attrs: unknown) {
+  if (!isRecord(attrs)) {
+    return null;
+  }
+
+  const href = attrs.href ?? attrs.url;
+
+  return typeof href === "string" && href.trim() ? href.trim() : null;
+}
+
+function normalizeLinkKey(href: string) {
+  const trimmed = href.trim();
+
+  if (!trimmed) {
+    return "";
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    const pathname = parsed.pathname.replace(/\/$/, "") || "/";
+
+    return `${parsed.protocol}//${parsed.hostname.toLocaleLowerCase("en-US")}${pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return trimmed.replace(/\/$/, "");
+  }
+}
+
+function getUniqueLinks(links: ReadonlyArray<DocumentStats["links"][number]>) {
+  const seen = new Set<string>();
+  const uniqueLinks: DocumentStats["links"] = [];
+
+  links.forEach((link) => {
+    const key = normalizeLinkKey(link.href);
+
+    if (!key || seen.has(key)) {
+      return;
+    }
+
+    seen.add(key);
+    uniqueLinks.push(link);
+  });
+
+  return uniqueLinks;
+}
+
+function isInternalLinkHref(href: string) {
+  const trimmed = href.trim();
+
+  if (!trimmed || trimmed.startsWith("#") || /^(mailto|tel|javascript):/i.test(trimmed)) {
+    return false;
+  }
+
+  if (trimmed.startsWith("/") || trimmed.startsWith("./") || trimmed.startsWith("../")) {
+    return true;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+
+    return (
+      /^https?:$/i.test(parsed.protocol) && INTERNAL_LINK_HOSTS.has(parsed.hostname.toLowerCase())
+    );
+  } catch {
+    const withoutProtocol = trimmed.replace(/^(https?:)?\/\//i, "");
+    const firstSegment = withoutProtocol.split(/[/?#]/)[0]?.toLowerCase();
+
+    if (firstSegment && INTERNAL_LINK_HOSTS.has(firstSegment)) {
+      return true;
+    }
+
+    return !trimmed.includes(".") && !trimmed.includes(":");
+  }
+}
+
+function isExternalLinkHref(href: string) {
+  const trimmed = href.trim();
+
+  if (!trimmed || /^(mailto|tel|javascript):/i.test(trimmed)) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+
+    return (
+      /^https?:$/i.test(parsed.protocol) && !INTERNAL_LINK_HOSTS.has(parsed.hostname.toLowerCase())
+    );
+  } catch {
+    return trimmed.includes(".") && !isInternalLinkHref(trimmed);
+  }
 }
 
 function collectDocumentStats(contents: readonly string[]): DocumentStats {
@@ -130,13 +228,17 @@ function collectDocumentStats(contents: readonly string[]): DocumentStats {
       images.push({ alt, mediaId });
     }
 
+    const nodeHref = getHrefFromAttrs(node.attrs);
+    if (nodeHref && text) {
+      links.push({ href: nodeHref, text });
+    }
+
     if (node.marks?.length && text) {
       node.marks.forEach((mark) => {
-        if (mark.type === "link") {
-          const href = mark.attrs?.href;
-          if (typeof href === "string" && href.trim()) {
-            links.push({ href: href.trim(), text });
-          }
+        const href = mark.type === "link" ? getHrefFromAttrs(mark.attrs) : null;
+
+        if (href) {
+          links.push({ href, text });
         }
       });
     }
@@ -209,8 +311,9 @@ export function analyzeArticleSeoStatus(input: ArticleSeoAnalyzerInput): Article
     const previous = stats.headings[index - 1];
     return previous && heading.level - previous.level > 1;
   });
-  const internalLinks = stats.links.filter((link) => link.href.startsWith("/"));
-  const externalLinks = stats.links.filter((link) => /^https?:\/\//i.test(link.href));
+  const uniqueLinks = getUniqueLinks(stats.links);
+  const internalLinks = uniqueLinks.filter((link) => isInternalLinkHref(link.href));
+  const externalLinks = uniqueLinks.filter((link) => isExternalLinkHref(link.href));
 
   const scoreParts = [
     Math.min(15, (isSlugValid(slug) ? 5 : 0) + (publicUrl ? 5 : 0) + 5),
@@ -475,8 +578,9 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
     addWarning("headings.hierarchy", "La hiérarchie des titres saute un niveau.");
   }
 
-  const internalLinks = stats.links.filter((link) => link.href.startsWith("/"));
-  const externalLinks = stats.links.filter((link) => /^https?:\/\//i.test(link.href));
+  const uniqueLinks = getUniqueLinks(stats.links);
+  const internalLinks = uniqueLinks.filter((link) => isInternalLinkHref(link.href));
+  const externalLinks = uniqueLinks.filter((link) => isExternalLinkHref(link.href));
 
   if (internalLinks.length >= 2 && internalLinks.length <= 5) {
     addPass("links.internal", "Le maillage interne est bien dosé.");

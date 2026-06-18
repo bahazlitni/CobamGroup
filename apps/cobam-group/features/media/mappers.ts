@@ -2,11 +2,7 @@
 
 import type { Prisma } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
-import {
-  canDeleteMediaRecord,
-  canForceRemoveMediaRecord,
-  canUpdateMediaRecord,
-} from "./access";
+import { canDeleteMediaRecord, canForceRemoveMediaRecord, canUpdateMediaRecord } from "./access";
 import type {
   MediaFolderListItemDto,
   MediaFolderOptionDto,
@@ -76,10 +72,7 @@ function toNullableNumber(
 
 function buildUploadedByLabel(media: MediaWithRelations): string | null {
   const profile = media.uploadedByUser?.profile;
-  const fullName = [profile?.firstName, profile?.lastName]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
+  const fullName = [profile?.firstName, profile?.lastName].filter(Boolean).join(" ").trim();
 
   if (fullName) {
     return fullName;
@@ -172,11 +165,13 @@ export function mapMediaFolderSummaryDto(folder: {
   id: bigint;
   parentId: bigint | null;
   name: string;
+  isProtected: boolean;
 }): MediaFolderSummaryDto {
   return {
     id: Number(folder.id),
     parentId: folder.parentId != null ? Number(folder.parentId) : null,
     name: folder.name,
+    isProtected: folder.isProtected,
   };
 }
 
@@ -184,6 +179,7 @@ export function mapMediaFolderListItemDto(folder: {
   id: bigint;
   parentId: bigint | null;
   name: string;
+  isProtected: boolean;
   mediaCount: number;
   childFolderCount: number;
   createdAt: Date;
@@ -193,6 +189,7 @@ export function mapMediaFolderListItemDto(folder: {
     id: Number(folder.id),
     parentId: folder.parentId != null ? Number(folder.parentId) : null,
     name: folder.name,
+    isProtected: folder.isProtected,
     mediaCount: folder.mediaCount,
     childFolderCount: folder.childFolderCount,
     createdAt: folder.createdAt.toISOString(),
@@ -229,4 +226,3 @@ export function mapMediaStatsDto(data: {
     totalSizeBytes: data.totalSizeBytes != null ? Number(data.totalSizeBytes) : 0,
   };
 }
-

@@ -16,6 +16,7 @@ import {
 import StaffSelect from "@/components/staff/ui/PanelSelect";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { Textarea } from "@/components/ui/textarea";
+import { MEDIA_FOLDER_SCOPE_IDS, MEDIA_FOLDER_SCOPE_LABELS } from "@/features/media/folder-scopes";
 import type {
   ProductCategoryEditorFormState,
   ProductSubcategoryEditorState,
@@ -78,8 +79,7 @@ export default function ProductCategoryEditorPanels({
   };
   disableSave?: boolean;
 }) {
-  const previewDescription =
-    buildExcerpt(form.description) ?? buildExcerpt(form.descriptionSeo);
+  const previewDescription = buildExcerpt(form.description) ?? buildExcerpt(form.descriptionSeo);
   const hasImage = form.imageMediaId != null;
   const resolvedThemeColor = resolveColorHex(form.themeColor);
 
@@ -99,21 +99,19 @@ export default function ProductCategoryEditorPanels({
 
           <StaffEditorInfoPanel description="Contrôlez la structure finale avant validation.">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+              <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
                 Nom affiché
               </p>
-              <p className="mt-1 text-lg font-semibold text-cobam-dark-blue">
+              <p className="text-cobam-dark-blue mt-1 text-lg font-semibold">
                 {form.name.trim() || "Nom de la catégorie"}
               </p>
             </div>
 
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+              <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
                 Slug
               </p>
-              <p className="mt-1 text-sm text-slate-600">
-                {form.slug.trim() || "slug-catégorie"}
-              </p>
+              <p className="mt-1 text-sm text-slate-600">{form.slug.trim() || "slug-catégorie"}</p>
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -133,9 +131,7 @@ export default function ProductCategoryEditorPanels({
 
               <StaffBadge size="sm" color="secondary" icon="folder">
                 {summary?.subcategoryCount ?? form.subcategories.length} sous-catégorie
-                {(summary?.subcategoryCount ?? form.subcategories.length) > 1
-                  ? "s"
-                  : ""}
+                {(summary?.subcategoryCount ?? form.subcategories.length) > 1 ? "s" : ""}
               </StaffBadge>
 
               <StaffBadge size="sm" color="green" icon="package">
@@ -145,7 +141,7 @@ export default function ProductCategoryEditorPanels({
             </div>
 
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+              <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
                 Média
               </p>
               <p className="mt-1 text-sm text-slate-600">
@@ -164,18 +160,16 @@ export default function ProductCategoryEditorPanels({
 
             {previewDescription ? (
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
                   Aperçu éditorial
                 </p>
-                <p className="mt-1 text-sm text-slate-600">
-                  {previewDescription}
-                </p>
+                <p className="mt-1 text-sm text-slate-600">{previewDescription}</p>
               </div>
             ) : null}
 
             {summary?.updatedAt ? (
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
                   Dernière mise à jour
                 </p>
                 <p className="mt-1 text-sm text-slate-600">
@@ -186,7 +180,7 @@ export default function ProductCategoryEditorPanels({
 
             {!summary?.updatedAt && summary?.createdAt ? (
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
                   Créée le
                 </p>
                 <p className="mt-1 text-sm text-slate-600">
@@ -288,6 +282,8 @@ export default function ProductCategoryEditorPanels({
             dialogTitle="Choisir l'image de catégorie"
             dialogDescription="Parcourez la médiathèque pour choisir l'image principale de cette catégorie."
             mediaId={form.imageMediaId}
+            folderId={MEDIA_FOLDER_SCOPE_IDS.PRODUCT_CATEGORIES}
+            folderLabel={MEDIA_FOLDER_SCOPE_LABELS[MEDIA_FOLDER_SCOPE_IDS.PRODUCT_CATEGORIES]}
             onChange={(value) => onFieldChange("imageMediaId", value)}
           />
 
@@ -359,7 +355,7 @@ export default function ProductCategoryEditorPanels({
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="space-y-1">
-                      <p className="text-sm font-semibold text-cobam-dark-blue">
+                      <p className="text-cobam-dark-blue text-sm font-semibold">
                         Sous-catégorie {index + 1}
                       </p>
                       <p className="text-xs text-slate-500">
@@ -382,20 +378,13 @@ export default function ProductCategoryEditorPanels({
 
                   <div className="mt-5 grid gap-6">
                     <div className="grid gap-6 md:grid-cols-2">
-                      <PanelField
-                        id={`subcategory-name-${subcategory.formKey}`}
-                        label="Nom"
-                      >
+                      <PanelField id={`subcategory-name-${subcategory.formKey}`} label="Nom">
                         <PanelInput
                           id={`subcategory-name-${subcategory.formKey}`}
                           fullWidth
                           value={subcategory.name}
                           onChange={(event) =>
-                            onSubcategoryChange(
-                              subcategory.formKey,
-                              "name",
-                              event.target.value,
-                            )
+                            onSubcategoryChange(subcategory.formKey, "name", event.target.value)
                           }
                           placeholder="Ex. Mitigeurs de cuisine"
                         />
@@ -410,11 +399,7 @@ export default function ProductCategoryEditorPanels({
                           fullWidth
                           value={subcategory.subtitle}
                           onChange={(event) =>
-                            onSubcategoryChange(
-                              subcategory.formKey,
-                              "subtitle",
-                              event.target.value,
-                            )
+                            onSubcategoryChange(subcategory.formKey, "subtitle", event.target.value)
                           }
                           placeholder="Ex. Douchettes et colonnes"
                         />
@@ -432,11 +417,7 @@ export default function ProductCategoryEditorPanels({
                           fullWidth
                           value={subcategory.slug}
                           onChange={(event) =>
-                            onSubcategoryChange(
-                              subcategory.formKey,
-                              "slug",
-                              event.target.value,
-                            )
+                            onSubcategoryChange(subcategory.formKey, "slug", event.target.value)
                           }
                           placeholder="mitigeurs-cuisine"
                         />
@@ -474,11 +455,7 @@ export default function ProductCategoryEditorPanels({
                           fullWidth
                           value={String(subcategory.isActive)}
                           onValueChange={(value) =>
-                            onSubcategoryChange(
-                              subcategory.formKey,
-                              "isActive",
-                              value === "true",
-                            )
+                            onSubcategoryChange(subcategory.formKey, "isActive", value === "true")
                           }
                           options={[
                             { value: "true", label: "Active" },
@@ -540,12 +517,12 @@ export default function ProductCategoryEditorPanels({
                       dialogTitle="Choisir l'image de sous-catégorie"
                       dialogDescription="Choisissez une image dédiée à cette sous-catégorie."
                       mediaId={subcategory.imageMediaId}
+                      folderId={MEDIA_FOLDER_SCOPE_IDS.PRODUCT_CATEGORIES}
+                      folderLabel={
+                        MEDIA_FOLDER_SCOPE_LABELS[MEDIA_FOLDER_SCOPE_IDS.PRODUCT_CATEGORIES]
+                      }
                       onChange={(value) =>
-                        onSubcategoryChange(
-                          subcategory.formKey,
-                          "imageMediaId",
-                          value,
-                        )
+                        onSubcategoryChange(subcategory.formKey, "imageMediaId", value)
                       }
                     />
 
@@ -577,11 +554,7 @@ export default function ProductCategoryEditorPanels({
                           id={`subcategory-description-seo-${subcategory.formKey}`}
                           value={subcategory.descriptionSeo}
                           onValueChange={(value) =>
-                            onSubcategoryChange(
-                              subcategory.formKey,
-                              "descriptionSeo",
-                              value,
-                            )
+                            onSubcategoryChange(subcategory.formKey, "descriptionSeo", value)
                           }
                           placeholder="Résumé SEO de la sous-catégorie..."
                           className="min-h-28 rounded-md border-slate-300 px-4 py-3 text-base"

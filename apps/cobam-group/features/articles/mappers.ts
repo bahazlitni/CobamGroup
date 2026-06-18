@@ -1,5 +1,6 @@
 import type { Article } from "@prisma/client";
 import { resolveAccessFromAssignments } from "@/features/rbac/user-access";
+import { getArticlePlainText } from "@/features/articles/document";
 import { parseOwnedTagString } from "@/features/tags/owned";
 import { slugify } from "@/lib/slugify";
 import type {
@@ -148,7 +149,7 @@ function mapArticleFaqQuestions(article: {
   return (article.faqQuestions ?? []).map((item) => ({
     id: Number(item.id),
     question: item.question,
-    content: item.content,
+    content: getArticlePlainText(item.content),
     sortOrder: item.sortOrder,
   }));
 }

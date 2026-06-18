@@ -23,6 +23,9 @@ type MediaImageFieldProps = {
   aspectRatio?: string;
   warnOnAspectRatioMismatch?: boolean;
   aspectMismatchMessage?: string;
+  folderId?: number | null;
+  folderLabel?: string;
+  includeDescendantFolders?: boolean;
   folderPath?: string;
   disabled?: boolean;
   label: string;
@@ -43,6 +46,9 @@ export default function MediaImageField({
   aspectRatio,
   warnOnAspectRatioMismatch = false,
   aspectMismatchMessage,
+  folderId,
+  folderLabel,
+  includeDescendantFolders,
   folderPath,
   disabled = false,
   label,
@@ -158,7 +164,7 @@ export default function MediaImageField({
                     ) : null}
                   </div>
                   {selectedImageAspectMismatch && requiredAspectRatio ? (
-                    <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium leading-5 text-amber-800">
+                    <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 font-medium text-amber-800">
                       {aspectMismatchMessage ??
                         `Cette image ne respecte pas le format ${requiredAspectRatio.label}.`}
                     </div>
@@ -226,6 +232,9 @@ export default function MediaImageField({
         selectedMediaId={mediaId}
         aspectRatio={aspectRatio}
         requireAspectRatio={requireAspectRatio}
+        folderId={folderId}
+        folderLabel={folderLabel}
+        includeDescendantFolders={includeDescendantFolders}
         folderPath={folderPath}
         onSelect={(selectedMedia) => {
           setLoadedState({

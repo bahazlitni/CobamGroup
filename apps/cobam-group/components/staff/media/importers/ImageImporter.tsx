@@ -23,6 +23,9 @@ type MediaImageFieldProps = {
   previewImageClassName?: string;
   fallback?: ReactNode;
   noImagePreview?: boolean;
+  folderId?: number | null;
+  folderLabel?: string;
+  includeDescendantFolders?: boolean;
   folderPath?: string;
 };
 
@@ -38,6 +41,9 @@ export default function ImageImporter({
   previewImageClassName,
   fallback,
   noImagePreview = false,
+  folderId,
+  folderLabel,
+  includeDescendantFolders,
   folderPath,
 }: MediaImageFieldProps) {
   const [open, setOpen] = useState(false);
@@ -84,14 +90,8 @@ export default function ImageImporter({
     };
   }, [mediaId]);
 
-  const media =
-    mediaId != null && loadedState?.mediaId === mediaId
-      ? loadedState.media
-      : null;
-  const error =
-    mediaId != null && loadedState?.mediaId === mediaId
-      ? loadedState.error
-      : null;
+  const media = mediaId != null && loadedState?.mediaId === mediaId ? loadedState.media : null;
+  const error = mediaId != null && loadedState?.mediaId === mediaId ? loadedState.error : null;
   const isLoading = mediaId != null && loadedState?.mediaId !== mediaId;
 
   return (
@@ -99,24 +99,25 @@ export default function ImageImporter({
       <Card className="rounded-3xl py-0 shadow-none ring-1 ring-slate-200">
         <CardContent className="grid gap-5 p-5">
           <div className="grid gap-5 md:grid-cols-[auto_minmax(0,1fr)] md:items-start">
-            
-            {!noImagePreview && <ImagePreview
-              mediaId={mediaId}
-              alt={label}
-              className={previewClassName ?? "h-32 w-32 rounded-3xl"}
-              imageClassName={previewImageClassName}
-              fallback={fallback}
-            />}
+            {!noImagePreview && (
+              <ImagePreview
+                mediaId={mediaId}
+                alt={label}
+                className={previewClassName ?? "h-32 w-32 rounded-3xl"}
+                imageClassName={previewImageClassName}
+                fallback={fallback}
+              />
+            )}
 
             <div className="min-w-0 flex-1 space-y-2">
               <div className="space-y-1">
-                <p className="text-sm font-semibold text-cobam-dark-blue">{label}</p>
+                <p className="text-cobam-dark-blue text-sm font-semibold">{label}</p>
                 <p className="text-sm leading-6 text-slate-500">{description}</p>
               </div>
 
               {media ? (
                 <div className="space-y-1 rounded-lg border border-slate-300 bg-slate-50 px-4 py-3">
-                  <p className="truncate text-sm font-medium text-cobam-dark-blue">
+                  <p className="text-cobam-dark-blue truncate text-sm font-medium">
                     {getMediaDisplayTitle(media)}
                   </p>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
@@ -129,11 +130,7 @@ export default function ImageImporter({
                 </div>
               ) : (
                 <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-                  {isLoading
-                    ? "Chargement de l'image..."
-                    : error
-                      ? error
-                      : emptyLabel}
+                  {isLoading ? "Chargement de l'image..." : error ? error : emptyLabel}
                 </div>
               )}
             </div>
@@ -165,11 +162,7 @@ export default function ImageImporter({
             ) : null}
 
             {error && mediaId != null ? (
-              <AnimatedUIButton
-                type="button"
-                onClick={() => setOpen(true)}
-                variant="light"
-              >
+              <AnimatedUIButton type="button" onClick={() => setOpen(true)} variant="light">
                 <span className="inline-flex items-center gap-2">
                   <RefreshCcw className="h-4 w-4" />
                   Rechoisir
@@ -195,6 +188,9 @@ export default function ImageImporter({
             });
             onChange(selectedMedia.id);
           }}
+          folderId={folderId}
+          folderLabel={folderLabel}
+          includeDescendantFolders={includeDescendantFolders}
           folderPath={folderPath}
         />
       ) : null}

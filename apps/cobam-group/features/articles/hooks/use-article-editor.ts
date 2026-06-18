@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { clearStaffInfiniteListCache } from "@/lib/client/use-staff-infinite-scroll";
 import { normalizeOwnedTagNames } from "@/features/tags/owned";
 import { slugify } from "@/lib/slugify";
-import { isArticleDocumentEmpty, normalizeArticleContent } from "../document";
+import { getArticlePlainText, normalizeArticleContent } from "../document";
 import { analyzeArticleSeo } from "../seo-analyzer";
 import {
   cancelArticlePublicationScheduleClient,
@@ -114,9 +114,7 @@ function mapCtaButtonToEditorState(
   };
 }
 
-function mapCtaBannerToEditorState(
-  banner: ArticleCTABannerDto,
-): ArticleEditorCTABanner {
+function mapCtaBannerToEditorState(banner: ArticleCTABannerDto): ArticleEditorCTABanner {
   return {
     rowId: createRowId("article-cta"),
     id: banner.id,
@@ -139,7 +137,7 @@ function mapFaqQuestionToEditorState(
     rowId: createRowId("article-faq"),
     id: item.id,
     question: item.question,
-    content: normalizeArticleContent(item.content),
+    content: getArticlePlainText(item.content),
     sortOrder: item.sortOrder,
   };
 }
@@ -211,7 +209,7 @@ function validateEditorStateForSave(state: ArticleEditorState) {
 
   state.faqQuestions.forEach((item, index) => {
     const hasQuestion = Boolean(item.question.trim());
-    const hasAnswer = !isArticleDocumentEmpty(item.content);
+    const hasAnswer = Boolean(item.content.trim());
 
     if (hasQuestion !== hasAnswer) {
       throw new Error(`La FAQ #${index + 1} doit avoir une question et une réponse.`);
@@ -243,10 +241,10 @@ function mapEditorStateToPayload(state: ArticleEditorState) {
   }));
 
   const faqQuestions = state.faqQuestions
-    .filter((item) => item.question.trim() && !isArticleDocumentEmpty(item.content))
+    .filter((item) => item.question.trim() && item.content.trim())
     .map((item, index) => ({
       question: item.question.trim(),
-      content: normalizeArticleContent(item.content),
+      content: item.content.replace(/\r\n/g, "\n").trim(),
       sortOrder: index,
     }));
 
@@ -316,7 +314,8 @@ export function useArticleEditor(articleId: number | null) {
         focusKeyword: state.focusKeyword,
         status: state.status === "published" ? "PUBLISHED" : "DRAFT",
         noIndex: state.noIndex,
-        categoryName: article?.category?.id === Number(state.categoryId) ? article.category.name : null,
+        categoryName:
+          article?.category?.id === Number(state.categoryId) ? article.category.name : null,
         coverMediaId: state.coverMediaId.trim() ? Number(state.coverMediaId) : null,
         ogTitle: state.ogTitle,
         ogDescription: state.ogDescription,
@@ -562,6 +561,34 @@ export function useArticleEditor(articleId: number | null) {
     setNotice(null);
   }, [loadedState]);
 
+  const copyPlainText = useCallback(async () => {
+    const plainText = [
+      getArticlePlainText(state.introductionContent),
+      getArticlePlainText(state.bodyContent),
+      getArticlePlainText(state.conclusionContent),
+    ]
+      .map((section) => section.trim())
+      .filter(Boolean)
+      .join("\n\n");
+
+    if (!plainText) {
+      setError("Aucun texte d'article à copier.");
+      setNotice(null);
+      return false;
+    }
+
+    try {
+      await navigator.clipboard.writeText(plainText);
+      setError(null);
+      setNotice("Texte de l'article copié.");
+      return true;
+    } catch {
+      setError("Impossible de copier le texte dans le presse-papiers.");
+      setNotice(null);
+      return false;
+    }
+  }, [state.bodyContent, state.conclusionContent, state.introductionContent]);
+
   const deleteArticle = useCallback(async () => {
     if (articleId == null) {
       setError("Impossible de supprimer un article qui n'existe pas encore.");
@@ -610,6 +637,7 @@ export function useArticleEditor(articleId: number | null) {
     unpublish,
     schedulePublication,
     cancelSchedule,
+    copyPlainText,
     deleteArticle,
     resetToLoaded,
     generateSlugFromTitle,

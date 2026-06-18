@@ -145,6 +145,7 @@ const mediaFolderSelect = {
   id: true,
   parentId: true,
   name: true,
+  isProtected: true,
   createdByUserId: true,
   createdAt: true,
   updatedAt: true,
@@ -422,26 +423,12 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
           { introductionContent: { contains: mediaId.toString() } },
           { bodyContent: { contains: mediaId.toString() } },
           { conclusionContent: { contains: mediaId.toString() } },
-          {
-            faqQuestions: {
-              some: {
-                content: {
-                  contains: mediaId.toString(),
-                },
-              },
-            },
-          },
         ]),
       },
       select: {
         introductionContent: true,
         bodyContent: true,
         conclusionContent: true,
-        faqQuestions: {
-          select: {
-            content: true,
-          },
-        },
       },
     }),
     prisma.article.findMany({
@@ -515,7 +502,6 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
       ...extractArticleMediaIds(article.introductionContent),
       ...extractArticleMediaIds(article.bodyContent),
       ...extractArticleMediaIds(article.conclusionContent),
-      ...article.faqQuestions.flatMap((item) => extractArticleMediaIds(item.content)),
     ]) {
       incrementUsageCount(countsByMediaId, BigInt(mediaId), "articleMediaLinks");
     }

@@ -6,14 +6,12 @@ import MediaImageField from "@/components/staff/media/importers/media-image-fiel
 import StaffSelect from "@/components/staff/ui/PanelSelect";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MEDIA_FOLDER_SCOPE_IDS, MEDIA_FOLDER_SCOPE_LABELS } from "@/features/media/folder-scopes";
 import { cn } from "@/lib/utils";
 
 interface ArticleSeoPanelProps {
   state: ArticleEditorState;
-  onField: <K extends keyof ArticleEditorState>(
-    key: K,
-    value: ArticleEditorState[K],
-  ) => void;
+  onField: <K extends keyof ArticleEditorState>(key: K, value: ArticleEditorState[K]) => void;
 }
 
 const SCHEMA_OPTIONS = [
@@ -39,29 +37,21 @@ function SeoScore({ state }: { state: ArticleEditorState }) {
   return (
     <div className="mb-3">
       <div className="mb-1 flex items-center justify-between text-xs">
-        <span className="font-medium text-muted-foreground">SEO Score</span>
+        <span className="text-muted-foreground font-medium">SEO Score</span>
         <span
           className={cn(
             "font-bold",
-            pct >= 80
-              ? "text-green-600"
-              : pct >= 50
-                ? "text-yellow-600"
-                : "text-red-500",
+            pct >= 80 ? "text-green-600" : pct >= 50 ? "text-yellow-600" : "text-red-500",
           )}
         >
           {pct}%
         </span>
       </div>
-      <div className="h-1.5 w-full rounded-full bg-muted">
+      <div className="bg-muted h-1.5 w-full rounded-full">
         <div
           className={cn(
             "h-1.5 rounded-full transition-all",
-            pct >= 80
-              ? "bg-green-500"
-              : pct >= 50
-                ? "bg-yellow-500"
-                : "bg-red-500",
+            pct >= 80 ? "bg-green-500" : pct >= 50 ? "bg-yellow-500" : "bg-red-500",
           )}
           style={{ width: `${pct}%` }}
         />
@@ -89,9 +79,7 @@ export function ArticleSeoPanel({ state, onField }: ArticleSeoPanelProps) {
         <div>
           <Label className="text-xs">
             Meta Description
-            <span className="ml-1 text-muted-foreground">
-              ({state.descriptionSeo.length}/160)
-            </span>
+            <span className="text-muted-foreground ml-1">({state.descriptionSeo.length}/160)</span>
           </Label>
           <textarea
             value={state.descriptionSeo}
@@ -99,12 +87,12 @@ export function ArticleSeoPanel({ state, onField }: ArticleSeoPanelProps) {
             placeholder="Meta description for search engines..."
             rows={3}
             maxLength={160}
-            className="mt-1 w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring mt-1 w-full resize-none rounded-md border px-3 py-2 text-sm focus-visible:ring-1 focus-visible:outline-none"
           />
         </div>
 
-        <div className="rounded-md border bg-muted/30 p-2.5">
-          <p className="mb-1.5 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+        <div className="bg-muted/30 rounded-md border p-2.5">
+          <p className="text-muted-foreground mb-1.5 text-[10px] font-semibold tracking-wide uppercase">
             Google Preview
           </p>
           <p className="truncate text-sm leading-snug font-medium text-blue-600">
@@ -113,7 +101,7 @@ export function ArticleSeoPanel({ state, onField }: ArticleSeoPanelProps) {
           <p className="truncate text-[11px] text-green-700">
             yourdomain.com/articles/{state.slug || "article-slug"}
           </p>
-          <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
+          <p className="text-muted-foreground mt-0.5 line-clamp-2 text-[11px] leading-relaxed">
             {state.descriptionSeo || "No meta description - add one for better CTR."}
           </p>
         </div>
@@ -138,7 +126,7 @@ export function ArticleSeoPanel({ state, onField }: ArticleSeoPanelProps) {
               onChange={(event) => onField("ogDescription", event.target.value)}
               placeholder="OG description..."
               rows={2}
-              className="mt-1 w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring mt-1 w-full resize-none rounded-md border px-3 py-2 text-sm focus-visible:ring-1 focus-visible:outline-none"
             />
           </div>
 
@@ -148,9 +136,9 @@ export function ArticleSeoPanel({ state, onField }: ArticleSeoPanelProps) {
               <MediaImageField
                 label="OG image"
                 mediaId={state.ogImageMediaId ? Number(state.ogImageMediaId) : null}
-                onChange={(id) =>
-                  onField("ogImageMediaId", id ? String(id) : "")
-                }
+                folderId={MEDIA_FOLDER_SCOPE_IDS.ARTICLES}
+                folderLabel={MEDIA_FOLDER_SCOPE_LABELS[MEDIA_FOLDER_SCOPE_IDS.ARTICLES]}
+                onChange={(id) => onField("ogImageMediaId", id ? String(id) : "")}
               />
             </div>
           </div>

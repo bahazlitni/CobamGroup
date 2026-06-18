@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import {
+  findMediaFolderScopeIdClient,
   findMediaFolderIdByPathClient,
   isMediaFilenameConflictError,
   listMediaClient,
@@ -38,6 +39,9 @@ type ImagePickerDialogProps = {
   onSelect: (media: MediaListItemDto) => void;
   aspectRatio?: string;
   requireAspectRatio?: boolean;
+  folderId?: number | null;
+  folderLabel?: string;
+  includeDescendantFolders?: boolean;
   folderPath?: string;
 };
 
@@ -168,6 +172,9 @@ export default function ImagePickerDialog({
   onSelect,
   aspectRatio,
   requireAspectRatio = false,
+  folderId,
+  folderLabel,
+  includeDescendantFolders = false,
   folderPath,
 }: ImagePickerDialogProps) {
   const [activeTab, setActiveTab] = useState<PickerTab>("library");
@@ -187,29 +194,37 @@ export default function ImagePickerDialog({
     widthPx: number;
     heightPx: number;
   } | null>(null);
+  const [scopeWasMissing, setScopeWasMissing] = useState(false);
   const loadRequestIdRef = useRef(0);
   const isClosingRef = useRef(false);
   const requiredAspectRatio = useMemo(() => parseAspectRatio(aspectRatio), [aspectRatio]);
   const aspectRatioMessage = requiredAspectRatio
     ? `Format requis: ${requiredAspectRatio.label}`
     : null;
-  const scopedLibraryDescription = folderPath
-    ? `Cette bibliotheque affiche uniquement les images du dossier ${folderPath} et de ses sous-dossiers.`
+  const requestedScopeLabel =
+    folderId != null ? (folderLabel ?? `#${folderId}`) : folderPath ? folderPath : null;
+  const scopedLibraryDescription = requestedScopeLabel
+    ? scopeWasMissing
+      ? `Dossier ${requestedScopeLabel} introuvable; affichage de toutes les images.`
+      : `Cette bibliotheque affiche uniquement les images du dossier ${requestedScopeLabel}.`
     : "Cette bibliotheque affiche les images de tous les dossiers.";
 
   const resolveScopedFolderId = useCallback(async () => {
+    if (folderId != null) {
+      const resolvedFolderId = await findMediaFolderScopeIdClient(folderId);
+      setScopeWasMissing(resolvedFolderId == null);
+      return resolvedFolderId;
+    }
+
     if (!folderPath) {
-      return undefined;
+      setScopeWasMissing(false);
+      return null;
     }
 
-    const folderId = await findMediaFolderIdByPathClient(folderPath);
-
-    if (folderId == null) {
-      throw new Error(`Le dossier ${folderPath} est introuvable dans la mediatheque.`);
-    }
-
-    return folderId;
-  }, [folderPath]);
+    const resolvedFolderId = await findMediaFolderIdByPathClient(folderPath);
+    setScopeWasMissing(resolvedFolderId == null);
+    return resolvedFolderId;
+  }, [folderId, folderPath]);
 
   const resetDialogState = useCallback(() => {
     setActiveTab("library");
@@ -223,6 +238,7 @@ export default function ImagePickerDialog({
     setSelectedExistingId(null);
     setUploadFile(null);
     setUploadDimensions(null);
+    setScopeWasMissing(false);
   }, []);
 
   useEffect(() => {
@@ -288,7 +304,7 @@ export default function ImagePickerDialog({
           sortBy: "date",
           sortDirection: "desc",
           folderId,
-          includeDescendantFolders: folderId != null,
+          includeDescendantFolders: folderId != null && includeDescendantFolders,
         });
 
         if (requestId !== loadRequestIdRef.current || isClosingRef.current) {
@@ -316,7 +332,7 @@ export default function ImagePickerDialog({
         }
       }
     },
-    [deferredSearch, open, resolveScopedFolderId],
+    [deferredSearch, includeDescendantFolders, open, resolveScopedFolderId],
   );
 
   useEffect(() => {
@@ -480,8 +496,8 @@ export default function ImagePickerDialog({
               <PickerEmptyState
                 title="Aucune image disponible"
                 description={
-                  folderPath
-                    ? `Aucune image n'est disponible dans ${folderPath} pour le moment.`
+                  requestedScopeLabel && !scopeWasMissing
+                    ? `Aucune image n'est disponible dans ${requestedScopeLabel} pour le moment.`
                     : "Essayez une autre recherche dans toute la mediatheque ou importez une nouvelle image depuis l'onglet Importer."
                 }
               />

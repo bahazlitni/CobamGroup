@@ -3,6 +3,7 @@ import type { ArticleSeoAnalyzerResult } from "@/features/articles/seo-analyzer"
 
 type SeoChecksProps = {
   analysis: ArticleSeoAnalyzerResult;
+  articlePublicHref: string | null;
 };
 
 function getStatusBadge(status: ArticleSeoAnalyzerResult["status"]) {
@@ -80,7 +81,24 @@ function FeedbackList({
   );
 }
 
-export default function SeoChecks({ analysis }: SeoChecksProps) {
+function DynamicLink({ href, text }: { href: string | null; text: string }) {
+  if (!href) {
+    return <p>{text}</p>;
+  }
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-3 truncate text-base leading-snug font-semibold text-blue-700"
+    >
+      {text}
+    </a>
+  );
+}
+
+export default function SeoChecks({ analysis, articlePublicHref }: SeoChecksProps) {
   const badge = getStatusBadge(analysis.status);
 
   return (
@@ -101,12 +119,7 @@ export default function SeoChecks({ analysis }: SeoChecksProps) {
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4">
-        <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
-          Aperçu Google
-        </p>
-        <p className="mt-3 truncate text-base leading-snug font-semibold text-blue-700">
-          {analysis.searchPreview.title}
-        </p>
+        <DynamicLink href={articlePublicHref} text={analysis.searchPreview.title} />
         <p className="truncate text-xs text-green-700">
           cobamgroup.com{analysis.searchPreview.url}
         </p>

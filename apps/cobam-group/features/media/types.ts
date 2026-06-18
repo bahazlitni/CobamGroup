@@ -132,6 +132,7 @@ export type MediaFolderSummaryDto = {
   id: number;
   parentId: number | null;
   name: string;
+  isProtected: boolean;
 };
 
 export type MediaFolderListItemDto = MediaFolderSummaryDto & {

@@ -33,6 +33,7 @@ import {
   normalizeArticleEditorColor,
 } from "@/features/articles/editor/colors";
 import type { ArticleRichTextEditorFeatures } from "@/features/articles/editor/extensions";
+import { MEDIA_FOLDER_SCOPE_IDS, MEDIA_FOLDER_SCOPE_LABELS } from "@/features/media/folder-scopes";
 import type { MediaListItemDto } from "@/features/media/types";
 import { cn } from "@/lib/utils";
 import ImagePickerDialog from "../media/importers/image-picker-dialog";
@@ -599,6 +600,8 @@ export default function ArticleRichTextToolbar({ editor, features }: ArticleRich
           title="Importer une image dans l'article"
           description="Choisissez une image existante ou importez-en une nouvelle depuis la mediatheque."
           selectedMediaId={null}
+          folderId={MEDIA_FOLDER_SCOPE_IDS.ARTICLES}
+          folderLabel={MEDIA_FOLDER_SCOPE_LABELS[MEDIA_FOLDER_SCOPE_IDS.ARTICLES]}
           onSelect={(media) => {
             insertMediaImage(editor, media);
             setIsImagePickerOpen(false);

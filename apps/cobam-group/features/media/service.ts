@@ -608,6 +608,21 @@ export async function resolveMediaFolderIdByPathService(session: StaffSession, p
   return folder ? Number(folder.id) : null;
 }
 
+export async function getMediaFolderByIdService(session: StaffSession, folderId: number) {
+  if (!canAccessMediaLibrary(session)) {
+    throw new MediaServiceError("Acces refuse.", 403);
+  }
+
+  const ownerUserId = getOwnerScope(session);
+  const folder = await findMediaFolderById(folderId, ownerUserId);
+
+  if (!folder) {
+    throw new MediaServiceError("Dossier introuvable.", 404);
+  }
+
+  return mapMediaFolderSummaryDto(folder);
+}
+
 export async function uploadMediaService(session: StaffSession, input: MediaUploadInput) {
   if (!canUploadMedia(session)) {
     throw new MediaServiceError("Accès refusé.", 403);
@@ -946,6 +961,10 @@ export async function deleteMediaFolderService(
 
   if (!existingFolder) {
     throw new MediaServiceError("Dossier introuvable.", 404);
+  }
+
+  if (existingFolder.isProtected) {
+    throw new MediaServiceError("Ce dossier est protege et ne peut pas etre supprime.", 400);
   }
 
   const forceRemove = options.force === true;

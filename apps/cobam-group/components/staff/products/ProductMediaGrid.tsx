@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ImagePlus } from "lucide-react";
+import { getMediaFolderScopeLabel, MEDIA_FOLDER_SCOPE_IDS } from "@/features/media/folder-scopes";
 import type { ProductMediaDto } from "@/features/products/types";
 import { cn } from "@/lib/utils";
 import ProductMediaEditDialog from "./ProductMediaEditDialog";
@@ -25,6 +26,25 @@ function moveItem<T>(items: T[], fromIndex: number, toIndex: number) {
   return next;
 }
 
+function getDefaultProductMediaFolderId(input: {
+  mediaKind: ProductMediaDto["kind"] | "ALL";
+  role: ProductMediaDto["role"];
+}) {
+  if (input.role === "TECHNICAL") {
+    return MEDIA_FOLDER_SCOPE_IDS.PRODUCT_DATASHEETS;
+  }
+
+  if (input.role === "CERTIFICATE") {
+    return MEDIA_FOLDER_SCOPE_IDS.CERTIFICATE_PDFS;
+  }
+
+  if (input.mediaKind === "IMAGE" || input.role === "GALLERY") {
+    return MEDIA_FOLDER_SCOPE_IDS.PRODUCT_IMAGES;
+  }
+
+  return null;
+}
+
 export default function ProductMediaGrid({
   items,
   onChange,
@@ -38,6 +58,8 @@ export default function ProductMediaGrid({
   documentExtensions,
   role = "GALLERY",
   maxItems,
+  folderId,
+  folderLabel,
 }: {
   items: ProductMediaDto[];
   onChange: (items: ProductMediaDto[]) => void;
@@ -51,16 +73,21 @@ export default function ProductMediaGrid({
   documentExtensions?: string[];
   role?: ProductMediaDto["role"];
   maxItems?: number;
+  folderId?: number | null;
+  folderLabel?: string;
 }) {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [editingMedia, setEditingMedia] = useState<ProductMediaDto | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const pickerFolderId =
+    folderId !== undefined ? folderId : getDefaultProductMediaFolderId({ mediaKind, role });
+  const pickerFolderLabel = folderLabel ?? getMediaFolderScopeLabel(pickerFolderId);
 
   return (
     <div className="space-y-4">
       <div className="space-y-1">
-        <p className="text-sm font-semibold text-cobam-dark-blue">{title}</p>
+        <p className="text-cobam-dark-blue text-sm font-semibold">{title}</p>
         <p className="text-sm leading-6 text-slate-500">{description}</p>
       </div>
 
@@ -98,14 +125,14 @@ export default function ProductMediaGrid({
           type="button"
           onClick={() => setIsPickerOpen(true)}
           className={cn(
-            "group flex aspect-square flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-4 text-center transition hover:border-cobam-water-blue hover:bg-cobam-water-blue/5",
+            "group hover:border-cobam-water-blue hover:bg-cobam-water-blue/5 flex aspect-square flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-slate-50 px-4 text-center transition",
             items.length === 0 ? "min-h-52" : "",
           )}
         >
-          <span className="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-lg border border-slate-300 bg-white text-cobam-water-blue shadow-sm transition group-hover:border-cobam-water-blue/30">
+          <span className="text-cobam-water-blue group-hover:border-cobam-water-blue/30 mb-3 inline-flex h-14 w-14 items-center justify-center rounded-lg border border-slate-300 bg-white shadow-sm transition">
             <ImagePlus className="h-6 w-6" />
           </span>
-          <p className="text-sm font-semibold text-cobam-dark-blue">{addButtonLabel}</p>
+          <p className="text-cobam-dark-blue text-sm font-semibold">{addButtonLabel}</p>
           <p className="mt-1 text-xs leading-5 text-slate-500">{addButtonHint}</p>
         </button>
       </div>
@@ -119,6 +146,8 @@ export default function ProductMediaGrid({
           mediaKind={mediaKind}
           documentExtensions={documentExtensions}
           excludedMediaIds={maxItems === 1 ? [] : items.map((item) => item.id)}
+          folderId={pickerFolderId}
+          folderLabel={pickerFolderLabel}
           onSelect={(media) => {
             const selectedMedia = { ...media, role, sortOrder: items.length };
             onChange(maxItems === 1 ? [selectedMedia] : [...items, selectedMedia]);

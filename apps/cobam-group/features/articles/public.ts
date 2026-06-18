@@ -2,6 +2,7 @@ import { ArticleStatus, Prisma } from "@prisma/client";
 import {
   extractArticleMediaIds,
   getArticleFirstParagraphText,
+  getArticlePlainText,
   replaceArticleImageSources,
 } from "./document";
 import { canPreviewDraftArticleOnPublicPage } from "@/features/articles/access";
@@ -188,8 +189,7 @@ function mapPublicArticleSummary(article: PublicArticleRecord): PublicArticleSum
       hasCover && article.coverMediaId != null
         ? buildPublicMediaUrl(article.coverMediaId, "thumbnail")
         : null,
-    coverImageAlt:
-      article.coverMedia?.altText ?? article.coverMedia?.title ?? article.title,
+    coverImageAlt: article.coverMedia?.altText ?? article.coverMedia?.title ?? article.title,
     coverImageWidth: article.coverMedia?.widthPx ?? null,
     coverImageHeight: article.coverMedia?.heightPx ?? null,
     categories: getPublicArticleCategories(article),
@@ -297,11 +297,7 @@ async function listPublicArticleSummaries(
       ensurePublishedArticleMediaPublic({
         coverMediaId: article.coverMediaId,
         ogImageMediaId: article.ogImageMediaId,
-        contents: [
-          article.introductionContent,
-          article.bodyContent,
-          article.conclusionContent,
-        ],
+        contents: [article.introductionContent, article.bodyContent, article.conclusionContent],
       }),
     ),
   );
@@ -376,11 +372,7 @@ async function listPublicArticleSuggestions(input: {
       ensurePublishedArticleMediaPublic({
         coverMediaId: article.coverMediaId,
         ogImageMediaId: null,
-        contents: [
-          article.introductionContent,
-          article.bodyContent,
-          article.conclusionContent,
-        ],
+        contents: [article.introductionContent, article.bodyContent, article.conclusionContent],
       }),
     ),
   );
@@ -404,11 +396,7 @@ export async function findPublicArticleBySlug(
       ogDescription: true,
       ogImageMediaId: true,
       ctaBanners: {
-        orderBy: [
-          { approxPositionPercentage: "asc" },
-          { title: "asc" },
-          { id: "asc" },
-        ],
+        orderBy: [{ approxPositionPercentage: "asc" }, { title: "asc" }, { id: "asc" }],
         select: {
           id: true,
           title: true,
@@ -462,12 +450,7 @@ export async function findPublicArticleBySlug(
     await ensurePublishedArticleMediaPublic({
       coverMediaId: article.coverMediaId,
       ogImageMediaId: article.ogImageMediaId,
-      contents: [
-        article.introductionContent,
-        article.bodyContent,
-        article.conclusionContent,
-        ...article.faqQuestions.map((item) => item.content),
-      ],
+      contents: [article.introductionContent, article.bodyContent, article.conclusionContent],
       ctaImageIds: article.ctaBanners
         .map((banner) => banner.imageId)
         .filter((imageId): imageId is bigint => imageId != null),
@@ -502,9 +485,7 @@ export async function findPublicArticleBySlug(
     faqQuestions: article.faqQuestions.map((item) => ({
       id: Number(item.id),
       question: item.question,
-      content: replaceArticleImageSources(item.content, (mediaId) =>
-        buildPublicMediaUrl(mediaId, "original"),
-      ),
+      content: getArticlePlainText(item.content),
       sortOrder: item.sortOrder,
     })),
     descriptionSeo: article.descriptionSeo,

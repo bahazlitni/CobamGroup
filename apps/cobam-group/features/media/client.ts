@@ -35,6 +35,7 @@ type MediaUploadResponse = ApiOk<{ media: MediaListItemDto }> | ApiFail;
 type MediaUpdateResponse = ApiOk<{ media: MediaListItemDto }> | ApiFail;
 type MediaDeleteResponse = ApiOk<Record<string, never>> | ApiFail;
 type MediaFolderCreateResponse = ApiOk<{ folder: MediaFolderSummaryDto }> | ApiFail;
+type MediaFolderDetailResponse = ApiOk<{ folder: MediaFolderSummaryDto }> | ApiFail;
 type MediaFolderUpdateResponse = ApiOk<{ folder: MediaFolderSummaryDto }> | ApiFail;
 type MediaFolderDeleteResponse = ApiOk<Record<string, never>> | ApiFail;
 type MediaFolderResolveResponse = ApiOk<{ folderId: number | null }> | ApiFail;
@@ -131,6 +132,8 @@ function buildListParams(params: {
 
 const mediaFolderPathCache = new Map<string, number | null>();
 const mediaFolderPathPromiseCache = new Map<string, Promise<number | null>>();
+const mediaFolderIdCache = new Map<number, MediaFolderSummaryDto | null>();
+const mediaFolderIdPromiseCache = new Map<number, Promise<MediaFolderSummaryDto | null>>();
 
 export async function listMediaClient(params: {
   browseMode?: MediaBrowseMode;
@@ -204,6 +207,61 @@ export async function findMediaFolderIdByPathClient(path: string): Promise<numbe
   } finally {
     mediaFolderPathPromiseCache.delete(normalizedPath);
   }
+}
+
+export async function findMediaFolderByIdClient(
+  folderId: number,
+): Promise<MediaFolderSummaryDto | null> {
+  if (!Number.isInteger(folderId) || folderId <= 0) {
+    return null;
+  }
+
+  if (mediaFolderIdCache.has(folderId)) {
+    return mediaFolderIdCache.get(folderId) ?? null;
+  }
+
+  const existingPromise = mediaFolderIdPromiseCache.get(folderId);
+
+  if (existingPromise) {
+    return existingPromise;
+  }
+
+  const pendingLookup = (async () => {
+    const res = await staffApiFetch(`/api/staff/media-folders/${folderId}`, {
+      method: "GET",
+      auth: true,
+    });
+    const data = await parseJsonSafe<MediaFolderDetailResponse>(res);
+
+    if (res.status === 404) {
+      mediaFolderIdCache.set(folderId, null);
+      return null;
+    }
+
+    if (!res.ok || !data?.ok || !data.folder) {
+      throw createMediaClientError(
+        data,
+        "Erreur lors de la resolution du dossier media",
+        res.status,
+      );
+    }
+
+    mediaFolderIdCache.set(folderId, data.folder);
+    return data.folder;
+  })();
+
+  mediaFolderIdPromiseCache.set(folderId, pendingLookup);
+
+  try {
+    return await pendingLookup;
+  } finally {
+    mediaFolderIdPromiseCache.delete(folderId);
+  }
+}
+
+export async function findMediaFolderScopeIdClient(folderId: number): Promise<number | null> {
+  const folder = await findMediaFolderByIdClient(folderId);
+  return folder?.id ?? null;
 }
 
 export async function uploadMediaClient(input: MediaUploadRequest): Promise<MediaListItemDto> {

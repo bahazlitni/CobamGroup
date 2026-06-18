@@ -8,13 +8,11 @@ import StaffSelect from "@/components/staff/ui/PanelSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MEDIA_FOLDER_SCOPE_IDS, MEDIA_FOLDER_SCOPE_LABELS } from "@/features/media/folder-scopes";
 
 interface ArticleMetaPanelProps {
   state: ArticleEditorState;
-  onField: <K extends keyof ArticleEditorState>(
-    key: K,
-    value: ArticleEditorState[K],
-  ) => void;
+  onField: <K extends keyof ArticleEditorState>(key: K, value: ArticleEditorState[K]) => void;
   onGenerateSlug: () => void;
   categories: { value: string; label: string }[];
 }
@@ -70,7 +68,7 @@ export function ArticleMetaPanel({
               value={state.slug}
               onChange={(event) => onField("slug", event.target.value)}
               placeholder="article-slug"
-              className="h-8 text-sm font-mono"
+              className="h-8 font-mono text-sm"
             />
             <Button
               type="button"
@@ -83,9 +81,7 @@ export function ArticleMetaPanel({
               <Wand2 className="h-3.5 w-3.5" />
             </Button>
           </div>
-          <p className="mt-1 truncate text-[10px] text-muted-foreground">
-            {publicUrl}
-          </p>
+          <p className="text-muted-foreground mt-1 truncate text-[10px]">{publicUrl}</p>
         </div>
 
         <div>
@@ -107,6 +103,8 @@ export function ArticleMetaPanel({
             <MediaImageField
               label="Cover image"
               mediaId={state.coverMediaId ? Number(state.coverMediaId) : null}
+              folderId={MEDIA_FOLDER_SCOPE_IDS.ARTICLES}
+              folderLabel={MEDIA_FOLDER_SCOPE_LABELS[MEDIA_FOLDER_SCOPE_IDS.ARTICLES]}
               onChange={(id) => onField("coverMediaId", id ? String(id) : "")}
             />
           </div>
@@ -119,11 +117,9 @@ export function ArticleMetaPanel({
             onChange={(event) => onField("excerpt", event.target.value)}
             placeholder="Short summary for listings..."
             rows={3}
-            className="mt-1 w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring mt-1 w-full resize-none rounded-md border px-3 py-2 text-sm focus-visible:ring-1 focus-visible:outline-none"
           />
-          <p className="text-right text-[10px] text-muted-foreground">
-            {state.excerpt.length}/300
-          </p>
+          <p className="text-muted-foreground text-right text-[10px]">{state.excerpt.length}/300</p>
         </div>
       </div>
     </SidebarCard>

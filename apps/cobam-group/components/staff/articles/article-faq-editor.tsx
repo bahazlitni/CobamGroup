@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { GripVertical, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
-import PanelInput from "@/components/staff/ui/PanelInput";
+import { Textarea } from "@/components/ui/textarea";
 import type { ArticleEditorFaqQuestion } from "@/features/articles/hooks/use-article-editor";
-import { normalizeArticleContent } from "@/features/articles/document";
-import ArticleRichTextEditor from "./article-rich-text-editor";
 import { cn } from "@/lib/utils";
+import ArticleEditorCardHeader from "./article-editor-card-header";
 
 type ArticleFaqEditorProps = {
   value: ArticleEditorFaqQuestion[];
@@ -35,7 +34,7 @@ function createQuestion(index: number): ArticleEditorFaqQuestion {
     rowId: createRowId(),
     id: null,
     question: "",
-    content: normalizeArticleContent(""),
+    content: "",
     sortOrder: index,
   };
 }
@@ -61,6 +60,21 @@ export default function ArticleFaqEditor({
 
   const removeQuestion = (rowId: string) => {
     onChange(normalizeSortOrder(value.filter((item) => item.rowId !== rowId)));
+  };
+
+  const duplicateQuestion = (item: ArticleEditorFaqQuestion) => {
+    const sourceIndex = value.findIndex((candidate) => candidate.rowId === item.rowId);
+    const insertIndex = sourceIndex >= 0 ? sourceIndex + 1 : value.length;
+    const next = [...value];
+
+    next.splice(insertIndex, 0, {
+      ...item,
+      rowId: createRowId(),
+      id: null,
+      question: item.question ? `${item.question} copie` : "",
+    });
+
+    onChange(normalizeSortOrder(next));
   };
 
   const moveQuestion = (sourceRowId: string, targetRowId: string) => {
@@ -117,12 +131,6 @@ export default function ArticleFaqEditor({
           {value.map((item, index) => (
             <section
               key={item.rowId}
-              draggable={!disabled}
-              onDragStart={(event) => {
-                setDraggedRowId(item.rowId);
-                event.dataTransfer.effectAllowed = "move";
-                event.dataTransfer.setData("text/plain", item.rowId);
-              }}
               onDragOver={(event) => {
                 if (!disabled) {
                   event.preventDefault();
@@ -138,63 +146,71 @@ export default function ArticleFaqEditor({
                 setDraggedRowId(null);
                 setDragOverRowId(null);
               }}
-              onDragEnd={() => {
-                setDraggedRowId(null);
-                setDragOverRowId(null);
-              }}
               className={cn(
-                "rounded-2xl border border-slate-200 bg-white p-4 transition",
+                "overflow-hidden rounded-2xl border border-slate-200 bg-white transition",
                 dragOverRowId === item.rowId && "border-sky-300 bg-sky-50/60",
                 draggedRowId === item.rowId && "opacity-60",
               )}
             >
-              <div className="mb-4 flex items-start gap-3">
-                <button
-                  type="button"
-                  className="mt-2 inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-400"
-                  aria-label={`Déplacer la question ${index + 1}`}
-                  disabled={disabled}
-                >
-                  <GripVertical className="size-4" />
-                </button>
-                <div className="min-w-0 flex-1">
-                  <PanelInput
-                    value={item.question}
-                    onChange={(event) =>
-                      updateQuestion(item.rowId, (current) => ({
-                        ...current,
-                        question: event.target.value,
-                      }))
-                    }
-                    placeholder="Question"
-                    disabled={disabled}
-                    fullWidth
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeQuestion(item.rowId)}
-                  disabled={disabled}
-                  className="mt-2 inline-flex size-9 items-center justify-center rounded-lg border border-red-100 text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  aria-label={`Supprimer la question ${index + 1}`}
-                >
-                  <Trash2 className="size-4" />
-                </button>
-              </div>
-
-              <ArticleRichTextEditor
-                editorId={`article-faq-${item.rowId}`}
-                value={item.content}
-                onChange={(content) =>
+              <ArticleEditorCardHeader
+                value={item.question}
+                onChange={(question) =>
                   updateQuestion(item.rowId, (current) => ({
                     ...current,
-                    content,
+                    question,
                   }))
                 }
-                placeholder="Réponse..."
-                editable={!disabled}
-                variant="paragraphOnly"
+                placeholder="Question"
+                disabled={disabled}
+                dragHandleLabel={`Déplacer la question ${index + 1}`}
+                draggable
+                onDragStart={(event) => {
+                  if (disabled) {
+                    return;
+                  }
+
+                  setDraggedRowId(item.rowId);
+                  event.dataTransfer.effectAllowed = "move";
+                  event.dataTransfer.setData("text/plain", item.rowId);
+                }}
+                onDragEnd={() => {
+                  setDraggedRowId(null);
+                  setDragOverRowId(null);
+                }}
+                actions={[
+                  {
+                    key: "duplicate",
+                    label: "Dupliquer",
+                    icon: "copy",
+                    onClick: () => duplicateQuestion(item),
+                    disabled,
+                  },
+                  {
+                    key: "remove",
+                    label: "Retirer",
+                    icon: "trash",
+                    tone: "danger",
+                    onClick: () => removeQuestion(item.rowId),
+                    disabled,
+                  },
+                ]}
               />
+
+              <div className="p-4 sm:p-5">
+                <Textarea
+                  value={item.content}
+                  onChange={(event) =>
+                    updateQuestion(item.rowId, (current) => ({
+                      ...current,
+                      content: event.target.value,
+                    }))
+                  }
+                  placeholder="Réponse..."
+                  disabled={disabled}
+                  rows={4}
+                  className="min-h-28 resize-y rounded-xl border-slate-300 bg-white text-sm leading-6 text-slate-700"
+                />
+              </div>
             </section>
           ))}
         </div>
