@@ -32,12 +32,14 @@ import {
   ARTICLE_EDITOR_COLOR_PRESETS,
   normalizeArticleEditorColor,
 } from "@/features/articles/editor/colors";
+import type { ArticleRichTextEditorFeatures } from "@/features/articles/editor/extensions";
 import type { MediaListItemDto } from "@/features/media/types";
 import { cn } from "@/lib/utils";
 import ImagePickerDialog from "../media/importers/image-picker-dialog";
 
 type ArticleRichTextToolbarProps = {
   editor: Editor | null;
+  features: ArticleRichTextEditorFeatures;
 };
 
 type ToolbarButtonProps = {
@@ -157,7 +159,7 @@ function insertMediaImage(editor: Editor | null, media: MediaListItemDto) {
     .run();
 }
 
-export default function ArticleRichTextToolbar({ editor }: ArticleRichTextToolbarProps) {
+export default function ArticleRichTextToolbar({ editor, features }: ArticleRichTextToolbarProps) {
   const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
   const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
   const [linkValue, setLinkValue] = useState("");
@@ -238,27 +240,31 @@ export default function ArticleRichTextToolbar({ editor }: ArticleRichTextToolba
   return (
     <div className="sticky top-0 z-30 flex w-full flex-col gap-3 border-b border-slate-300 bg-slate-50/95 p-4 pt-6 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-slate-50/85">
       <div className="flex min-w-max items-center justify-center gap-2">
-        <Select
-          value={editorState.activeBlock}
-          onValueChange={(value) => applyBlockType(editor, value)}
-          disabled={isReadOnly}
-        >
-          <SelectTrigger className="h-9 min-w-40 rounded-xl border-slate-300 bg-white">
-            <div className="flex items-center gap-2">
-              <SelectValue placeholder="Titre rapide" />
-            </div>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="paragraph">Paragraphe</SelectItem>
-            <SelectItem value="h2">Titre 2</SelectItem>
-            <SelectItem value="h3">Titre 3</SelectItem>
-            <SelectItem value="h4">Titre 4</SelectItem>
-            <SelectItem value="h5">Titre 5</SelectItem>
-            <SelectItem value="h6">Titre 6</SelectItem>
-          </SelectContent>
-        </Select>
+        {features.headings ? (
+          <>
+            <Select
+              value={editorState.activeBlock}
+              onValueChange={(value) => applyBlockType(editor, value)}
+              disabled={isReadOnly}
+            >
+              <SelectTrigger className="h-9 min-w-40 rounded-xl border-slate-300 bg-white">
+                <div className="flex items-center gap-2">
+                  <SelectValue placeholder="Titre rapide" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="paragraph">Paragraphe</SelectItem>
+                <SelectItem value="h2">Titre 2</SelectItem>
+                <SelectItem value="h3">Titre 3</SelectItem>
+                <SelectItem value="h4">Titre 4</SelectItem>
+                <SelectItem value="h5">Titre 5</SelectItem>
+                <SelectItem value="h6">Titre 6</SelectItem>
+              </SelectContent>
+            </Select>
 
-        <Separator orientation="vertical" className="mx-1 hidden h-6 sm:block" />
+            <Separator orientation="vertical" className="mx-1 hidden h-6 sm:block" />
+          </>
+        ) : null}
 
         <ToolbarButton
           label="Gras"
@@ -394,118 +400,134 @@ export default function ArticleRichTextToolbar({ editor }: ArticleRichTextToolba
           </PopoverContent>
         </Popover>
 
-        <ToolbarButton
-          label="Importer une image"
-          iconOnly
-          disabled={isReadOnly}
-          onClick={() => setIsImagePickerOpen(true)}
-        >
-          <ImagePlus className="h-4 w-4" />
-        </ToolbarButton>
+        {features.images ? (
+          <ToolbarButton
+            label="Importer une image"
+            iconOnly
+            disabled={isReadOnly}
+            onClick={() => setIsImagePickerOpen(true)}
+          >
+            <ImagePlus className="h-4 w-4" />
+          </ToolbarButton>
+        ) : null}
 
-        <ToolbarButton
-          label="Citation"
-          active={editorState.isBlockquote}
-          disabled={isReadOnly}
-          onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-        >
-          <Quote className="h-4 w-4" />
-        </ToolbarButton>
+        {features.blockquote ? (
+          <ToolbarButton
+            label="Citation"
+            active={editorState.isBlockquote}
+            disabled={isReadOnly}
+            onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+          >
+            <Quote className="h-4 w-4" />
+          </ToolbarButton>
+        ) : null}
 
-        <ToolbarButton
-          label="Liste"
-          active={editorState.isBulletList}
-          disabled={isReadOnly}
-          onClick={() => editor?.chain().focus().toggleBulletList().run()}
-        >
-          <List className="mr-2 h-4 w-4" />
-          Liste
-        </ToolbarButton>
-
-        <ToolbarButton
-          label="Liste ordonnée"
-          active={editorState.isOrderedList}
-          disabled={isReadOnly}
-          onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-        >
-          <ListOrdered className="mr-2 h-4 w-4" />
-          123
-        </ToolbarButton>
-
-        <ToolbarButton
-          label="Tableau"
-          disabled={isReadOnly}
-          onClick={() =>
-            editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
-          }
-        >
-          Tableau
-        </ToolbarButton>
-
-        <ToolbarButton
-          label="Horizontal"
-          disabled={isReadOnly}
-          onClick={() => editor?.chain().focus().setHorizontalRule().run()}
-        >
-          <Minus className="mr-2 h-4 w-4" />
-          Ligne
-        </ToolbarButton>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2">
-          <div className="inline-flex items-center gap-2 pr-1 text-xs font-medium text-slate-600">
-            <Type className="h-4 w-4 text-slate-400" />
-            <span>Palette COBAM</span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {ARTICLE_EDITOR_COLOR_PRESETS.map((preset) => {
-              const isActive =
-                normalizeArticleEditorColor(editorState.currentColor) ===
-                normalizeArticleEditorColor(preset.value);
-
-              return (
-                <button
-                  key={preset.value}
-                  type="button"
-                  title={`${preset.name} - ${preset.description}`}
-                  aria-label={`Appliquer ${preset.name}`}
-                  onClick={() => editor?.chain().focus().setColor(preset.value).run()}
-                  disabled={isReadOnly}
-                  className={cn(
-                    "h-7 w-7 rounded-full border-2 transition-transform duration-200 hover:scale-105",
-                    isActive ? "border-slate-900 ring-2 ring-slate-200" : "border-white shadow-sm",
-                  )}
-                  style={{ backgroundColor: preset.value }}
-                />
-              );
-            })}
-          </div>
-
-          <label className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-300 bg-slate-50 px-3 text-xs font-medium text-slate-600">
-            <span>Libre</span>
-            <Input
-              type="color"
-              value={editorState.currentColor}
-              onChange={(event) => editor?.chain().focus().setColor(event.target.value).run()}
+        {features.lists ? (
+          <>
+            <ToolbarButton
+              label="Liste"
+              active={editorState.isBulletList}
               disabled={isReadOnly}
-              className="h-6 w-8 cursor-pointer rounded-md border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
-            />
-          </label>
-        </div>
+              onClick={() => editor?.chain().focus().toggleBulletList().run()}
+            >
+              <List className="mr-2 h-4 w-4" />
+              Liste
+            </ToolbarButton>
 
-        <ToolbarButton
-          label="Retirer la couleur"
-          iconOnly
-          disabled={!editor}
-          onClick={() => editor?.chain().focus().unsetColor().run()}
-        >
-          <Eraser className="h-4 w-4" />
-        </ToolbarButton>
+            <ToolbarButton
+              label="Liste ordonnée"
+              active={editorState.isOrderedList}
+              disabled={isReadOnly}
+              onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+            >
+              <ListOrdered className="mr-2 h-4 w-4" />
+              123
+            </ToolbarButton>
+          </>
+        ) : null}
+
+        {features.tables ? (
+          <ToolbarButton
+            label="Tableau"
+            disabled={isReadOnly}
+            onClick={() =>
+              editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+            }
+          >
+            Tableau
+          </ToolbarButton>
+        ) : null}
+
+        {features.horizontalRule ? (
+          <ToolbarButton
+            label="Horizontal"
+            disabled={isReadOnly}
+            onClick={() => editor?.chain().focus().setHorizontalRule().run()}
+          >
+            <Minus className="mr-2 h-4 w-4" />
+            Ligne
+          </ToolbarButton>
+        ) : null}
       </div>
 
-      {editorState.isTable ? (
+      {features.colors ? (
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2">
+            <div className="inline-flex items-center gap-2 pr-1 text-xs font-medium text-slate-600">
+              <Type className="h-4 w-4 text-slate-400" />
+              <span>Palette COBAM</span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {ARTICLE_EDITOR_COLOR_PRESETS.map((preset) => {
+                const isActive =
+                  normalizeArticleEditorColor(editorState.currentColor) ===
+                  normalizeArticleEditorColor(preset.value);
+
+                return (
+                  <button
+                    key={preset.value}
+                    type="button"
+                    title={`${preset.name} - ${preset.description}`}
+                    aria-label={`Appliquer ${preset.name}`}
+                    onClick={() => editor?.chain().focus().setColor(preset.value).run()}
+                    disabled={isReadOnly}
+                    className={cn(
+                      "h-7 w-7 rounded-full border-2 transition-transform duration-200 hover:scale-105",
+                      isActive
+                        ? "border-slate-900 ring-2 ring-slate-200"
+                        : "border-white shadow-sm",
+                    )}
+                    style={{ backgroundColor: preset.value }}
+                  />
+                );
+              })}
+            </div>
+
+            <label className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-300 bg-slate-50 px-3 text-xs font-medium text-slate-600">
+              <span>Libre</span>
+              <Input
+                type="color"
+                value={editorState.currentColor}
+                onChange={(event) => editor?.chain().focus().setColor(event.target.value).run()}
+                disabled={isReadOnly}
+                className="h-6 w-8 cursor-pointer rounded-md border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
+              />
+            </label>
+          </div>
+
+          <ToolbarButton
+            label="Retirer la couleur"
+            iconOnly
+            disabled={!editor}
+            onClick={() => editor?.chain().focus().unsetColor().run()}
+          >
+            <Eraser className="h-4 w-4" />
+          </ToolbarButton>
+        </div>
+      ) : null}
+
+      {features.tables && editorState.isTable ? (
         <div className="flex flex-wrap items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white p-3">
           <ToolbarButton
             label="Ajouter une ligne avant"
@@ -570,17 +592,19 @@ export default function ArticleRichTextToolbar({ editor }: ArticleRichTextToolba
         </div>
       ) : null}
 
-      <ImagePickerDialog
-        open={isImagePickerOpen}
-        onOpenChange={setIsImagePickerOpen}
-        title="Importer une image dans l'article"
-        description="Choisissez une image existante ou importez-en une nouvelle depuis la mediatheque."
-        selectedMediaId={null}
-        onSelect={(media) => {
-          insertMediaImage(editor, media);
-          setIsImagePickerOpen(false);
-        }}
-      />
+      {features.images ? (
+        <ImagePickerDialog
+          open={isImagePickerOpen}
+          onOpenChange={setIsImagePickerOpen}
+          title="Importer une image dans l'article"
+          description="Choisissez une image existante ou importez-en une nouvelle depuis la mediatheque."
+          selectedMediaId={null}
+          onSelect={(media) => {
+            insertMediaImage(editor, media);
+            setIsImagePickerOpen(false);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

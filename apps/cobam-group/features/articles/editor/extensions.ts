@@ -51,43 +51,104 @@ const articleImageOptions = {
 type ArticleEditorExtensionsOptions = {
   placeholder?: string;
   enableImageAltEditor?: boolean;
+  features?: ArticleRichTextEditorFeatures;
+};
+
+export type ArticleRichTextEditorFeatures = {
+  headings: boolean;
+  lists: boolean;
+  blockquote: boolean;
+  horizontalRule: boolean;
+  tables: boolean;
+  images: boolean;
+  links: boolean;
+  colors: boolean;
+};
+
+export const DEFAULT_ARTICLE_RICH_TEXT_FEATURES: ArticleRichTextEditorFeatures = {
+  headings: true,
+  lists: true,
+  blockquote: true,
+  horizontalRule: true,
+  tables: true,
+  images: true,
+  links: true,
+  colors: true,
+};
+
+export const PARAGRAPH_ONLY_ARTICLE_RICH_TEXT_FEATURES: ArticleRichTextEditorFeatures = {
+  headings: false,
+  lists: false,
+  blockquote: false,
+  horizontalRule: false,
+  tables: false,
+  images: false,
+  links: true,
+  colors: true,
 };
 
 export function createArticleEditorExtensions(
   options: ArticleEditorExtensionsOptions = {},
 ): AnyExtension[] {
+  const features = options.features ?? DEFAULT_ARTICLE_RICH_TEXT_FEATURES;
   const extensions: AnyExtension[] = [
     StarterKit.configure({
-      heading: {
-        levels: [2, 3, 4, 5, 6],
-      },
+      heading: features.headings ? { levels: [2, 3, 4, 5, 6] } : false,
+      bulletList: features.lists ? undefined : false,
+      orderedList: features.lists ? undefined : false,
+      listItem: features.lists ? undefined : false,
+      blockquote: features.blockquote ? undefined : false,
+      horizontalRule: features.horizontalRule ? undefined : false,
+      link: false,
+      underline: false,
+      codeBlock: false,
     }),
     Underline,
-    TextStyle,
-    Link.configure({
-      openOnClick: false,
-      autolink: false,
-      linkOnPaste: true,
-      defaultProtocol: "https",
-      HTMLAttributes: {
-        class: "article-link",
-        target: "_blank",
-        rel: "noopener noreferrer",
-      },
-    }),
-    Color.configure({
-      types: ["textStyle"],
-    }),
-    Table.configure({
-      resizable: true,
-    }),
-    TableRow,
-    TableHeader,
-    TableCell,
-    (options.enableImageAltEditor ? ArticleImageWithAltEditor : BaseArticleImage).configure(
-      articleImageOptions,
-    ),
   ];
+
+  if (features.links) {
+    extensions.push(
+      Link.configure({
+        openOnClick: false,
+        autolink: false,
+        linkOnPaste: true,
+        defaultProtocol: "https",
+        HTMLAttributes: {
+          class: "article-link",
+          target: "_blank",
+          rel: "noopener noreferrer",
+        },
+      }),
+    );
+  }
+
+  if (features.colors) {
+    extensions.push(
+      TextStyle,
+      Color.configure({
+        types: ["textStyle"],
+      }),
+    );
+  }
+
+  if (features.tables) {
+    extensions.push(
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+    );
+  }
+
+  if (features.images) {
+    extensions.push(
+      (options.enableImageAltEditor ? ArticleImageWithAltEditor : BaseArticleImage).configure(
+        articleImageOptions,
+      ),
+    );
+  }
 
   if (options.placeholder) {
     extensions.push(

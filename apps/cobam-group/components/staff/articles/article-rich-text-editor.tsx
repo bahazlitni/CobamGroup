@@ -3,7 +3,12 @@
 import { useEffect, useMemo, useRef } from "react";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import { parseArticleContent, serializeArticleContent } from "@/features/articles/document";
-import { createArticleEditorExtensions } from "@/features/articles/editor/extensions";
+import {
+  createArticleEditorExtensions,
+  DEFAULT_ARTICLE_RICH_TEXT_FEATURES,
+  PARAGRAPH_ONLY_ARTICLE_RICH_TEXT_FEATURES,
+  type ArticleRichTextEditorFeatures,
+} from "@/features/articles/editor/extensions";
 import { cn } from "@/lib/utils";
 import ArticleRichTextToolbar from "./article-rich-text-toolbar";
 
@@ -14,6 +19,8 @@ type ArticleRichTextEditorProps = {
   placeholder?: string;
   editable?: boolean;
   className?: string;
+  variant?: "article" | "paragraphOnly";
+  features?: Partial<ArticleRichTextEditorFeatures>;
 };
 
 type PastedImage = {
@@ -130,6 +137,21 @@ function insertPastedImages(editor: Editor | null, images: PastedImage[]) {
     .run();
 }
 
+function resolveEditorFeatures(
+  variant: ArticleRichTextEditorProps["variant"],
+  features: ArticleRichTextEditorProps["features"],
+): ArticleRichTextEditorFeatures {
+  const baseFeatures =
+    variant === "paragraphOnly"
+      ? PARAGRAPH_ONLY_ARTICLE_RICH_TEXT_FEATURES
+      : DEFAULT_ARTICLE_RICH_TEXT_FEATURES;
+
+  return {
+    ...baseFeatures,
+    ...features,
+  };
+}
+
 export default function ArticleRichTextEditor({
   editorId,
   value,
@@ -137,15 +159,26 @@ export default function ArticleRichTextEditor({
   placeholder = "Commencez a ecrire votre article...",
   editable = true,
   className,
+  variant = "article",
+  features,
 }: ArticleRichTextEditorProps) {
   const onChangeRef = useRef(onChange);
   const editorRef = useRef<Editor | null>(null);
   const isSyncingExternalContentRef = useRef(false);
   const document = useMemo(() => parseArticleContent(value), [value]);
   const normalizedValue = useMemo(() => serializeArticleContent(document), [document]);
+  const editorFeatures = useMemo(
+    () => resolveEditorFeatures(variant, features),
+    [features, variant],
+  );
   const extensions = useMemo(
-    () => createArticleEditorExtensions({ placeholder, enableImageAltEditor: true }),
-    [placeholder],
+    () =>
+      createArticleEditorExtensions({
+        placeholder,
+        enableImageAltEditor: editorFeatures.images,
+        features: editorFeatures,
+      }),
+    [editorFeatures, placeholder],
   );
 
   useEffect(() => {
@@ -163,7 +196,7 @@ export default function ArticleRichTextEditor({
         class: "tiptap article-document article-document--editor",
       },
       handlePaste: (_view, event) => {
-        if (!editorRef.current?.isEditable) {
+        if (!editorFeatures.images || !editorRef.current?.isEditable) {
           return false;
         }
 
@@ -223,7 +256,7 @@ export default function ArticleRichTextEditor({
         className,
       )}
     >
-      <ArticleRichTextToolbar editor={editor} />
+      <ArticleRichTextToolbar editor={editor} features={editorFeatures} />
 
       <div className="rounded-b-lg bg-white">
         {editor ? (

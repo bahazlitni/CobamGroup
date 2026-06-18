@@ -193,6 +193,7 @@ export default function ArticleFaqEditor({
                 }
                 placeholder="Réponse..."
                 editable={!disabled}
+                variant="paragraphOnly"
               />
             </section>
           ))}
