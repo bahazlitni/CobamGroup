@@ -794,7 +794,7 @@ export async function updateAllProductsBulkService(
 
   if ((input.sku || input.name) && productIds.length > 1) {
     throw new AllProductsServiceError(
-      "SKU et nom ne peuvent etre modifies que pour un seul produit.",
+      "SKU et nom ne peuvent être modifies que pour un seul produit.",
       400,
     );
   }

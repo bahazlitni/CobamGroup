@@ -370,7 +370,7 @@ function parseVariant(input: unknown): ProductVariantInputDto {
   ];
   if (new Set(mediaIds).size !== mediaIds.length) {
     throw new ProductValidationError(
-      "Un meme media ne peut pas etre utilise plusieurs fois sur le meme produit.",
+      "Un meme media ne peut pas être utilise plusieurs fois sur le meme produit.",
     );
   }
 

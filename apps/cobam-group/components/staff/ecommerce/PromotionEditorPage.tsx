@@ -910,7 +910,7 @@ export default function PromotionEditorPage({ promotionId }: { promotionId?: str
                 </PanelField>
                 <ScopeSelector
                   title="Clients autorisés"
-                  hint="Vide = coupon public. Avec une selection, le client doit etre connecte avec un compte autorisé."
+                  hint="Vide = coupon public. Avec une selection, le client doit être connecte avec un compte autorisé."
                   options={options.customers}
                   selectedIds={couponForm.customerIds}
                   onChange={(customerIds) =>

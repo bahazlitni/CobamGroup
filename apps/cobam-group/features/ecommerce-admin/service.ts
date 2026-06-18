@@ -1227,7 +1227,7 @@ export async function createEcommerceCouponAdminService(
   } catch (error) {
     console.error("ECOMMERCE_COUPON_CREATE_SERVICE_ERROR:", error);
     throw new EcommerceAdminServiceError(
-      "Impossible de creer ce coupon. Le code existe peut-etre deja.",
+      "Impossible de creer ce coupon. Le code existe peut-être deja.",
       400,
     );
   }
@@ -1264,7 +1264,7 @@ export async function updateEcommerceCouponAdminService(
   } catch (error) {
     console.error("ECOMMERCE_COUPON_UPDATE_SERVICE_ERROR:", error);
     throw new EcommerceAdminServiceError(
-      "Impossible de mettre a jour ce coupon. Le code existe peut-etre deja.",
+      "Impossible de mettre a jour ce coupon. Le code existe peut-être deja.",
       400,
     );
   }

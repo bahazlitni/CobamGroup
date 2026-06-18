@@ -90,6 +90,18 @@ export default function MediaFolderCard({
                 aria-label={`Selectionner le dossier ${folder.name}`}
               />
             </div>
+                            {folder.isProtected ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex h-6 items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 text-xs font-semibold text-blue-700">
+                        <LockKeyhole className="h-3 w-3" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Ce dossier est protégé et ne peut pas être supprimé.
+                    </TooltipContent>
+                  </Tooltip>
+                ) : null}
           </div>
 
           <button
@@ -104,6 +116,7 @@ export default function MediaFolderCard({
               <h2 className="text-cobam-dark-blue line-clamp-2 text-base font-semibold">
                 {folder.name}
               </h2>
+              
             </div>
             <div className="flex items-start justify-between gap-3">
               <div className="inline-flex items-center gap-1">
@@ -113,19 +126,6 @@ export default function MediaFolderCard({
                 <StaffBadge icon="file" size="sm" color="default">
                   {folder.mediaCount}
                 </StaffBadge>
-                {folder.isProtected ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="inline-flex h-7 items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 text-xs font-semibold text-amber-700">
-                        <LockKeyhole className="h-3.5 w-3.5" />
-                        Protege
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      Ce dossier est protege et ne peut pas etre supprime.
-                    </TooltipContent>
-                  </Tooltip>
-                ) : null}
               </div>
             </div>
           </button>

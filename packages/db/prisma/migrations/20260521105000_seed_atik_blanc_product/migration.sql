@@ -188,7 +188,7 @@ SELECT
       ),
       jsonb_build_object(
         'type', 'paragraph',
-        'content', jsonb_build_array(jsonb_build_object('type', 'text', 'text', 'Il s''applique en neuf sur maconneries non enduites ou beton, et en renovation sur anciens supports non enduits ou revetus d''un mortier hydraulique sain. La finition peut etre lissee, rugueuse, brute de projection, ecrasee ou grattee selon le rendu recherche.'))
+        'content', jsonb_build_array(jsonb_build_object('type', 'text', 'text', 'Il s''applique en neuf sur maconneries non enduites ou beton, et en renovation sur anciens supports non enduits ou revetus d''un mortier hydraulique sain. La finition peut être lissee, rugueuse, brute de projection, ecrasee ou grattee selon le rendu recherche.'))
       ),
       jsonb_build_object(
         'type', 'bulletList',

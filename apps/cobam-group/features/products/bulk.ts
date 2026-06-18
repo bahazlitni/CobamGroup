@@ -27,7 +27,7 @@ export async function updateProductFamiliesBulkService(
 
   if ((input.sku || input.name) && familyIds.length > 1) {
     throw new ProductServiceError(
-      "SKU et nom ne peuvent etre modifies que pour une seule famille.",
+      "SKU et nom ne peuvent être modifies que pour une seule famille.",
       400,
     );
   }

@@ -964,7 +964,7 @@ export async function deleteMediaFolderService(
   }
 
   if (existingFolder.isProtected) {
-    throw new MediaServiceError("Ce dossier est protege et ne peut pas etre supprime.", 400);
+    throw new MediaServiceError("Ce dossier est protégé et ne peut pas être supprimé.", 400);
   }
 
   const forceRemove = options.force === true;

@@ -443,7 +443,7 @@ export default function MediaUploadDialog({
                     fullWidth
                   />
                   <p className="text-xs leading-5 text-slate-500">
-                    Les fichiers publics pourront etre servis depuis le site sans
+                    Les fichiers publics pourront être servis depuis le site sans
                     jeton d&apos;accès.
                   </p>
                 </div>

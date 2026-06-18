@@ -76,7 +76,7 @@ export async function listTagSuggestionsService(
 
 function throwDerivedTagMutationError() {
   throw new TagServiceError(
-    "Les tags sont derives du contenu et ne peuvent plus etre geres directement.",
+    "Les tags sont derives du contenu et ne peuvent plus être geres directement.",
     400,
   );
 }

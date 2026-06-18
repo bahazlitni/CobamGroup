@@ -122,7 +122,7 @@ export async function POST(req: Request) {
 
       console.error("MEDIA_UPLOAD_FORMDATA_ERROR:", error);
       throw new MediaValidationError(
-        "Le fichier n'a pas pu etre lu. Verifiez le fichier et reessayez.",
+        "Le fichier n'a pas pu être lu. Verifiez le fichier et reessayez.",
       );
     }
 

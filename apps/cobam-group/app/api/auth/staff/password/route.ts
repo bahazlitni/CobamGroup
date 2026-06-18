@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           ok: false,
-          message: "Le nouveau mot de passe doit etre different de l'ancien.",
+          message: "Le nouveau mot de passe doit être different de l'ancien.",
         },
         { status: 400 },
       );

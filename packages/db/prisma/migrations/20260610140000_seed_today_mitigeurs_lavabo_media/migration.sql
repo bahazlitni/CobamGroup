@@ -497,7 +497,7 @@ SELECT
             'text',
             CASE
               WHEN "seed"."installation_type" = 'Mural encastre' THEN 'La pose murale encastree garde le plan vasque degage et demande de verifier les reservations ainsi que les raccordements avant installation.'
-              WHEN "seed"."installation_type" = 'A encastrer' THEN 'La pose encastree permet une integration discrete et doit etre controlee avec la fiche technique avant validation du support.'
+              WHEN "seed"."installation_type" = 'A encastrer' THEN 'La pose encastree permet une integration discrete et doit être controlee avec la fiche technique avant validation du support.'
               ELSE 'La pose sur appareil convient aux lavabos et plans vasque qui recherchent une utilisation quotidienne simple et accessible.'
             END
           )

@@ -1290,7 +1290,7 @@ export async function deleteProductAttributeDefinitionService(session: StaffSess
 
   if (attributeDefinition && isProtectedAttributeDefinitionKey(attributeDefinition.key)) {
     throw new ProductTaxonomyServiceError(
-      "Les attributs Couleur et Finition ne peuvent pas etre supprimes.",
+      "Les attributs Couleur et Finition ne peuvent pas être supprimes.",
     );
   }
 

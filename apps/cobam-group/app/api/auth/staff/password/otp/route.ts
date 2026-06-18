@@ -38,7 +38,7 @@ function validatePasswordChangeInput(input: { currentPassword: string; newPasswo
   }
 
   if (input.currentPassword === input.newPassword) {
-    return "Le nouveau mot de passe doit etre different de l'ancien.";
+    return "Le nouveau mot de passe doit être different de l'ancien.";
   }
 
   return null;
