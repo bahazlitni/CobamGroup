@@ -69,7 +69,7 @@ function FeedbackList({
       <p className={`text-xs font-semibold tracking-[0.14em] uppercase ${styles.title}`}>{title}</p>
 
       <ul className={`mt-2 space-y-2 text-sm leading-6 ${styles.text}`}>
-        {items.slice(0, 6).map((item) => (
+        {items.map((item) => (
           <li key={item.code} className="flex gap-2">
             <span className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${styles.dot}`} />
             <span>{item.message}</span>
