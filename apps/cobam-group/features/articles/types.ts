@@ -23,21 +23,19 @@ export type ArticleListQuery = {
 
 export type ArticleCreateInput = {
   title: string;
-  displayTitle: string | null;
   slug: string;
   excerpt: string | null;
   content: string;
+  titleSeo: string | null;
   descriptionSeo: string | null;
-  categoryAssignments: ArticleCategoryAssignmentInput[];
+  focusKeyword: string | null;
+  categoryId: number | null;
   tagNames: string[];
   coverMediaId: number | null;
   ogTitle: string | null;
   ogDescription: string | null;
   ogImageMediaId: number | null;
   noIndex: boolean;
-  noFollow: boolean;
-  schemaType: string | null;
-  authorIds: string[];
   ctaBanners: ArticleCTABannerInput[];
 };
 
@@ -62,16 +60,10 @@ export type ArticleCTABannerInput = {
   buttons: ArticleCTABannerButtonInput[];
 };
 
-export type ArticleCategoryAssignmentInput = {
-  categoryId: number;
-  score: number;
-};
-
-export type ArticleCategoryAssignmentDto = {
-  categoryId: number;
+export type ArticleCategoryDto = {
+  id: number;
   name: string;
   color: string;
-  score: number;
 };
 
 export type ArticleTagDto = {
@@ -133,33 +125,25 @@ export type ArticleListItemDto = {
   status: ArticleStatus;
   publishedAt: string | null;
   scheduledPublishAt: string | null;
-  scheduledByUserId: string | null;
   updatedAt: string;
-  author: {
-    id: string;
-    email: string;
-    name: string | null;
-  };
-  authors: ArticleAuthorDto[];
-  categories: ArticleCategoryAssignmentDto[];
+  category: ArticleCategoryDto | null;
 };
 
 export type ArticleDetailDto = {
   id: number;
-  authorId: string;
-  authors: ArticleAuthorDto[];
-  categories: ArticleCategoryAssignmentDto[];
+  createdByUserId: string | null;
+  category: ArticleCategoryDto | null;
   tags: ArticleTagDto[];
   title: string;
-  displayTitle: string | null;
   slug: string;
   excerpt: string | null;
   content: string;
+  titleSeo: string | null;
   descriptionSeo: string | null;
+  focusKeyword: string | null;
   status: ArticleStatus;
   publishedAt: string | null;
   scheduledPublishAt: string | null;
-  scheduledByUserId: string | null;
   coverMediaId: number | null;
   createdAt: string;
   updatedAt: string;
@@ -167,8 +151,6 @@ export type ArticleDetailDto = {
   ogDescription: string | null;
   ogImageMediaId: number | null;
   noIndex: boolean;
-  noFollow: boolean;
-  schemaType: string | null;
   ctaBanners: ArticleCTABannerDto[];
   abilities: ArticleAbilitiesDto;
 };

@@ -323,7 +323,7 @@ export async function deleteArticleCategoryService(
     throw new ArticleCategoryServiceError("Accès refusé.", 403);
   }
 
-  if (!forceRemove && category._count.articleLinks > 0) {
+  if (!forceRemove && category._count.articles > 0) {
     throw new ArticleCategoryServiceError(
       "Cette catégorie est encore rattachée à des articles. Utilisez Forcer la suppression pour la détacher avant suppression.",
       400,

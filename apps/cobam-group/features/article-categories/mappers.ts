@@ -52,7 +52,7 @@ export function mapArticleCategoryToListItemDto(
     createdByUserId: string | null;
     createdAt: Date;
     updatedAt: Date;
-    _count: { articleLinks: number };
+    _count: { articles: number };
     createdByUser: CreatorRecord;
   },
   abilities: ArticleCategoryAbilitiesDto,
@@ -62,7 +62,7 @@ export function mapArticleCategoryToListItemDto(
     name: category.name,
     slug: category.slug,
     color: category.color,
-    articleCount: category._count.articleLinks,
+    articleCount: category._count.articles,
     createdByUserId: category.createdByUserId,
     createdByLabel: getCreatorLabel(category.createdByUser),
     createdAt: category.createdAt.toISOString(),

@@ -6,40 +6,25 @@ import type {
   ArticleListQuery,
 } from "./types";
 
-const AUTHOR_LINK_ORDER_BY = [
-  { createdAt: "asc" },
-  { userId: "asc" },
-] satisfies Prisma.ArticleAuthorLinkOrderByWithRelationInput[];
-
-const CATEGORY_LINK_ORDER_BY = [
-  { createdAt: "asc" },
-  { categoryId: "asc" },
-] satisfies Prisma.ArticleCategoryLinkOrderByWithRelationInput[];
-
 type ResolvedArticleInput = {
   title: string;
-  displayTitle: string | null;
   slug: string;
   excerpt: string | null;
   content: string;
+  titleSeo: string | null;
   descriptionSeo: string | null;
+  focusKeyword: string | null;
   tags: string;
-  categoryAssignments: Array<{
-    categoryId: number;
-    score: number;
-  }>;
+  categoryId: number | null;
   coverMediaId: number | null;
   ogTitle: string | null;
   ogDescription: string | null;
   ogImageMediaId: number | null;
   noIndex: boolean;
-  noFollow: boolean;
-  schemaType: string | null;
-  authorIds: string[];
   ctaBanners: ArticleCTABannerInput[];
 };
 
-const ARTICLE_AUTHOR_ROLE_SELECT = Prisma.validator<Prisma.UserRoleAssignmentSelect>()({
+const ARTICLE_STAFF_ROLE_SELECT = Prisma.validator<Prisma.UserRoleAssignmentSelect>()({
   role: {
     select: {
       id: true,
@@ -64,7 +49,7 @@ const ARTICLE_AUTHOR_ROLE_SELECT = Prisma.validator<Prisma.UserRoleAssignmentSel
   },
 });
 
-const ARTICLE_AUTHOR_USER_SELECT = Prisma.validator<Prisma.UserSelect>()({
+const ARTICLE_STAFF_USER_SELECT = Prisma.validator<Prisma.UserSelect>()({
   id: true,
   email: true,
   powerType: true,
@@ -77,25 +62,27 @@ const ARTICLE_AUTHOR_USER_SELECT = Prisma.validator<Prisma.UserSelect>()({
   },
   receivedRoleAssignments: {
     where: { revokedAt: null },
-    select: ARTICLE_AUTHOR_ROLE_SELECT,
+    select: ARTICLE_STAFF_ROLE_SELECT,
   },
 });
 
 const ARTICLE_SELECT = Prisma.validator<Prisma.ArticleSelect>()({
   id: true,
-  authorId: true,
+  createdByUserId: true,
+  updatedByUserId: true,
+  publishedByUserId: true,
   title: true,
-  displayTitle: true,
   slug: true,
   excerpt: true,
   content: true,
+  titleSeo: true,
   descriptionSeo: true,
+  focusKeyword: true,
   tags: true,
   status: true,
-  publishedByUserId: true,
   publishedAt: true,
   scheduledPublishAt: true,
-  scheduledByUserId: true,
+  categoryId: true,
   coverMediaId: true,
   createdAt: true,
   updatedAt: true,
@@ -103,33 +90,14 @@ const ARTICLE_SELECT = Prisma.validator<Prisma.ArticleSelect>()({
   ogDescription: true,
   ogImageMediaId: true,
   noIndex: true,
-  noFollow: true,
-  schemaType: true,
-  author: {
-    select: ARTICLE_AUTHOR_USER_SELECT,
+  createdByUser: {
+    select: ARTICLE_STAFF_USER_SELECT,
   },
-  authorLinks: {
-    orderBy: AUTHOR_LINK_ORDER_BY,
+  category: {
     select: {
-      createdAt: true,
-      userId: true,
-      user: {
-        select: ARTICLE_AUTHOR_USER_SELECT,
-      },
-    },
-  },
-  categoryLinks: {
-    orderBy: CATEGORY_LINK_ORDER_BY,
-    select: {
-      categoryId: true,
-      score: true,
-      category: {
-        select: {
-          id: true,
-          name: true,
-          color: true,
-        },
-      },
+      id: true,
+      name: true,
+      color: true,
     },
   },
   ctaBanners: {
@@ -163,9 +131,7 @@ const ARTICLE_SELECT = Prisma.validator<Prisma.ArticleSelect>()({
 });
 
 function buildArticleWhere(query: ArticleListQuery): Prisma.ArticleWhereInput {
-  const where: Prisma.ArticleWhereInput = {
-    deletedAt: null,
-  };
+  const where: Prisma.ArticleWhereInput = {};
 
   if (query.status) {
     where.status = query.status;
@@ -174,21 +140,13 @@ function buildArticleWhere(query: ArticleListQuery): Prisma.ArticleWhereInput {
   if (query.q) {
     where.OR = [
       { title: { contains: query.q, mode: "insensitive" } },
+      { titleSeo: { contains: query.q, mode: "insensitive" } },
       { slug: { contains: query.q, mode: "insensitive" } },
       { tags: { contains: query.q, mode: "insensitive" } },
     ];
   }
 
   return where;
-}
-
-function normalizeAdditionalAuthorIds(
-  originalAuthorId: string,
-  authorIds: readonly string[],
-) {
-  return [...new Set(authorIds.map((authorId) => authorId.trim()).filter(Boolean))].filter(
-    (authorId) => authorId !== originalAuthorId,
-  );
 }
 
 function mapCtaBannersForCreate(input: ArticleCTABannerInput[]) {
@@ -255,9 +213,7 @@ export async function listArticles(query: ArticleListQuery) {
   });
 }
 
-export async function findExistingArticleCategoryIds(
-  categoryIds: readonly number[],
-) {
+export async function findExistingArticleCategoryIds(categoryIds: readonly number[]) {
   const normalizedIds = [...new Set(categoryIds)].filter(
     (categoryId) => Number.isInteger(categoryId) && categoryId > 0,
   );
@@ -280,22 +236,6 @@ export async function findExistingArticleCategoryIds(
   return categories.map((category) => Number(category.id));
 }
 
-export async function findArticleAuthorCandidatesByIds(userIds: readonly string[]) {
-  const normalizedIds = [...new Set(userIds.map((userId) => userId.trim()).filter(Boolean))];
-
-  if (normalizedIds.length === 0) {
-    return [];
-  }
-
-  return prisma.user.findMany({
-    where: {
-      id: { in: normalizedIds },
-      portal: "STAFF",
-    },
-    select: ARTICLE_AUTHOR_USER_SELECT,
-  });
-}
-
 export async function listArticleAuthorOptions(query: ArticleAuthorOptionsQuery) {
   return prisma.user.findMany({
     where: {
@@ -306,51 +246,34 @@ export async function listArticleAuthorOptions(query: ArticleAuthorOptionsQuery)
       ...buildAuthorSearchWhere(query.q),
     },
     orderBy: [{ email: "asc" }],
-    select: ARTICLE_AUTHOR_USER_SELECT,
+    select: ARTICLE_STAFF_USER_SELECT,
     take: 50,
   });
 }
 
-
 export async function createArticle(
-  authorId: string,
+  actorUserId: string,
   input: ResolvedArticleInput,
 ) {
-  const authorIds = normalizeAdditionalAuthorIds(authorId, input.authorIds);
-
   return prisma.article.create({
     data: {
       title: input.title,
-      displayTitle: input.displayTitle,
       slug: input.slug,
       excerpt: input.excerpt,
       content: input.content,
+      titleSeo: input.titleSeo,
       descriptionSeo: input.descriptionSeo,
+      focusKeyword: input.focusKeyword,
       tags: input.tags,
       status: ArticleStatus.DRAFT,
-      coverMediaId:
-        input.coverMediaId != null ? BigInt(input.coverMediaId) : null,
-      authorId,
+      categoryId: input.categoryId != null ? BigInt(input.categoryId) : null,
+      coverMediaId: input.coverMediaId != null ? BigInt(input.coverMediaId) : null,
+      createdByUserId: actorUserId,
+      updatedByUserId: actorUserId,
       ogTitle: input.ogTitle,
       ogDescription: input.ogDescription,
-      ogImageMediaId:
-        input.ogImageMediaId != null ? BigInt(input.ogImageMediaId) : null,
+      ogImageMediaId: input.ogImageMediaId != null ? BigInt(input.ogImageMediaId) : null,
       noIndex: input.noIndex,
-      noFollow: input.noFollow,
-      schemaType: input.schemaType,
-      authorLinks: authorIds.length
-        ? {
-            create: authorIds.map((userId) => ({ userId })),
-          }
-        : undefined,
-      categoryLinks: input.categoryAssignments.length
-        ? {
-            create: input.categoryAssignments.map((assignment) => ({
-              categoryId: BigInt(assignment.categoryId),
-              score: assignment.score,
-            })),
-          }
-        : undefined,
       ctaBanners: input.ctaBanners.length
         ? {
             create: mapCtaBannersForCreate(input.ctaBanners),
@@ -363,49 +286,27 @@ export async function createArticle(
 
 export async function updateArticle(
   articleId: number,
-  originalAuthorId: string,
+  actorUserId: string,
   input: ResolvedArticleInput,
 ) {
-  const authorIds = normalizeAdditionalAuthorIds(originalAuthorId, input.authorIds);
-
   return prisma.article.update({
     where: { id: BigInt(articleId) },
     data: {
       title: input.title,
-      displayTitle: input.displayTitle,
       slug: input.slug,
       excerpt: input.excerpt,
       content: input.content,
+      titleSeo: input.titleSeo,
       descriptionSeo: input.descriptionSeo,
+      focusKeyword: input.focusKeyword,
       tags: input.tags,
-      coverMediaId:
-        input.coverMediaId != null ? BigInt(input.coverMediaId) : null,
+      categoryId: input.categoryId != null ? BigInt(input.categoryId) : null,
+      coverMediaId: input.coverMediaId != null ? BigInt(input.coverMediaId) : null,
+      updatedByUserId: actorUserId,
       ogTitle: input.ogTitle,
       ogDescription: input.ogDescription,
-      ogImageMediaId:
-        input.ogImageMediaId != null ? BigInt(input.ogImageMediaId) : null,
+      ogImageMediaId: input.ogImageMediaId != null ? BigInt(input.ogImageMediaId) : null,
       noIndex: input.noIndex,
-      noFollow: input.noFollow,
-      schemaType: input.schemaType,
-      authorLinks: {
-        deleteMany: {},
-        ...(authorIds.length
-          ? {
-              create: authorIds.map((userId) => ({ userId })),
-            }
-          : {}),
-      },
-      categoryLinks: {
-        deleteMany: {},
-        ...(input.categoryAssignments.length
-          ? {
-              create: input.categoryAssignments.map((assignment) => ({
-                categoryId: BigInt(assignment.categoryId),
-                score: assignment.score,
-              })),
-            }
-          : {}),
-      },
       ctaBanners: {
         deleteMany: {},
         ...(input.ctaBanners.length
@@ -426,7 +327,6 @@ export async function updateArticleStatus(
   extraData: {
     publishedByUserId?: string | null;
     scheduledPublishAt?: Date | null;
-    scheduledByUserId?: string | null;
   } = {},
 ) {
   return prisma.article.update({
@@ -440,9 +340,6 @@ export async function updateArticleStatus(
       ...(extraData.scheduledPublishAt !== undefined
         ? { scheduledPublishAt: extraData.scheduledPublishAt }
         : {}),
-      ...(extraData.scheduledByUserId !== undefined
-        ? { scheduledByUserId: extraData.scheduledByUserId }
-        : {}),
     },
     select: ARTICLE_SELECT,
   });
@@ -451,13 +348,11 @@ export async function updateArticleStatus(
 export async function updateArticleSchedule(
   articleId: number,
   scheduledPublishAt: Date | null,
-  scheduledByUserId: string | null,
 ) {
   return prisma.article.update({
     where: { id: BigInt(articleId) },
     data: {
       scheduledPublishAt,
-      scheduledByUserId,
     },
     select: ARTICLE_SELECT,
   });
@@ -466,7 +361,6 @@ export async function updateArticleSchedule(
 export async function listDueScheduledArticles(now: Date) {
   return prisma.article.findMany({
     where: {
-      deletedAt: null,
       status: ArticleStatus.DRAFT,
       scheduledPublishAt: {
         lte: now,
@@ -478,7 +372,6 @@ export async function listDueScheduledArticles(now: Date) {
       title: true,
       slug: true,
       scheduledPublishAt: true,
-      scheduledByUserId: true,
       coverMediaId: true,
       ogImageMediaId: true,
       content: true,
@@ -494,13 +387,11 @@ export async function listDueScheduledArticles(now: Date) {
 export async function markScheduledArticlePublished(
   articleId: bigint,
   scheduledPublishAt: Date | null,
-  scheduledByUserId: string | null,
   now: Date,
 ) {
   const result = await prisma.article.updateMany({
     where: {
       id: articleId,
-      deletedAt: null,
       status: ArticleStatus.DRAFT,
       scheduledPublishAt: {
         lte: now,
@@ -509,9 +400,7 @@ export async function markScheduledArticlePublished(
     data: {
       status: ArticleStatus.PUBLISHED,
       publishedAt: scheduledPublishAt ?? now,
-      publishedByUserId: scheduledByUserId,
       scheduledPublishAt: null,
-      scheduledByUserId: null,
     },
   });
 
@@ -525,3 +414,23 @@ export async function deleteArticle(articleId: number) {
   });
 }
 
+export async function listArticleSeoComparisonRecords(excludeArticleId?: number | null) {
+  return prisma.article.findMany({
+    where: excludeArticleId
+      ? {
+          id: {
+            not: BigInt(excludeArticleId),
+          },
+        }
+      : undefined,
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      titleSeo: true,
+      descriptionSeo: true,
+      focusKeyword: true,
+      content: true,
+    },
+  });
+}

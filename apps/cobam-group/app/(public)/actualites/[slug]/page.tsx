@@ -41,16 +41,16 @@ export async function generateMetadata({
   }
 
   return buildSeoMetadata({
-    title: article.ogTitle?.trim() || article.title,
+    title: article.ogTitle?.trim() || article.titleSeo?.trim() || article.title,
     description: article.ogDescription?.trim() || article.descriptionSeo || article.excerpt,
     path: `/actualites/${slug}`,
     imageUrl: article.ogImageUrl ?? article.coverImageUrl,
     imageAlt: article.coverImageAlt ?? article.title,
-    noIndex: article.isDraft,
+    noIndex: article.isDraft || article.noIndex,
     type: "article",
     publishedTime: article.publishedAt,
     modifiedTime: article.updatedAt,
-    authors: article.authors,
+    authors: ["COBAM Group"],
   });
 }
 
@@ -81,13 +81,12 @@ export default async function PublicArticleDetailPage({
           article.isDraft
             ? null
             : buildArticleStructuredData({
-                title: article.ogTitle?.trim() || article.title,
+                title: article.ogTitle?.trim() || article.titleSeo?.trim() || article.title,
                 description: articleDescription,
                 path,
                 imageUrl: article.ogImageUrl ?? article.coverImageUrl,
                 publishedAt: article.publishedAt,
                 updatedAt: article.updatedAt,
-                authors: article.authors,
               }),
         ]}
       />
@@ -108,7 +107,6 @@ export default async function PublicArticleDetailPage({
                     }}
                   >
                     <span>{category.name}</span>
-                    <span>{category.score}%</span>
                   </span>
                 ))}
               </div>

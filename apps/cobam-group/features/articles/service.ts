@@ -3,6 +3,10 @@ import type { StaffSession } from "@/features/auth/types";
 import { canAccessArticles, canCreateArticles } from "@/features/articles/access";
 import { extractArticleMediaIds } from "@/features/articles/document";
 import {
+  analyzeArticleSeo,
+  type ArticleSeoAnalyzerResult,
+} from "@/features/articles/seo-analyzer";
+import {
   mapArticleToDetailDto,
   mapArticleToListItemDto,
   mapAuthorRecordToAssignableDto,
@@ -31,12 +35,12 @@ import type {
 import {
   createArticle,
   deleteArticle,
-  findArticleAuthorCandidatesByIds,
-  findExistingArticleCategoryIds,
   findArticleById,
-  listDueScheduledArticles,
+  findExistingArticleCategoryIds,
   listArticleAuthorOptions,
+  listArticleSeoComparisonRecords,
   listArticles,
+  listDueScheduledArticles,
   markScheduledArticlePublished,
   updateArticle,
   updateArticleSchedule,
@@ -90,31 +94,33 @@ const UNPUBLISH_PERMISSIONS: ScopedPermissionSet = {
   own: PERMISSIONS.ARTICLES_UNPUBLISH_OWN,
 };
 
-function isArticleAuthor(article: ArticleRecord, userId: string) {
-  return (
-    article.authorId === userId ||
-    article.authorLinks.some((link) => link.userId === userId)
-  );
+function isArticleOwner(article: ArticleRecord, userId: string) {
+  return article.createdByUserId === userId;
 }
 
-function getOriginalAuthorAccess(article: ArticleRecord) {
+function getOwnerAccess(article: ArticleRecord) {
+  if (!article.createdByUser) {
+    return null;
+  }
+
   return resolveAccessFromAssignments({
-    powerType: article.author.powerType,
-    status: article.author.status,
-    assignments: article.author.receivedRoleAssignments,
+    powerType: article.createdByUser.powerType,
+    status: article.createdByUser.status,
+    assignments: article.createdByUser.receivedRoleAssignments,
   });
 }
 
-function isOriginalAuthorBelowActor(
-  session: StaffSession,
-  article: ArticleRecord,
-) {
-  const authorAccess = getOriginalAuthorAccess(article);
+function isOwnerBelowActor(session: StaffSession, article: ArticleRecord) {
+  const ownerAccess = getOwnerAccess(article);
+
+  if (!ownerAccess || !article.createdByUser) {
+    return false;
+  }
 
   return canAffectTargetUser(session, {
-    id: article.author.id,
-    powerType: article.author.powerType,
-    effectiveRole: authorAccess.effectiveRole,
+    id: article.createdByUser.id,
+    powerType: article.createdByUser.powerType,
+    effectiveRole: ownerAccess.effectiveRole,
   });
 }
 
@@ -127,64 +133,35 @@ function canActOnArticle(
     return true;
   }
 
-  if (
-    hasPermission(session, permissions.belowRole) &&
-    isOriginalAuthorBelowActor(session, article)
-  ) {
+  if (hasPermission(session, permissions.belowRole) && isOwnerBelowActor(session, article)) {
     return true;
   }
 
-  return hasPermission(session, permissions.own) && isArticleAuthor(article, session.id);
+  return hasPermission(session, permissions.own) && isArticleOwner(article, session.id);
 }
 
 function canViewArticle(session: StaffSession, article: ArticleRecord) {
   return (
     hasPermission(session, PERMISSIONS.ARTICLES_VIEW_ALL) ||
     (hasPermission(session, PERMISSIONS.ARTICLES_VIEW_OWN) &&
-      isArticleAuthor(article, session.id)) ||
+      isArticleOwner(article, session.id)) ||
     canActOnArticle(session, article, UPDATE_PERMISSIONS) ||
-    canActOnArticle(session, article, AUTHORS_UPDATE_PERMISSIONS) ||
     canActOnArticle(session, article, DELETE_PERMISSIONS) ||
     canActOnArticle(session, article, PUBLISH_PERMISSIONS) ||
     canActOnArticle(session, article, UNPUBLISH_PERMISSIONS)
   );
 }
 
-function canManageAuthorsOnNewArticle(session: StaffSession) {
-  return (
-    hasPermission(session, AUTHORS_UPDATE_PERMISSIONS.all) ||
-    hasPermission(session, AUTHORS_UPDATE_PERMISSIONS.own)
-  );
-}
-
 function getArticleAbilities(session: StaffSession, article: ArticleRecord) {
   return {
     canEdit: canActOnArticle(session, article, UPDATE_PERMISSIONS),
-    canManageAuthors: canActOnArticle(session, article, AUTHORS_UPDATE_PERMISSIONS),
+    canManageAuthors: false,
     canPublish:
       article.status === ArticleStatus.PUBLISHED
         ? canActOnArticle(session, article, UNPUBLISH_PERMISSIONS)
         : canActOnArticle(session, article, PUBLISH_PERMISSIONS),
     canDelete: canActOnArticle(session, article, DELETE_PERMISSIONS),
   };
-}
-
-function normalizeArticleAuthorIds(
-  authorId: string,
-  authorIds: readonly string[],
-) {
-  return [...new Set(authorIds.map((candidate) => candidate.trim()).filter(Boolean))].filter(
-    (candidate) => candidate !== authorId,
-  );
-}
-
-function haveSameStringSets(left: readonly string[], right: readonly string[]) {
-  if (left.length !== right.length) {
-    return false;
-  }
-
-  const leftSet = new Set(left);
-  return right.every((value) => leftSet.has(value));
 }
 
 function mapArticleCtaBannersForComparison(article: ArticleRecord) {
@@ -207,29 +184,19 @@ function mapArticleCtaBannersForComparison(article: ArticleRecord) {
 }
 
 function hasArticleContentChanges(article: ArticleRecord, input: ArticleUpdateInput) {
-  const currentCategoryAssignments = article.categoryLinks.map((link) => ({
-    categoryId: Number(link.categoryId),
-    score: link.score,
-  }));
-
-  const nextCategoryAssignments = input.categoryAssignments.map((assignment) => ({
-    categoryId: assignment.categoryId,
-    score: assignment.score,
-  }));
-
   const currentTagNames = parseOwnedTagString(article.tags);
   const nextTagNames = normalizeOwnedTagNames(input.tagNames);
   const currentCtaBanners = mapArticleCtaBannersForComparison(article);
 
   return !(
     article.title === input.title &&
-    article.displayTitle === input.displayTitle &&
     article.slug === input.slug &&
     article.excerpt === input.excerpt &&
     article.content === input.content &&
+    article.titleSeo === input.titleSeo &&
     article.descriptionSeo === input.descriptionSeo &&
-    JSON.stringify(currentCategoryAssignments) ===
-      JSON.stringify(nextCategoryAssignments) &&
+    article.focusKeyword === input.focusKeyword &&
+    (article.categoryId != null ? Number(article.categoryId) : null) === input.categoryId &&
     JSON.stringify(currentTagNames) === JSON.stringify(nextTagNames) &&
     (article.coverMediaId != null ? Number(article.coverMediaId) : null) === input.coverMediaId &&
     article.ogTitle === input.ogTitle &&
@@ -237,68 +204,21 @@ function hasArticleContentChanges(article: ArticleRecord, input: ArticleUpdateIn
     (article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null) ===
       input.ogImageMediaId &&
     article.noIndex === input.noIndex &&
-    article.noFollow === input.noFollow &&
-    article.schemaType === input.schemaType &&
     JSON.stringify(currentCtaBanners) === JSON.stringify(input.ctaBanners)
   );
 }
 
 async function assertValidRelations(input: {
-  categoryAssignments: ArticleCreateInput["categoryAssignments"];
+  categoryId: number | null;
   coverMediaId: number | null;
   ogImageMediaId: number | null;
   ctaBanners: ArticleCreateInput["ctaBanners"];
 }) {
-  if (input.categoryAssignments.length > 0) {
-    const normalizedAssignments = input.categoryAssignments.map((assignment) => ({
-      categoryId: assignment.categoryId,
-      score: assignment.score,
-    }));
-    const categoryIds = normalizedAssignments.map((assignment) => assignment.categoryId);
-    const uniqueCategoryIds = new Set(categoryIds);
+  if (input.categoryId != null) {
+    const existingCategoryIds = new Set(await findExistingArticleCategoryIds([input.categoryId]));
 
-    if (uniqueCategoryIds.size !== categoryIds.length) {
-      throw new ArticleServiceError(
-        "Une catégorie ne peut être ajoutée qu'une seule fois à un article.",
-        400,
-      );
-    }
-
-    const hasInvalidScore = normalizedAssignments.some(
-      (assignment) =>
-        !Number.isInteger(assignment.score) ||
-        assignment.score <= 0 ||
-        assignment.score > 100,
-    );
-
-    if (hasInvalidScore) {
-      throw new ArticleServiceError(
-        "Chaque score de catégorie doit être un entier entre 1 et 100.",
-        400,
-      );
-    }
-
-    const totalScore = normalizedAssignments.reduce(
-      (sum, assignment) => sum + assignment.score,
-      0,
-    );
-
-    if (totalScore !== 100) {
-      throw new ArticleServiceError(
-        "Le total des scores de catégories doit être égal à 100%.",
-        400,
-      );
-    }
-
-    const existingCategoryIds = new Set(
-      await findExistingArticleCategoryIds(categoryIds),
-    );
-
-    if (existingCategoryIds.size !== categoryIds.length) {
-      throw new ArticleServiceError(
-        "Une ou plusieurs catégories d'articles sont introuvables.",
-        400,
-      );
+    if (!existingCategoryIds.has(input.categoryId)) {
+      throw new ArticleServiceError("La catégorie d'article est introuvable.", 400);
     }
   }
 
@@ -332,31 +252,6 @@ async function assertValidRelations(input: {
       }
     }),
   );
-}
-
-async function assertValidAuthorIds(authorIds: readonly string[]) {
-  const normalizedAuthorIds = [...new Set(authorIds.map((authorId) => authorId.trim()).filter(Boolean))];
-
-  if (normalizedAuthorIds.length === 0) {
-    return;
-  }
-
-  const authors = await findArticleAuthorCandidatesByIds(normalizedAuthorIds);
-
-  if (authors.length !== normalizedAuthorIds.length) {
-    throw new ArticleServiceError("Un ou plusieurs auteurs sont introuvables.", 400);
-  }
-
-  const invalidAuthor = authors.find(
-    (author) => author.status === "BANNED" || author.status === "CLOSED",
-  );
-
-  if (invalidAuthor) {
-    throw new ArticleServiceError(
-      "Un auteur ferme ou banni ne peut pas etre ajoute a un article.",
-      400,
-    );
-  }
 }
 
 async function ensureArticleMediaIsPublic(input: {
@@ -393,6 +288,56 @@ function assertValidScheduledPublishAt(scheduledPublishAt: Date) {
       400,
     );
   }
+}
+
+async function analyzePersistedArticleSeo(
+  article: ArticleRecord,
+): Promise<ArticleSeoAnalyzerResult> {
+  const existingArticles = await listArticleSeoComparisonRecords(Number(article.id));
+
+  return analyzeArticleSeo({
+    id: Number(article.id),
+    title: article.title,
+    slug: article.slug,
+    excerpt: article.excerpt,
+    content: article.content,
+    titleSeo: article.titleSeo,
+    descriptionSeo: article.descriptionSeo,
+    focusKeyword: article.focusKeyword,
+    status: article.status,
+    noIndex: article.noIndex,
+    categoryName: article.category?.name ?? null,
+    coverMediaId: article.coverMediaId != null ? Number(article.coverMediaId) : null,
+    ogTitle: article.ogTitle,
+    ogDescription: article.ogDescription,
+    ogImageMediaId: article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
+    publicUrl: `/actualites/${article.slug}`,
+    mode: "publish",
+    existingArticles: existingArticles.map((candidate) => ({
+      id: Number(candidate.id),
+      slug: candidate.slug,
+      title: candidate.title,
+      titleSeo: candidate.titleSeo,
+      descriptionSeo: candidate.descriptionSeo,
+      focusKeyword: candidate.focusKeyword,
+      content: candidate.content,
+    })),
+  });
+}
+
+async function assertArticleSeoReadyForPublishing(article: ArticleRecord) {
+  const analysis = await analyzePersistedArticleSeo(article);
+
+  if (analysis.status !== "SEO_READY") {
+    const issue =
+      analysis.criticalIssues[0]?.message ??
+      analysis.warnings[0]?.message ??
+      "L'article doit être amélioré avant publication.";
+
+    throw new ArticleServiceError(`SEO_NOT_READY: ${issue}`, 422);
+  }
+
+  return analysis;
 }
 
 export async function listArticlesService(
@@ -440,6 +385,23 @@ export async function getArticleByIdService(
   return mapArticleToDetailDto(article, getArticleAbilities(session, article));
 }
 
+export async function getArticleSeoAnalysisService(
+  session: StaffSession,
+  articleId: number,
+): Promise<ArticleSeoAnalyzerResult> {
+  const article = await findArticleById(articleId);
+
+  if (!article) {
+    throw new ArticleServiceError("Article not found", 404);
+  }
+
+  if (!canViewArticle(session, article)) {
+    throw new ArticleServiceError("Forbidden", 403);
+  }
+
+  return analyzePersistedArticleSeo(article);
+}
+
 export async function listArticleAuthorOptionsService(
   session: StaffSession,
   query: ArticleAuthorOptionsQuery,
@@ -454,7 +416,7 @@ export async function listArticleAuthorOptionsService(
     if (!canActOnArticle(session, article, AUTHORS_UPDATE_PERMISSIONS)) {
       throw new ArticleServiceError("Forbidden", 403);
     }
-  } else if (!canCreateArticles(session) || !canManageAuthorsOnNewArticle(session)) {
+  } else if (!canCreateArticles(session)) {
     throw new ArticleServiceError("Forbidden", 403);
   }
 
@@ -473,19 +435,14 @@ export async function createArticleService(
     throw new ArticleServiceError("Forbidden", 403);
   }
 
-  if (input.authorIds.length > 0 && !canManageAuthorsOnNewArticle(session)) {
-    throw new ArticleServiceError("Forbidden", 403);
-  }
-
   await Promise.all([
     resolveOrCreateTagsByNames(input.tagNames),
     assertValidRelations({
-      categoryAssignments: input.categoryAssignments,
+      categoryId: input.categoryId,
       coverMediaId: input.coverMediaId,
       ogImageMediaId: input.ogImageMediaId,
       ctaBanners: input.ctaBanners,
     }),
-    assertValidAuthorIds(normalizeArticleAuthorIds(session.id, input.authorIds)),
   ]);
 
   const article = await createArticle(session.id, {
@@ -508,37 +465,28 @@ export async function updateArticleService(
   }
 
   const abilities = getArticleAbilities(session, before);
-  const nextAuthorIds = normalizeArticleAuthorIds(before.authorId, input.authorIds);
-  const previousAuthorIds = before.authorLinks.map((link) => link.userId);
-  const hasAuthorChanges = !haveSameStringSets(previousAuthorIds, nextAuthorIds);
   const hasContentChanges = hasArticleContentChanges(before, input);
 
   if (hasContentChanges && !abilities.canEdit) {
     throw new ArticleServiceError("Forbidden", 403);
   }
 
-  if (hasAuthorChanges && !abilities.canManageAuthors) {
-    throw new ArticleServiceError("Forbidden", 403);
-  }
-
-  if (!hasContentChanges && !hasAuthorChanges && !abilities.canEdit && !abilities.canManageAuthors) {
+  if (!hasContentChanges && !abilities.canEdit) {
     throw new ArticleServiceError("Forbidden", 403);
   }
 
   await Promise.all([
     resolveOrCreateTagsByNames(input.tagNames),
     assertValidRelations({
-      categoryAssignments: input.categoryAssignments,
+      categoryId: input.categoryId,
       coverMediaId: input.coverMediaId,
       ogImageMediaId: input.ogImageMediaId,
       ctaBanners: input.ctaBanners,
     }),
-    hasAuthorChanges ? assertValidAuthorIds(nextAuthorIds) : Promise.resolve(),
   ]);
 
-  const article = await updateArticle(articleId, before.authorId, {
+  const article = await updateArticle(articleId, session.id, {
     ...input,
-    authorIds: nextAuthorIds,
     tags: serializeOwnedTagNames(input.tagNames),
   });
 
@@ -571,6 +519,8 @@ export async function publishArticleService(
     throw new ArticleServiceError("Forbidden", 403);
   }
 
+  await assertArticleSeoReadyForPublishing(before);
+
   const article = await updateArticleStatus(
     articleId,
     ArticleStatus.PUBLISHED,
@@ -578,7 +528,6 @@ export async function publishArticleService(
     {
       publishedByUserId: session.id,
       scheduledPublishAt: null,
-      scheduledByUserId: null,
     },
   );
 
@@ -615,7 +564,6 @@ export async function unpublishArticleService(
     undefined,
     {
       scheduledPublishAt: null,
-      scheduledByUserId: null,
     },
   );
 
@@ -634,10 +582,7 @@ export async function scheduleArticlePublicationService(
   }
 
   if (before.status !== ArticleStatus.DRAFT) {
-    throw new ArticleServiceError(
-      "Seuls les articles en brouillon peuvent être planifiés.",
-      400,
-    );
+    throw new ArticleServiceError("Seuls les articles en brouillon peuvent être planifiés.", 400);
   }
 
   if (!canActOnArticle(session, before, PUBLISH_PERMISSIONS)) {
@@ -645,12 +590,9 @@ export async function scheduleArticlePublicationService(
   }
 
   assertValidScheduledPublishAt(scheduledPublishAt);
+  await assertArticleSeoReadyForPublishing(before);
 
-  const article = await updateArticleSchedule(
-    articleId,
-    scheduledPublishAt,
-    session.id,
-  );
+  const article = await updateArticleSchedule(articleId, scheduledPublishAt);
 
   return mapArticleToDetailDto(article, getArticleAbilities(session, article));
 }
@@ -669,7 +611,7 @@ export async function cancelArticlePublicationScheduleService(
     throw new ArticleServiceError("Forbidden", 403);
   }
 
-  const article = await updateArticleSchedule(articleId, null, null);
+  const article = await updateArticleSchedule(articleId, null);
 
   return mapArticleToDetailDto(article, getArticleAbilities(session, article));
 }
@@ -684,10 +626,20 @@ export async function publishDueScheduledArticlesService(now = new Date()) {
   }> = [];
 
   for (const article of dueArticles) {
+    const fullArticle = await findArticleById(Number(article.id));
+
+    if (!fullArticle) {
+      continue;
+    }
+
+    const analysis = await analyzePersistedArticleSeo(fullArticle);
+    if (analysis.status !== "SEO_READY") {
+      continue;
+    }
+
     const wasPublished = await markScheduledArticlePublished(
       article.id,
       article.scheduledPublishAt,
-      article.scheduledByUserId,
       now,
     );
 

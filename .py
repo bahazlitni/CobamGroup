@@ -2,7 +2,7 @@ import hashlib
 import hmac
 
 OTP_PEPPER = "5d238c8eb20ea19c17a25a5625330ba1dbd633e9eaef83e87cbf44656c93edca"
-CODE_HASH = "3be34ac384fa621a1f55f65e4986c151f3711af512742d11da43783be239c5da"
+CODE_HASH = "aca363a56719b4b4e91fce660b14ff8305efcaa0284a14b77d884f488d4593f5"
 
 def sha256_hex(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()

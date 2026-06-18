@@ -41,7 +41,7 @@ function getArticleStatusBadge(status: ArticleStatus, scheduledPublishAt?: strin
   }
 }
 
-const columns = ["Titre", "Auteur", "Catégories", "Statut", "Publication", "Mis à jour", "Actions"];
+const columns = ["Titre", "Auteur public", "Catégorie", "Statut", "Publication", "Mis à jour", "Actions"];
 
 export default function ArticlesListPage() {
   const {
@@ -138,16 +138,10 @@ export default function ArticlesListPage() {
                   {article.title}
                 </td>
 
-                <td className="px-4 py-3 align-top text-slate-600">
-                  {article.author.name || article.author.email}
-                </td>
+                <td className="px-4 py-3 align-top text-slate-600">COBAM Group</td>
 
                 <td className="px-4 py-3 align-top text-slate-600">
-                  {article.categories.length > 0
-                    ? article.categories
-                        .map((category) => `${category.name} (${category.score}%)`)
-                        .join(", ")
-                    : "-"}
+                  {article.category?.name ?? "-"}
                 </td>
 
                 <td className="px-4 py-3 align-top">

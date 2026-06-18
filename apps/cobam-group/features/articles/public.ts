@@ -10,10 +10,13 @@ import { makeMediaPublicMany } from "@/features/media/repository";
 import { prisma } from "@/lib/server/db/prisma";
 import type { ArticleCTABannerDto } from "./types";
 
+const PUBLIC_ARTICLE_AUTHOR = "COBAM Group";
+
 export type PublicArticleSummary = {
   id: number;
   slug: string;
   title: string;
+  titleSeo: string | null;
   excerpt: string;
   createdAt: string;
   updatedAt: string;
@@ -39,22 +42,30 @@ export type PublicArticleDetail = PublicArticleSummary & {
   ogTitle: string | null;
   ogDescription: string | null;
   ogImageUrl: string | null;
+  noIndex: boolean;
   isDraft: boolean;
   suggestions: PublicArticleSummary[];
 };
 
 type PublicArticleRecord = {
   id: bigint;
-  authorId: string;
+  createdByUserId: string | null;
   slug: string;
   title: string;
-  displayTitle: string | null;
+  titleSeo: string | null;
   excerpt: string | null;
   content: string;
   createdAt: Date;
   updatedAt: Date;
   publishedAt: Date | null;
   status: ArticleStatus;
+  noIndex: boolean;
+  categoryId: bigint | null;
+  category: {
+    id: bigint;
+    name: string;
+    color: string;
+  } | null;
   coverMediaId: bigint | null;
   coverMedia: {
     id: bigint;
@@ -65,26 +76,6 @@ type PublicArticleRecord = {
     isActive: boolean;
     deletedAt: Date | null;
   } | null;
-  author: {
-    email: string;
-    profile: { firstName: string | null; lastName: string | null } | null;
-  };
-  authorLinks: Array<{
-    userId: string;
-    user: {
-      email: string;
-      profile: { firstName: string | null; lastName: string | null } | null;
-    };
-  }>;
-  categoryLinks: Array<{
-    categoryId: bigint;
-    score: number;
-    category: {
-      id: bigint;
-      name: string;
-      color: string;
-    };
-  }>;
   ctaBanners?: Array<{
     id: bigint;
     title: string;
@@ -114,11 +105,6 @@ type PublicArticleRecord = {
   }>;
 };
 
-const AUTHOR_LINK_ORDER_BY = [
-  { createdAt: "asc" },
-  { userId: "asc" },
-] satisfies Prisma.ArticleAuthorLinkOrderByWithRelationInput[];
-
 function buildPublicMediaUrl(
   mediaId: bigint | number,
   variant: "original" | "thumbnail" = "original",
@@ -127,34 +113,17 @@ function buildPublicMediaUrl(
   return `/api/media/${mediaId.toString()}/file${query}`;
 }
 
-function getAuthorLabel(author: {
-  email: string;
-  profile: { firstName: string | null; lastName: string | null } | null;
-}) {
-  const parts = [
-    author.profile?.firstName?.trim() ?? "",
-    author.profile?.lastName?.trim() ?? "",
-  ].filter(Boolean);
-
-  return parts.length > 0 ? parts.join(" ") : author.email;
-}
-
-function getAuthorLabels(article: PublicArticleRecord) {
-  const labels = [
-    getAuthorLabel(article.author),
-    ...article.authorLinks.map((link) => getAuthorLabel(link.user)),
-  ];
-
-  return [...new Set(labels)];
-}
-
 function getPublicArticleCategories(article: PublicArticleRecord) {
-  return article.categoryLinks.map((link) => ({
-    id: Number(link.category.id),
-    name: link.category.name,
-    color: link.category.color,
-    score: link.score,
-  }));
+  return article.category
+    ? [
+        {
+          id: Number(article.category.id),
+          name: article.category.name,
+          color: article.category.color,
+          score: 100,
+        },
+      ]
+    : [];
 }
 
 async function ensurePublishedArticleMediaPublic(input: {
@@ -182,17 +151,18 @@ function mapPublicArticleSummary(article: PublicArticleRecord): PublicArticleSum
   const excerpt =
     article.excerpt?.trim() ||
     getArticleFirstParagraphText(article.content) ||
-    "Découvrez l'article complet sur COBAM GROUP.";
+    "Découvrez l'article complet sur COBAM Group.";
 
   return {
     id: Number(article.id),
     slug: article.slug,
-    title: article.displayTitle?.trim() || article.title,
+    title: article.title,
+    titleSeo: article.titleSeo,
     excerpt,
     createdAt: article.createdAt.toISOString(),
     updatedAt: article.updatedAt.toISOString(),
     publishedAt: article.publishedAt?.toISOString() ?? null,
-    authors: getAuthorLabels(article),
+    authors: [PUBLIC_ARTICLE_AUTHOR],
     coverImageUrl:
       hasCover && article.coverMediaId != null
         ? buildPublicMediaUrl(article.coverMediaId, "original")
@@ -248,16 +218,25 @@ function mapPublicArticleCtaBanners(article: PublicArticleRecord): ArticleCTABan
 function getPublicArticleSelect() {
   return Prisma.validator<Prisma.ArticleSelect>()({
     id: true,
-    authorId: true,
+    createdByUserId: true,
     slug: true,
     title: true,
-    displayTitle: true,
+    titleSeo: true,
     excerpt: true,
     content: true,
     createdAt: true,
     updatedAt: true,
     publishedAt: true,
     status: true,
+    noIndex: true,
+    categoryId: true,
+    category: {
+      select: {
+        id: true,
+        name: true,
+        color: true,
+      },
+    },
     coverMediaId: true,
     coverMedia: {
       select: {
@@ -270,57 +249,17 @@ function getPublicArticleSelect() {
         deletedAt: true,
       },
     },
-    author: {
-      select: {
-        email: true,
-        profile: {
-          select: {
-            firstName: true,
-            lastName: true,
-          },
-        },
-      },
-    },
-    authorLinks: {
-      orderBy: AUTHOR_LINK_ORDER_BY,
-      select: {
-        userId: true,
-        user: {
-          select: {
-            email: true,
-            profile: {
-              select: {
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        },
-      },
-    },
-    categoryLinks: {
-      orderBy: [{ score: "desc" }, { createdAt: "asc" }, { categoryId: "asc" }],
-      select: {
-        categoryId: true,
-        score: true,
-        category: {
-          select: {
-            id: true,
-            name: true,
-            color: true,
-          },
-        },
-      },
-    },
   });
 }
 
-async function listPublicArticleSummaries(options: { take?: number } = {}): Promise<PublicArticleSummary[]> {
+async function listPublicArticleSummaries(
+  options: { take?: number } = {},
+): Promise<PublicArticleSummary[]> {
   const articleSelect = getPublicArticleSelect();
   const articles = await prisma.article.findMany({
     where: {
-      deletedAt: null,
       status: ArticleStatus.PUBLISHED,
+      noIndex: false,
     },
     orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }, { id: "desc" }],
     take: options.take,
@@ -357,7 +296,7 @@ export async function listLatestPublicArticles(take = 3): Promise<PublicArticleS
 
 async function listPublicArticleSuggestions(input: {
   articleId: bigint;
-  categoryIds: bigint[];
+  categoryId: bigint | null;
   excludeSlug: string;
   take?: number;
 }) {
@@ -366,20 +305,14 @@ async function listPublicArticleSuggestions(input: {
   const seenIds = new Set<string>([input.articleId.toString()]);
   const suggestionPool: PublicArticleRecord[] = [];
 
-  if (input.categoryIds.length > 0) {
+  if (input.categoryId != null) {
     const sameCategory = await prisma.article.findMany({
       where: {
-        deletedAt: null,
         status: ArticleStatus.PUBLISHED,
+        noIndex: false,
         id: { not: input.articleId },
         slug: { not: input.excludeSlug },
-        categoryLinks: {
-          some: {
-            categoryId: {
-              in: input.categoryIds,
-            },
-          },
-        },
+        categoryId: input.categoryId,
       },
       orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }, { id: "desc" }],
       take,
@@ -397,8 +330,8 @@ async function listPublicArticleSuggestions(input: {
   if (suggestionPool.length < take) {
     const latestArticles = await prisma.article.findMany({
       where: {
-        deletedAt: null,
         status: ArticleStatus.PUBLISHED,
+        noIndex: false,
         id: { not: input.articleId },
         slug: { not: input.excludeSlug },
       },
@@ -435,7 +368,6 @@ export async function findPublicArticleBySlug(
   const articleSelect = getPublicArticleSelect();
   const article = await prisma.article.findFirst({
     where: {
-      deletedAt: null,
       slug,
     },
     select: {
@@ -510,7 +442,7 @@ export async function findPublicArticleBySlug(
   const summary = mapPublicArticleSummary(article);
   const suggestions = await listPublicArticleSuggestions({
     articleId: article.id,
-    categoryIds: article.categoryLinks.map((link) => link.categoryId),
+    categoryId: article.categoryId,
     excludeSlug: article.slug,
   });
 
@@ -527,6 +459,7 @@ export async function findPublicArticleBySlug(
       article.ogImageMediaId != null
         ? buildPublicMediaUrl(article.ogImageMediaId, "original")
         : null,
+    noIndex: article.noIndex,
     isDraft: article.status === ArticleStatus.DRAFT,
     suggestions,
   };

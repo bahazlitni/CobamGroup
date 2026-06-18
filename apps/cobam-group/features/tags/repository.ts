@@ -19,9 +19,6 @@ export type TagRecord = {
 async function collectDerivedTags(): Promise<TagRecord[]> {
   const [articleTags, productTags] = await Promise.all([
     prisma.article.findMany({
-      where: {
-        deletedAt: null,
-      },
       select: {
         tags: true,
         updatedAt: true,

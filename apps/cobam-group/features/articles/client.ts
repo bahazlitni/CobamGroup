@@ -6,6 +6,7 @@ import type {
   ArticleListResult,
   ArticleUpdateInput,
 } from "./types";
+import type { ArticleSeoAnalyzerResult } from "./seo-analyzer";
 
 type ApiOk<T> = {
   ok: true;
@@ -24,6 +25,10 @@ type ArticleDetailResponse =
 
 type ArticleAuthorOptionsResponse =
   | ApiOk<ArticleAuthorOptionsResult>
+  | ApiFail;
+
+type ArticleSeoAnalysisResponse =
+  | ApiOk<{ analysis: ArticleSeoAnalyzerResult }>
   | ApiFail;
 
 export class ArticleClientError extends Error {
@@ -256,6 +261,26 @@ export async function deleteArticleClient(articleId: number): Promise<void> {
       res.status,
     );
   }
+}
+
+export async function getArticleSeoAnalysisClient(
+  articleId: number,
+): Promise<ArticleSeoAnalyzerResult> {
+  const res = await staffApiFetch(`/api/staff/articles/${articleId}/seo`, {
+    method: "GET",
+    auth: true,
+  });
+
+  const data = await parseJsonSafe<ArticleSeoAnalysisResponse>(res);
+
+  if (!res.ok || !data?.ok || !data.analysis) {
+    throw new ArticleClientError(
+      getErrorMessage(data) || "Erreur lors de l'analyse SEO de l'article",
+      res.status,
+    );
+  }
+
+  return data.analysis;
 }
 
 export async function listArticleAuthorOptionsClient(params: {

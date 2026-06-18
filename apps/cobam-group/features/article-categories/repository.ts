@@ -58,7 +58,7 @@ const articleCategorySelect = Prisma.validator<Prisma.ArticleCategorySelect>()({
   updatedAt: true,
   _count: {
     select: {
-      articleLinks: true,
+      articles: true,
     },
   },
   createdByUser: {
@@ -170,9 +170,12 @@ export async function detachArticlesAndDeleteArticleCategory(categoryId: number)
   const categoryIdValue = BigInt(categoryId);
 
   return prisma.$transaction(async (tx) => {
-    const detachedArticles = await tx.articleCategoryLink.deleteMany({
+    const detachedArticles = await tx.article.updateMany({
       where: {
         categoryId: categoryIdValue,
+      },
+      data: {
+        categoryId: null,
       },
     });
 

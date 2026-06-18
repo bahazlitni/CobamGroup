@@ -1,131 +1,134 @@
 import { StaffBadge } from "@/components/staff/ui";
-import {
-  getArticleFirstParagraphText,
-  getArticlePlainText,
-} from "@/features/articles/document";
+import type { ArticleSeoAnalyzerResult } from "@/features/articles/seo-analyzer";
 
 type SeoChecksProps = {
-  title: string;
-  slug: string;
-  description: string;
-  content: string;
-  focusKeyword: string;
+  analysis: ArticleSeoAnalyzerResult;
 };
 
-function escapeRegExp(str: string) {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function getStatusBadge(status: ArticleSeoAnalyzerResult["status"]) {
+  switch (status) {
+    case "SEO_READY":
+      return { color: "green" as const, icon: "badge-check" as const, label: "SEO_READY" };
+    case "NEEDS_IMPROVEMENT":
+      return { color: "amber" as const, icon: "warning" as const, label: "NEEDS_IMPROVEMENT" };
+    case "NOT_READY":
+    default:
+      return { color: "red" as const, icon: "warning" as const, label: "NOT_READY" };
+  }
 }
 
-export default function SeoChecks({
+function FeedbackList({
   title,
-  slug,
-  description,
-  content,
-  focusKeyword,
-}: SeoChecksProps) {
-  const titleLength = title.trim().length;
-  const descLength = description.trim().length;
-  const contentText = getArticlePlainText(content);
-  const firstParagraphText = getArticleFirstParagraphText(content);
-  const keyword = focusKeyword.trim().toLowerCase();
-
-  const wordCount = contentText
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean).length;
-
-  const keywordOccurrences =
-    keyword.length === 0
-      ? 0
-      : (contentText
-          .toLowerCase()
-          .match(new RegExp(`\\b${escapeRegExp(keyword)}\\b`, "g")) || []
-        ).length;
-
-  const keywordDensity =
-    wordCount > 0 ? (keywordOccurrences / wordCount) * 100 : 0;
-
-  const keywordInTitle = !!keyword && title.toLowerCase().includes(keyword);
-  const keywordInDescription =
-    !!keyword && description.toLowerCase().includes(keyword);
-  const keywordInFirstParagraph =
-    !!keyword && firstParagraphText.toLowerCase().includes(keyword);
-
-  const keywordInSlug =
-    !!keyword &&
-    slug.toLowerCase().includes(keyword.replace(/\s+/g, "-"));
-
-  let score = 0;
-  const checks: { label: string; ok: boolean }[] = [];
-
-  const addCheck = (label: string, ok: boolean, points: number) => {
-    checks.push({ label, ok });
-    if (ok) {
-      score += points;
-    }
-  };
-
-  addCheck("Titre entre 35 et 60 caracteres", titleLength >= 35 && titleLength <= 60, 10);
-  addCheck("Meta description entre 120 et 160 caracteres", descLength >= 120 && descLength <= 160, 10);
-  addCheck("Contenu d'au moins 600 mots", wordCount >= 600, 15);
-  addCheck("Mot-clé present dans le titre", keywordInTitle, 10);
-  addCheck("Mot-clé present dans la meta description", keywordInDescription, 10);
-  addCheck("Mot-clé present dans le slug", keywordInSlug, 5);
-  addCheck("Mot-clé present dans l'intro", keywordInFirstParagraph, 10);
-  addCheck("Densite du mot-clé entre 1% et 1,5%", keywordDensity >= 1 && keywordDensity <= 1.5, 10);
-  addCheck("Slug propre et en minuscules", !!slug && slug === slug.toLowerCase() && !/\s/.test(slug), 5);
-
-  const maxScore = 85;
-  const normalizedScore = Math.round(Math.min(100, (score / maxScore) * 100));
-  const scoreBadge =
-    normalizedScore >= 80
-      ? { color: "green" as const, icon: "badge-check" as const }
-      : normalizedScore >= 50
-        ? { color: "amber" as const, icon: "warning" as const }
-        : { color: "red" as const, icon: "warning" as const };
+  items,
+}: {
+  title: string;
+  items: Array<{ code: string; message: string }>;
+}) {
+  if (items.length === 0) {
+    return null;
+  }
 
   return (
-    <section className="rounded-3xl border border-slate-300 bg-white p-5 shadow-sm sm:p-6">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-          Analyse SEO
-        </p>
+    <div>
+      <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">{title}</p>
+      <ul className="mt-2 space-y-2 text-sm leading-6 text-slate-650">
+        {items.slice(0, 6).map((item) => (
+          <li key={item.code} className="flex gap-2">
+            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-cobam-water-blue" />
+            <span>{item.message}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
-        <StaffBadge size="lg" color={scoreBadge.color} icon={scoreBadge.icon}>
-          Score estimé : {normalizedScore}/100
+export default function SeoChecks({ analysis }: SeoChecksProps) {
+  const badge = getStatusBadge(analysis.status);
+
+  return (
+    <section className="grid gap-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold tracking-[0.18em] text-slate-400 uppercase">
+            Analyse SEO
+          </p>
+          <p className="mt-1 text-sm text-slate-600">
+            Score estimé : <span className="font-semibold">{analysis.score}/100</span>
+          </p>
+        </div>
+
+        <StaffBadge size="lg" color={badge.color} icon={badge.icon}>
+          {badge.label}
         </StaffBadge>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <ul className="space-y-2 text-sm">
-          {checks.map((check, index) => (
-            <li key={index} className="flex items-start gap-2">
-              <span
-                className={`mt-1 h-2.5 w-2.5 rounded-full ${
-                  check.ok ? "bg-emerald-500" : "bg-slate-300"
-                }`}
-              />
-              <span className={check.ok ? "text-slate-700" : "text-slate-500"}>
-                {check.label}
-              </span>
-            </li>
-          ))}
-        </ul>
+      <div className="rounded-2xl border border-slate-200 bg-white p-4">
+        <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
+          Aperçu Google
+        </p>
+        <p className="mt-3 truncate text-base font-semibold leading-snug text-blue-700">
+          {analysis.searchPreview.title}
+        </p>
+        <p className="truncate text-xs text-green-700">cobamgroup.com{analysis.searchPreview.url}</p>
+        <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-600">
+          {analysis.searchPreview.description}
+        </p>
+      </div>
 
-        <div className="space-y-2 text-sm text-slate-600">
-          <p>
-            Nombre de mots : <span className="font-semibold">{wordCount}</span>
+      <div className="grid gap-5 lg:grid-cols-2">
+        <FeedbackList title="Bloquants" items={analysis.criticalIssues} />
+        <FeedbackList title="Alertes" items={analysis.warnings} />
+        <FeedbackList title="Validé" items={analysis.passedChecks.slice(0, 6)} />
+        <FeedbackList title="Recommandations" items={analysis.recommendations} />
+      </div>
+
+      {(analysis.suggestedTitleSeo || analysis.suggestedDescriptionSeo) ? (
+        <div className="rounded-2xl border border-cobam-water-blue/20 bg-cobam-water-blue/5 p-4 text-sm leading-6 text-slate-700">
+          {analysis.suggestedTitleSeo ? (
+            <p>
+              <span className="font-semibold">Titre SEO suggéré :</span>{" "}
+              {analysis.suggestedTitleSeo}
+            </p>
+          ) : null}
+          {analysis.suggestedDescriptionSeo ? (
+            <p className="mt-2">
+              <span className="font-semibold">Description suggérée :</span>{" "}
+              {analysis.suggestedDescriptionSeo}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
+            FAQ possibles
           </p>
-          <p>
-            Occurrences du mot-clé :{" "}
-            <span className="font-semibold">{keywordOccurrences}</span>
+          <ul className="mt-2 space-y-1 text-sm leading-6 text-slate-600">
+            {analysis.suggestedFaqQuestions.map((question) => (
+              <li key={question}>{question}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
+            Liens internes
           </p>
-          <p>
-            Densite :{" "}
-            <span className="font-semibold">
-              {keywordDensity ? keywordDensity.toFixed(2) : "0.00"}%
-            </span>
-          </p>
+          {analysis.suggestedInternalLinkOpportunities.length > 0 ? (
+            <ul className="mt-2 space-y-1 text-sm leading-6 text-slate-600">
+              {analysis.suggestedInternalLinkOpportunities.map((item) => (
+                <li key={item.articleId}>
+                  {item.title} <span className="text-slate-400">/{item.slug}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Aucun rapprochement local disponible dans l&apos;analyse instantanée.
+            </p>
+          )}
         </div>
       </div>
     </section>

@@ -1,0 +1,612 @@
+import type { ArticleStatus } from "@prisma/client";
+import type { JSONContent } from "@tiptap/core";
+import {
+  getArticleFirstParagraphText,
+  getArticlePlainText,
+  parseArticleContent,
+} from "./document";
+
+export type ArticleSeoStatus = "SEO_READY" | "NEEDS_IMPROVEMENT" | "NOT_READY";
+
+export type ArticleSeoFeedbackItem = {
+  code: string;
+  message: string;
+};
+
+export type ArticleSeoSearchPreview = {
+  title: string;
+  url: string;
+  description: string;
+};
+
+export type ArticleSeoComparisonArticle = {
+  id: number;
+  slug: string;
+  title: string;
+  titleSeo: string | null;
+  descriptionSeo: string | null;
+  focusKeyword: string | null;
+  content?: string | null;
+};
+
+export type ArticleSeoAnalyzerInput = {
+  id?: number | null;
+  title: string;
+  slug: string;
+  excerpt?: string | null;
+  content: string;
+  titleSeo?: string | null;
+  descriptionSeo?: string | null;
+  focusKeyword?: string | null;
+  status?: ArticleStatus | "DRAFT" | "PUBLISHED" | "ARCHIVED" | null;
+  noIndex?: boolean;
+  categoryName?: string | null;
+  coverMediaId?: number | null;
+  coverImageAlt?: string | null;
+  ogTitle?: string | null;
+  ogDescription?: string | null;
+  ogImageMediaId?: number | null;
+  publicUrl?: string | null;
+  mode?: "publish" | "public";
+  existingArticles?: ArticleSeoComparisonArticle[];
+};
+
+export type ArticleSeoAnalyzerResult = {
+  status: ArticleSeoStatus;
+  score: number;
+  criticalIssues: ArticleSeoFeedbackItem[];
+  warnings: ArticleSeoFeedbackItem[];
+  passedChecks: ArticleSeoFeedbackItem[];
+  recommendations: ArticleSeoFeedbackItem[];
+  searchPreview: ArticleSeoSearchPreview;
+  suggestedTitleSeo: string | null;
+  suggestedDescriptionSeo: string | null;
+  suggestedFaqQuestions: string[];
+  suggestedInternalLinkOpportunities: Array<{
+    articleId: number;
+    title: string;
+    slug: string;
+    reason: string;
+  }>;
+};
+
+type DocumentStats = {
+  headings: Array<{ level: number; text: string }>;
+  links: Array<{ href: string; text: string }>;
+  images: Array<{ alt: string | null; mediaId: number | null }>;
+  paragraphTexts: string[];
+};
+
+const GENERIC_LINK_ANCHORS = new Set([
+  "click here",
+  "cliquez ici",
+  "read more",
+  "lire plus",
+  "en savoir plus",
+  "link",
+  "lien",
+  "ici",
+]);
+
+const CURRENT_TOPIC_TERMS = [
+  "prix",
+  "promotion",
+  "stock",
+  "disponibilite",
+  "disponibilité",
+  "collection",
+  "nouveaute",
+  "nouveauté",
+  "2026",
+  "2025",
+];
+
+function normalizeText(value: string | null | undefined) {
+  return (value ?? "").replace(/\s+/g, " ").trim();
+}
+
+function lower(value: string | null | undefined) {
+  return normalizeText(value).toLocaleLowerCase("fr-FR");
+}
+
+function countWords(value: string) {
+  return normalizeText(value).split(/\s+/).filter(Boolean).length;
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function countNaturalOccurrences(text: string, term: string) {
+  const normalizedTerm = normalizeText(term);
+  if (!normalizedTerm) return 0;
+
+  const pattern = new RegExp(`\\b${escapeRegExp(normalizedTerm)}\\b`, "gi");
+  return (text.match(pattern) ?? []).length;
+}
+
+function isSlugValid(slug: string) {
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
+}
+
+function isProbablyKeywordStuffed(value: string, focusKeyword: string | null) {
+  const text = lower(value);
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length < 5) return false;
+
+  const term = lower(focusKeyword);
+  if (term && countNaturalOccurrences(text, term) >= 3) {
+    return true;
+  }
+
+  const counts = new Map<string, number>();
+  words
+    .filter((word) => word.length > 3)
+    .forEach((word) => counts.set(word, (counts.get(word) ?? 0) + 1));
+
+  return [...counts.values()].some((count) => count >= Math.max(4, words.length * 0.35));
+}
+
+function getSuggestedTitleSeo(input: ArticleSeoAnalyzerInput) {
+  const title = normalizeText(input.title);
+  if (!title) return null;
+
+  const category = normalizeText(input.categoryName);
+  const suffix = category && !lower(title).includes(lower(category)) ? ` | ${category}` : "";
+  return `${title}${suffix}`.slice(0, 255);
+}
+
+function getSuggestedDescriptionSeo(input: ArticleSeoAnalyzerInput, plainText: string) {
+  const existing =
+    normalizeText(input.excerpt) ||
+    normalizeText(getArticleFirstParagraphText(input.content)) ||
+    normalizeText(plainText);
+
+  if (!existing) return null;
+
+  const trimmed = existing.slice(0, 157).trimEnd();
+  return trimmed.length < existing.length ? `${trimmed}...` : trimmed;
+}
+
+function collectDocumentStats(content: string): DocumentStats {
+  const document = parseArticleContent(content);
+  const headings: DocumentStats["headings"] = [];
+  const links: DocumentStats["links"] = [];
+  const images: DocumentStats["images"] = [];
+  const paragraphTexts: string[] = [];
+
+  const textFromNode = (node: JSONContent): string => {
+    if (node.type === "text" && typeof node.text === "string") {
+      return node.text;
+    }
+
+    return Array.isArray(node.content)
+      ? node.content.map(textFromNode).join(" ")
+      : "";
+  };
+
+  const walk = (node: JSONContent) => {
+    const text = normalizeText(textFromNode(node));
+
+    if (node.type === "heading" && node.attrs && typeof node.attrs.level === "number") {
+      headings.push({ level: node.attrs.level, text });
+    }
+
+    if (node.type === "paragraph" && text) {
+      paragraphTexts.push(text);
+    }
+
+    if (node.type === "image") {
+      const attrs = node.attrs && typeof node.attrs === "object" ? node.attrs : {};
+      const alt = typeof attrs.alt === "string" ? normalizeText(attrs.alt) : null;
+      const mediaId =
+        typeof attrs.mediaId === "number"
+          ? attrs.mediaId
+          : typeof attrs.mediaId === "string" && /^\d+$/.test(attrs.mediaId)
+            ? Number(attrs.mediaId)
+            : null;
+
+      images.push({ alt, mediaId });
+    }
+
+    if (node.marks?.length && text) {
+      node.marks.forEach((mark) => {
+        if (mark.type === "link") {
+          const href = mark.attrs?.href;
+          if (typeof href === "string" && href.trim()) {
+            links.push({ href: href.trim(), text });
+          }
+        }
+      });
+    }
+
+    if (Array.isArray(node.content)) {
+      node.content.forEach(walk);
+    }
+  };
+
+  walk(document);
+  return { headings, links, images, paragraphTexts };
+}
+
+function calculateSimilarity(left: string, right: string) {
+  const leftWords = new Set(
+    lower(left)
+      .split(/\s+/)
+      .filter((word) => word.length > 3),
+  );
+  const rightWords = new Set(
+    lower(right)
+      .split(/\s+/)
+      .filter((word) => word.length > 3),
+  );
+
+  if (leftWords.size === 0 || rightWords.size === 0) return 0;
+
+  const overlap = [...leftWords].filter((word) => rightWords.has(word)).length;
+  return overlap / Math.min(leftWords.size, rightWords.size);
+}
+
+function makeItem(code: string, message: string): ArticleSeoFeedbackItem {
+  return { code, message };
+}
+
+export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAnalyzerResult {
+  const title = normalizeText(input.title);
+  const titleSeo = normalizeText(input.titleSeo) || title;
+  const descriptionSeo = normalizeText(input.descriptionSeo);
+  const focusKeyword = normalizeText(input.focusKeyword);
+  const slug = normalizeText(input.slug);
+  const plainText = getArticlePlainText(input.content);
+  const firstParagraph = getArticleFirstParagraphText(input.content);
+  const stats = collectDocumentStats(input.content);
+  const wordCount = countWords(plainText);
+  const publicUrl = input.publicUrl || (slug ? `/actualites/${slug}` : "");
+  const existingArticles = input.existingArticles ?? [];
+
+  const criticalIssues: ArticleSeoFeedbackItem[] = [];
+  const warnings: ArticleSeoFeedbackItem[] = [];
+  const passedChecks: ArticleSeoFeedbackItem[] = [];
+  const recommendations: ArticleSeoFeedbackItem[] = [];
+
+  const addPass = (code: string, message: string) => passedChecks.push(makeItem(code, message));
+  const addWarning = (code: string, message: string) => warnings.push(makeItem(code, message));
+  const addCritical = (code: string, message: string) => criticalIssues.push(makeItem(code, message));
+  const addRecommendation = (code: string, message: string) =>
+    recommendations.push(makeItem(code, message));
+
+  if (input.mode === "public" && input.status !== "PUBLISHED") {
+    addCritical("status.public", "L'article n'est pas publié.");
+  } else if (input.status === "ARCHIVED") {
+    addCritical("status.archived", "Un article archivé ne peut pas être publié.");
+  } else {
+    addPass("status.publishable", "Le statut permet une publication après validation.");
+  }
+
+  if (input.noIndex) {
+    addCritical("indexability.no_index", "L'option noIndex empêche l'indexation.");
+  } else {
+    addPass("indexability.indexable", "L'article est autorisé à l'indexation.");
+  }
+
+  if (!slug) {
+    addCritical("slug.missing", "Le slug est obligatoire.");
+  } else if (!isSlugValid(slug)) {
+    addCritical("slug.invalid", "Le slug doit être en minuscules, sans espaces, avec des tirets.");
+  } else {
+    addPass("slug.valid", "Le slug est propre et lisible.");
+  }
+
+  if (slug.length > 80) {
+    addWarning("slug.long", "Le slug est long : raccourcissez-le si possible.");
+  }
+
+  const duplicateSlug = existingArticles.find((article) => article.slug === slug);
+  if (duplicateSlug) {
+    addCritical("slug.duplicate", `Un autre article utilise déjà ce slug (#${duplicateSlug.id}).`);
+  }
+
+  if (!publicUrl || !publicUrl.startsWith("/actualites/")) {
+    addCritical("url.invalid", "L'URL publique de l'article ne peut pas être générée correctement.");
+  } else {
+    addPass("url.valid", "L'URL publique peut être générée.");
+  }
+
+  if (!title) {
+    addCritical("title.missing", "Le titre de l'article est obligatoire.");
+  } else {
+    addPass("title.present", "Le titre éditorial est renseigné.");
+  }
+
+  if (!plainText || wordCount < 120) {
+    addCritical("content.missing_or_too_thin", "Le contenu est absent ou trop court pour publier.");
+  } else {
+    addPass("content.present", "Le contenu contient une base exploitable.");
+  }
+
+  if (wordCount < 500) {
+    addWarning("content.thin", "Moins de 500 mots : l'article risque d'être léger pour le SEO.");
+  } else if (wordCount >= 800) {
+    addPass("content.depth", "La profondeur de contenu est solide pour un article standard.");
+  }
+
+  if (wordCount >= 1200) {
+    addPass("content.competitive_depth", "La longueur convient à un guide plus concurrentiel.");
+  }
+
+  if (!descriptionSeo) {
+    addCritical("description.missing", "La description SEO est obligatoire pour publier.");
+  }
+
+  if (titleSeo.length >= 35 && titleSeo.length <= 60) {
+    addPass("title_seo.length", "Le titre SEO est dans la plage recommandée.");
+  } else if (titleSeo.length < 25 || titleSeo.length > 65) {
+    addWarning("title_seo.length", "Visez un titre SEO entre 35 et 60 caractères.");
+  }
+
+  if (descriptionSeo.length >= 120 && descriptionSeo.length <= 160) {
+    addPass("description.length", "La description SEO est dans la plage recommandée.");
+  } else if (descriptionSeo && (descriptionSeo.length < 90 || descriptionSeo.length > 170)) {
+    addWarning("description.length", "Visez une description SEO entre 120 et 160 caractères.");
+  }
+
+  if (focusKeyword) {
+    const keyword = lower(focusKeyword);
+    const keywordInTitle = lower(titleSeo || title).includes(keyword);
+    const keywordInIntro = lower(firstParagraph).includes(keyword);
+    const keywordInHeading = stats.headings.some((heading) => lower(heading.text).includes(keyword));
+    const keywordInBody = lower(plainText).includes(keyword);
+
+    if (keywordInTitle) addPass("keyword.title", "Le mot-clé apparaît naturellement dans le titre.");
+    else addWarning("keyword.title", "Ajoutez le mot-clé principal dans le titre si cela reste naturel.");
+
+    if (keywordInIntro) addPass("keyword.intro", "Le mot-clé est présent dans l'introduction.");
+    else addWarning("keyword.intro", "L'introduction devrait mentionner le mot-clé principal.");
+
+    if (keywordInHeading || keywordInBody) {
+      addPass("keyword.body", "Le mot-clé apparaît dans le corps de l'article.");
+    } else {
+      addWarning("keyword.body", "Le mot-clé n'apparaît pas dans les sections de l'article.");
+    }
+
+    const occurrences = countNaturalOccurrences(lower(plainText), keyword);
+    if (wordCount > 0 && occurrences > Math.max(10, wordCount / 35)) {
+      addWarning("keyword.spam", "Le mot-clé semble trop répété : allégez les formulations.");
+    }
+  } else {
+    addWarning("keyword.missing", "Ajoutez un mot-clé principal pour guider l'analyse SEO.");
+  }
+
+  if (isProbablyKeywordStuffed(titleSeo, focusKeyword || null)) {
+    addWarning("title_seo.stuffed", "Le titre SEO ressemble à une liste de mots-clés.");
+  }
+
+  if (isProbablyKeywordStuffed(descriptionSeo, focusKeyword || null)) {
+    addWarning("description.stuffed", "La description SEO ressemble à une liste de mots-clés.");
+  }
+
+  const duplicateTitle = existingArticles.find(
+    (article) => lower(article.titleSeo || article.title) === lower(titleSeo),
+  );
+  if (duplicateTitle) {
+    addWarning("title_seo.duplicate", `Titre SEO proche d'un autre article (#${duplicateTitle.id}).`);
+  }
+
+  const duplicateDescription = descriptionSeo
+    ? existingArticles.find((article) => lower(article.descriptionSeo) === lower(descriptionSeo))
+    : null;
+  if (duplicateDescription) {
+    addWarning(
+      "description.duplicate",
+      `Description SEO identique à un autre article (#${duplicateDescription.id}).`,
+    );
+  }
+
+  const cannibalized = focusKeyword
+    ? existingArticles.find((article) => lower(article.focusKeyword) === lower(focusKeyword))
+    : null;
+  if (cannibalized) {
+    addWarning(
+      "keyword.cannibalization",
+      `Un autre article cible déjà ce mot-clé (#${cannibalized.id}).`,
+    );
+  }
+
+  const h1Count = stats.headings.filter((heading) => heading.level === 1).length;
+  const h2Count = stats.headings.filter((heading) => heading.level === 2).length;
+
+  if (h1Count > 1) {
+    addWarning("headings.multiple_h1", "Gardez un seul H1 : le titre de page sert déjà de H1.");
+  } else {
+    addPass("headings.h1", "La structure H1 est compatible avec le rendu public.");
+  }
+
+  if (wordCount > 500 && h2Count === 0) {
+    addWarning("headings.no_h2", "Ajoutez des H2 pour structurer les longues lectures.");
+  } else if (h2Count > 0) {
+    addPass("headings.h2", "L'article contient des sections H2.");
+  }
+
+  const brokenHierarchy = stats.headings.some((heading, index) => {
+    const previous = stats.headings[index - 1];
+    return previous && heading.level - previous.level > 1;
+  });
+  if (brokenHierarchy) {
+    addWarning("headings.hierarchy", "La hiérarchie des titres saute un niveau.");
+  }
+
+  const longParagraphs = stats.paragraphTexts.filter((paragraph) => countWords(paragraph) > 120);
+  if (longParagraphs.length > 0) {
+    addWarning("readability.long_paragraphs", "Certains paragraphes sont longs : aérez la lecture.");
+  } else {
+    addPass("readability.paragraphs", "Les paragraphes restent faciles à scanner.");
+  }
+
+  const longSentences = plainText
+    .split(/[.!?]+/)
+    .map(countWords)
+    .filter((words) => words > 35).length;
+  if (longSentences > 4) {
+    addWarning("readability.long_sentences", "Plusieurs phrases sont très longues.");
+  }
+
+  const internalLinks = stats.links.filter((link) => link.href.startsWith("/"));
+  const externalLinks = stats.links.filter((link) => /^https?:\/\//i.test(link.href));
+
+  if (internalLinks.length >= 2 && internalLinks.length <= 5) {
+    addPass("links.internal", "Le maillage interne est bien dosé.");
+  } else if (internalLinks.length === 0) {
+    addWarning("links.internal_missing", "Ajoutez 2 à 5 liens internes pertinents.");
+  } else if (internalLinks.length > 5) {
+    addWarning("links.internal_many", "Le nombre de liens internes est élevé : gardez les plus utiles.");
+  }
+
+  if (externalLinks.length > 0) {
+    addPass("links.external", "L'article cite au moins une ressource externe.");
+  }
+
+  const genericAnchor = stats.links.find((link) =>
+    GENERIC_LINK_ANCHORS.has(lower(link.text)),
+  );
+  if (genericAnchor) {
+    addWarning("links.generic_anchor", "Remplacez les ancres génériques par des libellés descriptifs.");
+  }
+
+  if (input.coverMediaId) {
+    addPass("images.cover", "Une image de couverture est sélectionnée.");
+  } else {
+    addWarning("images.cover_missing", "Ajoutez une image de couverture.");
+  }
+
+  if (stats.images.some((image) => image.alt === "" || image.alt == null)) {
+    addWarning("images.alt_missing", "Certaines images intégrées n'ont pas de texte alternatif.");
+  }
+
+  if (input.ogImageMediaId || input.coverMediaId) {
+    addPass("images.og", "Une image Open Graph peut être générée.");
+  } else {
+    addWarning("images.og_missing", "Ajoutez une image OG ou une couverture pour les partages.");
+  }
+
+  if (titleSeo && (descriptionSeo || input.excerpt) && publicUrl) {
+    addPass("schema.ready", "Les données nécessaires au JSON-LD BlogPosting sont disponibles.");
+  } else {
+    addWarning("schema.incomplete", "Complétez titre, description et URL pour un JSON-LD robuste.");
+  }
+
+  const freshnessText = lower(`${title} ${plainText}`);
+  const discussesCurrentTopic = CURRENT_TOPIC_TERMS.some((term) => freshnessText.includes(term));
+  if (discussesCurrentTopic && input.status === "PUBLISHED") {
+    addRecommendation(
+      "freshness.review",
+      "Ce sujet semble sensible à l'actualité : prévoyez une vérification régulière.",
+    );
+  }
+
+  const similarArticle = existingArticles
+    .map((article) => ({
+      article,
+      score: calculateSimilarity(`${titleSeo} ${plainText}`, `${article.titleSeo || article.title} ${article.content ?? ""}`),
+    }))
+    .sort((left, right) => right.score - left.score)[0];
+  if (similarArticle && similarArticle.score >= 0.55) {
+    addWarning(
+      "content.similar",
+      `Contenu potentiellement proche de l'article #${similarArticle.article.id}.`,
+    );
+  }
+
+  if (!input.categoryName) {
+    addRecommendation("category.missing", "Associez une catégorie pour améliorer le classement du blog.");
+  }
+
+  const suggestedInternalLinkOpportunities = existingArticles
+    .map((article) => ({
+      article,
+      score: calculateSimilarity(`${title} ${focusKeyword}`, `${article.titleSeo || article.title} ${article.focusKeyword ?? ""}`),
+    }))
+    .filter((item) => item.score > 0.18)
+    .sort((left, right) => right.score - left.score)
+    .slice(0, 5)
+    .map(({ article }) => ({
+      articleId: article.id,
+      title: article.titleSeo || article.title,
+      slug: article.slug,
+      reason: "Sujet proche ou intention de recherche complémentaire.",
+    }));
+
+  if (suggestedInternalLinkOpportunities.length > 0) {
+    addRecommendation(
+      "links.opportunities",
+      "Des opportunités de liens internes sont disponibles dans les recommandations.",
+    );
+  }
+
+  const suggestedFaqQuestions = [
+    focusKeyword ? `Comment choisir ${focusKeyword} ?` : `Comment choisir ${title || "ce produit ou service"} ?`,
+    focusKeyword ? `Quels critères vérifier pour ${focusKeyword} ?` : "Quels critères faut-il vérifier ?",
+    "Quand demander conseil à COBAM Group ?",
+  ];
+
+  const scoreParts = [
+    Math.min(
+      15,
+      (input.noIndex ? 0 : 5) + (isSlugValid(slug) ? 5 : 0) + (publicUrl ? 5 : 0),
+    ),
+    Math.min(
+      15,
+      (titleSeo ? 4 : 0) +
+        (titleSeo.length >= 35 && titleSeo.length <= 60 ? 4 : 0) +
+        (descriptionSeo ? 4 : 0) +
+        (descriptionSeo.length >= 120 && descriptionSeo.length <= 160 ? 3 : 0),
+    ),
+    Math.min(
+      15,
+      (focusKeyword ? 4 : 0) +
+        (focusKeyword && lower(titleSeo || title).includes(lower(focusKeyword)) ? 4 : 0) +
+        (focusKeyword && lower(firstParagraph).includes(lower(focusKeyword)) ? 4 : 0) +
+        (!warnings.some((warning) => warning.code === "keyword.spam") ? 3 : 0),
+    ),
+    Math.min(25, (wordCount >= 500 ? 10 : 0) + (wordCount >= 800 ? 8 : 0) + (plainText ? 7 : 0)),
+    Math.min(10, (h2Count > 0 || wordCount <= 500 ? 4 : 0) + (longParagraphs.length === 0 ? 3 : 0) + (!brokenHierarchy ? 3 : 0)),
+    Math.min(7, (internalLinks.length > 0 ? 4 : 0) + (externalLinks.length > 0 ? 2 : 0) + (!genericAnchor ? 1 : 0)),
+    Math.min(5, (input.coverMediaId ? 3 : 0) + (input.ogImageMediaId || input.coverMediaId ? 2 : 0)),
+    Math.min(5, titleSeo && (descriptionSeo || input.excerpt) && publicUrl ? 5 : 0),
+    Math.min(3, !similarArticle || similarArticle.score < 0.55 ? 3 : 0),
+  ];
+
+  const score = Math.max(0, Math.min(100, scoreParts.reduce((sum, part) => sum + part, 0)));
+  const status: ArticleSeoStatus =
+    criticalIssues.length > 0 ? "NOT_READY" : score >= 80 ? "SEO_READY" : "NEEDS_IMPROVEMENT";
+
+  const suggestedTitleSeo =
+    !input.titleSeo || titleSeo.length < 25 || titleSeo.length > 65
+      ? getSuggestedTitleSeo(input)
+      : null;
+  const suggestedDescriptionSeo =
+    !descriptionSeo || descriptionSeo.length < 90 || descriptionSeo.length > 170
+      ? getSuggestedDescriptionSeo(input, plainText)
+      : null;
+
+  return {
+    status,
+    score,
+    criticalIssues,
+    warnings,
+    passedChecks,
+    recommendations,
+    searchPreview: {
+      title: titleSeo || suggestedTitleSeo || title || "Titre de l'article",
+      url: publicUrl || "/actualites/slug-de-l-article",
+      description:
+        descriptionSeo ||
+        suggestedDescriptionSeo ||
+        normalizeText(input.excerpt) ||
+        "Ajoutez une description SEO claire pour cet article.",
+    },
+    suggestedTitleSeo,
+    suggestedDescriptionSeo,
+    suggestedFaqQuestions,
+    suggestedInternalLinkOpportunities,
+  };
+}

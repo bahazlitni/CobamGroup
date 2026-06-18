@@ -309,8 +309,9 @@ model User {
   otpChallenges            OTPChallenge[]
   passwordResetTokens      PasswordResetToken[]
   uploadedMedia            Media[]              @relation("MediaUploadedByUser")
-  articles                 Article[]            @relation("ArticleAuthor")
-  articleAuthorLinks       ArticleAuthorLink[]
+  createdArticles          Article[]            @relation("ArticleCreatedByUser")
+  updatedArticles          Article[]            @relation("ArticleUpdatedByUser")
+  publishedArticles        Article[]            @relation("ArticlePublishedByUser")
   createdArticleCategories ArticleCategory[]    @relation("ArticleCategoryCreatedByUser")
   updatedArticleCategories ArticleCategory[]    @relation("ArticleCategoryUpdatedByUser")
   profile                  StaffProfile?
@@ -1580,11 +1581,11 @@ model ArticleCategory {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
-  parent        ArticleCategory?      @relation("ArticleCategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
-  children      ArticleCategory[]     @relation("ArticleCategoryHierarchy")
-  createdByUser User?                 @relation("ArticleCategoryCreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)
-  updatedByUser User?                 @relation("ArticleCategoryUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: SetNull)
-  articleLinks  ArticleCategoryLink[]
+  parent        ArticleCategory?  @relation("ArticleCategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children      ArticleCategory[] @relation("ArticleCategoryHierarchy")
+  createdByUser User?             @relation("ArticleCategoryCreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  updatedByUser User?             @relation("ArticleCategoryUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: SetNull)
+  articles      Article[]
 
   @@index([createdByUserId])
   @@index([updatedByUserId])
@@ -1592,107 +1593,66 @@ model ArticleCategory {
 }
 
 model Article {
-  id                BigInt    @id @default(autoincrement())
-  authorId          String    @map("author_id")
-  updatedByUserId   String?   @map("updated_by_user_id")
-  publishedByUserId String?   @map("published_by_user_id")
-  archivedByUserId  String?   @map("archived_by_user_id")
-  deletedByUserId   String?   @map("deleted_by_user_id")
-  deletedAt         DateTime? @map("deleted_at")
+  id                 BigInt    @id @default(autoincrement())
+  createdByUserId    String?   @map("created_by_user_id")
+  updatedByUserId    String?   @map("updated_by_user_id")
+  publishedByUserId  String?   @map("published_by_user_id")
+  categoryId         BigInt?   @map("category_id")
+  publishedAt        DateTime? @map("published_at")
+  scheduledPublishAt DateTime? @map("scheduled_publish_at")
 
   title          String        @db.VarChar(255)
-  displayTitle   String?       @map("display_title") @db.VarChar(255)
   slug           String        @unique @db.VarChar(255)
   excerpt        String?       @db.Text
   content        String        @db.Text
+  titleSeo       String?       @map("title_seo") @db.VarChar(255)
   descriptionSeo String?       @map("description_seo") @db.VarChar(160)
+  focusKeyword   String?       @map("focus_keyword") @db.VarChar(160)
   tags           String        @default("") @db.Text
   status         ArticleStatus
-  publishedAt    DateTime?     @map("published_at")
-  scheduledPublishAt DateTime? @map("scheduled_publish_at")
-  scheduledByUserId  String?   @map("scheduled_by_user_id") @db.VarChar(191)
-  coverMediaId   BigInt?       @map("cover_media_id")
-  ogTitle        String?       @map("og_title") @db.VarChar(255)
-  ogDescription  String?       @map("og_description") @db.Text
-  ogImageMediaId BigInt?       @map("og_image_media_id")
-  noIndex        Boolean       @default(false) @map("no_index")
-  noFollow       Boolean       @default(false) @map("no_follow")
-  schemaType     String?       @map("schema_type") @db.VarChar(100)
-  createdAt      DateTime      @default(now()) @map("created_at")
-  updatedAt      DateTime      @updatedAt @map("updated_at")
 
-  author       User   @relation("ArticleAuthor", fields: [authorId], references: [id], onDelete: Restrict)
-  coverMedia   Media? @relation("ArticleCoverMedia", fields: [coverMediaId], references: [id], onDelete: SetNull)
-  ogImageMedia Media? @relation("ArticleOgImageMedia", fields: [ogImageMediaId], references: [id], onDelete: SetNull)
+  coverMediaId   BigInt?  @map("cover_media_id")
+  ogTitle        String?  @map("og_title") @db.VarChar(255)
+  ogDescription  String?  @map("og_description") @db.Text
+  ogImageMediaId BigInt?  @map("og_image_media_id")
+  noIndex        Boolean  @default(false) @map("no_index")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  categoryLinks ArticleCategoryLink[]
-  authorLinks   ArticleAuthorLink[]
-  mediaLinks    ArticleMediaLink[]
-  ctaBanners    ArticleCTABanner[]
+  createdByUser   User?            @relation("ArticleCreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  updatedByUser   User?            @relation("ArticleUpdatedByUser", fields: [updatedByUserId], references: [id], onDelete: SetNull)
+  publishedByUser User?            @relation("ArticlePublishedByUser", fields: [publishedByUserId], references: [id], onDelete: SetNull)
+  category        ArticleCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  coverMedia      Media?           @relation("ArticleCoverMedia", fields: [coverMediaId], references: [id], onDelete: SetNull)
+  ogImageMedia    Media?           @relation("ArticleOgImageMedia", fields: [ogImageMediaId], references: [id], onDelete: SetNull)
 
-  @@index([authorId])
+  ctaBanners ArticleCTABanner[]
+
+  @@index([createdByUserId])
+  @@index([updatedByUserId])
+  @@index([publishedByUserId])
+  @@index([categoryId])
   @@index([coverMediaId])
   @@index([ogImageMediaId])
   @@index([status])
+  @@index([status, publishedAt])
   @@index([status, scheduledPublishAt])
-  @@index([scheduledByUserId])
   @@map("articles")
 }
 
-model ArticleCategoryLink {
-  articleId  BigInt   @map("article_id")
-  categoryId BigInt   @map("category_id")
-  score      Int
-  createdAt  DateTime @default(now()) @map("created_at")
-
-  article  Article         @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  category ArticleCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-
-  @@id([articleId, categoryId])
-  @@index([categoryId])
-  @@map("article_category_links")
-}
-
-model ArticleAuthorLink {
-  articleId BigInt   @map("article_id")
-  userId    String   @map("user_id")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([articleId, userId])
-  @@index([userId])
-  @@map("article_author_links")
-}
-
-model ArticleMediaLink {
-  articleId BigInt        @map("article_id")
-  mediaId   BigInt        @map("media_id")
-  role      MediaLinkRole
-  sortOrder Int           @default(0) @map("sort_order")
-
-  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  media   Media   @relation(fields: [mediaId], references: [id], onDelete: Cascade)
-
-  @@id([articleId, mediaId])
-  @@index([mediaId])
-  @@map("article_media_links")
-}
-
 model ArticleCTABanner {
-  id                       BigInt                              @id @default(autoincrement())
-  articleId                BigInt                              @map("article_id")
-  title                    String                              @db.VarChar(255)
-  description              String?                             @db.Text
-  imageId                  BigInt?                             @map("image_id")
-  backgroundColor          String                              @default("#14202e") @map("background_color") @db.VarChar(30)
+  id                       BigInt                                @id @default(autoincrement())
+  articleId                BigInt                                @map("article_id")
+  title                    String                                @db.VarChar(255)
+  description              String?                               @db.Text
+  imageId                  BigInt?                               @map("image_id")
+  backgroundColor          String                                @default("#14202e") @map("background_color") @db.VarChar(30)
   horizontalAspectRatio    ArticleCTABannerHorizontalAspectRatio @default(RATIO_21_10) @map("horizontal_aspect_ratio")
-  anchor                   ArticleCTABannerAnchor              @default(CENTER_CENTER)
-  approxPositionPercentage Int                                 @default(50) @map("approx_position_percentage")
-  href                     String?                             @db.VarChar(500)
-  createdAt                DateTime                            @default(now()) @map("created_at")
-  updatedAt                DateTime                            @updatedAt @map("updated_at")
+  anchor                   ArticleCTABannerAnchor                @default(CENTER_CENTER)
+  approxPositionPercentage Int                                   @default(50) @map("approx_position_percentage")
+  href                     String?                               @db.VarChar(500)
+  createdAt                DateTime                              @default(now()) @map("created_at")
+  updatedAt                DateTime                              @updatedAt @map("updated_at")
 
   article Article                  @relation(fields: [articleId], references: [id], onDelete: Cascade)
   image   Media?                   @relation("ArticleCTABannerImageMedia", fields: [imageId], references: [id], onDelete: SetNull)
@@ -1778,7 +1738,6 @@ model Media {
   commercePromotionBanners   CommercePromotion[]  @relation("CommercePromotionBannerMedia")
   articleCoverFor            Article[]            @relation("ArticleCoverMedia")
   articleOgImageFor          Article[]            @relation("ArticleOgImageMedia")
-  articleMediaLinks          ArticleMediaLink[]
   articleCtaBannerImages     ArticleCTABanner[]   @relation("ArticleCTABannerImageMedia")
 
   @@index([folderId])

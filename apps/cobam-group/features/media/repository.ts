@@ -1,6 +1,7 @@
 // @/features/media/repository.ts
 
 import { Prisma } from "@prisma/client";
+import { extractArticleMediaIds } from "@/features/articles/document";
 import { prisma } from "@/lib/server/db/prisma";
 import {
   MEDIA_KIND,
@@ -415,22 +416,20 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
         bannerMediaId: true,
       },
     }),
-    prisma.articleMediaLink.findMany({
+    prisma.article.findMany({
       where: {
-        mediaId: {
-          in: mediaIds,
-        },
-        article: {
-          deletedAt: null,
-        },
+        OR: mediaIds.map((mediaId) => ({
+          content: {
+            contains: mediaId.toString(),
+          },
+        })),
       },
       select: {
-        mediaId: true,
+        content: true,
       },
     }),
     prisma.article.findMany({
       where: {
-        deletedAt: null,
         coverMediaId: {
           in: mediaIds,
         },
@@ -441,7 +440,6 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
     }),
     prisma.article.findMany({
       where: {
-        deletedAt: null,
         ogImageMediaId: {
           in: mediaIds,
         },
@@ -496,8 +494,10 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
     incrementUsageCount(countsByMediaId, promotion.bannerMediaId, "commercePromotionBannerFor");
   }
 
-  for (const link of articleAttachments) {
-    incrementUsageCount(countsByMediaId, link.mediaId, "articleMediaLinks");
+  for (const article of articleAttachments) {
+    for (const mediaId of extractArticleMediaIds(article.content)) {
+      incrementUsageCount(countsByMediaId, BigInt(mediaId), "articleMediaLinks");
+    }
   }
 
   for (const article of articleCovers) {
@@ -1134,53 +1134,6 @@ async function replaceMediaReferences(
     },
   });
 
-  const articleLinksToMove = await tx.articleMediaLink.findMany({
-    where: {
-      mediaId: fromMediaId,
-    },
-    select: {
-      articleId: true,
-    },
-  });
-  const articleIds = [...new Set(articleLinksToMove.map((link) => link.articleId.toString()))].map(
-    (id) => BigInt(id),
-  );
-  const collidingArticleIds =
-    articleIds.length === 0
-      ? []
-      : (
-          await tx.articleMediaLink.findMany({
-            where: {
-              mediaId: toMediaId,
-              articleId: {
-                in: articleIds,
-              },
-            },
-            select: {
-              articleId: true,
-            },
-          })
-        ).map((link) => link.articleId);
-  const deletedCollidingArticleLinks =
-    collidingArticleIds.length === 0
-      ? { count: 0 }
-      : await tx.articleMediaLink.deleteMany({
-          where: {
-            mediaId: fromMediaId,
-            articleId: {
-              in: collidingArticleIds,
-            },
-          },
-        });
-  const movedArticleAttachments = await tx.articleMediaLink.updateMany({
-    where: {
-      mediaId: fromMediaId,
-    },
-    data: {
-      mediaId: toMediaId,
-    },
-  });
-
   const [
     productFamilyLinks,
     productCategoryImages,
@@ -1294,7 +1247,7 @@ async function replaceMediaReferences(
   ]);
 
   const productVariantLinks = deletedCollidingProductLinks.count + movedProductVariantLinks.count;
-  const articleAttachments = deletedCollidingArticleLinks.count + movedArticleAttachments.count;
+  const articleAttachments = 0;
 
   return {
     productFamilyLinks: productFamilyLinks.count,
@@ -1465,11 +1418,7 @@ export async function detachMediaReferencesAndDeleteMediaRecord(mediaId: number)
         bannerMediaId: null,
       },
     });
-    const articleAttachments = await tx.articleMediaLink.deleteMany({
-      where: {
-        mediaId: mediaIdValue,
-      },
-    });
+    const articleAttachments = 0;
     const articleCovers = await tx.article.updateMany({
       where: {
         coverMediaId: mediaIdValue,
@@ -1503,7 +1452,7 @@ export async function detachMediaReferencesAndDeleteMediaRecord(mediaId: number)
       staffAvatars: staffAvatars.count,
       commerceInvoicePdfs: commerceInvoicePdfs.count,
       commercePromotionBanners: commercePromotionBanners.count,
-      articleAttachments: articleAttachments.count,
+      articleAttachments,
       articleCovers: articleCovers.count,
       articleOgImages: articleOgImages.count,
       total:
@@ -1517,7 +1466,7 @@ export async function detachMediaReferencesAndDeleteMediaRecord(mediaId: number)
         staffAvatars.count +
         commerceInvoicePdfs.count +
         commercePromotionBanners.count +
-        articleAttachments.count +
+        articleAttachments +
         articleCovers.count +
         articleOgImages.count,
     };

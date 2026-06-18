@@ -72,27 +72,20 @@ export function buildArticleStructuredData(input: {
   imageUrl?: string | null;
   publishedAt?: string | null;
   updatedAt: string;
-  authors: string[];
 }) {
   return {
     "@context": "https://schema.org",
-    "@type": "Article",
+    "@type": "BlogPosting",
     headline: input.title,
     description: input.description,
     image: input.imageUrl ? [buildAbsoluteUrl(input.imageUrl)] : undefined,
     datePublished: input.publishedAt ?? input.updatedAt,
     dateModified: input.updatedAt,
-    author:
-      input.authors.length > 0
-        ? input.authors.map((name) => ({
-            "@type": "Person",
-            name,
-          }))
-        : {
-            "@type": "Organization",
-            "@id": buildAbsoluteUrl("/#organization"),
-            name: getSiteName(),
-          },
+    author: {
+      "@type": "Organization",
+      "@id": buildAbsoluteUrl("/#organization"),
+      name: getSiteName(),
+    },
     publisher: {
       "@type": "Organization",
       "@id": buildAbsoluteUrl("/#organization"),

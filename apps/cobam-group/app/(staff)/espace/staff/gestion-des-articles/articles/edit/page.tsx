@@ -3,7 +3,6 @@
 import { Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { CalendarClock, Loader2, XCircle } from "lucide-react";
-import ArticleAuthorsPanel from "@/components/staff/articles/article-authors-panel";
 import ArticleCTABannersEditor from "@/components/staff/articles/article-cta-banners-editor";
 import ArticleRichTextEditor from "@/components/staff/articles/article-rich-text-editor";
 import AutosaveIndicator from "@/components/staff/articles/AutosaveIndicator";
@@ -142,7 +141,6 @@ function ArticleEditPageContent() {
     : null;
   const articleAbilities = editor.article?.abilities ?? null;
   const canEditArticle = editor.mode === "create" ? true : Boolean(articleAbilities?.canEdit);
-  const canManageAuthors = editor.mode === "edit" && Boolean(articleAbilities?.canManageAuthors);
   const canDeleteArticle = editor.mode === "edit" && Boolean(articleAbilities?.canDelete);
   const canPublishArticle = editor.mode === "create" ? true : Boolean(articleAbilities?.canPublish);
   const isArticleActionBusy =
@@ -218,13 +216,6 @@ function ArticleEditPageContent() {
         </StaffNotice>
       ) : null}
 
-      {editor.mode === "edit" && !canEditArticle && canManageAuthors ? (
-        <StaffNotice variant="warning" title="Édition limitée">
-          Vous pouvez gérer les auteurs de cet article, mais le contenu et la publication restent en
-          lecture seule pour votre compte.
-        </StaffNotice>
-      ) : null}
-
       <StaffEditorLayout
         sidebar={
           <>
@@ -232,10 +223,10 @@ function ArticleEditPageContent() {
               mode={editor.mode === "create" ? "create" : "edit"}
               onSave={() => void editor.save()}
               isSaving={editor.isSaving}
-              saveDisabled={!canEditArticle && !canManageAuthors}
+              saveDisabled={!canEditArticle}
               onDelete={canDeleteArticle ? handleDeleteArticle : undefined}
               isDeleting={editor.isDeleting}
-              description="Retrouvez ici la sauvegarde, la publication et la gestion des co-auteurs."
+              description="Retrouvez ici la sauvegarde, la publication et la planification."
               topContent={
                 <div className="flex flex-wrap items-center gap-2">
                   <StaffBadge
@@ -276,6 +267,7 @@ function ArticleEditPageContent() {
                     loading={editor.isPublishing}
                     loadingText="Publication..."
                     onClick={() => void editor.publish()}
+                    disabled={isArticleActionBusy || !editor.canPublishBySeo}
                     className="w-full"
                   >
                     Publier
@@ -364,7 +356,8 @@ function ArticleEditPageContent() {
                         disabled={
                           isArticleActionBusy ||
                           !editor.state.scheduledPublishAt ||
-                          !scheduleInputIsAligned
+                          !scheduleInputIsAligned ||
+                          !editor.canPublishBySeo
                         }
                       >
                         {editor.isScheduling ? (
@@ -400,19 +393,15 @@ function ArticleEditPageContent() {
             <StaffEditorInfoPanel description="Repères rapides sur cet article et son état actuel.">
               <div className="flex flex-wrap gap-2">
                 <StaffBadge size="sm" color="secondary" icon="folder">
-                  {editor.state.categoryAssignments.length} catégorie
-                  {editor.state.categoryAssignments.length > 1 ? "s" : ""}
+                  {editor.state.categoryId ? "1 catégorie" : "Sans catégorie"}
                 </StaffBadge>
                 <StaffBadge size="sm" color="default" icon="tag">
                   {editor.state.tagNames.length} tag
                   {editor.state.tagNames.length > 1 ? "s" : ""}
                 </StaffBadge>
-                {editor.article ? (
-                  <StaffBadge size="sm" color="info" icon="users">
-                    {editor.article.authors.length} auteur
-                    {editor.article.authors.length > 1 ? "s" : ""}
-                  </StaffBadge>
-                ) : null}
+                <StaffBadge size="sm" color="info" icon="badge-check">
+                  {editor.seoAnalysis.status}
+                </StaffBadge>
               </div>
 
               <div>
@@ -461,10 +450,10 @@ function ArticleEditPageContent() {
         <Panel
           pretitle="Article"
           title="Identité éditoriale"
-          description="Regroupez ici le titre, l'affichage, les catégories et le visuel."
+          description="Regroupez ici le titre, les catégories et le visuel."
         >
           <div className="grid gap-6">
-            <PanelField id="article-title" label="Titre interne">
+            <PanelField id="article-title" label="Titre">
               <PanelInput
                 id="article-title"
                 value={editor.state.title}
@@ -475,156 +464,47 @@ function ArticleEditPageContent() {
               />
             </PanelField>
 
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)]">
-              <PanelField id="article-display-title" label="Titre affiché">
+            <PanelField id="article-slug" label="Slug">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <PanelInput
-                  id="article-display-title"
-                  value={editor.state.displayTitle}
-                  onChange={(event) => editor.setField("displayTitle", event.target.value)}
-                  placeholder="Titre visible"
+                  id="article-slug"
+                  value={editor.state.slug}
+                  onChange={(event) => editor.setField("slug", event.target.value)}
+                  placeholder="slug-de-l-article"
                   disabled={!canEditArticle}
                   fullWidth
                 />
-              </PanelField>
-
-              <PanelField id="article-slug" label="Slug">
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <PanelInput
-                    id="article-slug"
-                    value={editor.state.slug}
-                    onChange={(event) => editor.setField("slug", event.target.value)}
-                    placeholder="slug-de-l-article"
-                    disabled={!canEditArticle}
-                    fullWidth
-                  />
-                  <AnimatedUIButton
-                    type="button"
-                    variant="outline"
-                    icon="restart"
-                    iconPosition="left"
-                    onClick={editor.generateSlugFromTitle}
-                    disabled={!canEditArticle}
-                  >
-                    Générer
-                  </AnimatedUIButton>
-                </div>
-              </PanelField>
-            </div>
-
-            <PanelField
-              id="article-categories"
-              label="Catégories d'articles"
-            >
-              <div className="space-y-4">
-                {editor.state.categoryAssignments.length > 0 ? (
-                  editor.state.categoryAssignments.map((assignment, index) => {
-                    const selectedIds = editor.state.categoryAssignments
-                      .map((item, itemIndex) => (itemIndex === index ? null : item.categoryId))
-                      .filter(Boolean);
-
-                    const options = articleCategories.map((category) => ({
-                      value: String(category.id),
-                      label: category.name,
-                      disabled: selectedIds.includes(String(category.id)),
-                    }));
-
-                    if (
-                      assignment.categoryId &&
-                      !options.some((option) => option.value === assignment.categoryId)
-                    ) {
-                      options.unshift({
-                        value: assignment.categoryId,
-                        label: `Catégorie indisponible (#${assignment.categoryId})`,
-                        disabled: false,
-                      });
-                    }
-
-                    const selectedCategory = articleCategories.find(
-                      (category) => String(category.id) === assignment.categoryId,
-                    );
-
-                    return (
-                      <div
-                        key={assignment.rowId}
-                        className="flex items-center justify-between gap-3 rounded-xl border border-slate-300 bg-slate-50/75 p-4"
-                      >
-                        {selectedCategory ? (
-                          <span
-                            className="h-4 w-4 rounded-full border border-slate-300"
-                            style={{ backgroundColor: selectedCategory.color }}
-                            aria-hidden="true"
-                          />
-                        ) : null}
-
-                        <div className="grid flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_120px] lg:items-center">
-                          <StaffSearchSelect
-                            value={assignment.categoryId}
-                            onValueChange={(value) =>
-                              editor.setCategoryAssignmentCategory(index, value)
-                            }
-                            emptyLabel="Choisir une catégorie"
-                            options={options}
-                            disabled={!canEditArticle || isLoadingArticleCategories}
-                            fullWidth
-                            searchPlaceholder="Rechercher une catégorie..."
-                            noResultsLabel="Aucune catégorie trouvée"
-                          />
-
-                          <div className="flex items-center gap-2">
-                            <PanelInput
-                              type="number"
-                              min={1}
-                              max={100}
-                              step={1}
-                              value={assignment.score}
-                              onChange={(event) => {
-                                const parsed = Number(event.target.value);
-                                editor.setCategoryAssignmentScore(
-                                  index,
-                                  Number.isFinite(parsed) ? parsed : assignment.score,
-                                );
-                              }}
-                              disabled={!canEditArticle}
-                            />
-                            <span className="text-sm font-semibold text-slate-500">%</span>
-                          </div>
-                        </div>
-
-                        <AnimatedUIButton
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          icon="close"
-                          onClick={() => editor.removeCategoryAssignment(index)}
-                          disabled={!canEditArticle}
-                          className="opacity-50"
-                        />
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="rounded-[24px] border border-dashed border-slate-300 bg-slate-50/70 p-4 text-sm leading-6 text-slate-500">
-                    Aucune catégorie liée pour le moment.
-                  </div>
-                )}
-
                 <AnimatedUIButton
                   type="button"
                   variant="outline"
-                  icon="plus"
+                  icon="restart"
                   iconPosition="left"
-                  onClick={editor.addCategoryAssignment}
-                  disabled={!canEditArticle || isLoadingArticleCategories}
-                  size="md"
-                  className="w-full py-5"
+                  onClick={editor.generateSlugFromTitle}
+                  disabled={!canEditArticle}
                 >
-                  Ajouter une catégorie
+                  Générer
                 </AnimatedUIButton>
-
-                {articleCategoryOptionsError ? (
-                  <p className="text-sm leading-6 text-amber-700">{articleCategoryOptionsError}</p>
-                ) : null}
               </div>
+            </PanelField>
+
+            <PanelField id="article-category" label="Catégorie d'article">
+              <StaffSearchSelect
+                value={editor.state.categoryId}
+                onValueChange={(value) => editor.setField("categoryId", value)}
+                emptyLabel="Choisir une catégorie"
+                options={articleCategories.map((category) => ({
+                  value: String(category.id),
+                  label: category.name,
+                }))}
+                disabled={!canEditArticle || isLoadingArticleCategories}
+                fullWidth
+                searchPlaceholder="Rechercher une catégorie..."
+                noResultsLabel="Aucune catégorie trouvée"
+              />
+
+              {articleCategoryOptionsError ? (
+                <p className="mt-2 text-sm leading-6 text-amber-700">{articleCategoryOptionsError}</p>
+              ) : null}
             </PanelField>
 
             <div className="self-start">
@@ -640,27 +520,6 @@ function ArticleEditPageContent() {
               />
             </div>
           </div>
-        </Panel>
-
-        <Panel
-          pretitle="Collaboration"
-          title="Auteurs"
-          description="Gérez ici l'auteur principal et les co-auteurs de cet article."
-        >
-          {editor.mode === "edit" && editor.article ? (
-            <ArticleAuthorsPanel
-              articleId={editor.article.id}
-              authors={editor.article.authors}
-              selectedAuthorIds={editor.state.authorIds}
-              canManageAuthors={canManageAuthors}
-              onChange={(authorIds) => editor.setField("authorIds", authorIds)}
-              mode="compact"
-            />
-          ) : (
-            <div className="rounded-[24px] border border-dashed border-slate-300 bg-slate-50/70 p-4 text-sm leading-6 text-slate-500">
-              Sauvegardez d&apos;abord l&apos;article pour gérer ensuite les co-auteurs.
-            </div>
-          )}
         </Panel>
 
         <Panel pretitle="Contenu" title="Rédaction de l'article" allowOverflow>
@@ -727,6 +586,17 @@ function ArticleEditPageContent() {
               />
             </PanelField>
 
+            <PanelField id="article-title-seo" label="Titre SEO">
+              <PanelInput
+                id="article-title-seo"
+                value={editor.state.titleSeo}
+                onChange={(event) => editor.setField("titleSeo", event.target.value)}
+                placeholder="Titre affiché dans Google..."
+                disabled={!canEditArticle}
+                fullWidth
+              />
+            </PanelField>
+
             <PanelField id="article-description-seo" label="Description SEO">
               <DescriptionSEOTextArea
                 id="article-description-seo"
@@ -740,13 +610,7 @@ function ArticleEditPageContent() {
             </PanelField>
 
             <div className="rounded-[24px] border border-slate-300 bg-slate-50/70 p-4">
-              <SeoChecks
-                title={editor.state.title}
-                slug={editor.state.slug}
-                description={editor.state.descriptionSeo}
-                content={editor.state.content}
-                focusKeyword={editor.state.focusKeyword}
-              />
+              <SeoChecks analysis={editor.seoAnalysis} />
             </div>
           </div>
         </Panel>

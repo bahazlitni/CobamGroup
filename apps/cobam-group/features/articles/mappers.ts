@@ -4,10 +4,9 @@ import { parseOwnedTagString } from "@/features/tags/owned";
 import { slugify } from "@/lib/slugify";
 import type {
   ArticleAbilitiesDto,
-  ArticleCategoryAssignmentDto,
-  ArticleCTABannerDto,
   ArticleAssignableAuthorDto,
-  ArticleAuthorDto,
+  ArticleCategoryDto,
+  ArticleCTABannerDto,
   ArticleDetailDto,
   ArticleListItemDto,
   ArticleTagDto,
@@ -54,28 +53,6 @@ function getAuthorName(author: {
   return nameParts.length > 0 ? nameParts.join(" ") : null;
 }
 
-export function mapAuthorRecordToDto(
-  author: ArticleAuthorRecord,
-  isOriginalAuthor: boolean,
-): ArticleAuthorDto {
-  const access = resolveAccessFromAssignments({
-    powerType: author.powerType as "ROOT" | "ADMIN" | "USER",
-    status: author.status,
-    assignments: author.receivedRoleAssignments,
-  });
-
-  return {
-    id: author.id,
-    email: author.email,
-    name: getAuthorName(author),
-    status: author.status,
-    powerType: author.powerType,
-    roleLabel: access.roleLabel,
-    roleColor: access.roleColor,
-    isOriginalAuthor,
-  };
-}
-
 export function mapAuthorRecordToAssignableDto(
   author: ArticleAuthorRecord,
 ): ArticleAssignableAuthorDto {
@@ -96,47 +73,20 @@ export function mapAuthorRecordToAssignableDto(
   };
 }
 
-function mapArticleAuthors(article: {
-  author: ArticleAuthorRecord;
-  authorLinks: Array<{
-    userId: string;
-    user: ArticleAuthorRecord;
-  }>;
-}) {
-  const authors = [
-    mapAuthorRecordToDto(article.author, true),
-    ...article.authorLinks.map((link) => mapAuthorRecordToDto(link.user, false)),
-  ];
-
-  const seenIds = new Set<string>();
-
-  return authors.filter((author) => {
-    if (seenIds.has(author.id)) {
-      return false;
-    }
-
-    seenIds.add(author.id);
-    return true;
-  });
-}
-
-function mapArticleCategories(article: {
-  categoryLinks: Array<{
-    categoryId: bigint;
-    score: number;
-    category: {
-      id: bigint;
-      name: string;
-      color: string;
-    };
-  }>;
-}): ArticleCategoryAssignmentDto[] {
-  return article.categoryLinks.map((link) => ({
-    categoryId: Number(link.categoryId),
-    name: link.category.name,
-    color: link.category.color,
-    score: link.score,
-  }));
+function mapArticleCategory(article: {
+  category: {
+    id: bigint;
+    name: string;
+    color: string;
+  } | null;
+}): ArticleCategoryDto | null {
+  return article.category
+    ? {
+        id: Number(article.category.id),
+        name: article.category.name,
+        color: article.category.color,
+      }
+    : null;
 }
 
 function mapArticleTags(article: {
@@ -191,18 +141,23 @@ function mapArticleCtaBanners(article: {
 export function mapArticleToDetailDto(
   article: {
     id: bigint;
-    authorId: string;
+    createdByUserId: string | null;
     title: string;
-    displayTitle: string | null;
     slug: string;
     excerpt: string | null;
     content: string;
+    titleSeo: string | null;
     descriptionSeo: string | null;
+    focusKeyword: string | null;
     tags: string;
     status: Article["status"];
     publishedAt: Date | null;
     scheduledPublishAt: Date | null;
-    scheduledByUserId: string | null;
+    category: {
+      id: bigint;
+      name: string;
+      color: string;
+    } | null;
     coverMediaId: bigint | null;
     createdAt: Date;
     updatedAt: Date;
@@ -210,22 +165,6 @@ export function mapArticleToDetailDto(
     ogDescription: string | null;
     ogImageMediaId: bigint | null;
     noIndex: boolean;
-    noFollow: boolean;
-    schemaType: string | null;
-    author: ArticleAuthorRecord;
-    authorLinks: Array<{
-      userId: string;
-      user: ArticleAuthorRecord;
-    }>;
-    categoryLinks: Array<{
-      categoryId: bigint;
-      score: number;
-      category: {
-        id: bigint;
-        name: string;
-        color: string;
-      };
-    }>;
     ctaBanners?: Array<{
       id: bigint;
       title: string;
@@ -249,20 +188,19 @@ export function mapArticleToDetailDto(
 ): ArticleDetailDto {
   return {
     id: Number(article.id),
-    authorId: article.authorId,
-    authors: mapArticleAuthors(article),
-    categories: mapArticleCategories(article),
+    createdByUserId: article.createdByUserId,
+    category: mapArticleCategory(article),
     tags: mapArticleTags(article),
     title: article.title,
-    displayTitle: article.displayTitle,
     slug: article.slug,
     excerpt: article.excerpt,
     content: article.content,
+    titleSeo: article.titleSeo,
     descriptionSeo: article.descriptionSeo,
+    focusKeyword: article.focusKeyword,
     status: article.status,
     publishedAt: toIsoString(article.publishedAt),
     scheduledPublishAt: toIsoString(article.scheduledPublishAt),
-    scheduledByUserId: article.scheduledByUserId,
     coverMediaId: article.coverMediaId != null ? Number(article.coverMediaId) : null,
     createdAt: article.createdAt.toISOString(),
     updatedAt: article.updatedAt.toISOString(),
@@ -271,8 +209,6 @@ export function mapArticleToDetailDto(
     ogImageMediaId:
       article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
     noIndex: article.noIndex,
-    noFollow: article.noFollow,
-    schemaType: article.schemaType,
     ctaBanners: mapArticleCtaBanners(article),
     abilities,
   };
@@ -285,27 +221,13 @@ export function mapArticleToListItemDto(article: {
   status: Article["status"];
   publishedAt: Date | null;
   scheduledPublishAt: Date | null;
-  scheduledByUserId: string | null;
   updatedAt: Date;
-  author: ArticleAuthorRecord;
-  authorLinks: Array<{
-    userId: string;
-    user: ArticleAuthorRecord;
-  }>;
-  categoryLinks: Array<{
-    categoryId: bigint;
-    score: number;
-    category: {
-      id: bigint;
-      name: string;
-      color: string;
-    };
-  }>;
-  tags: string;
+  category: {
+    id: bigint;
+    name: string;
+    color: string;
+  } | null;
 }): ArticleListItemDto {
-  const authors = mapArticleAuthors(article);
-  const primaryAuthor = authors[0];
-
   return {
     id: Number(article.id),
     title: article.title,
@@ -313,15 +235,7 @@ export function mapArticleToListItemDto(article: {
     status: article.status,
     publishedAt: toIsoString(article.publishedAt),
     scheduledPublishAt: toIsoString(article.scheduledPublishAt),
-    scheduledByUserId: article.scheduledByUserId,
     updatedAt: article.updatedAt.toISOString(),
-    author: {
-      id: primaryAuthor?.id ?? article.author.id,
-      email: primaryAuthor?.email ?? article.author.email,
-      name: primaryAuthor?.name ?? getAuthorName(article.author),
-    },
-    authors,
-    categories: mapArticleCategories(article),
+    category: mapArticleCategory(article),
   };
 }
-

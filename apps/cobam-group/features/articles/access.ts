@@ -32,8 +32,7 @@ export function canCreateArticles(session: StaffSession): boolean {
 export function canPreviewDraftArticleOnPublicPage(
   session: StaffSession,
   article: {
-    authorId: string;
-    authorLinks?: Array<{ userId: string }>;
+    createdByUserId: string | null;
   },
 ): boolean {
   if (hasPermission(session, PERMISSIONS.ARTICLES_VIEW_ALL)) {
@@ -44,8 +43,5 @@ export function canPreviewDraftArticleOnPublicPage(
     return false;
   }
 
-  return (
-    article.authorId === session.id ||
-    (article.authorLinks ?? []).some((link) => link.userId === session.id)
-  );
+  return article.createdByUserId === session.id;
 }

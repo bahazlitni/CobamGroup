@@ -169,7 +169,7 @@ export async function findUserByEmail(email: string) {
 
 export async function countArticlesByAuthor(userId: string) {
   return prisma.article.count({
-    where: { authorId: userId },
+    where: { createdByUserId: userId },
   });
 }
 

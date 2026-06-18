@@ -1210,27 +1210,23 @@ const result = await prisma.$transaction(
       const content = serializeArticleContent(article.body);
       const baseData = {
         title: article.title,
-        displayTitle: article.title,
         slug: article.slug,
         excerpt: article.excerpt,
         content,
+        titleSeo: article.seoTitle,
         descriptionSeo: article.seoDescription,
         tags: serializeTags(article.tags),
         status: ArticleStatus.PUBLISHED,
         publishedAt: existing?.publishedAt ?? new Date(),
-        authorId,
+        createdByUserId: authorId,
         updatedByUserId: authorId,
         publishedByUserId: authorId,
+        categoryId: category.id,
         coverMediaId: existing?.coverMediaId ?? null,
         ogTitle: article.seoTitle,
         ogDescription: article.seoDescription,
         ogImageMediaId: existing?.ogImageMediaId ?? null,
         noIndex: false,
-        noFollow: false,
-        schemaType: "Article",
-        deletedAt: null,
-        deletedByUserId: null,
-        archivedByUserId: null,
       };
 
       const record = existing
@@ -1243,23 +1239,6 @@ const result = await prisma.$transaction(
             data: baseData,
             select: { id: true },
           });
-
-      await tx.articleCategoryLink.upsert({
-        where: {
-          articleId_categoryId: {
-            articleId: record.id,
-            categoryId: category.id,
-          },
-        },
-        create: {
-          articleId: record.id,
-          categoryId: category.id,
-          score: 100,
-        },
-        update: {
-          score: 100,
-        },
-      });
 
       articleResults.push({
         title: article.title,
@@ -1299,17 +1278,10 @@ const validationRecords = await prisma.article.findMany({
     coverMediaId: true,
     ogImageMediaId: true,
     noIndex: true,
-    noFollow: true,
-    schemaType: true,
-    categoryLinks: {
+    category: {
       select: {
-        score: true,
-        category: {
-          select: {
-            name: true,
-            slug: true,
-          },
-        },
+        name: true,
+        slug: true,
       },
     },
   },
@@ -1334,7 +1306,7 @@ for (const article of validationRecords) {
     throw new Error(`Validation failed: invalid Tiptap JSON for ${article.slug}.`);
   }
 
-  if (article.categoryLinks.length === 0) {
+  if (!article.category) {
     throw new Error(`Validation failed: article has no category ${article.slug}.`);
   }
 
@@ -1350,8 +1322,6 @@ for (const article of validationRecords) {
     article.coverMediaId !== null ||
     article.ogImageMediaId !== null ||
     article.noIndex ||
-    article.noFollow ||
-    article.schemaType !== "Article" ||
     article.status !== ArticleStatus.PUBLISHED ||
     article.publishedAt === null
   ) {
@@ -1369,9 +1339,8 @@ console.log(
         title: article.title,
         slug: article.slug,
         status: article.status,
-        category: article.categoryLinks[0]?.category.name ?? null,
-        categorySlug: article.categoryLinks[0]?.category.slug ?? null,
-        score: article.categoryLinks[0]?.score ?? null,
+        category: article.category?.name ?? null,
+        categorySlug: article.category?.slug ?? null,
       })),
     },
     null,

@@ -13,6 +13,9 @@ import {
 import { isArticleCtaBannerAspectRatioAllowed } from "./cta-banners";
 import { DESCRIPTION_SEO_MAX_LENGTH } from "@/lib/seo-description";
 
+const TITLE_SEO_MAX_LENGTH = 255;
+const FOCUS_KEYWORD_MAX_LENGTH = 160;
+
 export class ArticleValidationError extends Error {
   status: number;
 
@@ -67,6 +70,26 @@ function parseOptionalDescriptionSeo(value: unknown) {
   if (normalized && normalized.length > DESCRIPTION_SEO_MAX_LENGTH) {
     throw new ArticleValidationError(
       `descriptionSeo must be ${DESCRIPTION_SEO_MAX_LENGTH} characters or fewer`,
+    );
+  }
+  return normalized;
+}
+
+function parseOptionalTitleSeo(value: unknown) {
+  const normalized = parseOptionalNullableString(value);
+  if (normalized && normalized.length > TITLE_SEO_MAX_LENGTH) {
+    throw new ArticleValidationError(
+      `titleSeo must be ${TITLE_SEO_MAX_LENGTH} characters or fewer`,
+    );
+  }
+  return normalized;
+}
+
+function parseOptionalFocusKeyword(value: unknown) {
+  const normalized = parseOptionalNullableString(value);
+  if (normalized && normalized.length > FOCUS_KEYWORD_MAX_LENGTH) {
+    throw new ArticleValidationError(
+      `focusKeyword must be ${FOCUS_KEYWORD_MAX_LENGTH} characters or fewer`,
     );
   }
   return normalized;
@@ -227,12 +250,15 @@ function parseArticleCtaBanners(value: unknown): ArticleCreateInput["ctaBanners"
   });
 }
 
-function parseCategoryAssignments(
-  value: unknown,
-  fallbackCategoryId: number | null,
-) {
-  if (Array.isArray(value)) {
-    return value.map((item, index) => {
+function parseCategoryId(raw: Record<string, unknown>) {
+  const directCategoryId = parseOptionalNullableInteger(raw.categoryId, "categoryId");
+
+  if (directCategoryId != null) {
+    return directCategoryId;
+  }
+
+  if (Array.isArray(raw.categoryAssignments)) {
+    const assignments = raw.categoryAssignments.map((item, index) => {
       if (!isRecord(item)) {
         throw new ArticleValidationError("Invalid \"categoryAssignments\"");
       }
@@ -255,36 +281,15 @@ function parseCategoryAssignments(
         score,
       };
     });
+
+    const sorted = assignments.sort(
+      (left, right) => right.score - left.score || left.categoryId - right.categoryId,
+    );
+
+    return sorted[0]?.categoryId ?? null;
   }
 
-  return fallbackCategoryId != null
-    ? [
-        {
-          categoryId: fallbackCategoryId,
-          score: 100,
-        },
-      ]
-    : [];
-}
-
-function parseAuthorIds(value: unknown): string[] {
-  if (value == null) {
-    return [];
-  }
-
-  if (!Array.isArray(value)) {
-    throw new ArticleValidationError('Invalid "authorIds"');
-  }
-
-  return [...new Set(
-    value.map((item) => {
-      if (typeof item !== "string" || !item.trim()) {
-        throw new ArticleValidationError('Invalid "authorIds"');
-      }
-
-      return item.trim();
-    }),
-  )];
+  return null;
 }
 
 function parseTagNames(value: unknown): string[] {
@@ -362,19 +367,15 @@ function parseArticleInputBase(raw: unknown): ArticleCreateInput {
     throw new ArticleValidationError("Invalid request body");
   }
 
-  const fallbackCategoryId = parseOptionalNullableInteger(raw.categoryId, "categoryId");
-
   return {
     title: parseRequiredString(raw.title, "title"),
-    displayTitle: parseOptionalNullableString(raw.displayTitle),
     slug: parseRequiredString(raw.slug, "slug"),
     excerpt: parseOptionalNullableString(raw.excerpt),
     content: parseRequiredString(raw.content, "content"),
+    titleSeo: parseOptionalTitleSeo(raw.titleSeo),
     descriptionSeo: parseOptionalDescriptionSeo(raw.descriptionSeo),
-    categoryAssignments: parseCategoryAssignments(
-      raw.categoryAssignments,
-      fallbackCategoryId,
-    ),
+    focusKeyword: parseOptionalFocusKeyword(raw.focusKeyword),
+    categoryId: parseCategoryId(raw),
     tagNames: parseTagNames(raw.tagNames),
     coverMediaId: parseOptionalNullableInteger(
       raw.coverMediaId,
@@ -387,9 +388,6 @@ function parseArticleInputBase(raw: unknown): ArticleCreateInput {
       "ogImageMediaId",
     ),
     noIndex: parseOptionalNullableBoolean(raw.noIndex),
-    noFollow: parseOptionalNullableBoolean(raw.noFollow),
-    schemaType: parseOptionalNullableString(raw.schemaType),
-    authorIds: parseAuthorIds(raw.authorIds),
     ctaBanners: parseArticleCtaBanners(raw.ctaBanners),
   };
 }
