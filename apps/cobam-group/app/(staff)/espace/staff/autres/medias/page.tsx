@@ -17,6 +17,7 @@ import MediaToolbar from "@/components/staff/media/media-toolbar";
 import MediaUploadDialog from "@/components/staff/media/media-upload-dialog";
 import { StaffNotice, StaffPageHeader, StaffStateCard } from "@/components/staff/ui";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
 import {
   canAccessMediaLibrary,
@@ -538,30 +539,32 @@ function MediaLibraryPageContent() {
         />
       ) : null}
 
-      <MediaGrid
-        folders={folders}
-        showFolders
-        groups={groups}
-        selectedMediaIds={selectedMediaIds}
-        selectedFolderIds={selectedFolderIds}
-        onToggleSelected={toggleSelected}
-        onToggleSelectedFolder={toggleSelectedFolder}
-        onToggleGroupSelected={toggleManySelected}
-        onToggleFoldersSelected={toggleManyFoldersSelected}
-        onOpenFolder={openFolder}
-        onDropSelectionToFolder={handleDropSelectionToFolder}
-        onDragStartFolder={(folderId, event) =>
-          handleDragStartSelection("folder", folderId, event)
-        }
-        onDragStartMedia={(mediaId, event) =>
-          handleDragStartSelection("media", mediaId, event)
-        }
-        onOpen={openMedia}
-        isLoadingInitial={isLoadingInitial}
-        isLoadingMore={isLoadingMore}
-        hasMore={hasMore}
-        sentinelRef={sentinelRef}
-      />
+      <TooltipProvider>
+        <MediaGrid
+          folders={folders}
+          showFolders
+          groups={groups}
+          selectedMediaIds={selectedMediaIds}
+          selectedFolderIds={selectedFolderIds}
+          onToggleSelected={toggleSelected}
+          onToggleSelectedFolder={toggleSelectedFolder}
+          onToggleGroupSelected={toggleManySelected}
+          onToggleFoldersSelected={toggleManyFoldersSelected}
+          onOpenFolder={openFolder}
+          onDropSelectionToFolder={handleDropSelectionToFolder}
+          onDragStartFolder={(folderId, event) =>
+            handleDragStartSelection("folder", folderId, event)
+          }
+          onDragStartMedia={(mediaId, event) =>
+            handleDragStartSelection("media", mediaId, event)
+          }
+          onOpen={openMedia}
+          isLoadingInitial={isLoadingInitial}
+          isLoadingMore={isLoadingMore}
+          hasMore={hasMore}
+          sentinelRef={sentinelRef}
+        />
+      </TooltipProvider>
 
       <MediaUploadDialog
         key={`upload-${isUploadOpen ? "open" : "closed"}-${currentFolder?.id ?? "root"}`}
