@@ -1,4 +1,4 @@
-import { ArticleStatus, Prisma, UserStatus } from "@prisma/client";
+import { ArticleStatus, Prisma, UserStatus, type ArticleSeoStatus } from "@prisma/client";
 import { prisma } from "@/lib/server/db/prisma";
 import type {
   ArticleAuthorOptionsQuery,
@@ -86,6 +86,8 @@ const ARTICLE_SELECT = Prisma.validator<Prisma.ArticleSelect>()({
   focusKeyword: true,
   tags: true,
   status: true,
+  seoStatus: true,
+  seoScore: true,
   publishedAt: true,
   scheduledPublishAt: true,
   categoryId: true,
@@ -107,11 +109,7 @@ const ARTICLE_SELECT = Prisma.validator<Prisma.ArticleSelect>()({
     },
   },
   ctaBanners: {
-    orderBy: [
-      { approxPositionPercentage: "asc" },
-      { title: "asc" },
-      { id: "asc" },
-    ],
+    orderBy: [{ approxPositionPercentage: "asc" }, { title: "asc" }, { id: "asc" }],
     select: {
       id: true,
       title: true,
@@ -274,10 +272,7 @@ export async function listArticleAuthorOptions(query: ArticleAuthorOptionsQuery)
   });
 }
 
-export async function createArticle(
-  actorUserId: string,
-  input: ResolvedArticleInput,
-) {
+export async function createArticle(actorUserId: string, input: ResolvedArticleInput) {
   return prisma.article.create({
     data: {
       title: input.title,
@@ -385,14 +380,26 @@ export async function updateArticleStatus(
   });
 }
 
-export async function updateArticleSchedule(
-  articleId: number,
-  scheduledPublishAt: Date | null,
-) {
+export async function updateArticleSchedule(articleId: number, scheduledPublishAt: Date | null) {
   return prisma.article.update({
     where: { id: BigInt(articleId) },
     data: {
       scheduledPublishAt,
+    },
+    select: ARTICLE_SELECT,
+  });
+}
+
+export async function updateArticleSeoMetadata(
+  articleId: bigint | number,
+  seoStatus: ArticleSeoStatus,
+  seoScore: number,
+) {
+  return prisma.article.update({
+    where: { id: typeof articleId === "bigint" ? articleId : BigInt(articleId) },
+    data: {
+      seoStatus,
+      seoScore,
     },
     select: ARTICLE_SELECT,
   });
@@ -411,12 +418,25 @@ export async function listDueScheduledArticles(now: Date) {
       id: true,
       title: true,
       slug: true,
+      excerpt: true,
       scheduledPublishAt: true,
+      titleSeo: true,
+      descriptionSeo: true,
+      focusKeyword: true,
+      status: true,
+      noIndex: true,
       coverMediaId: true,
+      ogTitle: true,
+      ogDescription: true,
       ogImageMediaId: true,
       introductionContent: true,
       bodyContent: true,
       conclusionContent: true,
+      category: {
+        select: {
+          name: true,
+        },
+      },
       ctaBanners: {
         select: {
           imageId: true,
@@ -480,6 +500,31 @@ export async function listArticleSeoComparisonRecords(excludeArticleId?: number 
       introductionContent: true,
       bodyContent: true,
       conclusionContent: true,
+    },
+  });
+}
+
+export async function findArticleSlugConflict(slug: string, excludeArticleId?: number | null) {
+  const normalizedSlug = slug.trim();
+
+  if (!normalizedSlug) {
+    return null;
+  }
+
+  return prisma.article.findFirst({
+    where: {
+      slug: normalizedSlug,
+      ...(excludeArticleId
+        ? {
+            id: {
+              not: BigInt(excludeArticleId),
+            },
+          }
+        : {}),
+    },
+    select: {
+      id: true,
+      slug: true,
     },
   });
 }

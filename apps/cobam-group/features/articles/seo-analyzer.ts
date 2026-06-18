@@ -1,11 +1,6 @@
 import type { ArticleStatus } from "@prisma/client";
 import type { JSONContent } from "@tiptap/core";
-import {
-  getArticleFirstParagraphText,
-  getArticlePlainText,
-  parseArticleContent,
-} from "./document";
-import { slugify } from "@/lib/slugify";
+import { getArticlePlainText, parseArticleContent } from "./document";
 
 export type ArticleSeoStatus = "SEO_READY" | "NEEDS_IMPROVEMENT" | "NOT_READY";
 
@@ -27,16 +22,27 @@ export type ArticleSeoComparisonArticle = {
   titleSeo: string | null;
   descriptionSeo: string | null;
   focusKeyword: string | null;
-  content?: string | null;
+  introductionContent?: string | null;
+  bodyContent?: string | null;
+  conclusionContent?: string | null;
+  faqQuestions?: Array<{
+    question?: string | null;
+    content?: string | null;
+  }>;
 };
 
 export type ArticleSeoAnalyzerInput = {
   id?: number | null;
   title: string;
-  displayTitle?: string | null;
   slug: string;
   excerpt?: string | null;
-  content: string;
+  introductionContent: string;
+  bodyContent: string;
+  conclusionContent: string;
+  faqQuestions?: Array<{
+    question?: string | null;
+    content: string;
+  }>;
   titleSeo?: string | null;
   descriptionSeo?: string | null;
   focusKeyword?: string | null;
@@ -61,14 +67,6 @@ export type ArticleSeoAnalyzerResult = {
   passedChecks: ArticleSeoFeedbackItem[];
   recommendations: ArticleSeoFeedbackItem[];
   searchPreview: ArticleSeoSearchPreview;
-  suggestedTitleSeo: string | null;
-  suggestedDescriptionSeo: string | null;
-  suggestedInternalLinkOpportunities: Array<{
-    articleId: number;
-    title: string;
-    slug: string;
-    reason: string;
-  }>;
 };
 
 type DocumentStats = {
@@ -77,30 +75,6 @@ type DocumentStats = {
   images: Array<{ alt: string | null; mediaId: number | null }>;
   paragraphTexts: string[];
 };
-
-const GENERIC_LINK_ANCHORS = new Set([
-  "click here",
-  "cliquez ici",
-  "read more",
-  "lire plus",
-  "en savoir plus",
-  "link",
-  "lien",
-  "ici",
-]);
-
-const CURRENT_TOPIC_TERMS = [
-  "prix",
-  "promotion",
-  "stock",
-  "disponibilite",
-  "disponibilité",
-  "collection",
-  "nouveaute",
-  "nouveauté",
-  "2026",
-  "2025",
-];
 
 function normalizeText(value: string | null | undefined) {
   return (value ?? "").replace(/\s+/g, " ").trim();
@@ -114,63 +88,11 @@ function countWords(value: string) {
   return normalizeText(value).split(/\s+/).filter(Boolean).length;
 }
 
-function escapeRegExp(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function countNaturalOccurrences(text: string, term: string) {
-  const normalizedTerm = normalizeText(term);
-  if (!normalizedTerm) return 0;
-
-  const pattern = new RegExp(`\\b${escapeRegExp(normalizedTerm)}\\b`, "gi");
-  return (text.match(pattern) ?? []).length;
-}
-
 function isSlugValid(slug: string) {
   return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
 }
 
-function isProbablyKeywordStuffed(value: string, focusKeyword: string | null) {
-  const text = lower(value);
-  const words = text.split(/\s+/).filter(Boolean);
-  if (words.length < 5) return false;
-
-  const term = lower(focusKeyword);
-  if (term && countNaturalOccurrences(text, term) >= 3) {
-    return true;
-  }
-
-  const counts = new Map<string, number>();
-  words
-    .filter((word) => word.length > 3)
-    .forEach((word) => counts.set(word, (counts.get(word) ?? 0) + 1));
-
-  return [...counts.values()].some((count) => count >= Math.max(4, words.length * 0.35));
-}
-
-function getSuggestedTitleSeo(input: ArticleSeoAnalyzerInput) {
-  const title = normalizeText(input.displayTitle) || normalizeText(input.title);
-  if (!title) return null;
-
-  const category = normalizeText(input.categoryName);
-  const suffix = category && !lower(title).includes(lower(category)) ? ` | ${category}` : "";
-  return `${title}${suffix}`.slice(0, 255);
-}
-
-function getSuggestedDescriptionSeo(input: ArticleSeoAnalyzerInput, plainText: string) {
-  const existing =
-    normalizeText(input.excerpt) ||
-    normalizeText(getArticleFirstParagraphText(input.content)) ||
-    normalizeText(plainText);
-
-  if (!existing) return null;
-
-  const trimmed = existing.slice(0, 157).trimEnd();
-  return trimmed.length < existing.length ? `${trimmed}...` : trimmed;
-}
-
-function collectDocumentStats(content: string): DocumentStats {
-  const document = parseArticleContent(content);
+function collectDocumentStats(contents: readonly string[]): DocumentStats {
   const headings: DocumentStats["headings"] = [];
   const links: DocumentStats["links"] = [];
   const images: DocumentStats["images"] = [];
@@ -181,9 +103,7 @@ function collectDocumentStats(content: string): DocumentStats {
       return node.text;
     }
 
-    return Array.isArray(node.content)
-      ? node.content.map(textFromNode).join(" ")
-      : "";
+    return Array.isArray(node.content) ? node.content.map(textFromNode).join(" ") : "";
   };
 
   const walk = (node: JSONContent) => {
@@ -226,30 +146,107 @@ function collectDocumentStats(content: string): DocumentStats {
     }
   };
 
-  walk(document);
+  contents.forEach((content) => {
+    walk(parseArticleContent(content));
+  });
+
   return { headings, links, images, paragraphTexts };
-}
-
-function calculateSimilarity(left: string, right: string) {
-  const leftWords = new Set(
-    lower(left)
-      .split(/\s+/)
-      .filter((word) => word.length > 3),
-  );
-  const rightWords = new Set(
-    lower(right)
-      .split(/\s+/)
-      .filter((word) => word.length > 3),
-  );
-
-  if (leftWords.size === 0 || rightWords.size === 0) return 0;
-
-  const overlap = [...leftWords].filter((word) => rightWords.has(word)).length;
-  return overlap / Math.min(leftWords.size, rightWords.size);
 }
 
 function makeItem(code: string, message: string): ArticleSeoFeedbackItem {
   return { code, message };
+}
+
+function getAnalyzerContents(input: ArticleSeoAnalyzerInput) {
+  return [
+    input.introductionContent,
+    input.bodyContent,
+    input.conclusionContent,
+    ...(input.faqQuestions ?? []).map((item) => item.content),
+  ];
+}
+
+export function analyzeArticleSeoStatus(input: ArticleSeoAnalyzerInput): ArticleSeoStatus {
+  const title = normalizeText(input.title);
+  const titleSeo = normalizeText(input.titleSeo) || title;
+  const descriptionSeo = normalizeText(input.descriptionSeo);
+  const focusKeyword = normalizeText(input.focusKeyword);
+  const slug = normalizeText(input.slug);
+  const publicUrl = input.publicUrl || (slug ? `/actualites/${slug}` : "");
+  const existingArticles = input.existingArticles ?? [];
+
+  if (
+    (input.mode === "public" && input.status !== "PUBLISHED") ||
+    input.status === "ARCHIVED" ||
+    input.noIndex ||
+    !slug ||
+    !isSlugValid(slug) ||
+    existingArticles.some((article) => article.slug === slug) ||
+    !publicUrl ||
+    !publicUrl.startsWith("/actualites/") ||
+    !title ||
+    !descriptionSeo
+  ) {
+    return "NOT_READY";
+  }
+
+  const documentContents = getAnalyzerContents(input);
+  const introductionText = getArticlePlainText(input.introductionContent);
+  const bodyText = getArticlePlainText(input.bodyContent);
+  const plainText = documentContents
+    .map((content) => getArticlePlainText(content))
+    .filter(Boolean)
+    .join(" ");
+  const wordCount = countWords(plainText);
+
+  if (!plainText || wordCount < 120 || !bodyText || countWords(bodyText) < 80) {
+    return "NOT_READY";
+  }
+
+  const stats = collectDocumentStats(documentContents);
+  const h2Count = stats.headings.filter((heading) => heading.level === 2).length;
+  const brokenHierarchy = stats.headings.some((heading, index) => {
+    const previous = stats.headings[index - 1];
+    return previous && heading.level - previous.level > 1;
+  });
+  const internalLinks = stats.links.filter((link) => link.href.startsWith("/"));
+  const externalLinks = stats.links.filter((link) => /^https?:\/\//i.test(link.href));
+
+  const scoreParts = [
+    Math.min(15, (isSlugValid(slug) ? 5 : 0) + (publicUrl ? 5 : 0) + 5),
+    Math.min(
+      15,
+      (titleSeo ? 4 : 0) +
+        (titleSeo.length >= 35 && titleSeo.length <= 60 ? 4 : 0) +
+        (descriptionSeo ? 4 : 0) +
+        (descriptionSeo.length >= 120 && descriptionSeo.length <= 160 ? 3 : 0),
+    ),
+    Math.min(
+      15,
+      (focusKeyword ? 4 : 0) +
+        (focusKeyword && lower(titleSeo || title).includes(lower(focusKeyword)) ? 4 : 0) +
+        (focusKeyword && lower(introductionText).includes(lower(focusKeyword)) ? 4 : 0) +
+        (focusKeyword && lower(plainText).includes(lower(focusKeyword)) ? 3 : 0),
+    ),
+    Math.min(25, (wordCount >= 500 ? 10 : 0) + (wordCount >= 800 ? 8 : 0) + 7),
+    Math.min(10, (h2Count > 0 || wordCount <= 500 ? 5 : 0) + (!brokenHierarchy ? 5 : 0)),
+    Math.min(7, (internalLinks.length > 0 ? 5 : 0) + (externalLinks.length > 0 ? 2 : 0)),
+    Math.min(
+      5,
+      (input.coverMediaId ? 3 : 0) + (input.ogImageMediaId || input.coverMediaId ? 2 : 0),
+    ),
+    Math.min(5, titleSeo && (descriptionSeo || input.excerpt) && publicUrl ? 5 : 0),
+    Math.min(3, input.categoryName ? 3 : 0),
+  ];
+  const score = Math.max(
+    0,
+    Math.min(
+      100,
+      scoreParts.reduce((sum, part) => sum + part, 0),
+    ),
+  );
+
+  return score >= 80 ? "SEO_READY" : "NEEDS_IMPROVEMENT";
 }
 
 export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAnalyzerResult {
@@ -258,9 +255,16 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
   const descriptionSeo = normalizeText(input.descriptionSeo);
   const focusKeyword = normalizeText(input.focusKeyword);
   const slug = normalizeText(input.slug);
-  const plainText = getArticlePlainText(input.content);
-  const firstParagraph = getArticleFirstParagraphText(input.content);
-  const stats = collectDocumentStats(input.content);
+  const documentContents = getAnalyzerContents(input);
+  const introductionText = getArticlePlainText(input.introductionContent);
+  const bodyText = getArticlePlainText(input.bodyContent);
+  const conclusionText = getArticlePlainText(input.conclusionContent);
+  const hasFaq = (input.faqQuestions ?? []).some((item) => getArticlePlainText(item.content));
+  const plainText = documentContents
+    .map((content) => getArticlePlainText(content))
+    .filter(Boolean)
+    .join(" ");
+  const stats = collectDocumentStats(documentContents);
   const wordCount = countWords(plainText);
   const publicUrl = input.publicUrl || (slug ? `/actualites/${slug}` : "");
   const existingArticles = input.existingArticles ?? [];
@@ -272,7 +276,8 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
 
   const addPass = (code: string, message: string) => passedChecks.push(makeItem(code, message));
   const addWarning = (code: string, message: string) => warnings.push(makeItem(code, message));
-  const addCritical = (code: string, message: string) => criticalIssues.push(makeItem(code, message));
+  const addCritical = (code: string, message: string) =>
+    criticalIssues.push(makeItem(code, message));
   const addRecommendation = (code: string, message: string) =>
     recommendations.push(makeItem(code, message));
 
@@ -308,7 +313,10 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
   }
 
   if (!publicUrl || !publicUrl.startsWith("/actualites/")) {
-    addCritical("url.invalid", "L'URL publique de l'article ne peut pas être générée correctement.");
+    addCritical(
+      "url.invalid",
+      "L'URL publique de l'article ne peut pas être générée correctement.",
+    );
   } else {
     addPass("url.valid", "L'URL publique peut être générée.");
   }
@@ -325,6 +333,28 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
     addPass("content.present", "Le contenu contient une base exploitable.");
   }
 
+  if (introductionText) {
+    addPass("content.introduction", "L'introduction est renseignée.");
+  } else {
+    addWarning("content.introduction_missing", "Ajoutez une introduction courte et claire.");
+  }
+
+  if (!bodyText || countWords(bodyText) < 80) {
+    addCritical("content.body_missing", "Le corps de l'article est absent ou trop court.");
+  } else {
+    addPass("content.body", "Le corps de l'article contient une base exploitable.");
+  }
+
+  if (conclusionText) {
+    addPass("content.conclusion", "La conclusion est renseignée.");
+  } else {
+    addWarning("content.conclusion_missing", "Ajoutez une conclusion pour fermer l'article.");
+  }
+
+  if (hasFaq) {
+    addPass("content.faq", "La FAQ est renseignée.");
+  }
+
   if (wordCount < 500) {
     addWarning("content.thin", "Moins de 500 mots : l'article risque d'être léger pour le SEO.");
   } else if (wordCount >= 800) {
@@ -337,6 +367,10 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
 
   if (!descriptionSeo) {
     addCritical("description.missing", "La description SEO est obligatoire pour publier.");
+    addRecommendation(
+      "description.write",
+      "Rédigez une description SEO claire avant de demander la validation.",
+    );
   }
 
   if (titleSeo.length >= 35 && titleSeo.length <= 60) {
@@ -354,12 +388,19 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
   if (focusKeyword) {
     const keyword = lower(focusKeyword);
     const keywordInTitle = lower(titleSeo || title).includes(keyword);
-    const keywordInIntro = lower(firstParagraph).includes(keyword);
-    const keywordInHeading = stats.headings.some((heading) => lower(heading.text).includes(keyword));
+    const keywordInIntro = lower(introductionText).includes(keyword);
+    const keywordInHeading = stats.headings.some((heading) =>
+      lower(heading.text).includes(keyword),
+    );
     const keywordInBody = lower(plainText).includes(keyword);
 
-    if (keywordInTitle) addPass("keyword.title", "Le mot-clé apparaît naturellement dans le titre.");
-    else addWarning("keyword.title", "Ajoutez le mot-clé principal dans le titre si cela reste naturel.");
+    if (keywordInTitle)
+      addPass("keyword.title", "Le mot-clé apparaît naturellement dans le titre.");
+    else
+      addWarning(
+        "keyword.title",
+        "Ajoutez le mot-clé principal dans le titre si cela reste naturel.",
+      );
 
     if (keywordInIntro) addPass("keyword.intro", "Le mot-clé est présent dans l'introduction.");
     else addWarning("keyword.intro", "L'introduction devrait mentionner le mot-clé principal.");
@@ -369,28 +410,22 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
     } else {
       addWarning("keyword.body", "Le mot-clé n'apparaît pas dans les sections de l'article.");
     }
-
-    const occurrences = countNaturalOccurrences(lower(plainText), keyword);
-    if (wordCount > 0 && occurrences > Math.max(10, wordCount / 35)) {
-      addWarning("keyword.spam", "Le mot-clé semble trop répété : allégez les formulations.");
-    }
   } else {
     addWarning("keyword.missing", "Ajoutez un mot-clé principal pour guider l'analyse SEO.");
-  }
-
-  if (isProbablyKeywordStuffed(titleSeo, focusKeyword || null)) {
-    addWarning("title_seo.stuffed", "Le titre SEO ressemble à une liste de mots-clés.");
-  }
-
-  if (isProbablyKeywordStuffed(descriptionSeo, focusKeyword || null)) {
-    addWarning("description.stuffed", "La description SEO ressemble à une liste de mots-clés.");
+    addRecommendation(
+      "keyword.define",
+      "Renseignez un mot-clé principal validé par l'équipe éditoriale.",
+    );
   }
 
   const duplicateTitle = existingArticles.find(
     (article) => lower(article.titleSeo || article.title) === lower(titleSeo),
   );
   if (duplicateTitle) {
-    addWarning("title_seo.duplicate", `Titre SEO proche d'un autre article (#${duplicateTitle.id}).`);
+    addWarning(
+      "title_seo.duplicate",
+      `Titre SEO proche d'un autre article (#${duplicateTitle.id}).`,
+    );
   }
 
   const duplicateDescription = descriptionSeo
@@ -424,6 +459,10 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
 
   if (wordCount > 500 && h2Count === 0) {
     addWarning("headings.no_h2", "Ajoutez des H2 pour structurer les longues lectures.");
+    addRecommendation(
+      "headings.add_h2",
+      "Découpez le corps de l'article avec des titres H2 lisibles.",
+    );
   } else if (h2Count > 0) {
     addPass("headings.h2", "L'article contient des sections H2.");
   }
@@ -436,21 +475,6 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
     addWarning("headings.hierarchy", "La hiérarchie des titres saute un niveau.");
   }
 
-  const longParagraphs = stats.paragraphTexts.filter((paragraph) => countWords(paragraph) > 120);
-  if (longParagraphs.length > 0) {
-    addWarning("readability.long_paragraphs", "Certains paragraphes sont longs : aérez la lecture.");
-  } else {
-    addPass("readability.paragraphs", "Les paragraphes restent faciles à scanner.");
-  }
-
-  const longSentences = plainText
-    .split(/[.!?]+/)
-    .map(countWords)
-    .filter((words) => words > 35).length;
-  if (longSentences > 4) {
-    addWarning("readability.long_sentences", "Plusieurs phrases sont très longues.");
-  }
-
   const internalLinks = stats.links.filter((link) => link.href.startsWith("/"));
   const externalLinks = stats.links.filter((link) => /^https?:\/\//i.test(link.href));
 
@@ -458,25 +482,26 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
     addPass("links.internal", "Le maillage interne est bien dosé.");
   } else if (internalLinks.length === 0) {
     addWarning("links.internal_missing", "Ajoutez 2 à 5 liens internes pertinents.");
+    addRecommendation(
+      "links.add_internal",
+      "Ajoutez au moins deux liens internes vers des pages ou articles COBAM utiles.",
+    );
   } else if (internalLinks.length > 5) {
-    addWarning("links.internal_many", "Le nombre de liens internes est élevé : gardez les plus utiles.");
+    addWarning(
+      "links.internal_many",
+      "Le nombre de liens internes est élevé : gardez les plus utiles.",
+    );
   }
 
   if (externalLinks.length > 0) {
     addPass("links.external", "L'article cite au moins une ressource externe.");
   }
 
-  const genericAnchor = stats.links.find((link) =>
-    GENERIC_LINK_ANCHORS.has(lower(link.text)),
-  );
-  if (genericAnchor) {
-    addWarning("links.generic_anchor", "Remplacez les ancres génériques par des libellés descriptifs.");
-  }
-
   if (input.coverMediaId) {
     addPass("images.cover", "Une image de couverture est sélectionnée.");
   } else {
     addWarning("images.cover_missing", "Ajoutez une image de couverture.");
+    addRecommendation("images.cover", "Sélectionnez une image de couverture avant publication.");
   }
 
   if (stats.images.some((image) => image.alt === "" || image.alt == null)) {
@@ -489,65 +514,21 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
     addWarning("images.og_missing", "Ajoutez une image OG ou une couverture pour les partages.");
   }
 
+  if (input.categoryName) {
+    addPass("category.present", "La catégorie est renseignée.");
+  } else {
+    addWarning("category.missing", "Associez une catégorie à l'article.");
+    addRecommendation("category.assign", "Associez l'article à une catégorie éditoriale.");
+  }
+
   if (titleSeo && (descriptionSeo || input.excerpt) && publicUrl) {
     addPass("schema.ready", "Les données nécessaires au JSON-LD BlogPosting sont disponibles.");
   } else {
     addWarning("schema.incomplete", "Complétez titre, description et URL pour un JSON-LD robuste.");
   }
 
-  const freshnessText = lower(`${title} ${plainText}`);
-  const discussesCurrentTopic = CURRENT_TOPIC_TERMS.some((term) => freshnessText.includes(term));
-  if (discussesCurrentTopic && input.status === "PUBLISHED") {
-    addRecommendation(
-      "freshness.review",
-      "Ce sujet semble sensible à l'actualité : prévoyez une vérification régulière.",
-    );
-  }
-
-  const similarArticle = existingArticles
-    .map((article) => ({
-      article,
-      score: calculateSimilarity(`${titleSeo} ${plainText}`, `${article.titleSeo || article.title} ${article.content ?? ""}`),
-    }))
-    .sort((left, right) => right.score - left.score)[0];
-  if (similarArticle && similarArticle.score >= 0.55) {
-    addWarning(
-      "content.similar",
-      `Contenu potentiellement proche de l'article #${similarArticle.article.id}.`,
-    );
-  }
-
-  if (!input.categoryName) {
-    addRecommendation("category.missing", "Associez une catégorie pour améliorer le classement du blog.");
-  }
-
-  const suggestedInternalLinkOpportunities = existingArticles
-    .map((article) => ({
-      article,
-      score: calculateSimilarity(`${title} ${focusKeyword}`, `${article.titleSeo || article.title} ${article.focusKeyword ?? ""}`),
-    }))
-    .filter((item) => item.score > 0.18)
-    .sort((left, right) => right.score - left.score)
-    .slice(0, 5)
-    .map(({ article }) => ({
-      articleId: article.id,
-      title: article.titleSeo || article.title,
-      slug: article.slug,
-      reason: "Sujet proche ou intention de recherche complémentaire.",
-    }));
-
-  if (suggestedInternalLinkOpportunities.length > 0) {
-    addRecommendation(
-      "links.opportunities",
-      "Des opportunités de liens internes sont disponibles dans les recommandations.",
-    );
-  }
-
   const scoreParts = [
-    Math.min(
-      15,
-      (input.noIndex ? 0 : 5) + (isSlugValid(slug) ? 5 : 0) + (publicUrl ? 5 : 0),
-    ),
+    Math.min(15, (input.noIndex ? 0 : 5) + (isSlugValid(slug) ? 5 : 0) + (publicUrl ? 5 : 0)),
     Math.min(
       15,
       (titleSeo ? 4 : 0) +
@@ -559,29 +540,29 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
       15,
       (focusKeyword ? 4 : 0) +
         (focusKeyword && lower(titleSeo || title).includes(lower(focusKeyword)) ? 4 : 0) +
-        (focusKeyword && lower(firstParagraph).includes(lower(focusKeyword)) ? 4 : 0) +
-        (!warnings.some((warning) => warning.code === "keyword.spam") ? 3 : 0),
+        (focusKeyword && lower(introductionText).includes(lower(focusKeyword)) ? 4 : 0) +
+        (focusKeyword && lower(plainText).includes(lower(focusKeyword)) ? 3 : 0),
     ),
     Math.min(25, (wordCount >= 500 ? 10 : 0) + (wordCount >= 800 ? 8 : 0) + (plainText ? 7 : 0)),
-    Math.min(10, (h2Count > 0 || wordCount <= 500 ? 4 : 0) + (longParagraphs.length === 0 ? 3 : 0) + (!brokenHierarchy ? 3 : 0)),
-    Math.min(7, (internalLinks.length > 0 ? 4 : 0) + (externalLinks.length > 0 ? 2 : 0) + (!genericAnchor ? 1 : 0)),
-    Math.min(5, (input.coverMediaId ? 3 : 0) + (input.ogImageMediaId || input.coverMediaId ? 2 : 0)),
+    Math.min(10, (h2Count > 0 || wordCount <= 500 ? 5 : 0) + (!brokenHierarchy ? 5 : 0)),
+    Math.min(7, (internalLinks.length > 0 ? 5 : 0) + (externalLinks.length > 0 ? 2 : 0)),
+    Math.min(
+      5,
+      (input.coverMediaId ? 3 : 0) + (input.ogImageMediaId || input.coverMediaId ? 2 : 0),
+    ),
     Math.min(5, titleSeo && (descriptionSeo || input.excerpt) && publicUrl ? 5 : 0),
-    Math.min(3, !similarArticle || similarArticle.score < 0.55 ? 3 : 0),
+    Math.min(3, input.categoryName ? 3 : 0),
   ];
 
-  const score = Math.max(0, Math.min(100, scoreParts.reduce((sum, part) => sum + part, 0)));
+  const score = Math.max(
+    0,
+    Math.min(
+      100,
+      scoreParts.reduce((sum, part) => sum + part, 0),
+    ),
+  );
   const status: ArticleSeoStatus =
     criticalIssues.length > 0 ? "NOT_READY" : score >= 80 ? "SEO_READY" : "NEEDS_IMPROVEMENT";
-
-  const suggestedTitleSeo =
-    !input.titleSeo || titleSeo.length < 25 || titleSeo.length > 65
-      ? getSuggestedTitleSeo(input)
-      : null;
-  const suggestedDescriptionSeo =
-    !descriptionSeo || descriptionSeo.length < 90 || descriptionSeo.length > 170
-      ? getSuggestedDescriptionSeo(input, plainText)
-      : null;
 
   return {
     status,
@@ -591,16 +572,12 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
     passedChecks,
     recommendations,
     searchPreview: {
-      title: titleSeo || suggestedTitleSeo || title || "Titre de l'article",
+      title: titleSeo || title || "Titre de l'article",
       url: publicUrl || "/actualites/slug-de-l-article",
       description:
         descriptionSeo ||
-        suggestedDescriptionSeo ||
         normalizeText(input.excerpt) ||
         "Ajoutez une description SEO claire pour cet article.",
     },
-    suggestedTitleSeo,
-    suggestedDescriptionSeo,
-    suggestedInternalLinkOpportunities,
   };
 }

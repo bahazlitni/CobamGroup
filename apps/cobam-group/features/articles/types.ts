@@ -1,11 +1,13 @@
 export type {
   ArticleCTABannerAnchor,
   ArticleCTABannerHorizontalAspectRatio,
+  ArticleSeoStatus,
   ArticleStatus,
 } from "@prisma/client";
 import type {
   ArticleCTABannerAnchor,
   ArticleCTABannerHorizontalAspectRatio,
+  ArticleSeoStatus,
   ArticleStatus,
 } from "@prisma/client";
 
@@ -136,6 +138,8 @@ export type ArticleListItemDto = {
   title: string;
   slug: string;
   status: ArticleStatus;
+  seoStatus: ArticleSeoStatus;
+  seoScore: number;
   publishedAt: string | null;
   scheduledPublishAt: string | null;
   updatedAt: string;
@@ -157,6 +161,8 @@ export type ArticleDetailDto = {
   descriptionSeo: string | null;
   focusKeyword: string | null;
   status: ArticleStatus;
+  seoStatus: ArticleSeoStatus;
+  seoScore: number;
   publishedAt: string | null;
   scheduledPublishAt: string | null;
   coverMediaId: number | null;

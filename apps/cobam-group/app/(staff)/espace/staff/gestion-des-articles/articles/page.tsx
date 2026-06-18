@@ -6,7 +6,11 @@ import PanelTable from "@/components/staff/ui/PanelTable";
 import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useArticlesList } from "@/features/articles/hooks/use-articles-list";
-import type { ArticleListItemDto, ArticleStatus } from "@/features/articles/types";
+import type {
+  ArticleListItemDto,
+  ArticleSeoStatus,
+  ArticleStatus,
+} from "@/features/articles/types";
 import { usePathname } from "next/navigation";
 
 function getArticleStatusBadge(status: ArticleStatus, scheduledPublishAt?: string | null) {
@@ -41,7 +45,49 @@ function getArticleStatusBadge(status: ArticleStatus, scheduledPublishAt?: strin
   }
 }
 
-const columns = ["Titre", "Auteur public", "Catégorie", "Statut", "Publication", "Mis à jour", "Actions"];
+const columns = [
+  "Titre",
+  "Auteur public",
+  "Catégorie",
+  "Statut",
+  "Publication",
+  "Mis à jour",
+  "Actions",
+];
+
+function getArticleSeoStatusBadge(status: ArticleSeoStatus) {
+  switch (status) {
+    case "SEO_READY":
+      return {
+        label: "SEO_READY",
+        color: "green" as const,
+        icon: "badge-check" as const,
+      };
+    case "NEEDS_IMPROVEMENT":
+      return {
+        label: "NEEDS_IMPROVEMENT",
+        color: "amber" as const,
+        icon: "warning" as const,
+      };
+    case "NOT_READY":
+    default:
+      return {
+        label: "NOT_READY",
+        color: "red" as const,
+        icon: "warning" as const,
+      };
+  }
+}
+
+function getSeoScoreColor(score: number) {
+  if (score >= 85) return "#16a34a";
+  if (score >= 70) return "#65a30d";
+  if (score >= 50) return "#d97706";
+  if (score >= 30) return "#ea580c";
+  return "#dc2626";
+}
+
+const articleColumns = [...columns.slice(0, 4), "SEO", "Score SEO", ...columns.slice(4)];
 
 export default function ArticlesListPage() {
   const {
@@ -97,7 +143,7 @@ export default function ArticlesListPage() {
         </form>
 
         <PanelTable
-          columns={columns}
+          columns={articleColumns}
           isLoading={isLoading}
           error={error}
           isEmpty={items.length === 0}
@@ -114,6 +160,7 @@ export default function ArticlesListPage() {
         >
           {items.map((article: ArticleListItemDto) => {
             const statusBadge = getArticleStatusBadge(article.status, article.scheduledPublishAt);
+            const seoStatusBadge = getArticleSeoStatusBadge(article.seoStatus);
             const scheduledDateLabel = article.scheduledPublishAt
               ? new Date(article.scheduledPublishAt).toLocaleString("fr-FR", {
                   dateStyle: "short",
@@ -157,6 +204,22 @@ export default function ArticlesListPage() {
                   ) : (
                     statusBadgeNode
                   )}
+                </td>
+
+                <td className="px-4 py-3 align-top">
+                  <StaffBadge size="sm" color={seoStatusBadge.color} icon={seoStatusBadge.icon}>
+                    {seoStatusBadge.label}
+                  </StaffBadge>
+                </td>
+
+                <td className="px-4 py-3 align-top">
+                  <StaffBadge
+                    size="sm"
+                    color={getSeoScoreColor(article.seoScore)}
+                    className="font-mono"
+                  >
+                    {article.seoScore}/100
+                  </StaffBadge>
                 </td>
 
                 <td className="px-4 py-3 align-top text-xs text-slate-600">

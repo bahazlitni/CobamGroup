@@ -13,7 +13,7 @@ import { listArticlesClient } from "../client";
 import type { ArticleListItemDto } from "../types";
 
 const LIST_CACHE_KEY = "articles";
-const LIST_CACHE_VERSION = 2;
+const LIST_CACHE_VERSION = 3;
 
 type ArticlesListCacheExtra = {
   cacheVersion?: number;
@@ -46,7 +46,9 @@ export function useArticlesList(initialPageSize = 12) {
 
     if (
       candidate?.extra?.cacheVersion === LIST_CACHE_VERSION &&
-      candidate.items.every((item) => "scheduledPublishAt" in item)
+      candidate.items.every(
+        (item) => "scheduledPublishAt" in item && "seoStatus" in item && "seoScore" in item,
+      )
     ) {
       return candidate;
     }

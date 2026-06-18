@@ -23,6 +23,12 @@ enum ArticleStatus {
   ARCHIVED
 }
 
+enum ArticleSeoStatus {
+  SEO_READY
+  NEEDS_IMPROVEMENT
+  NOT_READY
+}
+
 enum ArticleCTABannerHorizontalAspectRatio {
   SQUARE
   RATIO_21_10
@@ -1601,17 +1607,19 @@ model Article {
   publishedAt        DateTime? @map("published_at")
   scheduledPublishAt DateTime? @map("scheduled_publish_at")
 
-  title               String   @db.VarChar(255)
-  slug                String   @unique @db.VarChar(255)
-  excerpt             String?  @db.Text
-  introductionContent String   @map("introduction_content") @db.Text
-  bodyContent         String   @map("body_content") @db.Text
-  conclusionContent   String   @map("conclusion_content") @db.Text
-  titleSeo            String?  @map("title_seo") @db.VarChar(255)
-  descriptionSeo      String?  @map("description_seo") @db.VarChar(160)
-  focusKeyword        String?  @map("focus_keyword") @db.VarChar(160)
-  tags                String   @default("") @db.Text
+  title               String           @db.VarChar(255)
+  slug                String           @unique @db.VarChar(255)
+  excerpt             String?          @db.Text
+  introductionContent String           @map("introduction_content") @db.Text
+  bodyContent         String           @map("body_content") @db.Text
+  conclusionContent   String           @map("conclusion_content") @db.Text
+  titleSeo            String?          @map("title_seo") @db.VarChar(255)
+  descriptionSeo      String?          @map("description_seo") @db.VarChar(160)
+  focusKeyword        String?          @map("focus_keyword") @db.VarChar(160)
+  tags                String           @default("") @db.Text
   status              ArticleStatus
+  seoStatus           ArticleSeoStatus @default(NOT_READY) @map("seo_status")
+  seoScore            Int              @default(0) @map("seo_score")
 
   coverMediaId   BigInt?  @map("cover_media_id")
   ogTitle        String?  @map("og_title") @db.VarChar(255)
@@ -1638,6 +1646,7 @@ model Article {
   @@index([coverMediaId])
   @@index([ogImageMediaId])
   @@index([status])
+  @@index([seoStatus])
   @@index([status, publishedAt])
   @@index([status, scheduledPublishAt])
   @@map("articles")

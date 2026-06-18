@@ -4,7 +4,10 @@ import { canAccessArticles, canCreateArticles } from "@/features/articles/access
 import { extractArticleMediaIds } from "@/features/articles/document";
 import {
   analyzeArticleSeo,
+  analyzeArticleSeoStatus,
+  type ArticleSeoAnalyzerInput,
   type ArticleSeoAnalyzerResult,
+  type ArticleSeoStatus,
 } from "@/features/articles/seo-analyzer";
 import {
   mapArticleToDetailDto,
@@ -35,6 +38,7 @@ import type {
 import {
   createArticle,
   deleteArticle,
+  findArticleSlugConflict,
   findArticleById,
   findExistingArticleCategoryIds,
   listArticleAuthorOptions,
@@ -43,6 +47,7 @@ import {
   listDueScheduledArticles,
   markScheduledArticlePublished,
   updateArticle,
+  updateArticleSeoMetadata,
   updateArticleSchedule,
   updateArticleStatus,
 } from "./repository";
@@ -57,6 +62,30 @@ export class ArticleServiceError extends Error {
 }
 
 type ArticleRecord = NonNullable<Awaited<ReturnType<typeof findArticleById>>>;
+
+type ArticleSeoSource = {
+  id: bigint | number;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  introductionContent: string;
+  bodyContent: string;
+  conclusionContent: string;
+  titleSeo: string | null;
+  descriptionSeo: string | null;
+  focusKeyword: string | null;
+  status: ArticleStatus;
+  noIndex: boolean;
+  category?: { name: string } | null;
+  coverMediaId: bigint | number | null;
+  ogTitle: string | null;
+  ogDescription: string | null;
+  ogImageMediaId: bigint | number | null;
+  faqQuestions: Array<{
+    question?: string | null;
+    content: string;
+  }>;
+};
 
 type ScopedPermissionSet = {
   all: string;
@@ -309,10 +338,7 @@ function assertValidScheduledPublishAt(scheduledPublishAt: Date) {
   }
 
   if (scheduledPublishAt.getTime() <= Date.now()) {
-    throw new ArticleServiceError(
-      "La date de publication planifiée doit être dans le futur.",
-      400,
-    );
+    throw new ArticleServiceError("La date de publication planifiée doit être dans le futur.", 400);
   }
 }
 
@@ -321,7 +347,49 @@ async function analyzePersistedArticleSeo(
 ): Promise<ArticleSeoAnalyzerResult> {
   const existingArticles = await listArticleSeoComparisonRecords(Number(article.id));
 
-  return analyzeArticleSeo({
+  return analyzeArticleSeo(
+    mapArticleToSeoAnalyzerInput(article, {
+      existingArticles: existingArticles.map((candidate) => ({
+        id: Number(candidate.id),
+        slug: candidate.slug,
+        title: candidate.title,
+        titleSeo: candidate.titleSeo,
+        descriptionSeo: candidate.descriptionSeo,
+        focusKeyword: candidate.focusKeyword,
+        introductionContent: candidate.introductionContent,
+        bodyContent: candidate.bodyContent,
+        conclusionContent: candidate.conclusionContent,
+      })),
+    }),
+  );
+}
+
+async function persistArticleSeoMetadata(
+  article: ArticleRecord,
+  analysis: Pick<ArticleSeoAnalyzerResult, "status" | "score">,
+) {
+  if (article.seoStatus === analysis.status && article.seoScore === analysis.score) {
+    return article;
+  }
+
+  return updateArticleSeoMetadata(article.id, analysis.status, analysis.score);
+}
+
+async function refreshArticleSeoMetadata(article: ArticleRecord) {
+  const analysis = analyzeArticleSeo(mapArticleToSeoAnalyzerInput(article));
+
+  return persistArticleSeoMetadata(article, analysis);
+}
+
+function toOptionalNumber(value: bigint | number | null | undefined) {
+  return value != null ? Number(value) : null;
+}
+
+function mapArticleToSeoAnalyzerInput(
+  article: ArticleSeoSource,
+  options: Pick<ArticleSeoAnalyzerInput, "existingArticles"> = {},
+): ArticleSeoAnalyzerInput {
+  return {
     id: Number(article.id),
     title: article.title,
     slug: article.slug,
@@ -339,39 +407,47 @@ async function analyzePersistedArticleSeo(
     status: article.status,
     noIndex: article.noIndex,
     categoryName: article.category?.name ?? null,
-    coverMediaId: article.coverMediaId != null ? Number(article.coverMediaId) : null,
+    coverMediaId: toOptionalNumber(article.coverMediaId),
     ogTitle: article.ogTitle,
     ogDescription: article.ogDescription,
-    ogImageMediaId: article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
+    ogImageMediaId: toOptionalNumber(article.ogImageMediaId),
     publicUrl: `/actualites/${article.slug}`,
     mode: "publish",
-    existingArticles: existingArticles.map((candidate) => ({
-      id: Number(candidate.id),
-      slug: candidate.slug,
-      title: candidate.title,
-      titleSeo: candidate.titleSeo,
-      descriptionSeo: candidate.descriptionSeo,
-      focusKeyword: candidate.focusKeyword,
-      introductionContent: candidate.introductionContent,
-      bodyContent: candidate.bodyContent,
-      conclusionContent: candidate.conclusionContent,
-    })),
-  });
+    existingArticles: options.existingArticles,
+  };
 }
 
-async function assertArticleSeoReadyForPublishing(article: ArticleRecord) {
-  const analysis = await analyzePersistedArticleSeo(article);
+async function getArticleSeoStatusForPublishing(
+  article: ArticleSeoSource,
+): Promise<ArticleSeoStatus> {
+  const slugConflict = await findArticleSlugConflict(article.slug, Number(article.id));
 
-  if (analysis.status !== "SEO_READY") {
-    const issue =
-      analysis.criticalIssues[0]?.message ??
-      analysis.warnings[0]?.message ??
-      "L'article doit être amélioré avant publication.";
+  return analyzeArticleSeoStatus(
+    mapArticleToSeoAnalyzerInput(article, {
+      existingArticles: slugConflict
+        ? [
+            {
+              id: Number(slugConflict.id),
+              slug: slugConflict.slug,
+              title: "",
+              titleSeo: null,
+              descriptionSeo: null,
+              focusKeyword: null,
+            },
+          ]
+        : [],
+    }),
+  );
+}
 
-    throw new ArticleServiceError(`SEO_NOT_READY: ${issue}`, 422);
+async function assertArticleSeoReadyForPublishing(article: ArticleSeoSource) {
+  const status = await getArticleSeoStatusForPublishing(article);
+
+  if (status !== "SEO_READY") {
+    throw new ArticleServiceError(`SEO_NOT_READY: ${status}`, 422);
   }
 
-  return analysis;
+  return status;
 }
 
 export async function listArticlesService(
@@ -433,7 +509,10 @@ export async function getArticleSeoAnalysisService(
     throw new ArticleServiceError("Forbidden", 403);
   }
 
-  return analyzePersistedArticleSeo(article);
+  const analysis = await analyzePersistedArticleSeo(article);
+  await persistArticleSeoMetadata(article, analysis);
+
+  return analysis;
 }
 
 export async function listArticleAuthorOptionsService(
@@ -461,10 +540,7 @@ export async function listArticleAuthorOptionsService(
   };
 }
 
-export async function createArticleService(
-  session: StaffSession,
-  input: ArticleCreateInput,
-) {
+export async function createArticleService(session: StaffSession, input: ArticleCreateInput) {
   if (!canCreateArticles(session)) {
     throw new ArticleServiceError("Forbidden", 403);
   }
@@ -483,8 +559,9 @@ export async function createArticleService(
     ...input,
     tags: serializeOwnedTagNames(input.tagNames),
   });
+  const articleWithSeo = await refreshArticleSeoMetadata(article);
 
-  return mapArticleToDetailDto(article, getArticleAbilities(session, article));
+  return mapArticleToDetailDto(articleWithSeo, getArticleAbilities(session, articleWithSeo));
 }
 
 export async function updateArticleService(
@@ -519,16 +596,16 @@ export async function updateArticleService(
     }),
   ]);
 
-  const article = await updateArticle(articleId, session.id, {
+  const updatedArticle = await updateArticle(articleId, session.id, {
     ...input,
     tags: serializeOwnedTagNames(input.tagNames),
   });
+  const article = await refreshArticleSeoMetadata(updatedArticle);
 
   if (article.status === ArticleStatus.PUBLISHED) {
     await ensureArticleMediaIsPublic({
       coverMediaId: article.coverMediaId != null ? Number(article.coverMediaId) : null,
-      ogImageMediaId:
-        article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
+      ogImageMediaId: article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
       contents: getArticleDocumentContents(article),
       ctaImageIds: article.ctaBanners
         .map((banner) => (banner.imageId != null ? Number(banner.imageId) : null))
@@ -539,10 +616,7 @@ export async function updateArticleService(
   return mapArticleToDetailDto(article, getArticleAbilities(session, article));
 }
 
-export async function publishArticleService(
-  session: StaffSession,
-  articleId: number,
-) {
+export async function publishArticleService(session: StaffSession, articleId: number) {
   const before = await findArticleById(articleId);
 
   if (!before) {
@@ -567,8 +641,7 @@ export async function publishArticleService(
 
   await ensureArticleMediaIsPublic({
     coverMediaId: article.coverMediaId != null ? Number(article.coverMediaId) : null,
-    ogImageMediaId:
-      article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
+    ogImageMediaId: article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
     contents: getArticleDocumentContents(article),
     ctaImageIds: article.ctaBanners
       .map((banner) => (banner.imageId != null ? Number(banner.imageId) : null))
@@ -578,10 +651,7 @@ export async function publishArticleService(
   return mapArticleToDetailDto(article, getArticleAbilities(session, article));
 }
 
-export async function unpublishArticleService(
-  session: StaffSession,
-  articleId: number,
-) {
+export async function unpublishArticleService(session: StaffSession, articleId: number) {
   const before = await findArticleById(articleId);
 
   if (!before) {
@@ -592,14 +662,9 @@ export async function unpublishArticleService(
     throw new ArticleServiceError("Forbidden", 403);
   }
 
-  const article = await updateArticleStatus(
-    articleId,
-    ArticleStatus.DRAFT,
-    undefined,
-    {
-      scheduledPublishAt: null,
-    },
-  );
+  const article = await updateArticleStatus(articleId, ArticleStatus.DRAFT, undefined, {
+    scheduledPublishAt: null,
+  });
 
   return mapArticleToDetailDto(article, getArticleAbilities(session, article));
 }
@@ -660,14 +725,8 @@ export async function publishDueScheduledArticlesService(now = new Date()) {
   }> = [];
 
   for (const article of dueArticles) {
-    const fullArticle = await findArticleById(Number(article.id));
-
-    if (!fullArticle) {
-      continue;
-    }
-
-    const analysis = await analyzePersistedArticleSeo(fullArticle);
-    if (analysis.status !== "SEO_READY") {
+    const status = await getArticleSeoStatusForPublishing(article);
+    if (status !== "SEO_READY") {
       continue;
     }
 
@@ -682,10 +741,8 @@ export async function publishDueScheduledArticlesService(now = new Date()) {
     }
 
     await ensureArticleMediaIsPublic({
-      coverMediaId:
-        article.coverMediaId != null ? Number(article.coverMediaId) : null,
-      ogImageMediaId:
-        article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
+      coverMediaId: article.coverMediaId != null ? Number(article.coverMediaId) : null,
+      ogImageMediaId: article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
       contents: getArticleDocumentContents(article),
       ctaImageIds: article.ctaBanners
         .map((banner) => (banner.imageId != null ? Number(banner.imageId) : null))
@@ -708,10 +765,7 @@ export async function publishDueScheduledArticlesService(now = new Date()) {
   };
 }
 
-export async function deleteArticleService(
-  session: StaffSession,
-  articleId: number,
-) {
+export async function deleteArticleService(session: StaffSession, articleId: number) {
   const before = await findArticleById(articleId);
 
   if (!before) {

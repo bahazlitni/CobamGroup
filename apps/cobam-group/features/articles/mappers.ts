@@ -90,9 +90,7 @@ function mapArticleCategory(article: {
     : null;
 }
 
-function mapArticleTags(article: {
-  tags: string;
-}): ArticleTagDto[] {
+function mapArticleTags(article: { tags: string }): ArticleTagDto[] {
   return parseOwnedTagString(article.tags).map((name) => ({
     name,
     slug: slugify(name),
@@ -170,6 +168,8 @@ export function mapArticleToDetailDto(
     focusKeyword: string | null;
     tags: string;
     status: Article["status"];
+    seoStatus: Article["seoStatus"];
+    seoScore: number;
     publishedAt: Date | null;
     scheduledPublishAt: Date | null;
     category: {
@@ -226,6 +226,8 @@ export function mapArticleToDetailDto(
     descriptionSeo: article.descriptionSeo,
     focusKeyword: article.focusKeyword,
     status: article.status,
+    seoStatus: article.seoStatus,
+    seoScore: article.seoScore,
     publishedAt: toIsoString(article.publishedAt),
     scheduledPublishAt: toIsoString(article.scheduledPublishAt),
     coverMediaId: article.coverMediaId != null ? Number(article.coverMediaId) : null,
@@ -233,8 +235,7 @@ export function mapArticleToDetailDto(
     updatedAt: article.updatedAt.toISOString(),
     ogTitle: article.ogTitle,
     ogDescription: article.ogDescription,
-    ogImageMediaId:
-      article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
+    ogImageMediaId: article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
     noIndex: article.noIndex,
     ctaBanners: mapArticleCtaBanners(article),
     faqQuestions: mapArticleFaqQuestions(article),
@@ -247,6 +248,8 @@ export function mapArticleToListItemDto(article: {
   title: string;
   slug: string;
   status: Article["status"];
+  seoStatus: Article["seoStatus"];
+  seoScore: number;
   publishedAt: Date | null;
   scheduledPublishAt: Date | null;
   updatedAt: Date;
@@ -261,6 +264,8 @@ export function mapArticleToListItemDto(article: {
     title: article.title,
     slug: article.slug,
     status: article.status,
+    seoStatus: article.seoStatus,
+    seoScore: article.seoScore,
     publishedAt: toIsoString(article.publishedAt),
     scheduledPublishAt: toIsoString(article.scheduledPublishAt),
     updatedAt: article.updatedAt.toISOString(),

@@ -17,7 +17,7 @@ function getStatusBadge(status: ArticleSeoAnalyzerResult["status"]) {
   }
 }
 
-type FeedbackTheme = "error" | "info" | "warning" | "success";
+type FeedbackTheme = "error" | "warning" | "info" | "success";
 
 const feedbackThemeStyles: Record<
   FeedbackTheme,
@@ -38,8 +38,8 @@ const feedbackThemeStyles: Record<
     text: "text-slate-650",
   },
   info: {
-    title: "text-sky-600",
-    dot: "bg-sky-500",
+    title: "text-cobam-water-blue",
+    dot: "bg-cobam-water-blue",
     text: "text-slate-650",
   },
   success: {
@@ -66,18 +66,12 @@ function FeedbackList({
 
   return (
     <div>
-      <p
-        className={`text-xs font-semibold uppercase tracking-[0.14em] ${styles.title}`}
-      >
-        {title}
-      </p>
+      <p className={`text-xs font-semibold tracking-[0.14em] uppercase ${styles.title}`}>{title}</p>
 
       <ul className={`mt-2 space-y-2 text-sm leading-6 ${styles.text}`}>
         {items.slice(0, 6).map((item) => (
           <li key={item.code} className="flex gap-2">
-            <span
-              className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${styles.dot}`}
-            />
+            <span className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${styles.dot}`} />
             <span>{item.message}</span>
           </li>
         ))}
@@ -97,7 +91,7 @@ export default function SeoChecks({ analysis }: SeoChecksProps) {
             Analyse SEO
           </p>
           <p className="mt-1 text-sm text-slate-600">
-            Score estimé : <span className="font-semibold">{analysis.score}/100</span>
+            Score : <span className="font-semibold">{analysis.score}/100</span>
           </p>
         </div>
 
@@ -110,58 +104,22 @@ export default function SeoChecks({ analysis }: SeoChecksProps) {
         <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
           Aperçu Google
         </p>
-        <p className="mt-3 truncate text-base font-semibold leading-snug text-blue-700">
+        <p className="mt-3 truncate text-base leading-snug font-semibold text-blue-700">
           {analysis.searchPreview.title}
         </p>
-        <p className="truncate text-xs text-green-700">cobamgroup.com{analysis.searchPreview.url}</p>
+        <p className="truncate text-xs text-green-700">
+          cobamgroup.com{analysis.searchPreview.url}
+        </p>
         <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-600">
           {analysis.searchPreview.description}
         </p>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="flex flex-col gap-5">
         <FeedbackList theme="error" title="Bloquants" items={analysis.criticalIssues} />
         <FeedbackList theme="warning" title="Alertes" items={analysis.warnings} />
-        <FeedbackList theme="success" title="Validé" items={analysis.passedChecks.slice(0, 6)} />
         <FeedbackList theme="info" title="Recommandations" items={analysis.recommendations} />
-      </div>
-
-      {(analysis.suggestedTitleSeo || analysis.suggestedDescriptionSeo) ? (
-        <div className="rounded-2xl border border-cobam-water-blue/20 bg-cobam-water-blue/5 p-4 text-sm leading-6 text-slate-700">
-          {analysis.suggestedTitleSeo ? (
-            <p>
-              <span className="font-semibold">Titre SEO suggéré :</span>{" "}
-              {analysis.suggestedTitleSeo}
-            </p>
-          ) : null}
-          {analysis.suggestedDescriptionSeo ? (
-            <p className="mt-2">
-              <span className="font-semibold">Description suggérée :</span>{" "}
-              {analysis.suggestedDescriptionSeo}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
-            Liens internes
-          </p>
-          {analysis.suggestedInternalLinkOpportunities.length > 0 ? (
-            <ul className="mt-2 space-y-1 text-sm leading-6 text-slate-600">
-              {analysis.suggestedInternalLinkOpportunities.map((item) => (
-                <li key={item.articleId}>
-                  {item.title} <span className="text-slate-400">/{item.slug}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              Aucun rapprochement local disponible dans l&apos;analyse instantanée.
-            </p>
-          )}
-        </div>
+        <FeedbackList theme="success" title="Validé" items={analysis.passedChecks} />
       </div>
     </section>
   );
