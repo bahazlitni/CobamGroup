@@ -17,24 +17,67 @@ function getStatusBadge(status: ArticleSeoAnalyzerResult["status"]) {
   }
 }
 
+type FeedbackTheme = "error" | "info" | "warning" | "success";
+
+const feedbackThemeStyles: Record<
+  FeedbackTheme,
+  {
+    title: string;
+    dot: string;
+    text: string;
+  }
+> = {
+  error: {
+    title: "text-rose-600",
+    dot: "bg-rose-500",
+    text: "text-slate-650",
+  },
+  warning: {
+    title: "text-amber-600",
+    dot: "bg-amber-500",
+    text: "text-slate-650",
+  },
+  info: {
+    title: "text-sky-600",
+    dot: "bg-sky-500",
+    text: "text-slate-650",
+  },
+  success: {
+    title: "text-emerald-600",
+    dot: "bg-emerald-500",
+    text: "text-slate-650",
+  },
+};
+
 function FeedbackList({
   title,
   items,
+  theme,
 }: {
   title: string;
   items: Array<{ code: string; message: string }>;
+  theme: FeedbackTheme;
 }) {
   if (items.length === 0) {
     return null;
   }
 
+  const styles = feedbackThemeStyles[theme];
+
   return (
     <div>
-      <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">{title}</p>
-      <ul className="mt-2 space-y-2 text-sm leading-6 text-slate-650">
+      <p
+        className={`text-xs font-semibold uppercase tracking-[0.14em] ${styles.title}`}
+      >
+        {title}
+      </p>
+
+      <ul className={`mt-2 space-y-2 text-sm leading-6 ${styles.text}`}>
         {items.slice(0, 6).map((item) => (
           <li key={item.code} className="flex gap-2">
-            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-cobam-water-blue" />
+            <span
+              className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${styles.dot}`}
+            />
             <span>{item.message}</span>
           </li>
         ))}
@@ -77,10 +120,10 @@ export default function SeoChecks({ analysis }: SeoChecksProps) {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <FeedbackList title="Bloquants" items={analysis.criticalIssues} />
-        <FeedbackList title="Alertes" items={analysis.warnings} />
-        <FeedbackList title="Validé" items={analysis.passedChecks.slice(0, 6)} />
-        <FeedbackList title="Recommandations" items={analysis.recommendations} />
+        <FeedbackList theme="error" title="Bloquants" items={analysis.criticalIssues} />
+        <FeedbackList theme="warning" title="Alertes" items={analysis.warnings} />
+        <FeedbackList theme="success" title="Validé" items={analysis.passedChecks.slice(0, 6)} />
+        <FeedbackList theme="info" title="Recommandations" items={analysis.recommendations} />
       </div>
 
       {(analysis.suggestedTitleSeo || analysis.suggestedDescriptionSeo) ? (
@@ -101,17 +144,6 @@ export default function SeoChecks({ analysis }: SeoChecksProps) {
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
-            FAQ possibles
-          </p>
-          <ul className="mt-2 space-y-1 text-sm leading-6 text-slate-600">
-            {analysis.suggestedFaqQuestions.map((question) => (
-              <li key={question}>{question}</li>
-            ))}
-          </ul>
-        </div>
-
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <p className="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
             Liens internes

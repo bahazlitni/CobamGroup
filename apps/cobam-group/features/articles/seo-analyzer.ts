@@ -1,9 +1,11 @@
 import type { ArticleStatus } from "@prisma/client";
 import type { JSONContent } from "@tiptap/core";
 import {
+  getArticleFirstParagraphText,
   getArticlePlainText,
   parseArticleContent,
 } from "./document";
+import { slugify } from "@/lib/slugify";
 
 export type ArticleSeoStatus = "SEO_READY" | "NEEDS_IMPROVEMENT" | "NOT_READY";
 
@@ -25,23 +27,16 @@ export type ArticleSeoComparisonArticle = {
   titleSeo: string | null;
   descriptionSeo: string | null;
   focusKeyword: string | null;
-  introductionContent?: string | null;
-  bodyContent?: string | null;
-  conclusionContent?: string | null;
+  content?: string | null;
 };
 
 export type ArticleSeoAnalyzerInput = {
   id?: number | null;
   title: string;
+  displayTitle?: string | null;
   slug: string;
   excerpt?: string | null;
-  introductionContent: string;
-  bodyContent: string;
-  conclusionContent: string;
-  faqQuestions?: Array<{
-    question: string;
-    content: string;
-  }>;
+  content: string;
   titleSeo?: string | null;
   descriptionSeo?: string | null;
   focusKeyword?: string | null;
@@ -68,7 +63,6 @@ export type ArticleSeoAnalyzerResult = {
   searchPreview: ArticleSeoSearchPreview;
   suggestedTitleSeo: string | null;
   suggestedDescriptionSeo: string | null;
-  suggestedFaqQuestions: string[];
   suggestedInternalLinkOpportunities: Array<{
     articleId: number;
     title: string;
@@ -155,7 +149,7 @@ function isProbablyKeywordStuffed(value: string, focusKeyword: string | null) {
 }
 
 function getSuggestedTitleSeo(input: ArticleSeoAnalyzerInput) {
-  const title = normalizeText(input.title);
+  const title = normalizeText(input.displayTitle) || normalizeText(input.title);
   if (!title) return null;
 
   const category = normalizeText(input.categoryName);
@@ -166,7 +160,7 @@ function getSuggestedTitleSeo(input: ArticleSeoAnalyzerInput) {
 function getSuggestedDescriptionSeo(input: ArticleSeoAnalyzerInput, plainText: string) {
   const existing =
     normalizeText(input.excerpt) ||
-    normalizeText(getArticlePlainText(input.introductionContent)) ||
+    normalizeText(getArticleFirstParagraphText(input.content)) ||
     normalizeText(plainText);
 
   if (!existing) return null;
@@ -175,7 +169,8 @@ function getSuggestedDescriptionSeo(input: ArticleSeoAnalyzerInput, plainText: s
   return trimmed.length < existing.length ? `${trimmed}...` : trimmed;
 }
 
-function collectDocumentStats(contents: readonly string[]): DocumentStats {
+function collectDocumentStats(content: string): DocumentStats {
+  const document = parseArticleContent(content);
   const headings: DocumentStats["headings"] = [];
   const links: DocumentStats["links"] = [];
   const images: DocumentStats["images"] = [];
@@ -231,7 +226,7 @@ function collectDocumentStats(contents: readonly string[]): DocumentStats {
     }
   };
 
-  contents.forEach((content) => walk(parseArticleContent(content)));
+  walk(document);
   return { headings, links, images, paragraphTexts };
 }
 
@@ -263,21 +258,9 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
   const descriptionSeo = normalizeText(input.descriptionSeo);
   const focusKeyword = normalizeText(input.focusKeyword);
   const slug = normalizeText(input.slug);
-  const introductionText = getArticlePlainText(input.introductionContent);
-  const bodyText = getArticlePlainText(input.bodyContent);
-  const conclusionText = getArticlePlainText(input.conclusionContent);
-  const faqText = (input.faqQuestions ?? [])
-    .map((item) => `${item.question} ${getArticlePlainText(item.content)}`)
-    .join(" ");
-  const plainText = normalizeText(
-    [introductionText, bodyText, conclusionText, faqText].filter(Boolean).join(" "),
-  );
-  const stats = collectDocumentStats([
-    input.introductionContent,
-    input.bodyContent,
-    input.conclusionContent,
-    ...(input.faqQuestions ?? []).map((item) => item.content),
-  ]);
+  const plainText = getArticlePlainText(input.content);
+  const firstParagraph = getArticleFirstParagraphText(input.content);
+  const stats = collectDocumentStats(input.content);
   const wordCount = countWords(plainText);
   const publicUrl = input.publicUrl || (slug ? `/actualites/${slug}` : "");
   const existingArticles = input.existingArticles ?? [];
@@ -342,30 +325,6 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
     addPass("content.present", "Le contenu contient une base exploitable.");
   }
 
-  if (introductionText) {
-    addPass("introduction.present", "L'introduction est renseignée.");
-  } else {
-    addWarning("introduction.missing", "Ajoutez une introduction claire avant le corps de l'article.");
-  }
-
-  if (bodyText) {
-    addPass("body.present", "Le corps de l'article est renseigné.");
-  } else {
-    addCritical("body.missing", "Le corps de l'article est obligatoire.");
-  }
-
-  if (conclusionText) {
-    addPass("conclusion.present", "La conclusion est renseignée.");
-  } else {
-    addWarning("conclusion.missing", "Ajoutez une conclusion courte pour fermer l'article proprement.");
-  }
-
-  if ((input.faqQuestions ?? []).length > 0) {
-    addPass("faq.present", "La FAQ peut enrichir la fin de l'article.");
-  } else {
-    addRecommendation("faq.add", "Ajoutez 1 à 3 questions fréquentes si le sujet s'y prête.");
-  }
-
   if (wordCount < 500) {
     addWarning("content.thin", "Moins de 500 mots : l'article risque d'être léger pour le SEO.");
   } else if (wordCount >= 800) {
@@ -395,7 +354,7 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
   if (focusKeyword) {
     const keyword = lower(focusKeyword);
     const keywordInTitle = lower(titleSeo || title).includes(keyword);
-    const keywordInIntro = lower(introductionText).includes(keyword);
+    const keywordInIntro = lower(firstParagraph).includes(keyword);
     const keywordInHeading = stats.headings.some((heading) => lower(heading.text).includes(keyword));
     const keywordInBody = lower(plainText).includes(keyword);
 
@@ -548,10 +507,7 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
   const similarArticle = existingArticles
     .map((article) => ({
       article,
-      score: calculateSimilarity(
-        `${titleSeo} ${plainText}`,
-        `${article.titleSeo || article.title} ${article.introductionContent ?? ""} ${article.bodyContent ?? ""} ${article.conclusionContent ?? ""}`,
-      ),
+      score: calculateSimilarity(`${titleSeo} ${plainText}`, `${article.titleSeo || article.title} ${article.content ?? ""}`),
     }))
     .sort((left, right) => right.score - left.score)[0];
   if (similarArticle && similarArticle.score >= 0.55) {
@@ -587,12 +543,6 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
     );
   }
 
-  const suggestedFaqQuestions = [
-    focusKeyword ? `Comment choisir ${focusKeyword} ?` : `Comment choisir ${title || "ce produit ou service"} ?`,
-    focusKeyword ? `Quels critères vérifier pour ${focusKeyword} ?` : "Quels critères faut-il vérifier ?",
-    "Quand demander conseil à COBAM Group ?",
-  ];
-
   const scoreParts = [
     Math.min(
       15,
@@ -609,7 +559,7 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
       15,
       (focusKeyword ? 4 : 0) +
         (focusKeyword && lower(titleSeo || title).includes(lower(focusKeyword)) ? 4 : 0) +
-        (focusKeyword && lower(introductionText).includes(lower(focusKeyword)) ? 4 : 0) +
+        (focusKeyword && lower(firstParagraph).includes(lower(focusKeyword)) ? 4 : 0) +
         (!warnings.some((warning) => warning.code === "keyword.spam") ? 3 : 0),
     ),
     Math.min(25, (wordCount >= 500 ? 10 : 0) + (wordCount >= 800 ? 8 : 0) + (plainText ? 7 : 0)),
@@ -651,7 +601,6 @@ export function analyzeArticleSeo(input: ArticleSeoAnalyzerInput): ArticleSeoAna
     },
     suggestedTitleSeo,
     suggestedDescriptionSeo,
-    suggestedFaqQuestions,
     suggestedInternalLinkOpportunities,
   };
 }
