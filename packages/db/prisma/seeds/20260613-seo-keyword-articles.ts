@@ -1208,11 +1208,14 @@ const result = await prisma.$transaction(
       });
 
       const content = serializeArticleContent(article.body);
+      const emptyContent = serializeArticleContent([{ type: "paragraph" }]);
       const baseData = {
         title: article.title,
         slug: article.slug,
         excerpt: article.excerpt,
-        content,
+        introductionContent: emptyContent,
+        bodyContent: content,
+        conclusionContent: emptyContent,
         titleSeo: article.seoTitle,
         descriptionSeo: article.seoDescription,
         tags: serializeTags(article.tags),
@@ -1271,7 +1274,7 @@ const validationRecords = await prisma.article.findMany({
     id: true,
     title: true,
     slug: true,
-    content: true,
+    bodyContent: true,
     descriptionSeo: true,
     status: true,
     publishedAt: true,
@@ -1300,7 +1303,7 @@ for (const article of validationRecords) {
 
   seenValidationSlugs.add(article.slug);
 
-  const parsed = JSON.parse(article.content) as { type?: string; content?: unknown[] };
+  const parsed = JSON.parse(article.bodyContent) as { type?: string; content?: unknown[] };
 
   if (parsed.type !== "doc" || !Array.isArray(parsed.content) || parsed.content.length === 0) {
     throw new Error(`Validation failed: invalid Tiptap JSON for ${article.slug}.`);

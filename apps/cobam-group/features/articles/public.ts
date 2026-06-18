@@ -36,8 +36,16 @@ export type PublicArticleSummary = {
 };
 
 export type PublicArticleDetail = PublicArticleSummary & {
-  content: string;
+  introductionContent: string;
+  bodyContent: string;
+  conclusionContent: string;
   ctaBanners: ArticleCTABannerDto[];
+  faqQuestions: Array<{
+    id: number;
+    question: string;
+    content: string;
+    sortOrder: number;
+  }>;
   descriptionSeo: string | null;
   ogTitle: string | null;
   ogDescription: string | null;
@@ -54,7 +62,9 @@ type PublicArticleRecord = {
   title: string;
   titleSeo: string | null;
   excerpt: string | null;
-  content: string;
+  introductionContent: string;
+  bodyContent: string;
+  conclusionContent: string;
   createdAt: Date;
   updatedAt: Date;
   publishedAt: Date | null;
@@ -103,6 +113,12 @@ type PublicArticleRecord = {
       href: string | null;
     }>;
   }>;
+  faqQuestions?: Array<{
+    id: bigint;
+    question: string;
+    content: string;
+    sortOrder: number;
+  }>;
 };
 
 function buildPublicMediaUrl(
@@ -129,13 +145,13 @@ function getPublicArticleCategories(article: PublicArticleRecord) {
 async function ensurePublishedArticleMediaPublic(input: {
   coverMediaId: bigint | null;
   ogImageMediaId: bigint | null;
-  content: string;
+  contents: readonly string[];
   ctaImageIds?: readonly bigint[];
 }) {
   const mediaIds = [
     ...(input.coverMediaId != null ? [Number(input.coverMediaId)] : []),
     ...(input.ogImageMediaId != null ? [Number(input.ogImageMediaId)] : []),
-    ...extractArticleMediaIds(input.content),
+    ...input.contents.flatMap((content) => extractArticleMediaIds(content)),
     ...(input.ctaImageIds ?? []).map((mediaId) => Number(mediaId)),
   ];
 
@@ -150,7 +166,8 @@ function mapPublicArticleSummary(article: PublicArticleRecord): PublicArticleSum
     article.coverMediaId != null;
   const excerpt =
     article.excerpt?.trim() ||
-    getArticleFirstParagraphText(article.content) ||
+    getArticleFirstParagraphText(article.introductionContent) ||
+    getArticleFirstParagraphText(article.bodyContent) ||
     "Découvrez l'article complet sur COBAM Group.";
 
   return {
@@ -223,7 +240,9 @@ function getPublicArticleSelect() {
     title: true,
     titleSeo: true,
     excerpt: true,
-    content: true,
+    introductionContent: true,
+    bodyContent: true,
+    conclusionContent: true,
     createdAt: true,
     updatedAt: true,
     publishedAt: true,
@@ -278,7 +297,11 @@ async function listPublicArticleSummaries(
       ensurePublishedArticleMediaPublic({
         coverMediaId: article.coverMediaId,
         ogImageMediaId: article.ogImageMediaId,
-        content: article.content,
+        contents: [
+          article.introductionContent,
+          article.bodyContent,
+          article.conclusionContent,
+        ],
       }),
     ),
   );
@@ -353,7 +376,11 @@ async function listPublicArticleSuggestions(input: {
       ensurePublishedArticleMediaPublic({
         coverMediaId: article.coverMediaId,
         ogImageMediaId: null,
-        content: article.content,
+        contents: [
+          article.introductionContent,
+          article.bodyContent,
+          article.conclusionContent,
+        ],
       }),
     ),
   );
@@ -415,6 +442,15 @@ export async function findPublicArticleBySlug(
           },
         },
       },
+      faqQuestions: {
+        orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+        select: {
+          id: true,
+          question: true,
+          content: true,
+          sortOrder: true,
+        },
+      },
     },
   });
 
@@ -426,7 +462,12 @@ export async function findPublicArticleBySlug(
     await ensurePublishedArticleMediaPublic({
       coverMediaId: article.coverMediaId,
       ogImageMediaId: article.ogImageMediaId,
-      content: article.content,
+      contents: [
+        article.introductionContent,
+        article.bodyContent,
+        article.conclusionContent,
+        ...article.faqQuestions.map((item) => item.content),
+      ],
       ctaImageIds: article.ctaBanners
         .map((banner) => banner.imageId)
         .filter((imageId): imageId is bigint => imageId != null),
@@ -448,10 +489,24 @@ export async function findPublicArticleBySlug(
 
   return {
     ...summary,
-    content: replaceArticleImageSources(article.content, (mediaId) =>
+    introductionContent: replaceArticleImageSources(article.introductionContent, (mediaId) =>
+      buildPublicMediaUrl(mediaId, "original"),
+    ),
+    bodyContent: replaceArticleImageSources(article.bodyContent, (mediaId) =>
+      buildPublicMediaUrl(mediaId, "original"),
+    ),
+    conclusionContent: replaceArticleImageSources(article.conclusionContent, (mediaId) =>
       buildPublicMediaUrl(mediaId, "original"),
     ),
     ctaBanners: mapPublicArticleCtaBanners(article),
+    faqQuestions: article.faqQuestions.map((item) => ({
+      id: Number(item.id),
+      question: item.question,
+      content: replaceArticleImageSources(item.content, (mediaId) =>
+        buildPublicMediaUrl(mediaId, "original"),
+      ),
+      sortOrder: item.sortOrder,
+    })),
     descriptionSeo: article.descriptionSeo,
     ogTitle: article.ogTitle,
     ogDescription: article.ogDescription,

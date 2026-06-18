@@ -25,6 +25,17 @@ const BLOCK_BREAK_TYPES = new Set([
   "horizontalRule",
 ]);
 
+const FIRST_PARAGRAPH_IGNORED_TYPES = new Set([
+  "heading",
+  "table",
+  "tableRow",
+  "tableCell",
+  "tableHeader",
+  "codeBlock",
+  "horizontalRule",
+  "image",
+]);
+
 function cloneDocument<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
@@ -163,6 +174,20 @@ function collectPlainText(node: JSONContent, parts: string[]) {
   }
 }
 
+function collectParagraphText(node: JSONContent, parts: string[]) {
+  if (node.type === "text" && typeof node.text === "string") {
+    parts.push(node.text);
+  }
+
+  if (node.type === "hardBreak") {
+    parts.push("\n");
+  }
+
+  if (Array.isArray(node.content)) {
+    node.content.forEach((child) => collectParagraphText(child, parts));
+  }
+}
+
 function getImageMediaIdFromNode(node: JSONContent): number | null {
   if (node.type !== "image" || !isRecord(node.attrs)) {
     return null;
@@ -217,6 +242,43 @@ function getNodePlainText(node: JSONContent): string {
     .replace(/\n{3,}/g, "\n\n")
     .replace(/[ \t]{2,}/g, " ")
     .trim();
+}
+
+function getParagraphPlainText(node: JSONContent): string {
+  const parts: string[] = [];
+
+  collectParagraphText(node, parts);
+
+  return parts
+    .join("")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
+
+function findFirstParagraphText(node: JSONContent): string {
+  if (node.type === "paragraph") {
+    return getParagraphPlainText(node);
+  }
+
+  if (FIRST_PARAGRAPH_IGNORED_TYPES.has(node.type ?? "")) {
+    return "";
+  }
+
+  if (!Array.isArray(node.content)) {
+    return "";
+  }
+
+  for (const child of node.content) {
+    const text = findFirstParagraphText(child);
+
+    if (text) {
+      return text;
+    }
+  }
+
+  return "";
 }
 
 export function createEmptyArticleDocument(): ArticleDocument {
@@ -300,17 +362,8 @@ export function getArticleFirstParagraphText(
   value: string | ArticleDocument | null | undefined,
 ): string {
   const document = parseArticleContent(value);
-  const topLevelNodes = Array.isArray(document.content) ? document.content : [];
 
-  for (const node of topLevelNodes) {
-    const text = getNodePlainText(node);
-
-    if (text) {
-      return text;
-    }
-  }
-
-  return "";
+  return findFirstParagraphText(document);
 }
 
 export function extractArticleMediaIds(

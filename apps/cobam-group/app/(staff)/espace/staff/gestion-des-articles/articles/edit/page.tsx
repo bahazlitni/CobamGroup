@@ -4,6 +4,7 @@ import { Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { CalendarClock, Loader2, XCircle } from "lucide-react";
 import ArticleCTABannersEditor from "@/components/staff/articles/article-cta-banners-editor";
+import ArticleFaqEditor from "@/components/staff/articles/article-faq-editor";
 import ArticleRichTextEditor from "@/components/staff/articles/article-rich-text-editor";
 import AutosaveIndicator from "@/components/staff/articles/AutosaveIndicator";
 import SeoChecks from "@/components/staff/articles/SeoChecks";
@@ -537,11 +538,41 @@ function ArticleEditPageContent() {
             </PanelField>
 
             <ArticleRichTextEditor
-              editorId="article-content"
-              value={editor.state.content}
-              onChange={(value) => editor.setField("content", value)}
-              placeholder="Commencez à écrire votre article..."
+              editorId="article-introduction-content"
+              value={editor.state.introductionContent}
+              onChange={(value) => editor.setField("introductionContent", value)}
+              placeholder="Introduction de l'article..."
               editable={canEditArticle}
+            />
+
+            <ArticleRichTextEditor
+              editorId="article-body-content"
+              value={editor.state.bodyContent}
+              onChange={(value) => editor.setField("bodyContent", value)}
+              placeholder="Corps principal de l'article..."
+              editable={canEditArticle}
+            />
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+              <ArticleCTABannersEditor
+                value={editor.state.ctaBanners}
+                onChange={(nextBanners) => editor.setField("ctaBanners", nextBanners)}
+                disabled={!canEditArticle}
+              />
+            </div>
+
+            <ArticleRichTextEditor
+              editorId="article-conclusion-content"
+              value={editor.state.conclusionContent}
+              onChange={(value) => editor.setField("conclusionContent", value)}
+              placeholder="Conclusion..."
+              editable={canEditArticle}
+            />
+
+            <ArticleFaqEditor
+              value={editor.state.faqQuestions}
+              onChange={(nextQuestions) => editor.setField("faqQuestions", nextQuestions)}
+              disabled={!canEditArticle}
             />
 
             <PanelField id="article-tags" label="Tags">
@@ -554,19 +585,6 @@ function ArticleEditPageContent() {
               />
             </PanelField>
           </div>
-        </Panel>
-
-        <Panel
-          pretitle=""
-          title="Bannières CTA"
-          description=""
-          allowOverflow
-        >
-          <ArticleCTABannersEditor
-            value={editor.state.ctaBanners}
-            onChange={(nextBanners) => editor.setField("ctaBanners", nextBanners)}
-            disabled={!canEditArticle}
-          />
         </Panel>
 
         <Panel

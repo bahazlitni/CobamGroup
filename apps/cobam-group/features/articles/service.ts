@@ -183,16 +183,41 @@ function mapArticleCtaBannersForComparison(article: ArticleRecord) {
   }));
 }
 
+function mapArticleFaqQuestionsForComparison(article: ArticleRecord) {
+  return article.faqQuestions.map((item) => ({
+    question: item.question,
+    content: item.content,
+    sortOrder: item.sortOrder,
+  }));
+}
+
+function getArticleDocumentContents(article: {
+  introductionContent: string;
+  bodyContent: string;
+  conclusionContent: string;
+  faqQuestions?: Array<{ content: string }>;
+}) {
+  return [
+    article.introductionContent,
+    article.bodyContent,
+    article.conclusionContent,
+    ...(article.faqQuestions ?? []).map((item) => item.content),
+  ];
+}
+
 function hasArticleContentChanges(article: ArticleRecord, input: ArticleUpdateInput) {
   const currentTagNames = parseOwnedTagString(article.tags);
   const nextTagNames = normalizeOwnedTagNames(input.tagNames);
   const currentCtaBanners = mapArticleCtaBannersForComparison(article);
+  const currentFaqQuestions = mapArticleFaqQuestionsForComparison(article);
 
   return !(
     article.title === input.title &&
     article.slug === input.slug &&
     article.excerpt === input.excerpt &&
-    article.content === input.content &&
+    article.introductionContent === input.introductionContent &&
+    article.bodyContent === input.bodyContent &&
+    article.conclusionContent === input.conclusionContent &&
     article.titleSeo === input.titleSeo &&
     article.descriptionSeo === input.descriptionSeo &&
     article.focusKeyword === input.focusKeyword &&
@@ -204,7 +229,8 @@ function hasArticleContentChanges(article: ArticleRecord, input: ArticleUpdateIn
     (article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null) ===
       input.ogImageMediaId &&
     article.noIndex === input.noIndex &&
-    JSON.stringify(currentCtaBanners) === JSON.stringify(input.ctaBanners)
+    JSON.stringify(currentCtaBanners) === JSON.stringify(input.ctaBanners) &&
+    JSON.stringify(currentFaqQuestions) === JSON.stringify(input.faqQuestions)
   );
 }
 
@@ -257,13 +283,13 @@ async function assertValidRelations(input: {
 async function ensureArticleMediaIsPublic(input: {
   coverMediaId: number | null;
   ogImageMediaId: number | null;
-  content: string;
+  contents: readonly string[];
   ctaImageIds?: readonly number[];
 }) {
   const mediaIds = [
     ...(input.coverMediaId != null ? [input.coverMediaId] : []),
     ...(input.ogImageMediaId != null ? [input.ogImageMediaId] : []),
-    ...extractArticleMediaIds(input.content),
+    ...input.contents.flatMap((content) => extractArticleMediaIds(content)),
     ...(input.ctaImageIds ?? []),
   ];
 
@@ -300,7 +326,13 @@ async function analyzePersistedArticleSeo(
     title: article.title,
     slug: article.slug,
     excerpt: article.excerpt,
-    content: article.content,
+    introductionContent: article.introductionContent,
+    bodyContent: article.bodyContent,
+    conclusionContent: article.conclusionContent,
+    faqQuestions: article.faqQuestions.map((item) => ({
+      question: item.question,
+      content: item.content,
+    })),
     titleSeo: article.titleSeo,
     descriptionSeo: article.descriptionSeo,
     focusKeyword: article.focusKeyword,
@@ -320,7 +352,9 @@ async function analyzePersistedArticleSeo(
       titleSeo: candidate.titleSeo,
       descriptionSeo: candidate.descriptionSeo,
       focusKeyword: candidate.focusKeyword,
-      content: candidate.content,
+      introductionContent: candidate.introductionContent,
+      bodyContent: candidate.bodyContent,
+      conclusionContent: candidate.conclusionContent,
     })),
   });
 }
@@ -495,7 +529,7 @@ export async function updateArticleService(
       coverMediaId: article.coverMediaId != null ? Number(article.coverMediaId) : null,
       ogImageMediaId:
         article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
-      content: article.content,
+      contents: getArticleDocumentContents(article),
       ctaImageIds: article.ctaBanners
         .map((banner) => (banner.imageId != null ? Number(banner.imageId) : null))
         .filter((imageId): imageId is number => imageId != null),
@@ -535,7 +569,7 @@ export async function publishArticleService(
     coverMediaId: article.coverMediaId != null ? Number(article.coverMediaId) : null,
     ogImageMediaId:
       article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
-    content: article.content,
+    contents: getArticleDocumentContents(article),
     ctaImageIds: article.ctaBanners
       .map((banner) => (banner.imageId != null ? Number(banner.imageId) : null))
       .filter((imageId): imageId is number => imageId != null),
@@ -652,7 +686,7 @@ export async function publishDueScheduledArticlesService(now = new Date()) {
         article.coverMediaId != null ? Number(article.coverMediaId) : null,
       ogImageMediaId:
         article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
-      content: article.content,
+      contents: getArticleDocumentContents(article),
       ctaImageIds: article.ctaBanners
         .map((banner) => (banner.imageId != null ? Number(banner.imageId) : null))
         .filter((imageId): imageId is number => imageId != null),

@@ -143,8 +143,11 @@ export default async function PublicArticleDetailPage({
       <section className="py-12 sm:py-16">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <ArticleContentWithCTABanners
-            content={article.content}
+            introductionContent={article.introductionContent}
+            bodyContent={article.bodyContent}
+            conclusionContent={article.conclusionContent}
             ctaBanners={article.ctaBanners}
+            faqQuestions={article.faqQuestions}
           />
         </div>
       </section>

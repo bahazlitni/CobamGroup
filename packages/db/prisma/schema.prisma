@@ -1601,15 +1601,17 @@ model Article {
   publishedAt        DateTime? @map("published_at")
   scheduledPublishAt DateTime? @map("scheduled_publish_at")
 
-  title          String        @db.VarChar(255)
-  slug           String        @unique @db.VarChar(255)
-  excerpt        String?       @db.Text
-  content        String        @db.Text
-  titleSeo       String?       @map("title_seo") @db.VarChar(255)
-  descriptionSeo String?       @map("description_seo") @db.VarChar(160)
-  focusKeyword   String?       @map("focus_keyword") @db.VarChar(160)
-  tags           String        @default("") @db.Text
-  status         ArticleStatus
+  title               String   @db.VarChar(255)
+  slug                String   @unique @db.VarChar(255)
+  excerpt             String?  @db.Text
+  introductionContent String   @map("introduction_content") @db.Text
+  bodyContent         String   @map("body_content") @db.Text
+  conclusionContent   String   @map("conclusion_content") @db.Text
+  titleSeo            String?  @map("title_seo") @db.VarChar(255)
+  descriptionSeo      String?  @map("description_seo") @db.VarChar(160)
+  focusKeyword        String?  @map("focus_keyword") @db.VarChar(160)
+  tags                String   @default("") @db.Text
+  status              ArticleStatus
 
   coverMediaId   BigInt?  @map("cover_media_id")
   ogTitle        String?  @map("og_title") @db.VarChar(255)
@@ -1626,7 +1628,8 @@ model Article {
   coverMedia      Media?           @relation("ArticleCoverMedia", fields: [coverMediaId], references: [id], onDelete: SetNull)
   ogImageMedia    Media?           @relation("ArticleOgImageMedia", fields: [ogImageMediaId], references: [id], onDelete: SetNull)
 
-  ctaBanners ArticleCTABanner[]
+  ctaBanners   ArticleCTABanner[]
+  faqQuestions ArticleFaqQuestion[]
 
   @@index([createdByUserId])
   @@index([updatedByUserId])
@@ -1638,6 +1641,22 @@ model Article {
   @@index([status, publishedAt])
   @@index([status, scheduledPublishAt])
   @@map("articles")
+}
+
+model ArticleFaqQuestion {
+  id        BigInt   @id @default(autoincrement())
+  articleId BigInt   @map("article_id")
+  question  String   @db.VarChar(255)
+  content   String   @db.Text
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@index([articleId, sortOrder])
+  @@map("article_faq_questions")
 }
 
 model ArticleCTABanner {

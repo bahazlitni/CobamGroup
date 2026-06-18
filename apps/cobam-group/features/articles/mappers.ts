@@ -8,6 +8,7 @@ import type {
   ArticleCategoryDto,
   ArticleCTABannerDto,
   ArticleDetailDto,
+  ArticleFaqQuestionDto,
   ArticleListItemDto,
   ArticleTagDto,
 } from "./types";
@@ -138,6 +139,22 @@ function mapArticleCtaBanners(article: {
   }));
 }
 
+function mapArticleFaqQuestions(article: {
+  faqQuestions?: Array<{
+    id: bigint;
+    question: string;
+    content: string;
+    sortOrder: number;
+  }>;
+}): ArticleFaqQuestionDto[] {
+  return (article.faqQuestions ?? []).map((item) => ({
+    id: Number(item.id),
+    question: item.question,
+    content: item.content,
+    sortOrder: item.sortOrder,
+  }));
+}
+
 export function mapArticleToDetailDto(
   article: {
     id: bigint;
@@ -145,7 +162,9 @@ export function mapArticleToDetailDto(
     title: string;
     slug: string;
     excerpt: string | null;
-    content: string;
+    introductionContent: string;
+    bodyContent: string;
+    conclusionContent: string;
     titleSeo: string | null;
     descriptionSeo: string | null;
     focusKeyword: string | null;
@@ -183,6 +202,12 @@ export function mapArticleToDetailDto(
         href: string | null;
       }>;
     }>;
+    faqQuestions?: Array<{
+      id: bigint;
+      question: string;
+      content: string;
+      sortOrder: number;
+    }>;
   },
   abilities: ArticleAbilitiesDto,
 ): ArticleDetailDto {
@@ -194,7 +219,9 @@ export function mapArticleToDetailDto(
     title: article.title,
     slug: article.slug,
     excerpt: article.excerpt,
-    content: article.content,
+    introductionContent: article.introductionContent,
+    bodyContent: article.bodyContent,
+    conclusionContent: article.conclusionContent,
     titleSeo: article.titleSeo,
     descriptionSeo: article.descriptionSeo,
     focusKeyword: article.focusKeyword,
@@ -210,6 +237,7 @@ export function mapArticleToDetailDto(
       article.ogImageMediaId != null ? Number(article.ogImageMediaId) : null,
     noIndex: article.noIndex,
     ctaBanners: mapArticleCtaBanners(article),
+    faqQuestions: mapArticleFaqQuestions(article),
     abilities,
   };
 }

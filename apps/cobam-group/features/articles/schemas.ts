@@ -250,6 +250,36 @@ function parseArticleCtaBanners(value: unknown): ArticleCreateInput["ctaBanners"
   });
 }
 
+function parseArticleFaqQuestions(value: unknown): ArticleCreateInput["faqQuestions"] {
+  if (value == null) {
+    return [];
+  }
+
+  if (!Array.isArray(value)) {
+    throw new ArticleValidationError('Invalid "faqQuestions"');
+  }
+
+  return value
+    .map((item, index) => {
+      if (!isRecord(item)) {
+        throw new ArticleValidationError('Invalid "faqQuestions"');
+      }
+
+      return {
+        question: parseRequiredString(item.question, `faqQuestions[${index}].question`),
+        content: parseRequiredString(item.content, `faqQuestions[${index}].content`),
+        sortOrder:
+          parseOptionalNullableInteger(item.sortOrder, `faqQuestions[${index}].sortOrder`) ??
+          index,
+      };
+    })
+    .sort((left, right) => left.sortOrder - right.sortOrder)
+    .map((item, index) => ({
+      ...item,
+      sortOrder: index,
+    }));
+}
+
 function parseCategoryId(raw: Record<string, unknown>) {
   const directCategoryId = parseOptionalNullableInteger(raw.categoryId, "categoryId");
 
@@ -371,7 +401,9 @@ function parseArticleInputBase(raw: unknown): ArticleCreateInput {
     title: parseRequiredString(raw.title, "title"),
     slug: parseRequiredString(raw.slug, "slug"),
     excerpt: parseOptionalNullableString(raw.excerpt),
-    content: parseRequiredString(raw.content, "content"),
+    introductionContent: parseRequiredString(raw.introductionContent, "introductionContent"),
+    bodyContent: parseRequiredString(raw.bodyContent, "bodyContent"),
+    conclusionContent: parseRequiredString(raw.conclusionContent, "conclusionContent"),
     titleSeo: parseOptionalTitleSeo(raw.titleSeo),
     descriptionSeo: parseOptionalDescriptionSeo(raw.descriptionSeo),
     focusKeyword: parseOptionalFocusKeyword(raw.focusKeyword),
@@ -389,6 +421,7 @@ function parseArticleInputBase(raw: unknown): ArticleCreateInput {
     ),
     noIndex: parseOptionalNullableBoolean(raw.noIndex),
     ctaBanners: parseArticleCtaBanners(raw.ctaBanners),
+    faqQuestions: parseArticleFaqQuestions(raw.faqQuestions),
   };
 }
 

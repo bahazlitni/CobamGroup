@@ -25,7 +25,9 @@ export type ArticleCreateInput = {
   title: string;
   slug: string;
   excerpt: string | null;
-  content: string;
+  introductionContent: string;
+  bodyContent: string;
+  conclusionContent: string;
   titleSeo: string | null;
   descriptionSeo: string | null;
   focusKeyword: string | null;
@@ -37,6 +39,7 @@ export type ArticleCreateInput = {
   ogImageMediaId: number | null;
   noIndex: boolean;
   ctaBanners: ArticleCTABannerInput[];
+  faqQuestions: ArticleFaqQuestionInput[];
 };
 
 export type ArticleUpdateInput = ArticleCreateInput;
@@ -113,6 +116,16 @@ export type ArticleCTABannerDto = Omit<ArticleCTABannerInput, "buttons"> & {
   buttons: ArticleCTABannerButtonDto[];
 };
 
+export type ArticleFaqQuestionInput = {
+  question: string;
+  content: string;
+  sortOrder: number;
+};
+
+export type ArticleFaqQuestionDto = ArticleFaqQuestionInput & {
+  id: number;
+};
+
 export type ArticleAuthorOptionsQuery = {
   articleId: number | null;
   q?: string;
@@ -137,7 +150,9 @@ export type ArticleDetailDto = {
   title: string;
   slug: string;
   excerpt: string | null;
-  content: string;
+  introductionContent: string;
+  bodyContent: string;
+  conclusionContent: string;
   titleSeo: string | null;
   descriptionSeo: string | null;
   focusKeyword: string | null;
@@ -152,6 +167,7 @@ export type ArticleDetailDto = {
   ogImageMediaId: number | null;
   noIndex: boolean;
   ctaBanners: ArticleCTABannerDto[];
+  faqQuestions: ArticleFaqQuestionDto[];
   abilities: ArticleAbilitiesDto;
 };
 

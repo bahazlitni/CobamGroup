@@ -418,14 +418,30 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
     }),
     prisma.article.findMany({
       where: {
-        OR: mediaIds.map((mediaId) => ({
-          content: {
-            contains: mediaId.toString(),
+        OR: mediaIds.flatMap((mediaId) => [
+          { introductionContent: { contains: mediaId.toString() } },
+          { bodyContent: { contains: mediaId.toString() } },
+          { conclusionContent: { contains: mediaId.toString() } },
+          {
+            faqQuestions: {
+              some: {
+                content: {
+                  contains: mediaId.toString(),
+                },
+              },
+            },
           },
-        })),
+        ]),
       },
       select: {
-        content: true,
+        introductionContent: true,
+        bodyContent: true,
+        conclusionContent: true,
+        faqQuestions: {
+          select: {
+            content: true,
+          },
+        },
       },
     }),
     prisma.article.findMany({
@@ -495,7 +511,12 @@ async function attachMediaUsageCounts<T extends MediaRecord>(records: T[]) {
   }
 
   for (const article of articleAttachments) {
-    for (const mediaId of extractArticleMediaIds(article.content)) {
+    for (const mediaId of [
+      ...extractArticleMediaIds(article.introductionContent),
+      ...extractArticleMediaIds(article.bodyContent),
+      ...extractArticleMediaIds(article.conclusionContent),
+      ...article.faqQuestions.flatMap((item) => extractArticleMediaIds(item.content)),
+    ]) {
       incrementUsageCount(countsByMediaId, BigInt(mediaId), "articleMediaLinks");
     }
   }

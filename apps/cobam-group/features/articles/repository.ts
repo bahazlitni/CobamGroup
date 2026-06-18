@@ -3,6 +3,7 @@ import { prisma } from "@/lib/server/db/prisma";
 import type {
   ArticleAuthorOptionsQuery,
   ArticleCTABannerInput,
+  ArticleFaqQuestionInput,
   ArticleListQuery,
 } from "./types";
 
@@ -10,7 +11,9 @@ type ResolvedArticleInput = {
   title: string;
   slug: string;
   excerpt: string | null;
-  content: string;
+  introductionContent: string;
+  bodyContent: string;
+  conclusionContent: string;
   titleSeo: string | null;
   descriptionSeo: string | null;
   focusKeyword: string | null;
@@ -22,6 +25,7 @@ type ResolvedArticleInput = {
   ogImageMediaId: number | null;
   noIndex: boolean;
   ctaBanners: ArticleCTABannerInput[];
+  faqQuestions: ArticleFaqQuestionInput[];
 };
 
 const ARTICLE_STAFF_ROLE_SELECT = Prisma.validator<Prisma.UserRoleAssignmentSelect>()({
@@ -74,7 +78,9 @@ const ARTICLE_SELECT = Prisma.validator<Prisma.ArticleSelect>()({
   title: true,
   slug: true,
   excerpt: true,
-  content: true,
+  introductionContent: true,
+  bodyContent: true,
+  conclusionContent: true,
   titleSeo: true,
   descriptionSeo: true,
   focusKeyword: true,
@@ -128,6 +134,15 @@ const ARTICLE_SELECT = Prisma.validator<Prisma.ArticleSelect>()({
       },
     },
   },
+  faqQuestions: {
+    orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+    select: {
+      id: true,
+      question: true,
+      content: true,
+      sortOrder: true,
+    },
+  },
 });
 
 function buildArticleWhere(query: ArticleListQuery): Prisma.ArticleWhereInput {
@@ -169,6 +184,14 @@ function mapCtaBannersForCreate(input: ArticleCTABannerInput[]) {
           })),
         }
       : undefined,
+  }));
+}
+
+function mapFaqQuestionsForCreate(input: ArticleFaqQuestionInput[]) {
+  return input.map((item, index) => ({
+    question: item.question,
+    content: item.content,
+    sortOrder: index,
   }));
 }
 
@@ -260,7 +283,9 @@ export async function createArticle(
       title: input.title,
       slug: input.slug,
       excerpt: input.excerpt,
-      content: input.content,
+      introductionContent: input.introductionContent,
+      bodyContent: input.bodyContent,
+      conclusionContent: input.conclusionContent,
       titleSeo: input.titleSeo,
       descriptionSeo: input.descriptionSeo,
       focusKeyword: input.focusKeyword,
@@ -279,6 +304,11 @@ export async function createArticle(
             create: mapCtaBannersForCreate(input.ctaBanners),
           }
         : undefined,
+      faqQuestions: input.faqQuestions.length
+        ? {
+            create: mapFaqQuestionsForCreate(input.faqQuestions),
+          }
+        : undefined,
     },
     select: ARTICLE_SELECT,
   });
@@ -295,7 +325,9 @@ export async function updateArticle(
       title: input.title,
       slug: input.slug,
       excerpt: input.excerpt,
-      content: input.content,
+      introductionContent: input.introductionContent,
+      bodyContent: input.bodyContent,
+      conclusionContent: input.conclusionContent,
       titleSeo: input.titleSeo,
       descriptionSeo: input.descriptionSeo,
       focusKeyword: input.focusKeyword,
@@ -312,6 +344,14 @@ export async function updateArticle(
         ...(input.ctaBanners.length
           ? {
               create: mapCtaBannersForCreate(input.ctaBanners),
+            }
+          : {}),
+      },
+      faqQuestions: {
+        deleteMany: {},
+        ...(input.faqQuestions.length
+          ? {
+              create: mapFaqQuestionsForCreate(input.faqQuestions),
             }
           : {}),
       },
@@ -374,10 +414,17 @@ export async function listDueScheduledArticles(now: Date) {
       scheduledPublishAt: true,
       coverMediaId: true,
       ogImageMediaId: true,
-      content: true,
+      introductionContent: true,
+      bodyContent: true,
+      conclusionContent: true,
       ctaBanners: {
         select: {
           imageId: true,
+        },
+      },
+      faqQuestions: {
+        select: {
+          content: true,
         },
       },
     },
@@ -430,7 +477,9 @@ export async function listArticleSeoComparisonRecords(excludeArticleId?: number 
       titleSeo: true,
       descriptionSeo: true,
       focusKeyword: true,
-      content: true,
+      introductionContent: true,
+      bodyContent: true,
+      conclusionContent: true,
     },
   });
 }

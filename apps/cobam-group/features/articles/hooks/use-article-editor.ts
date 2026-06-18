@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { clearStaffInfiniteListCache } from "@/lib/client/use-staff-infinite-scroll";
 import { normalizeOwnedTagNames } from "@/features/tags/owned";
 import { slugify } from "@/lib/slugify";
-import { normalizeArticleContent } from "../document";
+import { isArticleDocumentEmpty, normalizeArticleContent } from "../document";
 import { analyzeArticleSeo } from "../seo-analyzer";
 import {
   cancelArticlePublicationScheduleClient,
@@ -54,13 +54,23 @@ export type ArticleEditorCTABanner = {
   buttons: ArticleEditorCTABannerButton[];
 };
 
+export type ArticleEditorFaqQuestion = {
+  rowId: string;
+  id: number | null;
+  question: string;
+  content: string;
+  sortOrder: number;
+};
+
 export type ArticleEditorState = {
   title: string;
   slug: string;
   categoryId: string;
   tagNames: string[];
   excerpt: string;
-  content: string;
+  introductionContent: string;
+  bodyContent: string;
+  conclusionContent: string;
   titleSeo: string;
   descriptionSeo: string;
   focusKeyword: string;
@@ -70,6 +80,7 @@ export type ArticleEditorState = {
   ogImageMediaId: string;
   noIndex: boolean;
   ctaBanners: ArticleEditorCTABanner[];
+  faqQuestions: ArticleEditorFaqQuestion[];
   scheduledPublishAt: string;
   status: "draft" | "published";
 };
@@ -121,6 +132,18 @@ function mapCtaBannerToEditorState(
   };
 }
 
+function mapFaqQuestionToEditorState(
+  item: ArticleDetailDto["faqQuestions"][number],
+): ArticleEditorFaqQuestion {
+  return {
+    rowId: createRowId("article-faq"),
+    id: item.id,
+    question: item.question,
+    content: normalizeArticleContent(item.content),
+    sortOrder: item.sortOrder,
+  };
+}
+
 function getEmptyEditorState(): ArticleEditorState {
   return {
     title: "",
@@ -128,7 +151,9 @@ function getEmptyEditorState(): ArticleEditorState {
     categoryId: "",
     tagNames: [],
     excerpt: "",
-    content: normalizeArticleContent(""),
+    introductionContent: normalizeArticleContent(""),
+    bodyContent: normalizeArticleContent(""),
+    conclusionContent: normalizeArticleContent(""),
     titleSeo: "",
     descriptionSeo: "",
     focusKeyword: "",
@@ -138,6 +163,7 @@ function getEmptyEditorState(): ArticleEditorState {
     ogImageMediaId: "",
     noIndex: false,
     ctaBanners: [],
+    faqQuestions: [],
     scheduledPublishAt: "",
     status: "draft",
   };
@@ -150,7 +176,9 @@ function mapArticleToEditorState(article: ArticleDetailDto): ArticleEditorState 
     categoryId: article.category ? String(article.category.id) : "",
     tagNames: article.tags.map((tag) => tag.name),
     excerpt: article.excerpt ?? "",
-    content: normalizeArticleContent(article.content),
+    introductionContent: normalizeArticleContent(article.introductionContent),
+    bodyContent: normalizeArticleContent(article.bodyContent),
+    conclusionContent: normalizeArticleContent(article.conclusionContent),
     titleSeo: article.titleSeo ?? "",
     descriptionSeo: article.descriptionSeo ?? "",
     focusKeyword: article.focusKeyword ?? deriveFocusKeyword(article.title ?? ""),
@@ -160,6 +188,7 @@ function mapArticleToEditorState(article: ArticleDetailDto): ArticleEditorState 
     ogImageMediaId: article.ogImageMediaId != null ? String(article.ogImageMediaId) : "",
     noIndex: article.noIndex,
     ctaBanners: article.ctaBanners.map(mapCtaBannerToEditorState),
+    faqQuestions: article.faqQuestions.map(mapFaqQuestionToEditorState),
     scheduledPublishAt: toDatetimeLocalInputValue(article.scheduledPublishAt),
     status: article.status === "PUBLISHED" ? "published" : "draft",
   };
@@ -177,6 +206,15 @@ function validateEditorStateForSave(state: ArticleEditorState) {
 
     if (banner.buttons.length > 2) {
       throw new Error("Une bannière CTA ne peut pas avoir plus de deux boutons.");
+    }
+  });
+
+  state.faqQuestions.forEach((item, index) => {
+    const hasQuestion = Boolean(item.question.trim());
+    const hasAnswer = !isArticleDocumentEmpty(item.content);
+
+    if (hasQuestion !== hasAnswer) {
+      throw new Error(`La FAQ #${index + 1} doit avoir une question et une réponse.`);
     }
   });
 }
@@ -204,12 +242,22 @@ function mapEditorStateToPayload(state: ArticleEditorState) {
     })),
   }));
 
+  const faqQuestions = state.faqQuestions
+    .filter((item) => item.question.trim() && !isArticleDocumentEmpty(item.content))
+    .map((item, index) => ({
+      question: item.question.trim(),
+      content: normalizeArticleContent(item.content),
+      sortOrder: index,
+    }));
+
   return {
     title: state.title.trim(),
     slug: state.slug.trim(),
     tagNames: normalizeOwnedTagNames(state.tagNames),
     excerpt: state.excerpt.trim() || null,
-    content: normalizeArticleContent(state.content),
+    introductionContent: normalizeArticleContent(state.introductionContent),
+    bodyContent: normalizeArticleContent(state.bodyContent),
+    conclusionContent: normalizeArticleContent(state.conclusionContent),
     titleSeo: state.titleSeo.trim() || null,
     descriptionSeo: state.descriptionSeo.trim() || null,
     focusKeyword: state.focusKeyword.trim() || null,
@@ -220,6 +268,7 @@ function mapEditorStateToPayload(state: ArticleEditorState) {
     ogImageMediaId: state.ogImageMediaId.trim() ? Number(state.ogImageMediaId) : null,
     noIndex: state.noIndex,
     ctaBanners,
+    faqQuestions,
   };
 }
 
@@ -255,7 +304,13 @@ export function useArticleEditor(articleId: number | null) {
         title: state.title,
         slug: state.slug,
         excerpt: state.excerpt,
-        content: state.content,
+        introductionContent: state.introductionContent,
+        bodyContent: state.bodyContent,
+        conclusionContent: state.conclusionContent,
+        faqQuestions: state.faqQuestions.map((item) => ({
+          question: item.question,
+          content: item.content,
+        })),
         titleSeo: state.titleSeo,
         descriptionSeo: state.descriptionSeo,
         focusKeyword: state.focusKeyword,
