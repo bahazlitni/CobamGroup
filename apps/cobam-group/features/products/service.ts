@@ -22,6 +22,7 @@ import {
 } from "./model-b-compat";
 import type {
   ProductFamilyDetailDto,
+  ProductFamilyDissolveResultDto,
   ProductFamilyListItemDto,
   ProductFamilyListResult,
   ProductFamilyUpsertInput,
@@ -222,6 +223,13 @@ type StaffFamilyListRecord = Prisma.ProductFamilyGetPayload<{
   select: typeof STAFF_FAMILY_LIST_SELECT;
 }>;
 
+type FamilySubcategoryTrail = {
+  categorySlug: string;
+  subcategorySlug: string;
+  categorySortOrder: number;
+  subcategorySortOrder: number;
+};
+
 function buildMediaUrl(mediaId: bigint | number, variant: "original" | "thumbnail" = "original") {
   const query = variant === "thumbnail" ? "?variant=thumbnail" : "";
   return `/api/media/${mediaId.toString()}/file${query}`;
@@ -365,6 +373,58 @@ function mapFamilyListItem(record: StaffFamilyListRecord): ProductFamilyListItem
       })) ?? [],
     updatedAt: record.updatedAt.toISOString(),
   };
+}
+
+function compareFamilySubcategoryTrails(
+  left: FamilySubcategoryTrail,
+  right: FamilySubcategoryTrail,
+) {
+  return (
+    left.categorySortOrder - right.categorySortOrder ||
+    left.subcategorySortOrder - right.subcategorySortOrder ||
+    left.categorySlug.localeCompare(right.categorySlug, "fr", { sensitivity: "base" }) ||
+    left.subcategorySlug.localeCompare(right.subcategorySlug, "fr", { sensitivity: "base" })
+  );
+}
+
+function pickPrimaryTrail(
+  subcategories: Array<{
+    subcategory: {
+      slug: string;
+      sortOrder: number;
+      category: {
+        slug: string;
+        sortOrder: number;
+      };
+    };
+  }>,
+): FamilySubcategoryTrail | null {
+  return (
+    subcategories
+      .map((link) => ({
+        categorySlug: link.subcategory.category.slug,
+        subcategorySlug: link.subcategory.slug,
+        categorySortOrder: link.subcategory.category.sortOrder,
+        subcategorySortOrder: link.subcategory.sortOrder,
+      }))
+      .sort(compareFamilySubcategoryTrails)[0] ?? null
+  );
+}
+
+function buildDissolvedFamilySourcePath(familySlug: string, trail: FamilySubcategoryTrail | null) {
+  if (!trail) {
+    return `/produits/familles/${familySlug}`;
+  }
+
+  return `/produits/${trail.categorySlug}/${trail.subcategorySlug}/famille/${familySlug}`;
+}
+
+function buildDissolvedFamilyTargetPath(productSlug: string, trail: FamilySubcategoryTrail | null) {
+  if (!trail) {
+    return `/produits/${productSlug}`;
+  }
+
+  return `/produits/${trail.categorySlug}/${trail.subcategorySlug}/${productSlug}`;
 }
 
 async function assertFamilySlugAvailable(slug: string, excludeFamilyId?: number) {
@@ -1008,6 +1068,134 @@ export async function updateProductService(
 
   const family = await writeFamily(familyId, input);
   return mapFamilyDetail(family);
+}
+
+export async function dissolveProductFamilyService(
+  session: StaffSession,
+  familyId: number,
+): Promise<ProductFamilyDissolveResultDto> {
+  if (!canManageProducts(session)) {
+    throw new ProductServiceError("Accès refusé.", 403);
+  }
+
+  return prisma.$transaction(
+    async (tx) => {
+      const family = await tx.productFamily.findUnique({
+        where: { id: BigInt(familyId) },
+        select: {
+          id: true,
+          slug: true,
+          defaultProductId: true,
+          members: {
+            orderBy: [{ sortOrder: "asc" }, { productId: "asc" }],
+            select: {
+              productId: true,
+              product: {
+                select: {
+                  id: true,
+                  slug: true,
+                  subcategories: {
+                    select: {
+                      subcategory: {
+                        select: {
+                          slug: true,
+                          sortOrder: true,
+                          category: {
+                            select: {
+                              slug: true,
+                              sortOrder: true,
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!family) {
+        throw new ProductServiceError("Famille introuvable.", 404);
+      }
+
+      if (family.members.length === 0) {
+        throw new ProductServiceError(
+          "Impossible de dissoudre une famille sans variante.",
+          409,
+        );
+      }
+
+      const defaultMember =
+        family.members.find((member) => member.productId === family.defaultProductId) ??
+        family.members[0];
+      const memberProductIds = family.members.map((member) => member.productId);
+      const trail = pickPrimaryTrail(defaultMember.product.subcategories);
+      const sourcePath = buildDissolvedFamilySourcePath(family.slug, trail);
+      const targetProductPath = buildDissolvedFamilyTargetPath(defaultMember.product.slug, trail);
+
+      await tx.productFamilyRedirect.upsert({
+        where: {
+          sourcePath,
+        },
+        update: {
+          familyId: family.id,
+          familySlug: family.slug,
+          sourceCategorySlug: trail?.categorySlug ?? null,
+          sourceSubcategorySlug: trail?.subcategorySlug ?? null,
+          sourcePath,
+          defaultVariantId: defaultMember.productId,
+        },
+        create: {
+          familyId: family.id,
+          familySlug: family.slug,
+          sourceCategorySlug: trail?.categorySlug ?? null,
+          sourceSubcategorySlug: trail?.subcategorySlug ?? null,
+          sourcePath,
+          defaultVariantId: defaultMember.productId,
+        },
+      });
+
+      await tx.product.updateMany({
+        where: {
+          id: {
+            in: memberProductIds,
+          },
+        },
+        data: {
+          kind: "SINGLE",
+        },
+      });
+
+      await tx.productFamilyMember.deleteMany({
+        where: {
+          familyId: family.id,
+        },
+      });
+
+      await tx.productFamily.delete({
+        where: {
+          id: family.id,
+        },
+      });
+
+      return {
+        familyId: Number(family.id),
+        familySlug: family.slug,
+        defaultVariantId: Number(defaultMember.productId),
+        defaultVariantSlug: defaultMember.product.slug,
+        redirectPath: sourcePath,
+        targetProductPath,
+        convertedProductIds: memberProductIds.map((productId) => Number(productId)),
+      };
+    },
+    {
+      maxWait: 10_000,
+      timeout: 60_000,
+    },
+  );
 }
 
 export async function deleteProductService(session: StaffSession, familyId: number) {

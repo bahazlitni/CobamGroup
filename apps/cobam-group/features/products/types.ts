@@ -166,6 +166,16 @@ export type ProductFamilyDetailDto = {
   updatedAt: string;
 };
 
+export type ProductFamilyDissolveResultDto = {
+  familyId: number;
+  familySlug: string;
+  defaultVariantId: number;
+  defaultVariantSlug: string;
+  redirectPath: string;
+  targetProductPath: string;
+  convertedProductIds: number[];
+};
+
 export type ProductFamilyListResult = {
   items: ProductFamilyListItemDto[];
   productBrandOptions: string[];

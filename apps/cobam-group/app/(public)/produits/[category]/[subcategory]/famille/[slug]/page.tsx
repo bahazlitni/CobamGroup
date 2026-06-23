@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import StructuredData from "@/components/seo/StructuredData";
 import PublicProductInspectorView from "@/components/public/products/public-product-inspector";
 import { findPublicProductSubcategoryBySlugs } from "@/features/product-categories/public";
 import {
+  findPublicDissolvedFamilyRedirect,
   findPublicFamilyBySlug,
   findPublicRelatedProducts,
 } from "@/features/products/public";
@@ -27,9 +28,25 @@ export async function generateMetadata({
   const family = await findPublicFamilyBySlug(slug);
 
   if (!family) {
+    const dissolvedRedirect = await findPublicDissolvedFamilyRedirect({
+      categorySlug: category,
+      subcategorySlug: subcategory,
+      familySlug: slug,
+    });
+
+    if (!dissolvedRedirect) {
+      return {
+        title: "Famille introuvable | COBAM GROUP",
+        robots: { index: false, follow: false },
+      };
+    }
+
     return {
-      title: "Famille introuvable | COBAM GROUP",
-      robots: { index: false, follow: false },
+      title: "Famille redirigée | COBAM GROUP",
+      alternates: {
+        canonical: dissolvedRedirect.targetPath,
+      },
+      robots: { index: false, follow: true },
     };
   }
 
@@ -48,7 +65,21 @@ export default async function PublicFamilyPage({ params }: FamilyPageProps) {
     }),
   ]);
 
-  if (!family || !subcategoryData) {
+  if (!family) {
+    const dissolvedRedirect = await findPublicDissolvedFamilyRedirect({
+      categorySlug: category,
+      subcategorySlug: subcategory,
+      familySlug: slug,
+    });
+
+    if (dissolvedRedirect) {
+      permanentRedirect(dissolvedRedirect.targetPath);
+    }
+
+    notFound();
+  }
+
+  if (!subcategoryData) {
     notFound();
   }
 

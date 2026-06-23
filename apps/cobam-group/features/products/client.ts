@@ -2,6 +2,7 @@
 
 import { staffApiFetch } from "@/lib/api/auth/staff/api-fetch";
 import type {
+  ProductFamilyDissolveResultDto,
   ProductFamilyDetailDto,
   ProductFamilyListResult,
   ProductFamilyUpsertInput,
@@ -143,6 +144,21 @@ export async function deleteProductClient(id: number) {
     res,
     "Impossible de supprimer la famille produit.",
   );
+}
+
+export async function dissolveProductFamilyClient(
+  id: number,
+): Promise<ProductFamilyDissolveResultDto> {
+  const res = await staffApiFetch(`/api/staff/products/${id}/dissolve`, {
+    method: "POST",
+    auth: true,
+  });
+  const payload = await unwrapResponse<{ result: ProductFamilyDissolveResultDto }>(
+    res,
+    "Impossible de dissoudre la famille produit.",
+  );
+
+  return payload.result;
 }
 
 export async function updateProductFamiliesBulkClient(input: {

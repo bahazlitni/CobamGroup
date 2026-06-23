@@ -32,6 +32,7 @@ import { canCreateProducts, canManageProducts } from "@/features/products/access
 import {
   createProductClient,
   deleteProductClient,
+  dissolveProductFamilyClient,
   getProductClient,
   getProductFormOptionsClient,
   ProductsClientError,
@@ -469,6 +470,7 @@ function ProductEditPageContent() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDissolving, setIsDissolving] = useState(false);
 
   const lockSharedAttributes = commonValues.productTypeId != null;
 
@@ -604,6 +606,43 @@ function ProductEditPageContent() {
             ? err.message
             : "Impossible de supprimer la famille.",
       );
+    }
+  };
+
+  const handleDissolve = async () => {
+    if (!isEdit || !canManage) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      [
+        "Êtes-vous sûr de vouloir dissoudre cette famille ?",
+        "",
+        "Cette action supprimera définitivement la famille, mais conservera ses variantes comme produits simples.",
+      ].join("\n"),
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setIsDissolving(true);
+    try {
+      const result = await dissolveProductFamilyClient(familyId);
+      setInitialSnapshot(JSON.stringify(toPayload(form, commonValues)));
+      toast.success("Famille dissoute. Les variantes sont maintenant des produits simples.");
+      router.replace(
+        `/espace/staff/gestion-des-produits/produits/edit?id=${result.defaultVariantId}`,
+      );
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof ProductsClientError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Impossible de dissoudre la famille.",
+      );
+    } finally {
+      setIsDissolving(false);
     }
   };
 
@@ -1593,9 +1632,28 @@ function ProductEditPageContent() {
             Enregistrer
           </AnimatedUIButton>
           {isEdit ? (
-            <AnimatedUIButton type="button" variant="light" onClick={() => void handleDelete()}>
-              Supprimer
-            </AnimatedUIButton>
+            <>
+              <AnimatedUIButton
+                type="button"
+                variant="outline"
+                icon="warning"
+                iconPosition="left"
+                onClick={() => void handleDissolve()}
+                loading={isDissolving}
+                loadingText="Dissolution..."
+                disabled={isSaving}
+              >
+                Dissoudre la famille
+              </AnimatedUIButton>
+              <AnimatedUIButton
+                type="button"
+                variant="light"
+                onClick={() => void handleDelete()}
+                disabled={isDissolving}
+              >
+                Supprimer
+              </AnimatedUIButton>
+            </>
           ) : null}
         </div>
       </div>

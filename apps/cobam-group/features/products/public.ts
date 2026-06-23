@@ -188,12 +188,25 @@ const PUBLIC_FAMILY_SELECT = {
   },
 } satisfies Prisma.ProductFamilySelect;
 
+const PUBLIC_FAMILY_REDIRECT_SELECT = {
+  sourcePath: true,
+  sourceCategorySlug: true,
+  sourceSubcategorySlug: true,
+  defaultVariant: {
+    select: PUBLIC_PRODUCT_SELECT,
+  },
+} satisfies Prisma.ProductFamilyRedirectSelect;
+
 type PublicFamilyRecord = Prisma.ProductFamilyGetPayload<{
   select: typeof PUBLIC_FAMILY_SELECT;
 }>;
 
 type PublicProductRecord = Prisma.ProductGetPayload<{
   select: typeof PUBLIC_PRODUCT_SELECT;
+}>;
+
+type PublicFamilyRedirectRecord = Prisma.ProductFamilyRedirectGetPayload<{
+  select: typeof PUBLIC_FAMILY_REDIRECT_SELECT;
 }>;
 
 type PublicIndexRow = {
@@ -882,6 +895,73 @@ function buildFamilySubcategories(publicVariants: PublicProductRecord[]) {
       categorySlug: link.categorySlug,
       categoryName: link.categoryName,
     }));
+}
+
+function resolveDissolvedFamilyTargetPath(
+  record: PublicFamilyRedirectRecord,
+  input: {
+    categorySlug: string;
+    subcategorySlug: string;
+  },
+) {
+  if (!isPublicSingleProduct(record.defaultVariant)) {
+    return null;
+  }
+
+  const links = mapSubcategoryLinks(record.defaultVariant.subcategories);
+  const matchingLink =
+    links.find(
+      (link) =>
+        link.categorySlug === input.categorySlug && link.slug === input.subcategorySlug,
+    ) ??
+    links.find(
+      (link) =>
+        link.categorySlug === record.sourceCategorySlug &&
+        link.slug === record.sourceSubcategorySlug,
+    ) ??
+    links[0];
+
+  if (!matchingLink) {
+    return null;
+  }
+
+  return `/produits/${matchingLink.categorySlug}/${matchingLink.slug}/${record.defaultVariant.slug}`;
+}
+
+export async function findPublicDissolvedFamilyRedirect(input: {
+  categorySlug: string;
+  subcategorySlug: string;
+  familySlug: string;
+}): Promise<{ sourcePath: string; targetPath: string } | null> {
+  const sourcePath = `/produits/${input.categorySlug}/${input.subcategorySlug}/famille/${input.familySlug}`;
+  const exactRedirect = await prisma.productFamilyRedirect.findUnique({
+    where: { sourcePath },
+    select: PUBLIC_FAMILY_REDIRECT_SELECT,
+  });
+  const redirect =
+    exactRedirect ??
+    (await prisma.productFamilyRedirect.findFirst({
+      where: {
+        familySlug: input.familySlug,
+      },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: PUBLIC_FAMILY_REDIRECT_SELECT,
+    }));
+
+  if (!redirect) {
+    return null;
+  }
+
+  const targetPath = resolveDissolvedFamilyTargetPath(redirect, input);
+
+  if (!targetPath) {
+    return null;
+  }
+
+  return {
+    sourcePath: redirect.sourcePath,
+    targetPath,
+  };
 }
 
 export async function listPublicProductsBySubcategory(input: {
