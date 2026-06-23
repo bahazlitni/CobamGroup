@@ -683,7 +683,6 @@ export default function PromotionEditorPage({ promotionId }: { promotionId?: str
             pickerTitle="Choisir une banniere de promotion"
             pickerDescription="Choisissez une image existante ou importez une nouvelle banniere."
             addButtonLabel="Ajouter une banniere"
-            addButtonHint="Image uniquement"
             mediaKind="IMAGE"
             maxItems={1}
             folderId={MEDIA_FOLDER_SCOPE_IDS.PROMOTIONS}

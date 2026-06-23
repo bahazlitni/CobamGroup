@@ -15,6 +15,7 @@ import {
   richTextDescriptionToString,
   visibilityFromProductLifecycle,
 } from "@/features/products/model-b-compat";
+import { buildStaffProductSearchWhere } from "@/features/products/search";
 import type {
   AllProductsExportFormat,
   AllProductsExportMode,
@@ -683,30 +684,7 @@ export async function listAllProductsService(
     throw new AllProductsServiceError("Accès refusé.", 403);
   }
 
-  const where: Prisma.ProductWhereInput = query.q
-    ? {
-        OR: [
-          { sku: { contains: query.q, mode: "insensitive" } },
-          { slug: { contains: query.q, mode: "insensitive" } },
-          { name: { contains: query.q, mode: "insensitive" } },
-          { displayName: { contains: query.q, mode: "insensitive" } },
-          {
-            familyMembership: {
-              is: {
-                family: {
-                  is: {
-                    OR: [
-                      { name: { contains: query.q, mode: "insensitive" } },
-                      { slug: { contains: query.q, mode: "insensitive" } },
-                    ],
-                  },
-                },
-              },
-            },
-          },
-        ],
-      }
-    : {};
+  const where = buildStaffProductSearchWhere(query.q);
 
   if (query.kind) {
     where.kind =

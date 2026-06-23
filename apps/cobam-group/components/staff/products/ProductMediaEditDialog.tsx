@@ -77,22 +77,20 @@ export default function ProductMediaEditDialog({
       <DialogContent className="max-w-3xl overflow-hidden p-0">
         <DialogHeader className="border-b border-slate-200 px-6 py-5">
           <DialogTitle className="text-base font-semibold text-cobam-dark-blue">
-            Modifier le media
+            Modifier le média
           </DialogTitle>
-          <DialogDescription className="pt-2 text-sm leading-6 text-slate-500">
-            Ajustez le nom public et le texte alternatif associes a ce produit.
-          </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-6 px-6 py-6 md:grid-cols-[240px_minmax(0,1fr)]">
           <div className="space-y-3">
             <MediaPreview media={media} />
-            <p className="break-words text-xs leading-5 text-slate-500">
-              {media.originalFilename || `${media.kind.toLowerCase()} #${media.id}`}
-            </p>
           </div>
 
           <div className="space-y-5">
+            <p className="break-words text-base font-semibold">
+              {media.originalFilename || `${media.kind.toLowerCase()} #${media.id}`}
+            </p>
+
             <label className="block space-y-2">
               <span className="text-xs font-bold uppercase tracking-[0.22em] text-cobam-water-blue">
                 Nom

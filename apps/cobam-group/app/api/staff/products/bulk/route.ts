@@ -3,6 +3,8 @@ import { AuthError, requireStaffSession } from "@/features/auth/server/session";
 import { ProductServiceError } from "@/features/products/service";
 import {
   deleteProductFamiliesBulkService,
+  dissolveProductFamiliesBulkService,
+  type FamilyBulkUpdateInput,
   updateProductFamiliesBulkService,
 } from "@/features/products/bulk";
 
@@ -24,7 +26,7 @@ function parseIds(input: unknown): number[] {
     throw new ProductServiceError("Identifiants invalides.", 400);
   }
 
-  return parsed;
+  return Array.from(new Set(parsed));
 }
 
 export async function POST(req: Request) {
@@ -38,7 +40,7 @@ export async function POST(req: Request) {
       throw new ProductServiceError("Donnees invalides.", 400);
     }
 
-    await updateProductFamiliesBulkService(session, ids, data as any);
+    await updateProductFamiliesBulkService(session, ids, data as FamilyBulkUpdateInput);
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error: unknown) {
@@ -74,6 +76,29 @@ export async function DELETE(req: Request) {
     }
 
     console.error("PRODUCT_FAMILIES_BULK_DELETE_ERROR:", error);
+    return NextResponse.json({ ok: false, message: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const session = await requireStaffSession(req);
+    const payload = (await req.json()) as Record<string, unknown>;
+    const ids = parseIds(payload);
+
+    const results = await dissolveProductFamiliesBulkService(session, ids);
+
+    return NextResponse.json({ ok: true, results }, { status: 200 });
+  } catch (error: unknown) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ ok: false, message: error.message }, { status: 401 });
+    }
+
+    if (error instanceof ProductServiceError) {
+      return NextResponse.json({ ok: false, message: error.message }, { status: error.status });
+    }
+
+    console.error("PRODUCT_FAMILIES_BULK_DISSOLVE_ERROR:", error);
     return NextResponse.json({ ok: false, message: "Internal server error" }, { status: 500 });
   }
 }

@@ -20,9 +20,13 @@ import {
   richTextDescriptionToEditorValue,
   stringToRichTextDescription,
 } from "./model-b-compat";
+import { buildStaffProductSearchWhere } from "./search";
 import type {
   ProductFamilyDetailDto,
   ProductFamilyDissolveResultDto,
+  ProductFamilyGroupingCandidateDto,
+  ProductFamilyGroupingCandidatesResult,
+  ProductFamilyGroupingInput,
   ProductFamilyListItemDto,
   ProductFamilyListResult,
   ProductFamilyUpsertInput,
@@ -154,11 +158,10 @@ const STAFF_FAMILY_DETAIL_SELECT = {
   id: true,
   name: true,
   slug: true,
-  subtitle: true,
+  titleSeo: true,
   description: true,
   descriptionSeo: true,
   mainImageMediaId: true,
-  defaultProductId: true,
   createdAt: true,
   updatedAt: true,
   members: {
@@ -176,30 +179,34 @@ const STAFF_FAMILY_LIST_SELECT = {
   id: true,
   name: true,
   slug: true,
-  subtitle: true,
   description: true,
   updatedAt: true,
   mainImageMediaId: true,
-  defaultProduct: {
+  members: {
+    orderBy: [{ sortOrder: "asc" }, { productId: "asc" }],
     select: {
-      id: true,
-      sku: true,
-      brand: { select: { name: true } },
-      visibleEcommerce: true,
-      visibleVitrine: true,
-      lifecycle: true,
-      subcategories: {
+      productId: true,
+      product: {
         select: {
-          subcategory: {
+          sku: true,
+          brand: { select: { name: true } },
+          visibleEcommerce: true,
+          visibleVitrine: true,
+          lifecycle: true,
+          subcategories: {
             select: {
-              id: true,
-              name: true,
-              slug: true,
-              category: {
+              subcategory: {
                 select: {
                   id: true,
                   name: true,
                   slug: true,
+                  category: {
+                    select: {
+                      id: true,
+                      name: true,
+                      slug: true,
+                    },
+                  },
                 },
               },
             },
@@ -208,12 +215,53 @@ const STAFF_FAMILY_LIST_SELECT = {
       },
     },
   },
-  members: {
+} satisfies Prisma.ProductFamilySelect;
+
+const STAFF_GROUPING_CANDIDATE_SELECT = {
+  id: true,
+  kind: true,
+  sku: true,
+  slug: true,
+  name: true,
+  displayName: true,
+  brand: { select: { name: true } },
+  visibleEcommerce: true,
+  visibleVitrine: true,
+  lifecycle: true,
+  updatedAt: true,
+  media: {
+    where: {
+      role: "GALLERY",
+    },
+    orderBy: [{ sortOrder: "asc" }, { mediaId: "asc" }],
     select: {
-      productId: true,
+      mediaId: true,
+      media: {
+        select: {
+          kind: true,
+        },
+      },
     },
   },
-} satisfies Prisma.ProductFamilySelect;
+  subcategories: {
+    select: {
+      subcategory: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          category: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+        },
+      },
+    },
+  },
+} satisfies Prisma.ProductSelect;
 
 type StaffFamilyDetailRecord = Prisma.ProductFamilyGetPayload<{
   select: typeof STAFF_FAMILY_DETAIL_SELECT;
@@ -221,6 +269,10 @@ type StaffFamilyDetailRecord = Prisma.ProductFamilyGetPayload<{
 
 type StaffFamilyListRecord = Prisma.ProductFamilyGetPayload<{
   select: typeof STAFF_FAMILY_LIST_SELECT;
+}>;
+
+type StaffGroupingCandidateRecord = Prisma.ProductGetPayload<{
+  select: typeof STAFF_GROUPING_CANDIDATE_SELECT;
 }>;
 
 type FamilySubcategoryTrail = {
@@ -328,21 +380,14 @@ function mapVariant(
 }
 
 function mapFamilyDetail(record: StaffFamilyDetailRecord): ProductFamilyDetailDto {
-  const defaultProductId = record.defaultProductId == null ? null : Number(record.defaultProductId);
-  const defaultVariantIndex = Math.max(
-    0,
-    record.members.findIndex((member) => Number(member.product.id) === defaultProductId),
-  );
-
   return {
     id: Number(record.id),
     name: record.name,
     slug: record.slug,
-    subtitle: record.subtitle,
+    titleSeo: record.titleSeo,
     description: record.description,
     descriptionSeo: record.descriptionSeo,
     mainImageMediaId: record.mainImageMediaId == null ? null : Number(record.mainImageMediaId),
-    defaultVariantIndex,
     variants: record.members.map((member) => mapVariant(member.product)),
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString(),
@@ -350,20 +395,21 @@ function mapFamilyDetail(record: StaffFamilyDetailRecord): ProductFamilyDetailDt
 }
 
 function mapFamilyListItem(record: StaffFamilyListRecord): ProductFamilyListItemDto {
+  const defaultProduct = record.members[0]?.product ?? null;
+
   return {
     id: Number(record.id),
     name: record.name,
     slug: record.slug,
-    subtitle: record.subtitle,
     description: record.description,
     mainImageUrl:
       record.mainImageMediaId == null ? null : buildMediaUrl(record.mainImageMediaId, "thumbnail"),
     variantCount: record.members.length,
-    defaultVariantSku: record.defaultProduct?.sku ?? null,
-    brand: productBrandLabel(record.defaultProduct?.brand),
-    lifecycle: record.defaultProduct ? productLifecycleFromVisibility(record.defaultProduct) : null,
+    defaultVariantSku: defaultProduct?.sku ?? null,
+    brand: productBrandLabel(defaultProduct?.brand),
+    lifecycle: defaultProduct ? productLifecycleFromVisibility(defaultProduct) : null,
     subcategories:
-      record.defaultProduct?.subcategories.map(({ subcategory }) => ({
+      defaultProduct?.subcategories.map(({ subcategory }) => ({
         id: Number(subcategory.id),
         categoryId: Number(subcategory.category.id),
         categoryName: subcategory.category.name,
@@ -371,6 +417,45 @@ function mapFamilyListItem(record: StaffFamilyListRecord): ProductFamilyListItem
         name: subcategory.name,
         slug: subcategory.slug,
       })) ?? [],
+    updatedAt: record.updatedAt.toISOString(),
+  };
+}
+
+function mapGroupingCandidate(
+  record: StaffGroupingCandidateRecord,
+): ProductFamilyGroupingCandidateDto {
+  const firstImage = record.media.find((link) => link.media.kind === "IMAGE");
+
+  return {
+    id: Number(record.id),
+    kind: record.kind,
+    sku: record.sku,
+    slug: record.slug,
+    name: record.name,
+    displayName: record.displayName,
+    brand: productBrandLabel(record.brand),
+    lifecycle: productLifecycleFromVisibility(record),
+    hasImage: record.media.some((link) => link.media.kind === "IMAGE"),
+    imageThumbnailUrl: firstImage ? buildMediaUrl(firstImage.mediaId, "thumbnail") : null,
+    subcategories: record.subcategories
+      .map(({ subcategory }) => ({
+        id: Number(subcategory.id),
+        categoryId: Number(subcategory.category.id),
+        categoryName: subcategory.category.name,
+        categorySlug: subcategory.category.slug,
+        name: subcategory.name,
+        slug: subcategory.slug,
+      }))
+      .sort((left, right) => {
+        const categoryCompare = left.categoryName.localeCompare(right.categoryName, "fr", {
+          sensitivity: "base",
+        });
+        if (categoryCompare !== 0) {
+          return categoryCompare;
+        }
+
+        return left.name.localeCompare(right.name, "fr", { sensitivity: "base" });
+      }),
     updatedAt: record.updatedAt.toISOString(),
   };
 }
@@ -637,7 +722,7 @@ async function writeFamily(familyId: number | null, input: ProductFamilyUpsertIn
               data: {
                 name: input.name,
                 slug: input.slug,
-                subtitle: input.subtitle,
+                titleSeo: input.titleSeo,
                 description: input.description,
                 descriptionSeo: input.descriptionSeo,
                 mainImageMediaId:
@@ -652,7 +737,7 @@ async function writeFamily(familyId: number | null, input: ProductFamilyUpsertIn
               data: {
                 name: input.name,
                 slug: input.slug,
-                subtitle: input.subtitle,
+                titleSeo: input.titleSeo,
                 description: input.description,
                 descriptionSeo: input.descriptionSeo,
                 mainImageMediaId:
@@ -689,8 +774,6 @@ async function writeFamily(familyId: number | null, input: ProductFamilyUpsertIn
           },
         });
       }
-
-      const createdOrUpdatedIds: bigint[] = [];
 
       for (const [index, variant] of input.variants.entries()) {
         const brandId = await resolveProductBrandOrganizationId(tx, variant.brand);
@@ -751,19 +834,7 @@ async function writeFamily(familyId: number | null, input: ProductFamilyUpsertIn
             sortOrder: index,
           },
         });
-
-        createdOrUpdatedIds.push(product.id);
       }
-
-      const defaultProductId =
-        createdOrUpdatedIds[input.defaultVariantIndex] ?? createdOrUpdatedIds[0] ?? null;
-
-      await tx.productFamily.update({
-        where: { id: family.id },
-        data: {
-          defaultProductId,
-        },
-      });
 
       return tx.productFamily.findUniqueOrThrow({
         where: { id: family.id },
@@ -983,7 +1054,6 @@ export async function listProductsService(
         OR: [
           { name: { contains: query.q, mode: "insensitive" } },
           { slug: { contains: query.q, mode: "insensitive" } },
-          { subtitle: { contains: query.q, mode: "insensitive" } },
           { description: { contains: query.q, mode: "insensitive" } },
           {
             members: {
@@ -1031,6 +1101,49 @@ export async function listProductsService(
   };
 }
 
+export async function listProductFamilyGroupingCandidatesService(
+  session: StaffSession,
+  query: {
+    page: number;
+    pageSize: number;
+    q: string | null;
+    excludeVariants?: boolean;
+    ungroupedOnly?: boolean;
+    excludedProductIds?: number[];
+  },
+): Promise<ProductFamilyGroupingCandidatesResult> {
+  if (!canAccessProducts(session)) {
+    throw new ProductServiceError("Accès refusé.", 403);
+  }
+
+  const where: Prisma.ProductWhereInput = {
+    ...buildStaffProductSearchWhere(query.q),
+    ...(query.excludeVariants === false ? {} : { kind: { in: ["STANDARD", "SINGLE"] } }),
+    ...(query.ungroupedOnly === false ? {} : { familyMembership: { is: null } }),
+    ...(query.excludedProductIds && query.excludedProductIds.length > 0
+      ? { id: { notIn: query.excludedProductIds.map((productId) => BigInt(productId)) } }
+      : {}),
+  };
+
+  const [items, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
+      skip: (query.page - 1) * query.pageSize,
+      take: query.pageSize,
+      select: STAFF_GROUPING_CANDIDATE_SELECT,
+    }),
+    prisma.product.count({ where }),
+  ]);
+
+  return {
+    items: items.map(mapGroupingCandidate),
+    total,
+    page: query.page,
+    pageSize: query.pageSize,
+  };
+}
+
 export async function getProductByIdService(session: StaffSession, familyId: number) {
   if (!canAccessProducts(session)) {
     throw new ProductServiceError("Accès refusé.", 403);
@@ -1054,6 +1167,110 @@ export async function createProductService(session: StaffSession, input: Product
   }
 
   const family = await writeFamily(null, input);
+  return mapFamilyDetail(family);
+}
+
+export async function groupExistingProductsIntoFamilyService(
+  session: StaffSession,
+  input: ProductFamilyGroupingInput,
+): Promise<ProductFamilyDetailDto> {
+  if (!canCreateProducts(session) || !canManageProducts(session)) {
+    throw new ProductServiceError("Acces refuse.", 403);
+  }
+
+  await assertFamilySlugAvailable(input.slug);
+
+  const selectedProductIds = input.productIds.map((productId) => BigInt(productId));
+
+  const family = await prisma.$transaction(
+    async (tx) => {
+      const products = await tx.product.findMany({
+        where: {
+          id: {
+            in: selectedProductIds,
+          },
+        },
+        select: {
+          id: true,
+          kind: true,
+          sku: true,
+          familyMembership: {
+            select: {
+              familyId: true,
+            },
+          },
+        },
+      });
+      const productsById = new Map(products.map((product) => [product.id.toString(), product]));
+
+      for (const productId of selectedProductIds) {
+        const product = productsById.get(productId.toString());
+
+        if (!product) {
+          throw new ProductServiceError("Un des produits selectionnes est introuvable.", 404);
+        }
+
+        if (product.kind !== "STANDARD" && product.kind !== "SINGLE") {
+          throw new ProductServiceError(
+            `Le produit "${product.sku}" ne peut pas etre groupe car il n'est pas simple.`,
+            409,
+          );
+        }
+
+        if (product.familyMembership) {
+          throw new ProductServiceError(
+            `Le produit "${product.sku}" appartient deja a une famille.`,
+            409,
+          );
+        }
+      }
+
+      const createdFamily = await tx.productFamily.create({
+        data: {
+          name: input.name,
+          slug: input.slug,
+          titleSeo: input.titleSeo,
+          description: input.description,
+          descriptionSeo: input.descriptionSeo,
+          mainImageMediaId: input.mainImageMediaId == null ? null : BigInt(input.mainImageMediaId),
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      await tx.product.updateMany({
+        where: {
+          id: {
+            in: selectedProductIds,
+          },
+        },
+        data: {
+          kind: "VARIANT",
+        },
+      });
+
+      await tx.productFamilyMember.createMany({
+        data: selectedProductIds.map((productId, index) => ({
+          familyId: createdFamily.id,
+          productId,
+          sortOrder: index,
+        })),
+      });
+
+      return tx.productFamily.findUniqueOrThrow({
+        where: {
+          id: createdFamily.id,
+        },
+        select: STAFF_FAMILY_DETAIL_SELECT,
+      });
+    },
+    {
+      maxWait: 10_000,
+      timeout: 60_000,
+    },
+  );
+
   return mapFamilyDetail(family);
 }
 
@@ -1085,7 +1302,6 @@ export async function dissolveProductFamilyService(
         select: {
           id: true,
           slug: true,
-          defaultProductId: true,
           members: {
             orderBy: [{ sortOrder: "asc" }, { productId: "asc" }],
             select: {
@@ -1128,9 +1344,7 @@ export async function dissolveProductFamilyService(
         );
       }
 
-      const defaultMember =
-        family.members.find((member) => member.productId === family.defaultProductId) ??
-        family.members[0];
+      const defaultMember = family.members[0];
       const memberProductIds = family.members.map((member) => member.productId);
       const trail = pickPrimaryTrail(defaultMember.product.subcategories);
       const sourcePath = buildDissolvedFamilySourcePath(family.slug, trail);

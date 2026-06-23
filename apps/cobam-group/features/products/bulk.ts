@@ -2,8 +2,13 @@ import { Prisma, type ProductLifecycle } from "@prisma/client";
 import type { StaffSession } from "@/features/auth/types";
 import { prisma } from "@/lib/server/db/prisma";
 import { canManageProducts } from "@/features/products/access";
-import { ProductServiceError, deleteProductService } from "@/features/products/service";
+import {
+  ProductServiceError,
+  deleteProductService,
+  dissolveProductFamilyService,
+} from "@/features/products/service";
 import { visibilityFromProductLifecycle } from "@/features/products/model-b-compat";
+import type { ProductFamilyDissolveResultDto } from "@/features/products/types";
 
 export type FamilyBulkUpdateInput = {
   sku?: string | null;
@@ -61,21 +66,27 @@ export async function updateProductFamiliesBulkService(
     },
     select: {
       id: true,
-      defaultProductId: true,
+      members: {
+        orderBy: [{ sortOrder: "asc" }, { productId: "asc" }],
+        take: 1,
+        select: {
+          productId: true,
+        },
+      },
     },
   });
 
-  const defaultProductIds = families
-    .map((family) => family.defaultProductId)
+  const firstMemberProductIds = families
+    .map((family) => family.members[0]?.productId)
     .filter((id): id is bigint => id != null);
 
-  if (defaultProductIds.length === 0) {
+  if (firstMemberProductIds.length === 0) {
     return;
   }
 
   await prisma.product.updateMany({
     where: {
-      id: { in: defaultProductIds },
+      id: { in: firstMemberProductIds },
     },
     data,
   });
@@ -96,4 +107,25 @@ export async function deleteProductFamiliesBulkService(
   for (const familyId of familyIds) {
     await deleteProductService(session, familyId);
   }
+}
+
+export async function dissolveProductFamiliesBulkService(
+  session: StaffSession,
+  familyIds: number[],
+) {
+  if (!canManageProducts(session)) {
+    throw new ProductServiceError("Accès refusé.", 403);
+  }
+
+  if (familyIds.length === 0) {
+    throw new ProductServiceError("Aucune famille sélectionnée.", 400);
+  }
+
+  const results: ProductFamilyDissolveResultDto[] = [];
+
+  for (const familyId of familyIds) {
+    results.push(await dissolveProductFamilyService(session, familyId));
+  }
+
+  return results;
 }

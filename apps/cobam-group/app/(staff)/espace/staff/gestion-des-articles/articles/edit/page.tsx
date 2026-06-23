@@ -460,7 +460,7 @@ function ArticleEditPageContent() {
           </>
         }
       >
-        <Panel pretitle="" title="Rédaction de l'article" allowOverflow>
+        <Panel  title="Rédaction de l'article" allowOverflow>
           <div className="grid gap-6">
             <PanelField id="article-title" label="Titre">
               <Textarea
@@ -592,7 +592,7 @@ function ArticleEditPageContent() {
           </div>
         </Panel>
 
-        <Panel pretitle="" title="Référencement et tags" description="">
+        <Panel  title="Référencement et tags" description="">
           <div className="grid gap-5">
             <PanelField id="article-focus-keyword" label="Mot-clé principal">
               <PanelInput

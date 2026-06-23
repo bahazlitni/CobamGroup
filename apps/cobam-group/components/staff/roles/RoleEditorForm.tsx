@@ -321,7 +321,7 @@ export default function RoleEditorForm({
   return (
     <div className="grid gap-6">
       <Panel
-        pretitle=""
+        
         title="Gestion du rôle"
         description="Activez les permissions à accorder à ce rôle. Les permissions de base du staff restent toujours actives."
       >

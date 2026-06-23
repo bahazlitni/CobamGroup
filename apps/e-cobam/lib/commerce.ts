@@ -142,12 +142,11 @@ const PRODUCT_FAMILY_SELECT = {
   id: true,
   slug: true,
   name: true,
-  subtitle: true,
+  titleSeo: true,
   description: true,
   descriptionSeo: true,
   mainImageMediaId: true,
   mainImage: { select: MEDIA_SELECT },
-  defaultProductId: true,
   updatedAt: true,
   members: {
     where: VISIBLE_ECOMMERCE_FAMILY_MEMBER_WHERE,
@@ -337,6 +336,7 @@ export type CommerceProductDetail = {
   entityType: "PRODUCT" | "FAMILY";
   slug: string;
   name: string;
+  titleSeo: string | null;
   subtitle: string | null;
   description: unknown;
   descriptionSeo: string | null;
@@ -662,9 +662,7 @@ function visibleFamilyProducts(record: ProductFamilyRecord | ProductFamilyDetail
 
 function defaultFamilyProduct(record: ProductFamilyRecord | ProductFamilyDetailRecord) {
   const products = visibleFamilyProducts(record);
-  const defaultProductId = record.defaultProductId == null ? null : Number(record.defaultProductId);
-
-  return products.find((product) => Number(product.id) === defaultProductId) ?? products[0] ?? null;
+  return products[0] ?? null;
 }
 
 function mapFamilyCard(record: ProductFamilyRecord): CommerceProductCard | null {
@@ -687,7 +685,7 @@ function mapFamilyCard(record: ProductFamilyRecord): CommerceProductCard | null 
     href: `/produits/${record.slug}`,
     sku: defaultProduct.sku,
     name: record.name,
-    subtitle: record.subtitle ?? trail.subcategory?.name ?? null,
+    subtitle: trail.subcategory?.name ?? null,
     summary: richTextPlainText(record.description) ?? productSummary(defaultProduct),
     brand: mapBrand(defaultProduct.brand),
     category: trail.category,
@@ -810,7 +808,7 @@ function mapFamilySearchCandidate(
     attributes_text: products.map(productAttributesText).filter(Boolean).join(" "),
     family_name: record.name,
     family_slug: record.slug,
-    family_subtitle: record.subtitle,
+    family_subtitle: null,
     family_description: record.description,
     family_description_seo: record.descriptionSeo,
     family_members_text: products.map(productSearchText).filter(Boolean).join(" "),
@@ -1699,6 +1697,7 @@ function mapProductDetail(record: ProductDetailRecord): CommerceProductDetail {
     entityType: "PRODUCT",
     slug: record.slug,
     name: record.displayName || record.name,
+    titleSeo: record.titleSeo,
     subtitle: trail.subcategory?.name ?? null,
     description: variant.description,
     descriptionSeo: record.descriptionSeo,
@@ -1732,7 +1731,8 @@ function mapFamilyDetail(record: ProductFamilyDetailRecord): CommerceProductDeta
     entityType: "FAMILY",
     slug: record.slug,
     name: record.name,
-    subtitle: record.subtitle ?? trail.subcategory?.name ?? null,
+    titleSeo: record.titleSeo,
+    subtitle: trail.subcategory?.name ?? null,
     description: record.description ?? variants[0]?.description ?? null,
     descriptionSeo: record.descriptionSeo,
     brand: mapBrand(defaultProduct.brand),

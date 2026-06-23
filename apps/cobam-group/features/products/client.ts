@@ -4,6 +4,8 @@ import { staffApiFetch } from "@/lib/api/auth/staff/api-fetch";
 import type {
   ProductFamilyDissolveResultDto,
   ProductFamilyDetailDto,
+  ProductFamilyGroupingCandidatesResult,
+  ProductFamilyGroupingInput,
   ProductFamilyListResult,
   ProductFamilyUpsertInput,
   ProductFormOptionsDto,
@@ -161,6 +163,61 @@ export async function dissolveProductFamilyClient(
   return payload.result;
 }
 
+export async function listProductFamilyGroupingCandidatesClient(input: {
+  page: number;
+  pageSize: number;
+  q?: string;
+  excludeVariants?: boolean;
+  ungroupedOnly?: boolean;
+  excludedProductIds?: number[];
+}): Promise<ProductFamilyGroupingCandidatesResult> {
+  const search = new URLSearchParams({
+    page: String(input.page),
+    pageSize: String(input.pageSize),
+  });
+  if (input.q?.trim()) {
+    search.set("q", input.q.trim());
+  }
+  if (input.excludeVariants != null) {
+    search.set("excludeVariants", String(input.excludeVariants));
+  }
+  if (input.ungroupedOnly != null) {
+    search.set("ungroupedOnly", String(input.ungroupedOnly));
+  }
+  if (input.excludedProductIds && input.excludedProductIds.length > 0) {
+    search.set("excludeIds", input.excludedProductIds.join(","));
+  }
+
+  const res = await staffApiFetch(`/api/staff/products/grouping?${search.toString()}`, {
+    method: "GET",
+    auth: true,
+  });
+
+  return unwrapResponse<ProductFamilyGroupingCandidatesResult>(
+    res,
+    "Impossible de charger les produits simples.",
+  );
+}
+
+export async function groupExistingProductsIntoFamilyClient(
+  input: ProductFamilyGroupingInput,
+): Promise<ProductFamilyDetailDto> {
+  const res = await staffApiFetch("/api/staff/products/grouping", {
+    method: "POST",
+    auth: true,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+  const payload = await unwrapResponse<{ product: ProductFamilyDetailDto }>(
+    res,
+    "Impossible de creer la famille depuis des produits existants.",
+  );
+
+  return payload.product;
+}
+
 export async function updateProductFamiliesBulkClient(input: {
   ids: number[];
   data: Record<string, unknown>;
@@ -188,4 +245,23 @@ export async function deleteProductFamiliesBulkClient(ids: number[]) {
   });
 
   return unwrapResponse(res, "Impossible de supprimer les familles.");
+}
+
+export async function dissolveProductFamiliesBulkClient(
+  ids: number[],
+): Promise<ProductFamilyDissolveResultDto[]> {
+  const res = await staffApiFetch("/api/staff/products/bulk", {
+    method: "PATCH",
+    auth: true,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ ids }),
+  });
+  const payload = await unwrapResponse<{ results: ProductFamilyDissolveResultDto[] }>(
+    res,
+    "Impossible de dissoudre les familles.",
+  );
+
+  return payload.results;
 }

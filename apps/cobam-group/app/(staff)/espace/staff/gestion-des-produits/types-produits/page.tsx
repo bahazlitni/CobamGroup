@@ -1078,7 +1078,6 @@ export default function ProductTypesAdminPage() {
                     pickerTitle="Choisir l'image du type produit"
                     pickerDescription="Choisissez une image existante ou importez-en une nouvelle depuis la mediatheque."
                     addButtonLabel="Choisir une image"
-                    addButtonHint="Image publique du template"
                     onChange={(items) =>
                       setProductTypeForm((current) => {
                         const media = items[0] ?? null;

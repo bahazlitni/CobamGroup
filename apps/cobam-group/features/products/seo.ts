@@ -196,7 +196,7 @@ export function buildFamilyMetadata(
   const path = options?.path ?? resolveFamilyCanonicalPath(family);
 
   return buildMetadataBase({
-    title: family.name,
+    title: family.titleSeo.trim() || family.name,
     description: resolveSeoDescription(
       family.descriptionSeo,
       family.description,

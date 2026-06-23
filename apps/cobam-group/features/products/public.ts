@@ -169,11 +169,10 @@ const PUBLIC_FAMILY_SELECT = {
   id: true,
   name: true,
   slug: true,
-  subtitle: true,
+  titleSeo: true,
   description: true,
   descriptionSeo: true,
   mainImageMediaId: true,
-  defaultProductId: true,
   mainImage: {
     select: MEDIA_SELECT,
   },
@@ -641,23 +640,17 @@ function mapProductCertificates(product: PublicProductRecord): PublicProductCert
 
 function pickDefaultPublicVariant(record: PublicFamilyRecord) {
   const publicVariants = record.members.map((member) => member.product).filter(isPublicProduct);
-  const defaultProductId = record.defaultProductId == null ? null : Number(record.defaultProductId);
 
   if (publicVariants.length === 0) {
     return {
       publicVariants,
-      defaultVariant:
-        publicVariants.find((variant) => Number(variant.id) === defaultProductId) ??
-        publicVariants[0] ??
-        null,
+      defaultVariant: null,
     };
   }
 
   return {
     publicVariants,
-    defaultVariant:
-      publicVariants.find((variant) => Number(variant.id) === defaultProductId) ??
-      publicVariants[0],
+    defaultVariant: publicVariants[0],
   };
 }
 
@@ -684,7 +677,6 @@ function mapFamilySummary(
     entityType: "FAMILY",
     name: record.name,
     slug: record.slug,
-    subtitle: record.subtitle,
     description:
       parseRichTextPreview(record.description) ??
       (defaultVariant ? getProductDescription(defaultVariant) : null),
@@ -706,7 +698,6 @@ function mapProductSummary(
     entityType,
     name: record.displayName,
     slug: record.slug,
-    subtitle: null,
     description: getProductDescription(record),
     brandName: getBrandName(record.brand),
     imageUrl: coverMedia?.kind === "IMAGE" ? coverMedia.url : null,
@@ -1214,7 +1205,7 @@ export async function listPublicProductsIndex(input: {
       ) AS attributes_text,
       f.name AS family_name,
       f.slug AS family_slug,
-      f.subtitle AS family_subtitle,
+      NULL::text AS family_subtitle,
       f.description AS family_description,
       f.description_seo AS family_description_seo,
       (
@@ -1601,7 +1592,6 @@ function buildRelatedProfileFromInspector(
       familyIds: [product.id],
       names: [
         product.name,
-        product.subtitle,
         product.description,
         ...product.variants.flatMap((variant) => [variant.displayName, variant.name]),
       ].filter((value): value is string => Boolean(value)),
@@ -1671,7 +1661,6 @@ function buildRelatedProfileFromRow(row: PublicRelatedIndexRow): RelatedProductP
       row.product_display_name,
       row.product_name,
       row.family_name,
-      row.family_subtitle,
       row.product_type_name,
       row.category_name,
       row.subcategory_name,
@@ -1732,7 +1721,7 @@ async function listPublicRelatedCandidateRows() {
         ) AS attributes_json,
         f.name AS family_name,
         f.slug AS family_slug,
-        f.subtitle AS family_subtitle,
+        NULL::text AS family_subtitle,
         f.description AS family_description,
         f.description_seo AS family_description_seo,
         (
@@ -2038,13 +2027,12 @@ export async function findPublicFamilyBySlug(
     id: Number(record.id),
     name: record.name,
     slug: record.slug,
-    subtitle: record.subtitle,
+    titleSeo: record.titleSeo,
     description: record.description,
     descriptionSeo: record.descriptionSeo,
     brand: mapProductBrand(defaultVariant.brand),
     brandName: getBrandName(defaultVariant.brand),
     coverMedia,
-    defaultVariantId: Number(defaultVariant.id),
     variants,
     subcategories: buildFamilySubcategories(publicVariants),
     colorReferences: buildColorReferences(variants, colorLookup),

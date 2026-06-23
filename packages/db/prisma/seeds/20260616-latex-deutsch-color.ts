@@ -576,19 +576,6 @@ const result = await prisma.$transaction(
       }
     }
 
-    const defaultProduct = requireRecord(
-      await tx.product.findUnique({
-        where: { sku: family.defaultSku },
-        select: { id: true },
-      }),
-      `Default product not found: ${family.defaultSku}`,
-    );
-
-    await tx.productFamily.update({
-      where: { slug: family.slug },
-      data: { defaultProductId: defaultProduct.id },
-    });
-
     return productResults;
   },
   { timeout: 60_000 },
@@ -622,7 +609,7 @@ const validationProducts = await prisma.product.findMany({
     familyMembership: {
       select: {
         sortOrder: true,
-        family: { select: { name: true, defaultProductId: true } },
+        family: { select: { name: true } },
       },
     },
   },

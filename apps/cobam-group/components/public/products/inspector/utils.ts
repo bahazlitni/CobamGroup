@@ -36,7 +36,6 @@ export type UnifiedInspectorProduct = {
   brand: PublicProductBrand | null;
   brandName: string | null;
   coverMedia: PublicProductInspectorMedia | null;
-  defaultVariantId: number | null;
   variants: PublicProductInspectorVariant[];
   subcategories: PublicProductSubcategoryLink[];
   colorReferences: PublicProductColorReference[];
@@ -110,7 +109,6 @@ export function normalizeInspectorProduct(
       brand: product.brand,
       brandName: product.brandName,
       coverMedia: product.coverMedia,
-      defaultVariantId: product.defaultVariantId,
       variants: product.variants,
       subcategories: product.subcategories,
       colorReferences: product.colorReferences,
@@ -125,7 +123,6 @@ export function normalizeInspectorProduct(
     brand: product.brand,
     brandName: product.brandNames.length > 0 ? product.brandNames.join(" · ") : null,
     coverMedia: product.media[0] ?? null,
-    defaultVariantId: product.id,
     variants: [
       {
         id: product.id,
@@ -148,7 +145,7 @@ export function normalizeInspectorProduct(
 }
 
 export function resolveInitialVariantId(product: UnifiedInspectorProduct) {
-  return product.defaultVariantId ?? product.variants[0]?.id ?? null;
+  return product.variants[0]?.id ?? null;
 }
 
 export function getVariantAttributeValue(

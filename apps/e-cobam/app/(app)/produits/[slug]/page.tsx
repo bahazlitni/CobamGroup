@@ -23,14 +23,14 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
 
   return {
-    title: product.name,
+    title: product.titleSeo ?? product.name,
     description:
       product.descriptionSeo ??
       product.variants[0]?.summary ??
       product.subtitle ??
       "Produit disponible dans le catalogue e-cobam.",
     openGraph: {
-      title: product.name,
+      title: product.titleSeo ?? product.name,
       description:
         product.descriptionSeo ??
         product.variants[0]?.summary ??

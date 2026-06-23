@@ -11,7 +11,7 @@ export default function Panel({
     allowOverflow = false,
 }: {
     className?: string;
-    pretitle: string;
+    pretitle?: string;
     title: string;
     description?: string;
     children?: ReactNode;

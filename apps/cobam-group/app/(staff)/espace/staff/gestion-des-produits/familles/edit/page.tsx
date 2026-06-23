@@ -199,11 +199,10 @@ function createEmptyFormState(): FamilyEditorState {
   return {
     name: "",
     slug: "",
-    subtitle: null,
+    titleSeo: "",
     description: null,
     descriptionSeo: null,
     mainImageMediaId: null,
-    defaultVariantIndex: 0,
     variants: [createEmptyVariant(0)],
   };
 }
@@ -227,7 +226,12 @@ function createEmptyCommonValuesState(): FamilyCommonValuesState {
 }
 
 function getDefaultVariant(form: FamilyEditorState) {
-  return form.variants[form.defaultVariantIndex] ?? form.variants[0] ?? createEmptyVariant(0);
+  return form.variants[0] ?? createEmptyVariant(0);
+}
+
+function shouldSyncFamilyTitleSeo(currentTitleSeo: string | null | undefined, currentName: string) {
+  const title = currentTitleSeo?.trim() ?? "";
+  return title.length === 0 || title === truncateTitleSeo(currentName);
 }
 
 function buildSharedAttributeKinds(variants: VariantEditorState[]) {
@@ -543,10 +547,19 @@ function ProductEditPageContent() {
   );
 
   const canSave = isEdit ? canManage : canCreate;
+  const hasValidFamilyTitleSeo =
+    form.titleSeo.trim().length > 0 && form.titleSeo.trim().length <= TITLE_SEO_MAX_LENGTH;
 
   const handleSave = async () => {
     if (!canSave) {
       toast.error("Accès refusé.");
+      return false;
+    }
+
+    if (!hasValidFamilyTitleSeo) {
+      toast.error(
+        `Le titre SEO de la famille est requis et limite a ${TITLE_SEO_MAX_LENGTH} caracteres.`,
+      );
       return false;
     }
 
@@ -715,17 +728,9 @@ function ProductEditPageContent() {
         nextVariants[index],
       ];
 
-      let nextDefaultIndex = current.defaultVariantIndex;
-      if (nextDefaultIndex === index) {
-        nextDefaultIndex = nextIndex;
-      } else if (nextDefaultIndex === nextIndex) {
-        nextDefaultIndex = index;
-      }
-
       return {
         ...current,
         variants: nextVariants,
-        defaultVariantIndex: nextDefaultIndex,
       };
     });
   };
@@ -915,39 +920,39 @@ function ProductEditPageContent() {
                 id="family-name"
                 fullWidth
                 value={form.name}
-                onChange={(event) =>
+                onChange={(event) => {
+                  const nextName = event.target.value;
                   setForm((current) => ({
                     ...current,
-                    name: event.target.value,
-                    slug: slugify(event.target.value),
-                  }))
-                }
-              />
-            </PanelField>
-            <PanelField className="flex-2" id="family-subtitle" label="Sous-titre">
-              <PanelInput
-                id="family-subtitle"
-                fullWidth
-                value={form.subtitle ?? ""}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, subtitle: event.target.value || null }))
-                }
-              />
-            </PanelField>
-            <PanelField className="flex-1" id="family-default" label="Variante par défaut">
-              <StaffSelect
-                id="family-default"
-                value={String(form.defaultVariantIndex)}
-                onValueChange={(value) =>
-                  setForm((current) => ({ ...current, defaultVariantIndex: Number(value) }))
-                }
-                options={form.variants.map((variant, index) => ({
-                  value: String(index),
-                  label: variant.name || variant.sku || `Variante ${index + 1}`,
-                }))}
+                    name: nextName,
+                    slug: slugify(nextName),
+                    titleSeo: shouldSyncFamilyTitleSeo(current.titleSeo, current.name)
+                      ? truncateTitleSeo(nextName)
+                      : current.titleSeo,
+                  }));
+                }}
               />
             </PanelField>
           </div>
+
+          <PanelField
+            id="family-title-seo"
+            label="Titre SEO"
+            hint={`${form.titleSeo.length}/${TITLE_SEO_MAX_LENGTH}`}
+          >
+            <PanelInput
+              id="family-title-seo"
+              fullWidth
+              maxLength={TITLE_SEO_MAX_LENGTH}
+              value={form.titleSeo}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  titleSeo: truncateTitleSeo(event.target.value),
+                }))
+              }
+            />
+          </PanelField>
 
           <PanelField id="family-description" label="Description">
             <Textarea
@@ -1233,10 +1238,6 @@ function ProductEditPageContent() {
                       return {
                         ...current,
                         variants: nextVariants,
-                        defaultVariantIndex:
-                          current.defaultVariantIndex >= nextVariants.length
-                            ? 0
-                            : current.defaultVariantIndex,
                       };
                     })
                   }
@@ -1539,7 +1540,6 @@ function ProductEditPageContent() {
                     pickerTitle="Ajouter une fiche technique"
                     pickerDescription="Choisissez un PDF existant ou importez-en un nouveau pour cette variante."
                     addButtonLabel="Ajouter une fiche"
-                    addButtonHint="PDF uniquement"
                     mediaKind="DOCUMENT"
                     documentExtensions={["pdf"]}
                     role="TECHNICAL"
@@ -1560,7 +1560,6 @@ function ProductEditPageContent() {
                     pickerTitle="Ajouter un certificat"
                     pickerDescription="Choisissez un PDF existant ou importez-en un nouveau pour cette variante."
                     addButtonLabel="Ajouter un certificat"
-                    addButtonHint="PDF uniquement"
                     mediaKind="DOCUMENT"
                     documentExtensions={["pdf"]}
                     role="CERTIFICATE"
@@ -1628,6 +1627,7 @@ function ProductEditPageContent() {
             onClick={() => void handleSave()}
             loading={isSaving}
             loadingText="Enregistrement..."
+            disabled={!hasValidFamilyTitleSeo}
           >
             Enregistrer
           </AnimatedUIButton>

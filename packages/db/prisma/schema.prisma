@@ -1261,7 +1261,6 @@ model Product {
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   familyMembership        ProductFamilyMember?
-  defaultForFamilies      ProductFamily[]                 @relation("ProductFamilyDefaultProduct")
   productFamilyRedirects  ProductFamilyRedirect[]         @relation("ProductFamilyRedirectDefaultVariant")
   brand                   Organization?                   @relation(fields: [brandId], references: [id], onDelete: SetNull)
   productType             ProductType                     @relation(fields: [productTypeId], references: [id], onDelete: Restrict)
@@ -1379,20 +1378,17 @@ model ProductFamily {
   id               BigInt   @id @default(autoincrement())
   slug             String   @unique @db.VarChar(255)
   name             String   @db.VarChar(255)
-  subtitle         String?  @db.VarChar(255)
+  titleSeo         String   @map("title_seo") @db.VarChar(60)
   description      String?  @db.Text
   descriptionSeo   String?  @map("description_seo") @db.VarChar(160)
   mainImageMediaId BigInt?  @map("main_image_media_id")
-  defaultProductId BigInt?  @map("default_product_id")
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
-  mainImage      Media?                @relation("ProductFamilyMainImageMedia", fields: [mainImageMediaId], references: [id], onDelete: SetNull)
-  defaultProduct Product?              @relation("ProductFamilyDefaultProduct", fields: [defaultProductId], references: [id], onDelete: SetNull)
-  members        ProductFamilyMember[]
+  mainImage Media?                @relation("ProductFamilyMainImageMedia", fields: [mainImageMediaId], references: [id], onDelete: SetNull)
+  members   ProductFamilyMember[]
 
   @@index([mainImageMediaId])
-  @@index([defaultProductId])
   @@map("product_families")
 }
 

@@ -1,5 +1,5 @@
 export default function PanelTitle(
-    {pretitle="", title, description=""}: {pretitle: string; title: string; description?:string;}
+    {pretitle, title, description}: {pretitle?: string; title: string; description?:string;}
 ){
     return (title && 
         <div className="border-b border-slate-300 px-5 py-4 sm:px-6">

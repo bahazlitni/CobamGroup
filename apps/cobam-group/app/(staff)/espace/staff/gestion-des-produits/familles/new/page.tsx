@@ -1,151 +1,131 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, Boxes, Lock, Package, PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Layers3, Package, Shapes } from "lucide-react";
-import Loading from "@/components/staff/Loading";
-import { StaffPageHeader } from "@/components/staff/ui";
-import { AnimatedUIButton } from "@/components/ui/custom/AnimatedUIButton";
-import { getProductFormOptionsClient, ProductsClientError } from "@/features/products/client";
-import type { ProductTypeGroupOptionDto } from "@/features/products/types";
+import { StaffPageHeader, StaffStateCard } from "@/components/staff/ui";
+import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
+import { canCreateProducts, canManageProducts } from "@/features/products/access";
+import clsx from "clsx";
+
+type ActionCardProps = {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  onClick?: () => void;
+  disabled?: boolean;
+  primary?: boolean;
+};
+
+function ActionCard({
+  title,
+  icon: Icon,
+  onClick,
+  disabled = false,
+  primary = false,
+}: ActionCardProps) {
+  return (
+    <button
+      type="button"
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      className={clsx(
+        "group relative flex min-h-[280px] w-full flex-col justify-between rounded-2xl border p-8 text-left shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cobam-water-blue/30",
+        disabled
+          ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400"
+          : primary
+            ? "border-cobam-water-blue/20 bg-cobam-water-blue/[0.06] text-cobam-dark-blue hover:-translate-y-0.5 hover:border-cobam-water-blue/40 hover:shadow-md"
+            : "border-slate-200 bg-white text-cobam-dark-blue hover:-translate-y-0.5 hover:border-cobam-water-blue/30 hover:shadow-md"
+      )}
+    >
+      {disabled ? (
+        <span className="absolute right-5 top-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400">
+          <Lock className="h-4 w-4" />
+        </span>
+      ) : null}
+
+      <span
+        className={clsx(
+          "inline-flex h-16 w-16 items-center justify-center rounded-2xl border",
+          disabled
+            ? "border-slate-200 bg-white text-slate-300"
+            : primary
+              ? "border-cobam-water-blue/15 bg-cobam-water-blue/10 text-cobam-water-blue"
+              : "border-slate-200 bg-slate-50 text-cobam-dark-blue"
+        )}
+      >
+        <Icon className="h-8 w-8" />
+      </span>
+
+      <div className="space-y-6">
+        <h2 className="text-3xl font-semibold tracking-tight leading-tight">
+          {title}
+        </h2>
+
+        <span
+          className={clsx(
+            "inline-flex items-center gap-2 text-base font-semibold",
+            disabled ? "text-slate-400" : "text-cobam-dark-blue"
+          )}
+        >
+          <ArrowRight
+            className={clsx(
+              "h-5 w-5 transition",
+              !disabled && "group-hover:translate-x-0.5"
+            )}
+          />
+        </span>
+      </div>
+    </button>
+  );
+}
 
 export default function NewProductFamilyPage() {
   const router = useRouter();
-  const [groups, setGroups] = useState<ProductTypeGroupOptionDto[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { user } = useStaffSessionContext();
 
-  useEffect(() => {
-    let cancelled = false;
+  const canCreate = user ? canCreateProducts(user) : false;
+  const canGroup = canCreate && (user ? canManageProducts(user) : false);
 
-    void (async () => {
-      try {
-        const options = await getProductFormOptionsClient();
-        if (!cancelled) {
-          setGroups(options.productTypeGroups);
-        }
-      } catch (err: unknown) {
-        if (!cancelled) {
-          setError(
-            err instanceof ProductsClientError
-              ? err.message
-              : err instanceof Error
-                ? err.message
-                : "Impossible de charger les modèles produit.",
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const hasProductTypes = useMemo(
-    () => groups.some((group) => group.productTypes.length > 0),
-    [groups],
-  );
-
-  const openBlankForm = () => {
-    router.push("/espace/staff/gestion-des-produits/familles/edit");
-  };
-
-  const openTemplateForm = (productTypeId: number) => {
-    router.push(`/espace/staff/gestion-des-produits/familles/edit?type=${productTypeId}`);
-  };
+  if (!canCreate) {
+    return (
+      <StaffStateCard
+        title="Accès refusé"
+        description="Vous ne pouvez pas créer de famille produit."
+      />
+    );
+  }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <StaffPageHeader
+        backHref="/espace/staff/gestion-des-produits/familles"
         eyebrow="Produits"
-        title="Choisir un modèle de famille"
+        title="Créer une famille"
         icon={Package}
-        actions={
-          <AnimatedUIButton
-            type="button"
-            variant="outline"
-            icon="arrow-right"
-            iconPosition="right"
-            onClick={openBlankForm}
-          >
-            Continuer sans modèle
-          </AnimatedUIButton>
-        }
       />
 
-      {isLoading ? (
-        <div className="flex min-h-[30vh] items-center justify-center">
-          <Loading />
-        </div>
-      ) : error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      ) : hasProductTypes ? (
-        <div className="space-y-8">
-          {groups
-            .filter((group) => group.productTypes.length > 0)
-            .map((group) => (
-              <section key={group.slug} className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-semibold tracking-[0.18em] text-slate-400 uppercase">
-                  <Layers3 className="h-4 w-4" />
-                  {group.name}
-                </div>
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {group.productTypes.map((productType) => (
-                    <button
-                      key={productType.id}
-                      type="button"
-                      onClick={() => openTemplateForm(productType.id)}
-                      className="group hover:border-cobam-dark-blue/40 flex min-h-36 flex-col justify-between rounded-lg border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:shadow-md"
-                    >
-                      <span className="flex items-start justify-between gap-4">
-                        <span>
-                          <span className="text-cobam-dark-blue flex items-center gap-2 text-base font-semibold">
-                            <Shapes className="text-cobam-water-blue h-4 w-4" />
-                            {productType.displayName}
-                          </span>
-                          {productType.hint ? (
-                            <span className="mt-2 block text-sm leading-6 text-slate-500">
-                              {productType.hint}
-                            </span>
-                          ) : null}
-                        </span>
-                        <ArrowRight className="group-hover:text-cobam-dark-blue h-4 w-4 shrink-0 text-slate-300 transition" />
-                      </span>
-                      <span className="mt-5 text-xs font-semibold tracking-[0.16em] text-slate-400 uppercase">
-                        {productType.attributes.length} attribut
-                        {productType.attributes.length > 1 ? "s" : ""}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </section>
-            ))}
-        </div>
-      ) : (
-        <div className="rounded-lg border border-slate-200 bg-white p-6">
-          <p className="text-sm text-slate-600">
-            Aucun modèle produit n&rsquo;est encore configuré.
-          </p>
-          <div className="mt-4">
-            <AnimatedUIButton
-              type="button"
-              variant="secondary"
-              icon="arrow-right"
-              iconPosition="right"
-              onClick={openBlankForm}
-            >
-              Continuer sans modèle
-            </AnimatedUIButton>
-          </div>
-        </div>
-      )}
+      <section className="grid gap-5 2xl:grid-cols-2">
+        <ActionCard
+          title="Créer une famille vide"
+          icon={PlusCircle}
+          primary
+          onClick={() =>
+            router.push("/espace/staff/gestion-des-produits/familles/edit")
+          }
+        />
+
+        <ActionCard
+          title={
+            canGroup
+              ? "Créer depuis des produits existants"
+              : "Regrouper des produits existants"
+          }
+          icon={Boxes}
+          disabled={!canGroup}
+          onClick={() =>
+            router.push("/espace/staff/gestion-des-produits/familles/new/grouping")
+          }
+        />
+      </section>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import type {
   MediaKind,
   ProductMediaRole,
   ProductLifecycle,
+  ProductKind,
   ProductTypeAttributeInputType,
   StockUnit,
 } from "@prisma/client";
@@ -129,11 +130,10 @@ export type ProductTypeGroupOptionDto = {
 export type ProductFamilyUpsertInput = {
   name: string;
   slug: string;
-  subtitle: string | null;
+  titleSeo: string;
   description: string | null;
   descriptionSeo: string | null;
   mainImageMediaId: number | null;
-  defaultVariantIndex: number;
   variants: ProductVariantInputDto[];
 };
 
@@ -141,7 +141,6 @@ export type ProductFamilyListItemDto = {
   id: number;
   name: string;
   slug: string;
-  subtitle: string | null;
   description: string | null;
   mainImageUrl: string | null;
   variantCount: number;
@@ -156,11 +155,10 @@ export type ProductFamilyDetailDto = {
   id: number;
   name: string;
   slug: string;
-  subtitle: string | null;
+  titleSeo: string;
   description: string | null;
   descriptionSeo: string | null;
   mainImageMediaId: number | null;
-  defaultVariantIndex: number;
   variants: ProductVariantInputDto[];
   createdAt: string;
   updatedAt: string;
@@ -174,6 +172,38 @@ export type ProductFamilyDissolveResultDto = {
   redirectPath: string;
   targetProductPath: string;
   convertedProductIds: number[];
+};
+
+export type ProductFamilyGroupingInput = {
+  name: string;
+  slug: string;
+  titleSeo: string;
+  description: string | null;
+  descriptionSeo: string | null;
+  mainImageMediaId: number | null;
+  productIds: number[];
+};
+
+export type ProductFamilyGroupingCandidateDto = {
+  id: number;
+  kind: ProductKind;
+  sku: string;
+  slug: string;
+  name: string;
+  displayName: string;
+  brand: string | null;
+  lifecycle: ProductLifecycle | null;
+  hasImage: boolean;
+  imageThumbnailUrl: string | null;
+  subcategories: ProductSubcategoryOptionDto[];
+  updatedAt: string;
+};
+
+export type ProductFamilyGroupingCandidatesResult = {
+  items: ProductFamilyGroupingCandidateDto[];
+  total: number;
+  page: number;
+  pageSize: number;
 };
 
 export type ProductFamilyListResult = {
@@ -206,7 +236,6 @@ export type PublicProductSummary = {
   entityType: PublicProductEntityType;
   name: string;
   slug: string;
-  subtitle: string | null;
   description: string | null;
   brandName: string | null;
   imageUrl: string | null;
@@ -335,13 +364,12 @@ export type PublicProductInspector = {
   id: number;
   name: string;
   slug: string;
-  subtitle: string | null;
+  titleSeo: string;
   description: string | null;
   descriptionSeo: string | null;
   brand: PublicProductBrand | null;
   brandName: string | null;
   coverMedia: PublicProductInspectorMedia | null;
-  defaultVariantId: number | null;
   variants: PublicProductInspectorVariant[];
   subcategories: PublicProductSubcategoryLink[];
   colorReferences: PublicProductColorReference[];

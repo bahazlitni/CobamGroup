@@ -874,7 +874,6 @@ function SingleProductEditPageContent() {
             pickerTitle="Ajouter une fiche technique"
             pickerDescription="Choisissez un PDF existant ou importez-en un nouveau pour ce produit."
             addButtonLabel="Ajouter une fiche"
-            addButtonHint="PDF uniquement"
             mediaKind="DOCUMENT"
             documentExtensions={["pdf"]}
             role="TECHNICAL"
@@ -893,7 +892,6 @@ function SingleProductEditPageContent() {
             pickerTitle="Ajouter un certificat"
             pickerDescription="Choisissez un PDF existant ou importez-en un nouveau pour ce produit."
             addButtonLabel="Ajouter un certificat"
-            addButtonHint="PDF uniquement"
             mediaKind="DOCUMENT"
             documentExtensions={["pdf"]}
             role="CERTIFICATE"

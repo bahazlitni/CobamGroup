@@ -9,7 +9,11 @@ import {
   PRODUCT_PRICING_VISIBILITY_VALUES,
   STOCK_UNIT_VALUES,
 } from "@/features/products/product-edit-fields";
-import type { ProductFamilyUpsertInput, ProductVariantInputDto } from "./types";
+import type {
+  ProductFamilyGroupingInput,
+  ProductFamilyUpsertInput,
+  ProductVariantInputDto,
+} from "./types";
 
 export class ProductValidationError extends Error {
   status: number;
@@ -76,6 +80,20 @@ function parseOptionalIntegerArray(value: unknown, fieldName: string) {
     }
     return parsed;
   });
+}
+
+function parseOptionalIntegerSearchList(values: string[], fieldName: string) {
+  return values
+    .flatMap((value) => value.split(","))
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((value) => {
+      const parsed = Number(value);
+      if (!Number.isInteger(parsed) || parsed <= 0) {
+        throw new ProductValidationError(`Identifiant invalide dans ${fieldName}.`);
+      }
+      return parsed;
+    });
 }
 
 function parseOptionalLimitedString(value: unknown, fieldName: string, maxLength: number) {
@@ -385,6 +403,20 @@ export function parseProductListQuery(searchParams: URLSearchParams) {
   };
 }
 
+export function parseProductPickerQuery(searchParams: URLSearchParams) {
+  const base = parseProductListQuery(searchParams);
+
+  return {
+    ...base,
+    excludeVariants: searchParams.get("excludeVariants") !== "false",
+    ungroupedOnly: searchParams.get("ungroupedOnly") !== "false",
+    excludedProductIds: parseOptionalIntegerSearchList(
+      searchParams.getAll("excludeIds"),
+      "excludeIds",
+    ),
+  };
+}
+
 export function parseProductIdParam(value: string) {
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed <= 0) {
@@ -405,28 +437,51 @@ export function parseProductCreateInput(input: unknown): ProductFamilyUpsertInpu
     throw new ProductValidationError("Une famille doit contenir au moins une variante.");
   }
 
-  const defaultVariantIndex = Number(record.defaultVariantIndex ?? 0);
-  if (
-    !Number.isInteger(defaultVariantIndex) ||
-    defaultVariantIndex < 0 ||
-    defaultVariantIndex >= variantsInput.length
-  ) {
-    throw new ProductValidationError("Variante par défaut invalide.");
-  }
-
   return {
     name: parseRequiredString(record.name, "name"),
     slug: parseRequiredString(record.slug, "slug"),
-    subtitle: parseOptionalString(record.subtitle),
+    titleSeo: parseRequiredLimitedString(record.titleSeo, "titleSeo", 60),
     description: parseOptionalString(record.description),
     descriptionSeo: parseOptionalDescriptionSeo(record.descriptionSeo, "descriptionSeo"),
     mainImageMediaId:
       record.mainImageMediaId == null || record.mainImageMediaId === ""
         ? null
         : parseProductIdParam(String(record.mainImageMediaId)),
-    defaultVariantIndex,
     variants: variantsInput.map(parseVariant),
   };
 }
 
 export const parseProductUpdateInput = parseProductCreateInput;
+
+export function parseProductFamilyGroupingInput(input: unknown): ProductFamilyGroupingInput {
+  if (!input || typeof input !== "object") {
+    throw new ProductValidationError("Corps de requete invalide.");
+  }
+
+  const record = input as Record<string, unknown>;
+  const productIds = parseOptionalIntegerArray(record.productIds, "productIds");
+  const uniqueProductIds = Array.from(new Set(productIds));
+
+  if (uniqueProductIds.length < 2) {
+    throw new ProductValidationError(
+      "Selectionnez au moins deux produits simples pour creer une famille.",
+    );
+  }
+
+  if (uniqueProductIds.length !== productIds.length) {
+    throw new ProductValidationError("Un produit ne peut pas etre selectionne plusieurs fois.");
+  }
+
+  return {
+    name: parseRequiredString(record.name, "name"),
+    slug: parseRequiredString(record.slug, "slug"),
+    titleSeo: parseRequiredLimitedString(record.titleSeo, "titleSeo", 60),
+    description: parseOptionalString(record.description),
+    descriptionSeo: parseOptionalDescriptionSeo(record.descriptionSeo, "descriptionSeo"),
+    mainImageMediaId:
+      record.mainImageMediaId == null || record.mainImageMediaId === ""
+        ? null
+        : parseProductIdParam(String(record.mainImageMediaId)),
+    productIds,
+  };
+}

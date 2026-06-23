@@ -61,14 +61,6 @@ export default function ProductCard({
 
         {/* Content Area - Simple & Typography focused */}
         <div className="flex flex-col gap-2 px-1">
-          <div className="flex items-center gap-2">
-            {product.subtitle && (
-              <h5 className="text-[9px] font-bold uppercase tracking-[0.3em] text-cobam-carbon-grey truncate">
-                {product.subtitle}
-              </h5>
-            )}
-          </div>
-
           {/* Title */}
           <h4
             className={`text-xl md:text-xl font-normal text-cobam-dark-blue leading-tight group-hover:text-[${resolvedThemeColor}] transition-colors duration-300`}

@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useStaffSessionContext } from "@/features/auth/client/staff-session-provider";
-import { canCreateProducts } from "@/features/products/access";
+import { canCreateProducts, canManageProducts } from "@/features/products/access";
 import {
   mergeUniqueById,
   readStaffInfiniteListCache,
@@ -28,6 +28,7 @@ import {
 } from "@/lib/client/use-staff-infinite-scroll";
 import {
   deleteProductFamiliesBulkClient,
+  dissolveProductFamiliesBulkClient,
   listProductsClient,
   ProductsClientError,
   updateProductFamiliesBulkClient,
@@ -48,6 +49,7 @@ type ProductFamiliesListCacheExtra = {
 export default function ProductsListPage() {
   const { user } = useStaffSessionContext();
   const canCreate = user ? canCreateProducts(user) : false;
+  const canManage = user ? canManageProducts(user) : false;
   const [listCache] = useState(() =>
     readStaffInfiniteListCache<
       ProductFamilyListItemDto,
@@ -78,6 +80,8 @@ export default function ProductsListPage() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [bulkEditLoading, setBulkEditLoading] = useState(false);
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
+  const [bulkDissolveLoading, setBulkDissolveLoading] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
   const shiftKeyRef = useRef(false);
@@ -270,6 +274,7 @@ export default function ProductsListPage() {
 
   const allSelected = items.length > 0 && selectedIds.length === items.length;
   const isIndeterminate = selectedIds.length > 0 && selectedIds.length < items.length;
+  const bulkActionLoading = bulkEditLoading || bulkDeleteLoading || bulkDissolveLoading;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -342,6 +347,10 @@ export default function ProductsListPage() {
   };
 
   const handleBulkEditOpen = () => {
+    if (!canManage) {
+      return;
+    }
+
     buildBulkForm();
     setBulkEditOpen(true);
   };
@@ -361,7 +370,7 @@ export default function ProductsListPage() {
   };
 
   const handleBulkEditSubmit = async () => {
-    if (selectedIds.length === 0) {
+    if (!canManage || selectedIds.length === 0) {
       return;
     }
 
@@ -391,7 +400,7 @@ export default function ProductsListPage() {
   };
 
   const handleBulkDelete = async () => {
-    if (selectedIds.length === 0) {
+    if (!canManage || selectedIds.length === 0) {
       return;
     }
 
@@ -402,7 +411,7 @@ export default function ProductsListPage() {
       return;
     }
 
-    setBulkEditLoading(true);
+    setBulkDeleteLoading(true);
     try {
       await deleteProductFamiliesBulkClient(selectedIds);
       setSelectedIds([]);
@@ -416,7 +425,37 @@ export default function ProductsListPage() {
             : "Impossible de supprimer les familles.",
       );
     } finally {
-      setBulkEditLoading(false);
+      setBulkDeleteLoading(false);
+    }
+  };
+
+  const handleBulkDissolve = async () => {
+    if (!canManage || selectedIds.length === 0) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Êtes-vous sûr de vouloir dissoudre ${selectedIds.length} famille(s) sélectionnée(s) ? Les variantes deviendront des produits simples.`,
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setBulkDissolveLoading(true);
+    try {
+      await dissolveProductFamiliesBulkClient(selectedIds);
+      setSelectedIds([]);
+      setReloadToken((current) => current + 1);
+    } catch (err: unknown) {
+      setError(
+        err instanceof ProductsClientError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Impossible de dissoudre les familles.",
+      );
+    } finally {
+      setBulkDissolveLoading(false);
     }
   };
 
@@ -485,7 +524,7 @@ export default function ProductsListPage() {
       </form>
 
       {selectedIds.length > 0 ? (
-        <div className="fixed right-6 bottom-6 z-30 flex w-[min(560px,calc(100vw-3rem))] flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-lg">
+        <div className="fixed right-6 bottom-6 z-30 flex w-[min(720px,calc(100vw-3rem))] flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-lg">
           <p className="text-sm text-slate-600">{selectedIds.length} famille(s) sélectionnée(s)</p>
           <div className="flex flex-wrap gap-2">
             <AnimatedUIButton
@@ -494,8 +533,22 @@ export default function ProductsListPage() {
               icon="modify"
               iconPosition="left"
               onClick={handleBulkEditOpen}
+              disabled={!canManage || bulkActionLoading}
             >
               Modifier
+            </AnimatedUIButton>
+            <AnimatedUIButton
+              type="button"
+              variant="outline"
+              color="warning"
+              icon="warning"
+              iconPosition="left"
+              onClick={() => void handleBulkDissolve()}
+              loading={bulkDissolveLoading}
+              loadingText="Dissolution..."
+              disabled={!canManage || bulkActionLoading}
+            >
+              Dissoudre
             </AnimatedUIButton>
             <AnimatedUIButton
               type="button"
@@ -504,7 +557,9 @@ export default function ProductsListPage() {
               icon="trash"
               iconPosition="left"
               onClick={handleBulkDelete}
-              disabled={bulkEditLoading}
+              loading={bulkDeleteLoading}
+              loadingText="Suppression..."
+              disabled={!canManage || bulkActionLoading}
             >
               Supprimer
             </AnimatedUIButton>
@@ -566,9 +621,6 @@ export default function ProductsListPage() {
               <div className="space-y-1">
                 <p className="text-cobam-dark-blue font-semibold">{family.name}</p>
                 <p className="text-xs text-slate-500">{family.slug}</p>
-                {family.subtitle ? (
-                  <p className="text-xs text-slate-500">{family.subtitle}</p>
-                ) : null}
               </div>
             </td>
             <td className="px-4 py-3 align-top text-sm text-slate-600">
